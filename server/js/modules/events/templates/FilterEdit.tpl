@@ -2,10 +2,12 @@
     <div class="col-sm-12">
         <h1 class="page-header"><span class="glyphicon glyphicon-plus"></span>&nbsp;Filter <% if(isNew()) { %>hinzuf&uuml;gen<% } else { %>bearbeiten<% } %></h1>
         <form class="form-horizontal" role="form">
-            <div class="form-group">
+            <div class="form-group has-feedback">
                 <label for="filtername" class="col-sm-1 control-label">Name</label>
                 <div class="col-sm-5">
-                    <input type="text" class="form-control" name="filtername" placeholder="Filtername" value="<%- name %>" />
+                    <input pattern="^[a-zA-Z0-9._\- ]+$" data-pattern-error="Erlaubte Zeichen: a-Z, 0-9, _, -, ." data-maxlength-error="Der Filtername muss zwischen 1 und 255 Zeichen lang sein" maxlength="255" minlength="1" type="text" class="form-control" name="filtername" placeholder="Filtername" value="<%- name %>" required />
+                    <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                    <div class="help-block with-errors"></div>
                 </div>
             </div>
             <div class="form-group">

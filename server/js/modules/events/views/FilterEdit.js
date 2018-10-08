@@ -2,7 +2,7 @@ define(['app/app',
         'app/models',
         'app/modules/events/views/FilterConditionList',
         'tpl!app/modules/events/templates/FilterEdit.tpl',
-        'validate'],
+        'validator'],
 function(HoneySens, Models, FilterConditionListView, FilterEditTpl) {
     HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.FilterEdit = Marionette.LayoutView.extend({
@@ -19,12 +19,16 @@ function(HoneySens, Models, FilterConditionListView, FilterEditTpl) {
                 'click button.save': function(e) {
                     e.preventDefault();
                     var valid = true;
-                    this.$el.find('form').bootstrapValidator('validate');
-                    this.$el.find('form').each(function() {
-                        valid = $(this).data('bootstrapValidator').isValid() && valid;
+
+                    this.$el.find('form').validator('validate');
+                    this.$el.find('.form-group').each(function() {
+                        valid = !$(this).hasClass('has-error') && valid;
                     });
+
                     if(valid) {
+                        this.$el.find('form').trigger('submit');
                         this.$el.find('button').prop('disabled', true);
+
                         var model = this.model,
                             name = this.$el.find('input[name="filtername"]').val(),
                             type = parseInt(this.$el.find('select[name="type"]').val()),
@@ -41,30 +45,15 @@ function(HoneySens, Models, FilterConditionListView, FilterEditTpl) {
                 this.conditionCollection = this.model.getConditionCollection();
             },
             onRender: function() {
-                this.getRegion('conditions').show(new FilterConditionListView({collection: this.conditionCollection}));
-                this.$el.find('form').bootstrapValidator({
-                    feedbackIcons: {
-                        valid: 'glyphicon glyphicon-ok',
-                        invalid: 'glyphicon glyphicon-remove',
-                        validating: 'glyphicon glyphicon-refresh'
-                    },
-                    fields: {
-                        filtername: {
-                            validators: {
-                                notEmpty: {},
-                                regexp: {
-                                    regexp: /^[a-zA-Z0-9._\- ]+$/,
-                                    message: 'Erlaubte Zeichen: a-Z, 0-9, _, -, .'
-                                },
-                                stringLength: {
-                                    min: 1,
-                                    max: 255,
-                                    message: 'Name muss zwischen 1 und 255 Zeichen lang sein'
-                                }
-                            }
-                        }
+                var view = this;
+
+                this.$el.find('form').validator().on('submit', function (e) {
+                    if (!e.isDefaultPrevented()) {
+                        e.preventDefault();
                     }
                 });
+
+                this.getRegion('conditions').show(new FilterConditionListView({collection: view.conditionCollection}));
             },
             templateHelpers: {
                 isNew: function() {

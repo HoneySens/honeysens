@@ -1,7 +1,7 @@
 <div class="headerBar">
     <% if(_.templateHelpers.isAllowed('users', 'create')) { %>
     <div class="pull-right dropdown">
-        <button id="addUser" type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown">
+        <button id="addUser" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
             <span class="caret"></span>&nbsp;&nbsp;Hinzuf&uuml;gen
         </button>
         <ul class="dropdown-menu"></ul>

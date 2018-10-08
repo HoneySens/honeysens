@@ -1,6 +1,6 @@
 <div class="col-sm-12">
     <div class="headerBar">
-        <div class="pull-right">
+        <div class="button-group text-right">
             <button type="button" class="save btn btn-primary btn-sm">
                 <span class="glyphicon glyphicon-save"></span>&nbsp;&nbsp;Speichern
             </button>
@@ -9,28 +9,36 @@
         <h3>Benutzer <% if(isEdit()) { %>bearbeiten<% } else { %>hinzuf&uuml;gen<% } %></h3>
     </div>
     <form class="form-horizontal" role="form">
-        <div class="form-group">
+        <div class="form-group has-feedback">
             <label for="username" class="col-sm-1 control-label">Name</label>
             <div class="col-sm-8">
-                <input type="text" class="form-control" name="username" placeholder="Benutzername" value="<%- name %>" autocomplete="off" />
+                <input type="text" name="username" class="form-control" placeholder="Benutzername" value="<%- name %>" required autocomplete="off" pattern="^[a-zA-Z0-9]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben und Zahlen erlaubt" minlength="1" maxlength="255" data-maxlength-error="Maximale L&auml;nge: 255 Zeichen" />
+                <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                <div class="help-block with-errors"></div>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group has-feedback">
             <label for="password" class="col-sm-1 control-label">Passwort</label>
             <div class="col-sm-8">
-                <input type="password" class="form-control" name="password" placeholder="<% if(isEdit()) { %>Neues Passwort<% } else { %>Passwort<% } %>" value="<%- password %>" autocomplete="new-password"/>
+                <input type="password" name="password" id="password" class="form-control" placeholder="<% if(isEdit()) { %>Neues Passwort<% } else { %>Passwort<% } %>" value="<%- password %>" data-minlength="6" data-minlength-error="Passwortl&auml;nge zwischen 6 und 255 Zeichen" maxlength="255" /*data-match="#confirmPassword" data-match-error="Die Passw&ouml;rter stimmen nicht &uuml;berein"*/>
+                <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                <div class="help-block with-errors"></div>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group has-feedback">
             <label for="confirmPassword" class="col-sm-1 control-label">Passwort wiederholen</label>
             <div class="col-sm-8">
-                <input type="password" class="form-control" name="confirmPassword" placeholder="<% if(isEdit()) { %>Passwort wiederholen<% } else { %>Passwort<% } %>" value="<%- password %>" autocomplete="new-password"/>
+                <input type="password" class="form-control" id="confirmPassword" class="form-control" placeholder="<% if(isEdit()) { %>Passwort wiederholen<% } else { %>Passwort<% } %>" value="<%- password %>" data-match="#password" data-match-error="Die Passw&ouml;rter stimmen nicht &uuml;berein" >
+                <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                <div class="help-block with-errors"></div>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group has-feedback">
             <label for="email" class="col-sm-1 control-label">E-Mail</label>
             <div class="col-sm-8">
-                <input type="email" class="form-control" name="email" placeholder="E-Mail-Adresse" value="<%- email %>" />
+                <input type="email" name="email" class="form-control" placeholder="E-Mail-Adresse" value="<%- email %>" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
+                <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                <div class="help-block with-errors"></div>
             </div>
         </div>
         <div class="form-group">

@@ -7,37 +7,20 @@ function(HoneySens, DivisionTpl) {
             events: {
                 'click button:submit': function(e) {
                     e.preventDefault();
-                    this.$el.find('form').bootstrapValidator('validate');
+                    this.$el.find('form').trigger('submit');
                 }
             },
             onRender: function() {
                 var view = this;
-                this.$el.find('form').bootstrapValidator({
-                    feedbackIcons: {
-                        valid: 'glyphicon glyphicon-ok',
-                        invalid: 'glyphicon glyphicon-remove',
-                        validating: 'glyphicon glyphicon-refresh'
-                    },
-                    fields: {
-                        divisionName: {
-                            validators: {
-                                notEmpty: {},
-                                regexp: {
-                                    regexp: /^[a-zA-Z0-9 ]+$/,
-                                    message: 'Nur Groß-, Kleinbuchstaben und Zahlen erlaubt'
-                                },
-                                stringLength: {
-                                    min: 1,
-                                    max: 255
-                                }
-                            }
-                        }
+                
+                this.$el.find('form').validator().on('submit', function (e) {
+                    if (!e.isDefaultPrevented()) {
+                        e.preventDefault();
+
+                        var divisionName = view.$el.find('input[name="divisionName"]').val();
+                        view.model.set({divisionName: divisionName});
+                        HoneySens.request('setup:install:show', {step: 4, model: view.model});
                     }
-                }).on('success.form.bv', function(e) {
-                    e.preventDefault();
-                    var divisionName = view.$el.find('input[name="divisionName"]').val();
-                    view.model.set({divisionName: divisionName});
-                    HoneySens.request('setup:install:show', {step: 4, model: view.model});
                 });
             }
         });

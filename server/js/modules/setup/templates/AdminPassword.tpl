@@ -3,13 +3,17 @@
 <form>
     <p>Dieser Assistent wird Sie beim einrichten eines neuen HoneySens-Servers begleiten.</p>
     <p>Bitte legen Sie zun&auml;st ein Passwort für den Administrator-Account fest.</p>
-    <div class="form-group">
+    <div class="form-group has-feedback">
         <label for="adminPassword">Administrator-Passwort</label>
-        <input type="password" class="form-control" id="adminPassword" name="adminPassword" />
+        <input type="password" name="adminPassword" id="adminPassword" class="form-control" required minlength="6" data-minlength-error="Passwortl&auml;nge zwischen 6 und 255 Zeichen" maxlength="255"/>
+        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+        <div class="help-block with-errors"></div>
     </div>
-    <div class="form-group">
+    <div class="form-group has-feedback">
         <label for="adminPassword">Wiederholung</label>
-        <input type="password" class="form-control" id="adminPasswordRepeat" name="adminPasswordRepeat" />
+        <input type="password" name="adminPasswordRepeat" id="adminPasswordRepeat" class="form-control" required data-match="#adminPassword" data-match-error="Die Passw&ouml;rter stimmen nicht &uuml;berein"/>
+        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+        <div class="help-block with-errors"></div>
     </div>
     <button type="submit" class="btn btn-primary btn-block">Weiter</button>
 </form>

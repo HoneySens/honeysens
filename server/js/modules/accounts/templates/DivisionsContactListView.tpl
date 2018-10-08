@@ -1,7 +1,7 @@
 <div class="headerBar">
     <% if(_.templateHelpers.isAllowed('contacts', 'create')) { %>
     <div class="pull-right">
-        <button type="button" class="add btn btn-primary btn-sm">
+        <button type="button" class="add btn btn-default btn-sm">
             <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Hinzuf&uuml;gen
         </button>
     </div>
