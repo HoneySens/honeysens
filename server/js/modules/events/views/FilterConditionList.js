@@ -1,39 +1,12 @@
 define(['app/app',
         'app/models',
         'tpl!app/modules/events/templates/FilterConditionListItem.tpl',
-        'tpl!app/modules/events/templates/FilterConditionList.tpl',
-        'validate'],
+        'tpl!app/modules/events/templates/FilterConditionList.tpl'],
 function(HoneySens, Models, FilterConditionListItemTpl, FilterConditionListTpl) {
     HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         var FilterConditionListItem = Marionette.ItemView.extend({
             template: FilterConditionListItemTpl,
             tagName: 'tr',
-            validators: {
-                IPvalue: {
-                    validators: {
-                        notEmpty: {},
-                        ip: {ipv4: true, ipv6: false}
-                    }
-                },
-                IPrange: {
-                    validators: {
-                        notEmpty: {},
-                        regexp: {
-                            regexp: /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)-(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-                            message: 'IP-Bereich muss das Muster a.b.c.d-e.f.g.h aufweisen'
-                        }
-                    }
-                },
-                PortValue: {
-                    validators: {
-                        notEmpty: {},
-                        between: {
-                            min: 1,
-                            max: 65535
-                        }
-                    }
-                }
-            },
             events: {
                 'click button.remove': function(e) {
                     e.preventDefault();
@@ -47,34 +20,44 @@ function(HoneySens, Models, FilterConditionListItemTpl, FilterConditionListTpl) 
                     field = this.model.get('field'),
                     type = this.model.get('type'),
                     value = this.model.get('value');
-                this.$el.find('form.conditionData').bootstrapValidator({
-                    feedbackIcons: {
-                        valid: 'glyphicon glyphicon-ok',
-                        invalid: 'glyphicon glyphicon-remove',
-                        validating: 'glyphicon glyphicon-refresh'
+
+                this.$el.find('form').validator().on('submit', function (e) {  
+                    if (!e.isDefaultPrevented()) {
+                        e.preventDefault();
+
+                        var attribute = parseInt(view.$el.find('select[name="attribute"]').val()),
+                            type = parseInt(view.$el.find('select[name="type"]').val()),
+                            value = '';
+                        switch(attribute) {
+                            case Models.EventFilterCondition.field.SOURCE:
+                                switch(type) {
+                                    case Models.EventFilterCondition.type.SOURCE_STATIC:
+                                        value = view.$el.find('input[name="ip_value"]').val();
+                                        break;
+                                    case Models.EventFilterCondition.type.SOURCE_IPRANGE:
+                                        value = view.$el.find('input[name="ip_range_value"]').val();
+                                        break;
+                                    }
+                                break;
+                            case Models.EventFilterCondition.field.TARGET:
+                                value = view.$el.find('input[name="port_value"]').val();
+                                break;
+                            case Models.EventFilterCondition.field.CLASSIFICATION:
+                                value = view.$el.find('select[name="classification"]').val();
+                                break;
+                            case Models.EventFilterCondition.field.PROTOCOL:
+                                value = view.$el.find('select[name="protocol"]').val();
+                                break;
+                        }
+
+                        view.model.set({field: attribute, type: type, value: value});
                     }
-                }).on('success.form.bv', function() {
-                    var attribute = parseInt(view.$el.find('select[name="attribute"]').val()),
-                        type = parseInt(view.$el.find('select[name="type"]').val()),
-                        value = '';
-                    switch(attribute) {
-                        case Models.EventFilterCondition.field.SOURCE:
-                        case Models.EventFilterCondition.field.TARGET:
-                            value = view.$el.find('input[name="value"]').val();
-                            break;
-                        case Models.EventFilterCondition.field.CLASSIFICATION:
-                            value = view.$el.find('select[name="classification"]').val();
-                            break;
-                        case Models.EventFilterCondition.field.PROTOCOL:
-                            value = view.$el.find('select[name="protocol"]').val();
-                            break;
-                    }
-                    view.model.set({field: attribute, type: type, value: value});
                 });
+
                 this.refreshTypeSelection(field, type);
                 this.refreshValueSelection(field, type, value);
                 this.refreshValidators(field, type);
-                this.$el.find('button').tooltip();
+                this.$el.find('button').tooltip(); 
             },
             changeAttribute: function() {
                 var attribute = parseInt(this.$el.find('select[name="attribute"]').val()),
@@ -105,7 +88,7 @@ function(HoneySens, Models, FilterConditionListItemTpl, FilterConditionListTpl) 
                         $select.attr('disabled', false);
                         $select.append('<option value="' + Models.EventFilterCondition.type.SOURCE_STATIC + '">IP-Adresse</option>');
                         $select.append('<option value="' + Models.EventFilterCondition.type.SOURCE_IPRANGE + '">IP-Bereich</option>');
-                        break;
+                        break; 
                     case Models.EventFilterCondition.field.TARGET:
                         $select.attr('disabled', 'disabled').append('<option value="' + Models.EventFilterCondition.type.TARGET_PORT + '">Port</option>');
                         break;
@@ -118,22 +101,30 @@ function(HoneySens, Models, FilterConditionListItemTpl, FilterConditionListTpl) 
             /**
              * Render the value input controls based on the given attribute and type values.
              * If a value is given, it will be treated as default value.
-             */
+             */    
             refreshValueSelection: function(attribute, type, value) {
                 value = value || null;
                 var $form = this.$el.find('form.conditionData');
                 // hide everything first, then selectively enable whatever is required
                 $form.find('select, input').addClass('hide');
+                
                 switch(attribute) {
                     case Models.EventFilterCondition.field.CLASSIFICATION:
                         $form.find('select[name="classification"]').removeClass('hide')
                             .find('option[value="' + value + '"]').prop('selected', true);
                         break;
                     case Models.EventFilterCondition.field.SOURCE:
-                        $form.find('input[name="value"]').removeClass('hide').val(value);
+                        switch(type) {
+                            case Models.EventFilterCondition.type.SOURCE_STATIC:
+                                this.$el.find('input[name="ip_value"]').removeClass('hide').val(value);
+                                break;
+                            case Models.EventFilterCondition.type.SOURCE_IPRANGE:
+                                this.$el.find('input[name="ip_range_value"]').removeClass('hide').val(value);
+                                break;
+                            }
                         break;
                     case Models.EventFilterCondition.field.TARGET:
-                        $form.find('input[name="value"]').removeClass('hide').val(value);
+                        $form.find('input[name="port_value"]').removeClass('hide').val(value);
                         break;
                     case Models.EventFilterCondition.field.PROTOCOL:
                         $form.find('select[name="protocol"]').removeClass('hide')
@@ -147,27 +138,34 @@ function(HoneySens, Models, FilterConditionListItemTpl, FilterConditionListTpl) 
             refreshValidators: function(attribute, type) {
                 var $form = this.$el.find('form.conditionData');
                 // reset form
-                $form.data('bootstrapValidator').resetForm();
-                $form.bootstrapValidator('removeField', 'value');
+                $form.validator('destroy');
+                $form.find('input[name="port_value"]').attr('data-validate', false).attr('required', false);
+                $form.find('input[name="ip_value"]').attr('data-validate', false).attr('required', false);
+                $form.find('input[name="ip_range_value"]').attr('data-validate', false).attr('required', false);
+                $form.find('div.form-feedback').addClass('hide');
+                
                 switch(attribute) {
                     case Models.EventFilterCondition.field.CLASSIFICATION:
                         break;
                     case Models.EventFilterCondition.field.SOURCE:
+                        $form.find('div.form-feedback').removeClass('hide');
                         switch(type) {
                             case Models.EventFilterCondition.type.SOURCE_STATIC:
-                                $form.bootstrapValidator('addField', this.$el.find('input[name="value"]'), this.validators.IPvalue);
+                                this.$el.find('input[name="ip_value"]').attr('data-validate', true).attr('required', true);
                                 break;
                             case Models.EventFilterCondition.type.SOURCE_IPRANGE:
-                                $form.bootstrapValidator('addField', this.$el.find('input[name="value"]'), this.validators.IPrange);
+                                this.$el.find('input[name="ip_range_value"]').attr('data-validate', true).attr('required', true);
                                 break;
                         }
                         break;
                     case Models.EventFilterCondition.field.TARGET:
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="value"]'), this.validators.PortValue);
+                        $form.find('div.form-feedback').removeClass('hide');
+                        this.$el.find('input[name="port_value"]').attr('data-validate', true).attr('required', true);
                         break;
                     case Models.EventFilterCondition.field.PROTOCOL:
                         break;
                 }
+                $form.validator('update');
             }
         });
 

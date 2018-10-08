@@ -1,25 +1,33 @@
 <form class="serverConfig form-group">
-    <div class="row">
-        <div class="col-sm-6 form-group">
-            <label for="smtpServer" class="control-label">Server</label>
-            <input type="text" name="smtpServer" class="form-control" value="<%- smtpServer %>" placeholder="Hostname oder IP-Adresse" />
-        </div>
-        <div class="col-sm-6 form-group">
-            <label class="control-label">Port</label>
-            <input type="text" name="smtpPort" class="form-control" value="<%- smtpPort %>" placeholder="25/587" />
-        </div>
+    <div class="form-group has-feedback">
+        <label for="smtpServer" class="control-label">Server</label>
+        <input type="text" name="smtpServer" class="form-control" value="<%- smtpServer %>" placeholder="Hostname oder IP-Adresse" required />
+        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+        <div class="help-block with-errors"></div>
     </div>
-    <div class="form-group">
+    <div class="form-group has-feedback">
+        <label for="smtpServer" class="control-label">Port</label>
+        <input type="number" name="smtpPort" class="form-control" placeholder="25/587" value="<%- smtpPort %>" required min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen"/>
+        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+        <div class="help-block with-errors"></div>
+    </div>
+    <div class="form-group has-feedback">
         <label class="control-label">Absender</label>
-        <input type="text" name="smtpFrom" class="form-control" value="<%- smtpFrom %>" placeholder="user@example.com" />
+        <input type="email" name="smtpFrom" class="form-control" value="<%- smtpFrom %>" placeholder="user@example.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
+        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+        <div class="help-block with-errors"></div>
     </div>
-    <div class="form-group">
+    <div class="form-group has-feedback">
         <label class="control-label">Benutzer</label>
         <input type="text" name="smtpUser" class="form-control" value="<%- smtpUser %>" placeholder="optional" />
+        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+        <div class="help-block with-errors"></div>
     </div>
-    <div class="form-group">
+    <div class="form-group has-feedback">
         <label class="control-label">Passwort</label>
         <input type="password" name="smtpPassword" class="form-control" value="<%- smtpPassword %>" placeholder="optional" autocomplete="new-password" />
+        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+        <div class="help-block with-errors"></div>
     </div>
     <div class="row">
         <div class="col-sm-6">

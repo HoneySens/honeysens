@@ -7,29 +7,20 @@ function(HoneySens, EndpointTpl) {
             events: {
                 'click button:submit': function(e) {
                     e.preventDefault();
-                    this.$el.find('form').bootstrapValidator('validate');
+                    this.$el.find('form').trigger('submit');
                 }
             },
             onRender: function() {
                 var view = this;
-                this.$el.find('form').bootstrapValidator({
-                    feedbackIcons: {
-                        valid: 'glyphicon glyphicon-ok',
-                        invalid: 'glyphicon glyphicon-remove',
-                        validating: 'glyphicon glyphicon-refresh'
-                    },
-                    fields: {
-                        serverEndpoint: {
-                            validators: {
-                                notEmpty: {}
-                            }
-                        }
+                
+                this.$el.find('form').validator().on('submit', function (e) {
+                    if (!e.isDefaultPrevented()) {
+                        e.preventDefault();
+
+                        var serverEndpoint = view.$el.find('input[name="serverEndpoint"]').val();
+                        view.model.set({serverEndpoint: serverEndpoint});
+                        HoneySens.request('setup:install:show', {step: 3, model: view.model});
                     }
-                }).on('success.form.bv', function(e) {
-                    e.preventDefault();
-                    var serverEndpoint = view.$el.find('input[name="serverEndpoint"]').val();
-                    view.model.set({serverEndpoint: serverEndpoint});
-                    HoneySens.request('setup:install:show', {step: 3, model: view.model});
                 });
             },
             templateHelpers: {

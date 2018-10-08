@@ -1,45 +1,47 @@
 define(['app/app',
         'tpl!app/modules/sensors/templates/SensorEdit.tpl',
         'app/views/common',
-        'validate'],
+        'validator'],
 function(HoneySens, SensorEditTpl) {
     HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.SensorEdit = Marionette.ItemView.extend({
             template: SensorEditTpl,
             className: 'container-fluid',
-            validators: {
-                notEmpty: {
-                    validators: {
-                        notEmpty: {}
-                    }
-                },
-                networkIP: {
-                    validators: {
-                        notEmpty: {},
-                        ip: {ipv4: true, ipv6: false}
-                    }
-                },
-                networkIPOptional: {
-                    validators: {
-                        ip: {ipv4: true, ipv6: false}
-                    }
-                },
-                PortNumber: {
-                    validators: {
-                        notEmpty: {},
-                        between: {min: 0, max: 65535, message: 'Gültige Portnummern: 0-65535'}
-                    }
-                },
-                MacAddress: {
-                    validators: {
-                        notEmpty: {},
-                        mac: {}
-                    }
-                }
-            },
             events: {
                 'click button.cancel': function() {
                     HoneySens.request('view:content').overlay.empty();
+                },
+                'click button.useCustomUpdateInterval': function(e) {
+                    var $updateIntervalField = this.$el.find('input[name="updateInterval"]'),
+                        $trigger = this.$el.find('button.useCustomUpdateInterval'),
+                        customUpdateInterval = !$trigger.hasClass('active');
+
+                    $updateIntervalField.prop('disabled', !customUpdateInterval);
+                    $updateIntervalField.prop('required', customUpdateInterval);
+                    if(customUpdateInterval) {
+                        $trigger.addClass('active');
+                        $updateIntervalField.val(this.model.get('update_interval'));
+                    } else {
+                        $trigger.removeClass('active');
+                        $updateIntervalField.val(HoneySens.data.settings.get('sensorsUpdateInterval'));
+                    }
+                    this.$el.find('form').validator('update');
+                },
+                'click button.useCustomServiceNetwork': function(e) {
+                    var $updateServiceNetworkField = this.$el.find('input[name="serviceNetwork"]'),
+                        $trigger = this.$el.find('button.useCustomServiceNetwork'),
+                        customServiceNetwork = !$trigger.hasClass('active');
+
+                    $updateServiceNetworkField.prop('disabled', !customServiceNetwork);
+                    $updateServiceNetworkField.prop('required', customServiceNetwork);
+                    if(customServiceNetwork) {
+                        $trigger.addClass('active');
+                        $updateServiceNetworkField.val(this.model.get('service_network'));
+                    } else {
+                        $trigger.removeClass('active');
+                        $updateServiceNetworkField.val(HoneySens.data.settings.get('sensorsServiceNetwork'));
+                    }
+                    this.$el.find('form').validator('update');
                 },
                 'change input[name="firmwarePreference"]': function(e) {
                     this.refreshFirmwarePreference(e.target.value);
@@ -61,7 +63,16 @@ function(HoneySens, SensorEditTpl) {
                 },
                 'click button:submit': function(e) {
                     e.preventDefault();
-                    this.$el.find('form').bootstrapValidator('validate');
+
+                    var valid = true;
+                    this.$el.find('form').validator('validate');
+                    this.$el.find('form .form-group').each(function() {
+                        valid = !$(this).hasClass('has-error') && valid;
+                    });
+
+                    if(valid) {
+                        this.$el.find('form').trigger('submit');
+                    }
                 },
                 'click label.disabled': function() {
                     // Ignore clicks on disabled labels. This fixes a bootstrap bug.
@@ -84,141 +95,103 @@ function(HoneySens, SensorEditTpl) {
                 this.$el.find('[data-toggle="popover"]').popover();
                 // Busy view spinner
                 this.$el.find('div.loading').html(HoneySens.Views.spinner.spin().el);
-                // Initialize validation
-                this.$el.find('form').bootstrapValidator({
-                    feedbackIcons: {
-                        valid: 'glyphicon glyphicon-ok',
-                        invalid: 'glyphicon glyphicon-remove',
-                        validating: 'glyphicon glyphicon-refresh'
-                    },
-                    fields: {
-                        sensorName: {
-                            validators: {
-                                notEmpty: {},
-                                regexp: {
-                                    regexp: /^[a-zA-Z0-9._\- ]+$/,
-                                    message: 'Erlaubte Zeichen: a-Z, 0-9, _, -, .'
+
+                this.$el.find('form').validator().on('submit', function (e) {
+                    if (!e.isDefaultPrevented()) {
+                        e.preventDefault();
+
+                        var $form = view.$el.find('div.addForm'),
+                            $busy = view.$el.find('div.addBusy'),
+                            $result = view.$el.find('div.addResult');
+                        // Trigger animation to transition from the form to the busy display
+                        $busy.removeClass('hide');
+                        $form.one('transitionend', function() {
+                            $form.addClass('hide');
+                            $busy.css('position', 'static');
+                            // Send model to server
+                            HoneySens.data.models.sensors.add(view.model);
+                            var name = view.$el.find('input[name="sensorName"]').val(),
+                                location = view.$el.find('input[name="location"]').val(),
+                                division = view.$el.find('select[name="division"]').val(),
+                                updateInterval = view.$el.find('button.useCustomUpdateInterval').hasClass('active') ? view.$el.find('input[name="updateInterval"]').val() : null,
+                                serviceNetwork = view.$el.find('button.useCustomServiceNetwork').hasClass('active') ? view.$el.find('input[name="serviceNetwork"]').val() : null,
+                                serverEndpointMode = view.$el.find('input[name="serverEndpoint"]:checked').val(),
+                                serverHost = view.$el.find('input[name="serverHost"]').val(),
+                                serverPortHTTPS = view.$el.find('input[name="serverPortHTTPS"]').val(),
+                                firmwareRevision = view.$el.find('select[name="firmwareRevision"]').val(),
+                                networkMode = view.$el.find('input[name="networkMode"]:checked').val(),
+                                networkIP = view.$el.find('input[name="networkIP"]').val(),
+                                networkNetmask = view.$el.find('input[name="networkNetmask"]').val(),
+                                networkGateway = view.$el.find('input[name="networkGateway"]').val(),
+                                networkDNS = view.$el.find('input[name="networkDNS"]').val(),
+                                MACMode = view.$el.find('input[name="networkMACMode"]:checked').val(),
+                                MACAddress = view.$el.find('input[name="customMAC"]').val(),
+                                proxyMode = view.$el.find('input[name="proxyType"]:checked').val(),
+                                proxyHost = view.$el.find('input[name="proxyHost"]').val(),
+                                proxyPort = view.$el.find('input[name="proxyPort"]').val(),
+                                proxyUser = view.$el.find('input[name="proxyUser"]').val(),
+                                proxyPassword = view.$el.find('input[name="proxyPassword"]').val();
+                            var modelData = {
+                                name: name,
+                                location: location,
+                                division: division,
+                                update_interval: updateInterval,
+                                service_network: serviceNetwork,
+                                server_endpoint_mode: serverEndpointMode,
+                                server_endpoint_host: serverHost,
+                                server_endpoint_port_https: serverPortHTTPS,
+                                firmware: firmwareRevision,
+                                network_ip_mode: networkMode,
+                                network_ip_address: networkIP,
+                                network_ip_netmask: networkNetmask,
+                                network_ip_gateway: networkGateway,
+                                network_ip_dns: networkDNS,
+                                network_mac_mode: MACMode,
+                                network_mac_address: MACAddress,
+                                proxy_mode: proxyMode,
+                                proxy_host: proxyHost,
+                                proxy_port: proxyPort,
+                                proxy_user: proxyUser
+                            };
+
+                            if(proxyPassword.length > 0) modelData.proxy_password = proxyPassword;
+                            // Reset password if no user was provided ('cause the server does the same)
+                            if(proxyUser.length === 0) modelData.proxy_password = null;
+                            view.model.save(modelData, {
+                                success: function() {
+                                    // Render summary and firmware + config download view
+                                    $result.removeClass('hide');
+                                    $busy.one('transitionend', function() {
+                                        $busy.addClass('hide');
+                                        $result.css('position', 'static');
+                                    });
+                                    var overlayHeight = $('#overlay div.container-fluid').outerHeight(),
+                                        contentHeight = $('#overlay div.container-fluid div.addBusy').outerHeight();
+                                    $busy.css('position', 'relative');
+                                    $busy.add($result).css('top', -Math.min(overlayHeight, contentHeight));
                                 },
-                                stringLength: {
-                                    min: 1,
-                                    max: 50,
-                                    message: 'Name darf maximal 50 Zeichen lang sein'
+                                error: function() {
+                                    $result.removeClass('hide');
+                                    $result.find('div.resultSuccess').addClass('hide');
+                                    $result.find('div.resultError').removeClass('hide');
+                                    $busy.one('transitionend', function() {
+                                        $busy.addClass('hide');
+                                        $result.css('position', 'static');
+                                    });
+                                    var overlayHeight = $('#overlay div.container-fluid').outerHeight(),
+                                        contentHeight = $('#overlay div.container-fluid div.addBusy').outerHeight();
+                                    $busy.css('position', 'relative');
+                                    $busy.add($result).css('top', -Math.min(overlayHeight, contentHeight));
                                 }
-                            }
-                        },
-                        location: {
-                            validators: {
-                                stringLength: {
-                                    min: 0,
-                                    max: 255,
-                                    message: 'Standort darf maximal 255 Zeichen lang sein'
-                                }
-                            }
-                        },
-                        updateInterval: {
-                            validators: {
-                                between: {min: 1, max: 60, message: 'Das Intervall kann minimal 1 und maximal 60 Minuten betragen'}
-                            }
-                        },
-                        serviceNetwork: {
-                            validators: {
-                                regexp: {
-                                    regexp: /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/,
-                                    message: 'Netzbereich bitte als IP-Adresse mit Netzmaske (z.B. 192.168.1.0/24) spezifizieren'
-                                }
-                            }
-                        }
-                    }
-                }).on('success.form.bv', function(e) {
-                    e.preventDefault();
-                    var $form = view.$el.find('div.addForm'),
-                        $busy = view.$el.find('div.addBusy'),
-                        $result = view.$el.find('div.addResult');
-                    // Trigger animation to transition from the form to the busy display
-                    $busy.removeClass('hide');
-                    $form.one('transitionend', function() {
-                        $form.addClass('hide');
-                        $busy.css('position', 'static');
-                        // Send model to server
-                        HoneySens.data.models.sensors.add(view.model);
-                        var name = view.$el.find('input[name="sensorName"]').val(),
-                            location = view.$el.find('input[name="location"]').val(),
-                            division = view.$el.find('select[name="division"]').val(),
-                            updateInterval = view.$el.find('input[name="updateInterval"]').val() || null,
-                            serviceNetwork = view.$el.find('input[name="serviceNetwork"]').val() || null,
-                            serverEndpointMode = view.$el.find('input[name="serverEndpoint"]:checked').val(),
-                            serverHost = view.$el.find('input[name="serverHost"]').val(),
-                            serverPortHTTPS = view.$el.find('input[name="serverPortHTTPS"]').val(),
-                            firmwareRevision = view.$el.find('select[name="firmwareRevision"]').val(),
-                            networkMode = view.$el.find('input[name="networkMode"]:checked').val(),
-                            networkIP = view.$el.find('input[name="networkIP"]').val(),
-                            networkNetmask = view.$el.find('input[name="networkNetmask"]').val(),
-                            networkGateway = view.$el.find('input[name="networkGateway"]').val(),
-                            networkDNS = view.$el.find('input[name="networkDNS"]').val(),
-                            MACMode = view.$el.find('input[name="networkMACMode"]:checked').val(),
-                            MACAddress = view.$el.find('input[name="customMAC"]').val(),
-                            proxyMode = view.$el.find('input[name="proxyType"]:checked').val(),
-                            proxyHost = view.$el.find('input[name="proxyHost"]').val(),
-                            proxyPort = view.$el.find('input[name="proxyPort"]').val(),
-                            proxyUser = view.$el.find('input[name="proxyUser"]').val(),
-                            proxyPassword = view.$el.find('input[name="proxyPassword"]').val();
-                        var modelData = {
-                            name: name,
-                            location: location,
-                            division: division,
-                            update_interval: updateInterval,
-                            service_network: serviceNetwork,
-                            server_endpoint_mode: serverEndpointMode,
-                            server_endpoint_host: serverHost,
-                            server_endpoint_port_https: serverPortHTTPS,
-                            firmware: firmwareRevision,
-                            network_ip_mode: networkMode,
-                            network_ip_address: networkIP,
-                            network_ip_netmask: networkNetmask,
-                            network_ip_gateway: networkGateway,
-                            network_ip_dns: networkDNS,
-                            network_mac_mode: MACMode,
-                            network_mac_address: MACAddress,
-                            proxy_mode: proxyMode,
-                            proxy_host: proxyHost,
-                            proxy_port: proxyPort,
-                            proxy_user: proxyUser
-                        };
-                        if(proxyPassword.length > 0) modelData.proxy_password = proxyPassword;
-                        // Reset password if no user was provided ('cause the server does the same)
-                        if(proxyUser.length === 0) modelData.proxy_password = null;
-                        view.model.save(modelData, {
-                            success: function() {
-                                // Render summary and firmware + config download view
-                                $result.removeClass('hide');
-                                $busy.one('transitionend', function() {
-                                    $busy.addClass('hide');
-                                    $result.css('position', 'static');
-                                });
-                                var overlayHeight = $('#overlay div.container-fluid').outerHeight(),
-                                    contentHeight = $('#overlay div.container-fluid div.addBusy').outerHeight();
-                                $busy.css('position', 'relative');
-                                $busy.add($result).css('top', -Math.min(overlayHeight, contentHeight));
-                            },
-                            error: function() {
-                                $result.removeClass('hide');
-                                $result.find('div.resultSuccess').addClass('hide');
-                                $result.find('div.resultError').removeClass('hide');
-                                $busy.one('transitionend', function() {
-                                    $busy.addClass('hide');
-                                    $result.css('position', 'static');
-                                });
-                                var overlayHeight = $('#overlay div.container-fluid').outerHeight(),
-                                    contentHeight = $('#overlay div.container-fluid div.addBusy').outerHeight();
-                                $busy.css('position', 'relative');
-                                $busy.add($result).css('top', -Math.min(overlayHeight, contentHeight));
-                            }
+                            });
                         });
-                    });
-                    var overlayHeight = $('#overlay div.container-fluid').outerHeight(),
-                        contentHeight = $('#overlay div.container-fluid div.addForm').outerHeight();
-                    $form.add($busy).css('top', -Math.min(overlayHeight, contentHeight));
+                        var overlayHeight = $('#overlay div.container-fluid').outerHeight(),
+                            contentHeight = $('#overlay div.container-fluid div.addForm').outerHeight();
+                        $form.add($busy).css('top', -Math.min(overlayHeight, contentHeight));
+                    }
                 });
+
+
                 // Set model data
                 this.$el.find('select[name="division"] option[value="' + this.model.get('division') + '"]').prop('selected', true);
                 // Preselecting bootstrap radio buttons is a bit more complicated...
@@ -246,6 +219,20 @@ function(HoneySens, SensorEditTpl) {
                     } else {
                         return HoneySens.data.models.platforms.byFirmwareAvailability().length > 0;
                     }
+                },
+                hasCustomUpdateInterval: function() {
+                    return this.update_interval > 0;
+                },
+                hasCustomServiceNetwork: function() {
+                    return this.service_network;
+                },
+                getUpdateInterval: function() {
+                    if(this.update_interval > 0) return this.update_interval;
+                    else return HoneySens.data.settings.get('sensorsUpdateInterval');
+                },
+                getServiceNetwork: function() {
+                    if(this.service_network) return this.service_network;
+                    else return HoneySens.data.settings.get('sensorsServiceNetwork');
                 }
             },
             serializeData: function() {
@@ -305,7 +292,7 @@ function(HoneySens, SensorEditTpl) {
                 portHTTPS = portHTTPS || null;
                 var $host = this.$el.find('input[name="serverHost"]'),
                     $portHTTPS = this.$el.find('input[name="serverPortHTTPS"]');
-                this.refreshValidators(endpoint, networkMode, MACMode, proxyMode);
+
                 switch(endpoint) {
                     case 0:
                         $host.attr('disabled', 'disabled').val(HoneySens.data.settings.get('serverHost'));
@@ -316,6 +303,7 @@ function(HoneySens, SensorEditTpl) {
                         $portHTTPS.attr('disabled', false).val(portHTTPS);
                         break;
                 }
+                this.refreshValidators(endpoint, networkMode, MACMode, proxyMode);
             },
             /**
              * Render the IPv4 configuration form based on the given mode. Also set default values, if given.
@@ -401,49 +389,49 @@ function(HoneySens, SensorEditTpl) {
             refreshValidators: function(serverMode, networkMode, MACMode, proxyMode) {
                 var $form = this.$el.find('form');
                 // reset form, remove all volatile fields
-                $form.data('bootstrapValidator').resetForm();
-                $form.bootstrapValidator('removeField', 'serverHost');
-                $form.bootstrapValidator('removeField', 'serverPortHTTPS');
-                $form.bootstrapValidator('removeField', 'networkIP');
-                $form.bootstrapValidator('removeField', 'networkNetmask');
-                $form.bootstrapValidator('removeField', 'networkGateway');
-                $form.bootstrapValidator('removeField', 'networkDNS');
-                $form.bootstrapValidator('removeField', 'customMAC');
-                $form.bootstrapValidator('removeField', 'proxyHost');
-                $form.bootstrapValidator('removeField', 'proxyPort');
+                $form.validator('destroy');
+
+                $form.find('input[name="serverHost"]').attr('required', false);
+                $form.find('input[name="serverPortHTTPS"]').attr('required', false);
+                $form.find('input[name="networkIP"]').attr('required', false);
+                $form.find('input[name="networkNetmask"]').attr('required', false);
+                $form.find('input[name="customMAC"]').attr('required', false);
+                $form.find('input[name="proxyHost"]').attr('required', false);
+                $form.find('input[name="proxyPort"]').attr('required', false);
+
                 switch(parseInt(serverMode)) {
                     case 0:
                         break;
                     case 1:
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="serverHost"]'), this.validators.networkIP);
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="serverPortHTTPS"]'), this.validators.PortNumber);
+                        this.$el.find('input[name="serverHost"]').attr('required', true);
+                        this.$el.find('input[name="serverPortHTTPS"]').attr('required', true);
                         break;
                 }
                 switch(parseInt(networkMode)) {
                     case 0:
                         break;
                     case 1:
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="networkIP"]'), this.validators.networkIP);
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="networkNetmask"]'), this.validators.networkIP);
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="networkGateway"]'), this.validators.networkIPOptional);
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="networkDNS"]'), this.validators.networkIPOptional);
+                        this.$el.find('input[name="networkIP"]').attr('required', true);
+                        this.$el.find('input[name="networkNetmask"]').attr('required', true);
                         break;
                 }
                 switch(parseInt(MACMode)) {
                     case 0:
                         break;
                     case 1:
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="customMAC"]'), this.validators.MacAddress);
+                        this.$el.find('input[name="customMAC"]').attr('required', true);
                         break;
                 }
                 switch(parseInt(proxyMode)) {
                     case 0:
                         break;
                     case 1:
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="proxyHost"]'), this.validators.notEmpty);
-                        $form.bootstrapValidator('addField', this.$el.find('input[name="proxyPort"]'), this.validators.PortNumber);
+                        this.$el.find('input[name="proxyHost"]').attr('required', true);
+                        this.$el.find('input[name="proxyPort"]').attr('required', true);
                         break;
                 }
+
+                $form.validator('update');
             }
         });
     });

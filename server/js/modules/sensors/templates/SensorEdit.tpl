@@ -4,13 +4,17 @@
         <form>
             <div class="row">
                 <div class="col-sm-6">
-                    <div class="form-group">
+                    <div class="form-group has-feedback">
                         <label for="sensorName" class="control-label">Name</label>
-                        <input type="text" name="sensorName" class="form-control" placeholder="Sensorname" value="<%- name %>" />
+                        <input pattern="^[a-zA-Z0-9._\- ]+$" data-pattern-error="Erlaubte Zeichen: a-Z, 0-9, _, -, ." data-maxlength-error="Der Sensorname muss zwischen 1 und 50 Zeichen lang sein" maxlength="50" minlength="1" type="text" class="form-control" name="sensorName" placeholder="Sensorname" value="<%- name %>" required />
+                        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                        <div class="help-block with-errors"></div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group has-feedback">
                         <label for="location" class="control-label">Standort</label>
-                        <input type="text" name="location" class="form-control" placeholder="z.B. Raum 312" value="<%- location %>" />
+                        <input data-maxlength-error="Standort darf maximal 255 Zeichen lang sein" maxlength="255" minlength="1" type="text" class="form-control" name="location" placeholder="z.B. Raum 312" value="<%- location %>" required />
+                        <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                        <div class="help-block with-errors"></div>
                     </div>
                     <div class="form-group">
                         <label for="division" class="control-label">Gruppe</label>
@@ -22,9 +26,21 @@
                     </div>
                     <fieldset>
                         <legend>Erreichbarkeit HoneySens-Server</legend>
-                        <div class="form-group">
-                            <label for="updateInterval" class="control-label">Update-Interval (frei lassen f&uuml;r systemweiten Standardwert)</label>
-                            <input type="text" name="updateInterval" class="form-control" value="<%- update_interval %>" />
+                        <div class="form-group has-feedback">
+                            <label for="updateInterval" class="control-label">Update-Interval</label>
+                            <div class="input-group">
+                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Zwischen systemweitem Standard und individuellem Wert umschalten">
+                                    <button type="button" class="useCustomUpdateInterval btn btn-default <% if(hasCustomUpdateInterval()) { %>active<% } %>">
+                                        <span class="glyphicon glyphicon-cog"></span>
+                                    </button>
+                                </span>
+                                <input type="number" name="updateInterval" class="form-control" value="<%- getUpdateInterval() %>" min="1" max="60" data-max-error="Das Intervall muss minimal 1 und maximal 60 Minuten betragen" <% if(!hasCustomUpdateInterval()) { %>disabled<% } %>/>
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Intervall in Minuten, in dem dieser Sensor den Server kontaktiert.">
+                                    <span class="glyphicon glyphicon-question-sign"></span>
+                                </div>
+                            </div>
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group">
                             <div class="btn-group btn-group-justified" data-toggle="buttons">
@@ -36,13 +52,17 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group has-feedback">
                             <label for="serverHost" class="control-label">Host</label>
-                            <input type="text" name="serverHost" class="form-control" placeholder="IP-Adresse des Servers" />
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="serverHost" placeholder="IP-Adresse des Servers" required />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group has-feedback">
                             <label for="serverPortHTTPS" class="control-label">HTTPS-Port (API)</label>
-                            <input type="text" name="serverPortHTTPS" class="form-control" placeholder="Standard: 443" />
+                            <input type="number" name="serverPortHTTPS" class="form-control" placeholder="Standard: 443" required min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen"/>
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
                     </fieldset>
                     <fieldset>
@@ -80,6 +100,8 @@
                 <div class="col-sm-6">
                     <fieldset>
                         <legend>Netzwerkschnittstelle</legend>
+                        <p>Spezifizieren Sie hier, ob der Sensor eine statische IP-Adresse besitzen oder diese von einem DHCP-Server beziehen soll.
+                            Falls dieser Sensor <strong>virtuell</strong> (d.h. als Docker-Container) betrieben werden soll, ist an dieser Stelle <em>"Unkonfiguriert"</em> die richtige Wahl.</p>
                         <div class="form-group">
                             <div class="btn-group btn-group-justified" data-toggle="buttons">
                                 <label class="btn btn-default">
@@ -97,23 +119,31 @@
                             <p class="form-control-static">IP-Adresse und Subnetzmaske werden automatisch vom DHCP-Server bezogen.</p>
                         </div>
                         <div class="form-group networkModeNone">
-                            <p class="form-control-static">Das Netzwerkinterface bleibt unkonfiguriert. Dies ist erforderlich, wenn virtuelle Sensoren manuell verwaltet werden sollen.</p>
+                            <p class="form-control-static">Das Netzwerkinterface bleibt unkonfiguriert. Dies ist erforderlich, wenn die IP-Adresse des Sensors andersweitig verwaltet wird, beispielsweise durch das Hostsystem bei virtuellen, in Docker-Containern betriebenen Sensoren.</p>
                         </div>
-                        <div class="form-group networkModeStatic">
-                            <label for="networkIP" class="control-label">IP-Adresse</label>
-                            <input type="text" name="networkIP" class="form-control" placeholder="z.B. 192.168.1.13" />
+                        <div class="form-group networkModeStatic has-feedback">
+                            <label for="networkIP" class="control-label">IP-Adresse</label>                            
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="networkIP" placeholder="z.B. 192.168.1.13" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
-                        <div class="form-group networkModeStatic">
+                        <div class="form-group networkModeStatic has-feedback">
                             <label for="networkNetmask" class="control-label">Subnetzmaske</label>
-                            <input type="text" name="networkNetmask" class="form-control" placeholder="z.B. 255.255.255.0" />
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="networkNetmask" placeholder="z.B. 255.255.255.0" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
-                        <div class="form-group networkModeStatic">
+                        <div class="form-group networkModeStatic has-feedback">
                             <label for="networkGateway" class="control-label">Gateway</label>
-                            <input type="text" name="networkGateway" class="form-control" placeholder="optional" />
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="networkGateway" placeholder="optional" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
-                        <div class="form-group networkModeStatic">
+                        <div class="form-group networkModeStatic has-feedback">
                             <label for="networkDNS" class="control-label">DNS-Server</label>
-                            <input type="text" name="networkDNS" class="form-control" placeholder="optional" />
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="networkDNS" placeholder="optional" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group">
                             <label for="networkMACMode" class="control-label">MAC-Adresse</label>
@@ -129,18 +159,27 @@
                         <div class="form-group networkMACOriginal">
                             <p class="form-control-static">Es wird die originale MAC-Adresse des verbauten Netzwerkinterfaces genutzt.</p>
                         </div>
-                        <div class="form-group networkMACCustom">
+                        <div class="form-group networkMACCustom has-feedback">
                             <label for="customMAC" class="control-label">Individuelle MAC-Adresse</label>
-                            <input type="text" name="customMAC" class="form-control" placeholder="00:11:22:33:44:55" />
+                            <input pattern="^(([A-Fa-f0-9]{2}[:]){5}[A-Fa-f0-9]{2}[,]?)+$" data-pattern-error="Bitte geben Sie eine valide MAC-Adresse ein" type="text" class="form-control" name="customMAC" placeholder="z.B. 00:11:22:33:44:55" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
-                        <div class="form-group networkServiceNetwork">
-                            <label for="serviceNetwork" class="control-label">Interner Netzbereich f&uuml;r Honeypot-Services (frei lassen f&uuml;r systemweiten Standardwert)</label>
+                        <div class="form-group networkServiceNetwork has-feedback">
+                            <label for="serviceNetwork" class="control-label">Interner Netzbereich f&uuml;r Honeypot-Services</label>
                             <div class="input-group">
-                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Spezifiziert den IP-Adressbereich, den Sensordienste zur internen Adressierung nutzen. Falls dieser mit lokalen Adressbereichen im Konflikt steht, ist hier ein freier und ungenutzter Adessraum anzugeben. ">
+                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Zwischen systemweitem Standard und individuellem Wert umschalten">
+                                    <button type="button" class="useCustomServiceNetwork btn btn-default <% if(hasCustomServiceNetwork()) { %>active<% } %>">
+                                        <span class="glyphicon glyphicon-cog"></span>
+                                    </button>
+                                </span>
+                                <input pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$" data-pattern-error="Netzbereich bitte als IP-Adresse mit Netzmaske (z.B. 192.168.1.0/24) spezifizieren" type="text" class="form-control" name="serviceNetwork" value="<%- getServiceNetwork() %>" <% if(!hasCustomServiceNetwork()) { %>disabled<% } %> />
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Spezifiziert den IP-Adressbereich, den Sensordienste zur internen Adressierung nutzen. Falls dieser mit lokalen Adressbereichen im Konflikt steht, ist hier ein freier und ungenutzter Adessraum anzugeben.">
                                     <span class="glyphicon glyphicon-question-sign"></span>
                                 </div>
-                                <input type="text" name="serviceNetwork" class="form-control" value="<%- service_network %>" />
                             </div>
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
                     </fieldset>
                     <fieldset>
@@ -158,13 +197,17 @@
                         <div class="form-group proxyTypeDisabled">
                             <p class="form-control-static">Es kommt kein Proxy-Server zum Einsatz.</p>
                         </div>
-                        <div class="form-group proxyTypeEnabled">
+                        <div class="form-group proxyTypeEnabled has-feedback">
                             <label for="proxyHost" class="control-label">Proxy-Server</label>
-                            <input type="text" name="proxyHost" class="form-control" placeholder="z.B. 10.0.0.3" />
+                            <input type="text" class="form-control" name="proxyHost" placeholder="z.B. 10.0.0.3" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
-                        <div class="form-group proxyTypeEnabled">
+                        <div class="form-group proxyTypeEnabled has-feedback">
                             <label for="proxyPort" class="control-label">Port</label>
-                            <input type="text" name="proxyPort" class="form-control" placeholder="z.B. 3128" />
+                            <input type="number" name="proxyPort" class="form-control" placeholder="z.B. 3128" min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen"/>
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group proxyTypeEnabled">
                             <label for="proxyUser" class="control-label">Benutzer</label>
@@ -172,7 +215,7 @@
                         </div>
                         <div class="form-group proxyTypeEnabled">
                             <label for="proxyPassword" class="control-label">Passwort</label>
-                            <input type="text" name="proxyPassword" class="form-control" placeholder="optional" />
+                            <input type="password" name="proxyPassword" class="form-control" placeholder="optional" autocomplete="new-password" />
                         </div>
                     </fieldset>
                 </div>
