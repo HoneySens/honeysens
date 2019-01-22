@@ -1,0 +1,26 @@
+--- a/etc/dionaea/dionaea.cfg
++++ b/etc/dionaea/dionaea.cfg
+@@ -1,7 +1,7 @@
+ [dionaea]
+ download.dir=var/lib/dionaea/binaries/
+-modules=curl,python,nfq,emu,pcap
+-processors=filter_streamdumper,filter_emu
++modules=curl,python,emu,pcap
++processors=filter_emu
+ 
+ listen.mode=getifaddrs
+ # listen.addresses=127.0.0.1
+@@ -22,11 +22,11 @@
+ # ssl.default.ou=
+ 
+ [logging]
+-default.filename=var/log/dionaea/dionaea.log
++#default.filename=var/log/dionaea/dionaea.log
+ default.levels=all
+ default.domains=*
+ 
+-errors.filename=var/log/dionaea/dionaea-errors.log
++#errors.filename=var/log/dionaea/dionaea-errors.log
+ errors.levels=warning,error
+ errors.domains=*
+ 

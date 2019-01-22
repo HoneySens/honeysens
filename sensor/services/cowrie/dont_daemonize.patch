@@ -1,0 +1,12 @@
+diff -ru a/bin/cowrie b/bin/cowrie
+--- a/bin/cowrie	2018-01-31 20:10:06.774215590 +0100
++++ b/bin/cowrie	2018-01-31 20:10:26.842273050 +0100
+@@ -6,7 +6,7 @@
+ VIRTUALENV_ENABLED=yes
+ 
+ #Change the below to -n to disable daemonizing (for instance when using supervisor)
+-DAEMONIZE=""
++DAEMONIZE="-n"
+ 
+ ################################################################################
+ ## don't modify below here ##

@@ -1,0 +1,53 @@
+dir = .
+
+[ ca ]
+default_ca = CA_default
+
+[ CA_default ]
+certificate = $dir/ca.crt
+private_key = $dir/ca.key
+default_days = 365
+default_md = sha256
+preserve = no
+email_in_dn = no
+nameopt = default_ca
+certopt = default_ca
+policy = policy_match
+
+[ policy_match ]
+countryName = optional
+stateOrProvinceName = match
+organizationName = match
+organizationalUnitName = optional
+commonName = supplied
+emailAddress = optional
+
+[ req ]
+default_bits = 1024
+default_keyfile = key.pem
+default_md = sha256
+string_mask = nombstr
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[ req_distinguished_name ]
+0.organizationName = Organisation
+organizationalUnitName = Organisationseinheit
+emailAddress = meine Mail
+emailAddress_max = 40
+localityName = Ort
+stateOrProvinceName = Provinz
+countryName = DE
+countryName_min = 2
+countryName_max = 2
+commonName = host
+commonName_max = 40
+
+[ v3_ca ]
+basicConstraints = CA:TRUE
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer:always
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+subjectKeyIdentifier = hash

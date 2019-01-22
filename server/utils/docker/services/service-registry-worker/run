@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Force unbuffered stdout
+export PYTHONUNBUFFERED=1
+
+exec /sbin/setuser beanstalkd /usr/bin/python /opt/HoneySens/beanstalk/honeysens-service-registry-worker.py /opt/HoneySens/data/config.cfg

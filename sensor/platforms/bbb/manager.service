@@ -1,0 +1,8 @@
+[Unit]
+Description=HoneySens Sensor Manager
+
+[Service]
+ExecStart=/usr/local/bin/manager -p bbb /opt/config.tar.gz
+
+[Install]
+WantedBy=multi-user.target

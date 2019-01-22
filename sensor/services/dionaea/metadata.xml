@@ -1,0 +1,13 @@
+<?xml version='1.0' standalone='yes'?>
+<service>
+    <name>Dionaea Honeypot</name>
+    <repository>honeysens/dionaea</repository>
+    <description>Dionaea is a low interaction honeypot with support for various protocols, notably SMB</description>
+    <architecture>$ARCH</architecture>
+		<rawNetworkAccess>false</rawNetworkAccess>
+		<catchAll>false</catchAll>
+		<portAssignment>{"445/tcp":445}</portAssignment>
+    <revision>$REVISION</revision>
+    <revisionDescription>Based on git revision 93d5bf93d03143c489069bf93216854b44a7d703</revisionDescription>
+</service>
+

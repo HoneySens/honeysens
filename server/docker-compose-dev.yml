@@ -1,0 +1,34 @@
+version: "3"
+services:
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - 443:443
+    networks:
+      - honeysens-dev
+    environment:
+      - BRANDING_ENABLED
+    volumes:
+      - honeysens_dev_data:/srv/data
+      - honeysens_dev_db:/var/lib/mysql
+      - .:/mnt
+
+  honeysens-registry:
+    image: registry:2
+    networks:
+      - honeysens-dev
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    volumes:
+      - honeysens_dev_registry:/var/lib/registry
+
+volumes:
+  honeysens_dev_data:
+  honeysens_dev_db:
+  honeysens_dev_registry:
+
+networks:
+  honeysens-dev:

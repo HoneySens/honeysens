@@ -1,0 +1,133 @@
+\documentclass[12pt]{article}
+\usepackage{a4,amsmath,latexsym,amssymb,textcomp,graphicx,fancyhdr,fancybox,listings,times,paralist,tikz,pgfplots,longtable,color,wrapfig}
+\usepackage[ngerman]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[top=2cm,right=2cm,bottom=2cm,left=2cm]{geometry}
+\usepackage[colorlinks=false,urlcolor=blue]{hyperref}
+
+\definecolor{hsred}{HTML}{D9230F}
+\definecolor{white}{HTML}{FFFFFF}
+
+% Header and footer styling
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{
+	\begin{tikzpicture}[overlay,remember picture]
+		\fill[hsred] (current page.north west) rectangle ($(current page.north east)+(0,-10mm)$);
+		\node[anchor=north west, text=white, minimum size=5mm, inner xsep=18.5mm, inner ysep=3.5mm] at (current page.north west) {HoneySens Administrationshandbuch};
+		\node[anchor=north east, text=white, minimum size=5mm, inner xsep=18.5mm, inner ysep=3.5mm] at (current page.north east) {\thepage};
+	\end{tikzpicture}
+}
+\fancyfoot[C]{}
+
+\newcommand{\bigcell}[2][c]{\begin{tabular}[#1]{@{}l@{}}#2\end{tabular}}
+\usetikzlibrary{calc}
+
+% ToC styling - display sections as subsections and hide subsections
+\makeatletter
+\renewcommand*\l@section{\@dottedtocline{1}{1.5em}{2.3em}}
+\makeatother
+\setcounter{tocdepth}{1}
+
+\begin{document}
+\setlength\parindent{0pt}
+\setlength\parskip{1em}
+\renewenvironment{itemize}{\begin{compactitem}}{\end{compactitem}}
+\renewenvironment{enumerate}{\begin{compactenum}}{\end{compactenum}}
+\pgfplotsset{/pgf/number format/use comma}
+\pgfplotsset{compat=1.5}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\lstset{basicstyle=\ttfamily,frame=single,commentstyle=\color{darkgray}\bfseries}
+\lstdefinelanguage{JavaScript}{
+  keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+  keywordstyle=\color{darkgray}\bfseries,
+  ndkeywords={class, export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{darkgray}\bfseries,
+  identifierstyle=\color{darkgray},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\color{black}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"`
+}
+\begin{titlepage}
+	\begin{tikzpicture}[overlay,remember picture]
+		\fill[hsred] (current page.north west) rectangle ($(current page.north east)+(0,-2mm)$);
+	\end{tikzpicture}
+	\begin{tikzpicture}[overlay,remember picture]
+		\fill[hsred] ($(current page.north west)+(0,-50mm)$) rectangle ($(current page.north east)+(0,-130mm)$);
+	\end{tikzpicture}
+	\par
+	\vspace{4.4cm}
+	\begin{wrapfigure}{r}{0.25\textwidth}
+	\vspace{-2.0cm}
+		\centering
+		\includegraphics[width=0.25\textwidth]{./graphics/honeysens-logo-white.png}\par
+	\end{wrapfigure}
+	{\color{white}
+	{\fontsize{1.3cm}{1.5cm}\selectfont Administration}\par
+		\vspace{0.5cm}
+		{\large für Version 0.2.1}\par
+		{\large Stand: November 2016}
+	}
+	\vfill
+	geschrieben von\\
+	Pascal Brückner
+\end{titlepage}
+
+\pagenumbering{Roman}
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+
+\section{Installation/Update Serverkomponente}
+Die Serversoftware wird in Form eines \textit{Docker}-Containers ausgeliefert. Für die Nutzung von Docker bitte die Dokumentation auf \url{https://docker.com/} berücksichtigen.
+
+\textbf{Hinweis:} In den nachfolgenden Listings bezeichnet \verb|x.y.z| die jeweils aktuelle Version der Serversoftware und muss entsprechend angepasst werden!
+
+Registrieren der (aktualisierten) Server-Software:\\
+\begin{figure}[h]
+	\begin{lstlisting}
+$ docker load -i ./HoneySens-Server-x.y.z.tar.gz
+	\end{lstlisting}
+\end{figure}
+
+Falls es sich um eine Neuinstallation des Servers handelt, muss zunächst ein sog. \textit{Data-only Container} angelegt werden, in dem alle Serverdaten abgelegt werden (u.a. die Inhalte der Datenbank, Sensor-Firmware, die Serverkonfiguration usw).\\
+\begin{figure}[h]
+	\begin{lstlisting}
+$ docker run --name honeysens-data 
+             --entrypoint /bin/echo pbrueckner/honeysens:x.y.z 
+             Data-only container for honeysens
+	\end{lstlisting}
+\end{figure}
+
+Falls hingegen ein Update einer bereits laufenden Server-Software durchgeführt werden soll, ist es zunächst notwendig, den bestehenden Container mit dem Namen \textit{honeysens} zu entfernen:
+\begin{figure}[h]
+	\begin{lstlisting}
+$ docker stop honeysens
+$ docker rm -v honeysens
+	\end{lstlisting}
+\end{figure}
+
+Anschließend wird ein neuer Container mit der aktuellen Server-Software gestartet. Die Pfade für das Serverzertifikat \verb|cert.pem| und den zugehörigen privaten Schlüssel \verb|key.pem| müssen auf die entsprechenden Dateien im lokalen Serversystem (außerhalb des Containers) verweisen. Es ist hierbei wichtig, dass das Zertifikat die \textbf{gesamte Zertifikatskette} vom Serverzertifikat bis zum Root-Zertifikat beinhaltet, damit die Sensoren später den Server korrekt authentifizieren können. Wenn die beiden \verb|--volume|-Optionen weggelassen werden, erzeugt der Server automatisch ein selbstsigniertes Zertifikat.
+\begin{figure}[!h]
+	\begin{lstlisting}
+$ docker run -d -p 80:80 -p 443:443 --name honeysens
+  --volumes-from honeysens-data
+  --privileged
+  --volume /path/to/cert.pem:/opt/HoneySens/data/ssl-cert.pem
+  --volume /path/to/key.pem:/opt/HoneySens/data/ssl-cert.key
+  pbrueckner/honeysens:x.y.z
+	\end{lstlisting}
+\end{figure}
+
+Der Server muss über TCP-Port 80 (HTTP) und 443 (HTTPS) für die Sensoren erreichbar sein. HTTP(S)-Proxy-Server werden unterstützt.
+
+
+\end{document}

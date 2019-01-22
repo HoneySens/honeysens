@@ -1,0 +1,32 @@
+diff -ru a/cowrie.cfg.dist b/cowrie.cfg.dist
+--- a/cowrie.cfg.dist	2017-07-10 10:10:07.000000000 +0200
++++ b/cowrie.cfg.dist	2018-02-05 13:41:31.510199837 +0100
+@@ -20,7 +20,7 @@
+ # environment
+ #
+ # (default: svr04)
+-hostname = svr04
++hostname = s4
+ 
+ 
+ # Directory where to save log files in.
+@@ -86,7 +86,7 @@
+ # TTY logging will log a transcript of the complete terminal interaction in UML
+ # compatible format.
+ # (default: true)
+-ttylog = true
++ttylog = false
+ 
+ 
+ # Interactive timeout determines when logged in sessions are
+@@ -348,8 +348,8 @@
+ 
+ # JSON based logging module
+ #
+-[output_jsonlog]
+-logfile = log/cowrie.json
++#[output_jsonlog]
++#logfile = log/cowrie.json
+ 
+ 
+ # Supports logging to Elasticsearch

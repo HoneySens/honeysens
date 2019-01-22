@@ -1,0 +1,11 @@
+diff -ru a/setup_sdcard.sh b/setup_sdcard.sh
+--- a/setup_sdcard.sh	2018-01-30 14:11:21.009333286 +0100
++++ b/setup_sdcard.sh	2018-01-30 14:19:21.859742105 +0100
+@@ -1522,6 +1522,7 @@
+ 	if [ ! -f ${TEMPDIR}/disk/opt/scripts/boot/generic-startup.sh ] ; then
+ 		git clone https://github.com/RobertCNelson/boot-scripts ${TEMPDIR}/disk/opt/scripts/ --depth 1
+ 		sudo chown -R 1000:1000 ${TEMPDIR}/disk/opt/scripts/
++		patch -d ${TEMPDIR}/disk -p1 < bbb-flasher.patch
+ 	else
+ 		cd ${TEMPDIR}/disk/opt/scripts/
+ 		git pull

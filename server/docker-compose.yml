@@ -1,0 +1,33 @@
+version: "3"
+services:
+
+  honeysens:
+    image: honeysens/server:18.12.01
+    restart: always
+    ports:
+      - 443:443
+    networks:
+      - honeysens
+    volumes:
+      - honeysens_data:/opt/HoneySens/data
+      - honeysens_db:/var/lib/mysql
+      #- <path to https.chain.crt>:/opt/HoneySens/data/https.chain.crt
+      #- <path to https.key>:/opt/HoneySens/data/https.key
+
+  honeysens-registry:
+    image: registry:2
+    restart: always
+    networks:
+      - honeysens
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    volumes:
+      - honeysens_registry:/var/lib/registry
+
+volumes:
+  honeysens_data:
+  honeysens_db:
+  honeysens_registry:
+
+networks:
+  honeysens:

@@ -1,0 +1,10 @@
+--- a/modules/python/CMakeLists.txt
++++ b/modules/python/CMakeLists.txt
+@@ -131,6 +131,7 @@
+         hpfeeds.yaml
+         log_db_sql.yaml.in
+         log_incident.yaml.in
++        log_honeysens.yaml.in
+         log_json.yaml.in
+         log_sqlite.yaml.in
+         nfq.yaml

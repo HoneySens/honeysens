@@ -1,0 +1,5 @@
+#!/bin/bash
+if [[ -e /var/run/apache2.pid ]]; then
+	rm /var/run/apache2.pid
+fi
+exec /usr/sbin/apache2 -D FOREGROUND -k start

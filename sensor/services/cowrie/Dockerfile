@@ -1,0 +1,9 @@
+FROM multiarch/alpine:amd64-v3.7
+MAINTAINER Pascal Brueckner pascal.brueckner@tu-dresden.de
+
+COPY prepare.sh config.patch dont_daemonize.patch honeysens.py cowrie.cfg /home/cowrie/
+RUN /bin/sh /home/cowrie/prepare.sh
+
+USER cowrie
+EXPOSE 2222
+ENTRYPOINT ["/home/cowrie/cowrie-1.2.0/bin/cowrie", "start"]

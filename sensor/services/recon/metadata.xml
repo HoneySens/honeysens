@@ -1,0 +1,12 @@
+<?xml version='1.0' standalone='yes'?>
+<service>
+    <name>Recon catch-all service</name>
+    <repository>honeysens/recon</repository>
+    <description>Recon is a small daemon that responds to and logs any incoming TCP or UDP request on arbitrary ports</description>
+    <architecture>$ARCH</architecture>
+    <rawNetworkAccess>false</rawNetworkAccess>
+    <catchAll>true</catchAll>
+    <portAssignment>{}</portAssignment>
+    <revision>$REVISION</revision>
+    <revisionDescription>Docker and ZeroMQ support</revisionDescription>
+</service>

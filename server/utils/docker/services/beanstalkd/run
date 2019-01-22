@@ -1,0 +1,2 @@
+#!/bin/bash
+exec /sbin/setuser beanstalkd /usr/bin/beanstalkd -l 127.0.0.1 -p 11300

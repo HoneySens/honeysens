@@ -1,0 +1,12 @@
+<?xml version='1.0' standalone='yes'?>
+<service>
+    <name>Cowrie SSH Honeypot</name>
+    <repository>honeysens/cowrie</repository>
+    <description>Cowrie is a medium interaction SSH and Telnet honeypot designed to log brute force attacks and the shell interaction performed by the attacker.</description>
+    <architecture>$ARCH</architecture>
+    <rawNetworkAccess>false</rawNetworkAccess>
+    <catchAll>false</catchAll>
+    <portAssignment>{"2222/tcp":22}</portAssignment>
+    <revision>$REVISION</revision>
+    <revisionDescription>Upstream version 1.2.0 with just SSH enabled</revisionDescription>
+</service>

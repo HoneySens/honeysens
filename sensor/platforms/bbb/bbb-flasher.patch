@@ -1,0 +1,34 @@
+diff -ru a/opt/scripts/tools/eMMC/functions.sh b/opt/scripts/tools/eMMC/functions.sh
+--- a/opt/scripts/tools/eMMC/functions.sh	2018-01-31 15:49:11.948805600 +0100
++++ b/opt/scripts/tools/eMMC/functions.sh	2018-01-31 13:43:15.000000000 +0100
+@@ -316,7 +316,7 @@
+     if [ ! "x${are_we_flasher}" = "x" ] ; then
+       echo_broadcast "We are init"
+       #When run as init
+-      exec /sbin/init
++      exec /sbin/init --unit=reboot.target
+       exit #We should not hit that
+     fi
+     echo_broadcast "Calling shutdown"
+diff -ru a/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh b/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
+--- a/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh	2018-01-31 15:48:11.536572967 +0100
++++ b/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh	2018-01-31 15:50:26.645092222 +0100
+@@ -46,5 +46,18 @@
+ check_eeprom
+ check_running_system
+ activate_cylon_leds
++
++mount -o remount,rw /
++# Copy over the sensor configuration
++find /boot/uboot -maxdepth 1 -name '*.tar.gz' -exec cp {} /opt/config.tar.gz \;
++sync
++if [ ! -f /opt/config.tar.gz ]; then
++  echo "Error: No sensor configuration found, aborting."
++  exit 1
++fi
++# Make SD card unbootable to prepare a reboot into the new system
++mv /boot/uEnv.txt /boot/uEnv.txt.orig
++mount -o remount,ro /
++
+ prepare_drive
+ 

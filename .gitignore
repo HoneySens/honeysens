@@ -1,0 +1,16 @@
+# IDE and VM
+.idea
+.project
+server/.vagrant/*
+server/.settings/*
+
+# 3rd party modules
+server/app/vendor/*
+server/node_modules/*
+
+# Build dirs
+server/out/*
+sensor/platforms/bbb/out/*
+sensor/services/cowrie/out/*
+sensor/services/dionaea/out/*
+sensor/services/recon/out/*

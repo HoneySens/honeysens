@@ -1,0 +1,13 @@
+<?xml version='1.0' standalone='yes'?>
+<firmware>
+  <name>HoneySens BeagleBone Black Firmware</name>
+  <platform>bbb</platform>
+  <version>$REVISION</version>
+  <description>Debian-based firmware that runs dockerized services</description>
+  <changelog>
+    <entry>
+        <version>18.12.01</version>
+        <desc>Support for remote certificate updates</desc>
+    </entry>
+  </changelog>
+</firmware>
