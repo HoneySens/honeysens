@@ -3,11 +3,15 @@ services:
 
   honeysens:
     image: honeysens/server:1.0.2
+    container_name: honeysens-server
     restart: always
     ports:
+      - 80:80
       - 443:443
     networks:
       - honeysens
+    #environment:
+      #- TLS_AUTH_PROXY=172.0.0.1
     volumes:
       - honeysens_data:/opt/HoneySens/data
       - honeysens_db:/var/lib/mysql
@@ -16,6 +20,7 @@ services:
 
   honeysens-registry:
     image: registry:2
+    container_name: honeysens-registry
     restart: always
     networks:
       - honeysens
