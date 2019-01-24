@@ -7,6 +7,7 @@ sed -i 's/password.*/password = honeysens/' /opt/HoneySens/data/config.cfg
 chown -R www-data:www-data /opt/HoneySens/cache/ /opt/HoneySens/data/
 cp -v /opt/HoneySens/utils/docker/apache.http.conf /etc/apache2/sites-available/honeysens_http.conf
 cp -v /opt/HoneySens/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
+cp -v /opt/HoneySens/utils/docker/apache.ssl_proxy_auth.conf /etc/apache2/sites-available/honeysens_ssl_proxy_auth.conf
 
 # Cron and sudo configuration
 cp -v /opt/HoneySens/utils/docker/cron.conf /etc/cron.d/honeysens
