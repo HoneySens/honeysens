@@ -119,11 +119,21 @@ abstract class RESTResource {
      * 2) that belongs to a currently registered sensor (CN equals sensor ID)
      * and return that sensor instance, otherwise return null.
      *
+     * Whether we trust HTTP_SSL_CLIENT_VERIFY set by a remote authenticating proxy or our local SSL_CLIENT_VERIFY
+     * is determined by the X-SSL-PROXY-AUTH controlled by our local apache configuration.
+     *
      * @return null|Sensor
      */
     protected function checkSensorCert() {
-        if(isset($_SERVER['SSL_CLIENT_VERIFY']) && $_SERVER['SSL_CLIENT_VERIFY'] === 'SUCCESS') {
-            $cn = $_SERVER['SSL_CLIENT_S_DN_CN'];
+        $SSL_CLIENT_VERIFY = 'SSL_CLIENT_VERIFY';
+        $SSL_CLIENT_S_DN_CN = 'SSL_CLIENT_S_DN_CN';
+        if(isset($_SERVER['X-SSL-PROXY-AUTH']) && $_SERVER['X-SSL-PROXY-AUTH'] === 'true') {
+            $SSL_CLIENT_VERIFY = 'HTTP_SSL_CLIENT_VERIFY';
+            $SSL_CLIENT_S_DN_CN = 'HTTP_SSL_CLIENT_S_DN_CN';
+        }
+
+        if(isset($_SERVER[$SSL_CLIENT_VERIFY]) && $_SERVER[$SSL_CLIENT_VERIFY] === 'SUCCESS' && isset($_SERVER[$SSL_CLIENT_S_DN_CN])) {
+            $cn = $_SERVER[$SSL_CLIENT_S_DN_CN];
             $sensorID = substr($cn, 1); // Remove first character (CN are currently 's' + sensor id)
             $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($sensorID);
             return $sensor;
