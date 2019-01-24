@@ -20,12 +20,22 @@ class Platform(GenericPlatform):
     config_archive = None
     proxy_cfg_dir = '/etc/systemd/system/docker.service.d'
     proxy_cfg_file = '{}/http-proxy.conf'.format(proxy_cfg_dir)
+    led_exec = '/opt/led.sh'
+    led_status_normal = 'green'
+    led_status_error = 'orange'
+    led_status_incident = 'red'
+    led_status_off = 'off'
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
         print('Initializing platform module: BeagleBone Black')
+        # Switch off the LED initially
+        self.set_led(self.led_status_off)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.apply_config)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.update)
+        hook_mgr.register_hook(constants.Hooks.ON_POLL, self.on_poll)
         hook_mgr.register_hook(constants.Hooks.ON_BEFORE_POLL, self.update_system_time)
+        hook_mgr.register_hook(constants.Hooks.ON_POLL_ERROR, self.on_poll_error)
+        hook_mgr.register_hook(constants.Hooks.ON_EVENT, self.on_event)
         self.interface = interface
         self.config_dir = config_dir
         self.config_archive = config_archive
@@ -90,6 +100,22 @@ class Platform(GenericPlatform):
                     self.restart_systemd_unit('docker')
             # Restart network interfaces
             self.start_systemd_unit('networking')
+
+    def on_poll(self, config_data):
+        if 'unhandledEvents' in config_data and config_data['unhandledEvents']:
+            print('PLATFORM: LED set to incident')
+            self.set_led(self.led_status_incident)
+        else:
+            print('PLATFORM: LED set to normal')
+            self.set_led(self.led_status_normal)
+
+    def on_poll_error(self):
+        print('PLATFORM: LED set to error')
+        self.set_led(self.led_status_error)
+
+    def on_event(self):
+        print('PLATFORM: Event happened, LED set to incident')
+        self.set_led(self.led_status_incident)
 
     def start_systemd_unit(self, unit):
         subprocess.call(['systemctl', 'start', unit])
@@ -162,3 +188,7 @@ class Platform(GenericPlatform):
             except Exception as e:
                 print('PLATFORM: Error during update process ({})'.format(e.message))
                 shutil.rmtree(tempdir)
+
+    def set_led(self, status):
+        if status in [self.led_status_normal, self.led_status_error, self.led_status_incident, self.led_status_off]:
+            subprocess.call([self.led_exec, status])
