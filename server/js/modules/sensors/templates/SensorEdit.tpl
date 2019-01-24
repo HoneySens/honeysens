@@ -220,6 +220,22 @@
                     </div>
                 </div>
                 <% } %>
+                <% if(firmwareExists(2)) { %>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="collapsed" data-toggle="collapse" data-parent="#instructions" href="#instDocker">Docker (x86)</a>
+                        </h4>
+                    </div>
+                    <div id="instDocker" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <p>Für die Einrichtung eines virtuellen Sensors auf Basis von Docker kann an dieser Stelle ein Archiv
+                                heruntergeladen werden, das sowohl das aktuelle Image als auch ein zugehöriges Startskript beinhaltet.</p>
+                            <a class="btn btn-primary btn-block" href="api/platforms/2/firmware/current"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Download Docker-Image</a>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
             </div>
             <% } %>
         </div>
