@@ -15,7 +15,7 @@ class ContactService {
 		$mail = new \PHPMailer();
 		$mail->isSMTP();
 		$mail->Host = $config['smtp']['server'];
-		$mail->Port = 587;
+		$mail->Port = $config['smtp']['port'];
 		$mail->SMTPSecure = 'tls';
 		$smtpUser = $config['smtp']['user'];
 		if($smtpUser != '') {
