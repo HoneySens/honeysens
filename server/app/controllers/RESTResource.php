@@ -129,4 +129,12 @@ abstract class RESTResource {
             return $sensor;
         } else return null;
     }
+
+    /**
+     * Returns the current server TLS certificate data as a string.
+     */
+    public function getServerCert() {
+        $certPath = APPLICATION_PATH . '/../data/https.chain.crt';
+        return file_get_contents($certPath);
+    }
 }

@@ -150,6 +150,11 @@ class Sensors extends RESTResource {
             if(V::attribute('crt_fp', V::stringType())->validate($statusData) && $sensorData['crt_fp'] != $statusData->crt_fp) {
                 $sensorData['sensor_crt'] = $sensor->getCert()->getContent();
             }
+            // If the server cert fingerprint was sent and differs from the current (or soon-to-be) TLS cert, include updated cert data
+            $srvCert = $controller->getServerCert();
+            if(V::attribute('srv_crt_fp', V::stringType())->validate($statusData) && openssl_x509_fingerprint($srvCert, 'sha256') != $statusData->srv_crt_fp) {
+                $sensorData['server_crt'] = $srvCert;
+            }
             echo json_encode($sensorData);
         });
 

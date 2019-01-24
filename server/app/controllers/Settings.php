@@ -36,16 +36,20 @@ class Settings extends RESTResource {
      * Returns the current system-wide settings.
      *
      * @return array
+     * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
 	public function get() {
 		$this->assureAllowed('all');
         // TODO This silently returns nothing if the config is invalid
 		$config = $this->getConfig();
+		$caCert = file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt');
 		$settings = array(
             'id' => 0,
 			'serverHost' => $config['server']['host'],
 			'serverPortHTTPS' => $config['server']['portHTTPS'],
-            'sensorsUpdateInterval' => $config['sensors']['update_interval']
+            'sensorsUpdateInterval' => $config['sensors']['update_interval'],
+            'caFP' => openssl_x509_fingerprint($caCert),
+            'caExpire' => openssl_x509_parse($caCert)['validTo_time_t']
         );
 		// Supply SMTP data only to admins
         if($this->getSessionUserID() == null) {
