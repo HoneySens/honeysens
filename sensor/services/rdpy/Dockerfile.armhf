@@ -1,0 +1,6 @@
+FROM multiarch/alpine:armhf-v3.7
+
+COPY prepare.sh honeysens_log.py rdpy-rdphoneypot.patch out.rss /home/rdpy/
+RUN /bin/sh /home/rdpy/prepare.sh
+
+CMD ["/usr/bin/rdpy-rdphoneypot.py", "/home/rdpy/out.rss"]

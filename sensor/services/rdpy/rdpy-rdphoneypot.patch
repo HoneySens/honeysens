@@ -1,0 +1,59 @@
+--- a/bin/rdpy-rdphoneypot.py
++++ b/bin/rdpy-rdphoneypot.py
+@@ -27,11 +27,12 @@
+ from rdpy.core import log, error, rss
+ from rdpy.protocol.rdp import rdp
+ from twisted.internet import reactor
++from rdpy.core.honeysens_log import HoneySensLogger
+ 
+ log._LOG_LEVEL = log.Level.INFO
+ 
+ class HoneyPotServer(rdp.RDPServerObserver):
+-    def __init__(self, controller, rssFileSizeList):
++    def __init__(self, controller, rssFileSizeList, logger):
+         """
+         @param controller: {RDPServerController}
+         @param rssFileSizeList: {Tuple} Tuple(Tuple(width, height), rssFilePath)
+@@ -40,6 +41,7 @@
+         self._rssFileSizeList = rssFileSizeList
+         self._dx, self._dy = 0, 0
+         self._rssFile = None
++        self._logger = logger
+         
+     def onReady(self):
+         """
+@@ -65,19 +67,20 @@
+         \tpassword : %s
+         \thostname : %s
+         """%(domain, username, password, hostname));
++        self._logger.log_credentials(domain, username, password, hostname)
+         self.start()
+         
+     def onClose(self):
+-        """ HoneyPot """
++        self._logger.commit()
+         
+     def onKeyEventScancode(self, code, isPressed, isExtended):
+-        """ HoneyPot """
++        self._logger.log_key(code, isPressed, isExtended)
+     
+     def onKeyEventUnicode(self, code, isPressed):
+-        """ HoneyPot """
++        self._logger.log('[Unicode event] Code: {}, Pressed: {}'.format(code, isPressed))
+         
+     def onPointerEvent(self, x, y, button, isPressed):
+-        """ HoneyPot """
++        self._logger.log_pointer(x, y, button, isPressed)
+         
+     def start(self):
+         self.loopScenario(self._rssFile.nextEvent())
+@@ -126,7 +129,8 @@
+         @see: rdp.ServerFactory.buildObserver
+         """
+         log.info("Connection from %s:%s"%(addr.host, addr.port))
+-        return HoneyPotServer(controller, self._rssFileSizeList)
++        logger = HoneySensLogger(addr.host, addr.port)
++        return HoneyPotServer(controller, self._rssFileSizeList, logger)
+     
+ def readSize(filePath):
+     """
