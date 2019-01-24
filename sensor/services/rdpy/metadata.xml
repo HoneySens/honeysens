@@ -1,0 +1,12 @@
+<?xml version='1.0' standalone='yes'?>
+<service>
+    <name>RDPy Honeypot</name>
+    <repository>honeysens/rdpy</repository>
+    <description>Remote Desktop Protocol Honeypot</description>
+    <architecture>$ARCH</architecture>
+    <rawNetworkAccess>false</rawNetworkAccess>
+    <catchAll>false</catchAll>
+    <portAssignment>{"3389/tcp":3389}</portAssignment>
+    <revision>$REVISION</revision>
+    <revisionDescription>Based on RDPy version 1.3.2</revisionDescription>
+</service>
