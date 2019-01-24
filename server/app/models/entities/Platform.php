@@ -12,7 +12,8 @@ use HoneySens\app\models\ServiceManager;
  * @Table(name="platforms")
  * @DiscriminatorColumn(name="discr", type="string")
  * @DiscriminatorMap({
- *     "bbb" = "HoneySens\app\models\platforms\BeagleBoneBlack"
+ *     "bbb" = "HoneySens\app\models\platforms\BeagleBoneBlack",
+ *     "docker_x86" = "HoneySens\app\models\platforms\DockerX86"
  * })
  */
 abstract class Platform {

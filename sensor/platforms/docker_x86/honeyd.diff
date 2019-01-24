@@ -1,0 +1,59 @@
+--- honeyd/compat/getopt.h
++++ honeyd/compat/getopt.h
+@@ -40,8 +40,6 @@
+ #ifndef _GETOPT_H_
+ #define _GETOPT_H_
+ 
+-#include <sys/cdefs.h>
+-
+ /*
+  * GNU-like getopt_long() and 4.4BSD getsubopt()/optreset extensions
+  */
+@@ -63,7 +61,10 @@
+ 	int val;
+ };
+ 
+-__BEGIN_DECLS
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ int	 getopt_long(int, char * const *, const char *,
+ 	    const struct option *, int *);
+ int	 getopt_long_only(int, char * const *, const char *,
+@@ -80,6 +81,8 @@
+ extern   int optreset;
+ extern   char *suboptarg;               /* getsubopt(3) external variable */
+ #endif
+-__END_DECLS
++#ifdef __cplusplus
++}
++#endif
+  
+ #endif /* !_GETOPT_H_ */
+--- honeyd/compat/sha1.h
++++ honeyd/compat/sha1.h
+@@ -15,9 +15,10 @@
+     unsigned char buffer[64];
+ } SHA1_CTX;
+ 
+-#include <sys/cdefs.h>
++#ifdef __cplusplus
++extern "C" {
++#endif
+ 
+-__BEGIN_DECLS
+ void SHA1Transform(u_int32_t [5], const unsigned char [64])
+ #ifdef __OpenBSD__
+ 		__attribute__((__bounded__(__minbytes__,1,5)))
+@@ -51,7 +52,9 @@
+ 		__attribute__((__bounded__(__minbytes__,3,41)))
+ #endif
+ ;
+-__END_DECLS
++#ifdef __cplusplus
++}
++#endif
+ 
+ #define SHA1_DIGESTSIZE       20
+ #define SHA1_BLOCKSIZE        64
