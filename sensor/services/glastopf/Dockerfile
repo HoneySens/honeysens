@@ -1,0 +1,7 @@
+FROM multiarch/alpine:amd64-v3.7
+MAINTAINER Pascal Brueckner pascal.brueckner@sylence.cc
+
+COPY glastopf.cfg log_honeysens.py prepare.sh run.sh openssl.conf stunnel.conf /root/
+RUN /bin/sh /root/prepare.sh
+
+CMD /opt/run.sh

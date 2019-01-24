@@ -1,0 +1,12 @@
+<?xml version='1.0' standalone='yes'?>
+<service>
+    <name>Glastopf Web Application Honeypot</name>
+    <repository>honeysens/glastopf</repository>
+    <description>Glastopf is a Python web application honeypot founded by Lukas Rist.</description>
+    <architecture>$ARCH</architecture>
+    <rawNetworkAccess>false</rawNetworkAccess>
+    <catchAll>false</catchAll>
+    <portAssignment>{"80/tcp":80, "443/tcp":443}</portAssignment>
+    <revision>$REVISION</revision>
+    <revisionDescription>Based on git revision 508729202428a35bcc6bb27dd97b831f7e5009b5</revisionDescription>
+</service>
