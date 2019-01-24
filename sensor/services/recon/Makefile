@@ -1,5 +1,5 @@
 PREFIX := HoneySens-recon
-REVISION := 18.12.01
+REVISION := 1.0.0
 OUTDIR := out
 METADATA := metadata.xml
 

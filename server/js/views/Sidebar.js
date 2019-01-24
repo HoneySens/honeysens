@@ -34,9 +34,7 @@ function(HoneySens, SidebarTpl) {
             },
             templateHelpers: {
                 showVersion: function() {
-                    // Only show the major and minor version numbers
-                    version = HoneySens.data.system.get('version').split('.');
-                    return version[0] + '.' + version[1];
+                    return HoneySens.data.system.get('version');
                 }
             }
         });
