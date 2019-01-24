@@ -1,0 +1,12 @@
+<?xml version='1.0' standalone='yes'?>
+<service>
+    <name>Conpot ICS Honeypot</name>
+    <repository>honeysens/conpot</repository>
+    <description>Conpot is an honeypot with the goal to collect intelligence about the motives and methods of adversaries targeting industrial control systems.</description>
+    <architecture>$ARCH</architecture>
+    <rawNetworkAccess>false</rawNetworkAccess>
+    <catchAll>false</catchAll>
+    <portAssignment>{"80/tcp":80, "102/tcp":102, "502/tcp":502, "47808/udp":47808}</portAssignment>
+    <revision>$REVISION</revision>
+    <revisionDescription>Based on git revision 783422a47a20d93e6a14b1b432e59872930fc03d</revisionDescription>
+</service>

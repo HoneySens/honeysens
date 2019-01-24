@@ -1,0 +1,28 @@
+--- a/conpot/testing.cfg
++++ b/conpot/testing.cfg
+@@ -5,8 +5,8 @@
+ timeout = 30
+ 
+ [daemon]
+-;user = conpot
+-;group = conpot
++user = conpot
++group = conpot
+ 
+ [json]
+ enabled = False
+@@ -49,10 +49,13 @@
+ use_https = False
+ 
+ [fetch_public_ip]
+-enabled = True
++enabled = False
+ urls = ["http://whatismyip.akamai.com/", "http://wgetip.com/"]
+ 
+ [change_mac_addr]
+ enabled = False
+ iface = eth0
+ addr = 00:de:ad:be:ef:00
++
++[honeysens]
++enabled = True
