@@ -41,18 +41,26 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4 class="panel-title">
-                <a class="collapsed" data-toggle="collapse" data-parent="#maintenance" href="#dbupdate">Schema-Update</a>
+                <a class="collapsed" data-toggle="collapse" data-parent="#maintenance" href="#caupdate">Certificate Authority</a>
             </h4>
         </div>
-        <div id="dbupdate" class="panel-collapse collapse">
+        <div id="caupdate" class="panel-collapse collapse">
             <div class="panel-body">
-                <div class="pull-right">
-                    <button type="button" class="updateDB btn btn-primary btn-sm" data-loading-text="Update...">
-                        Update
-                    </button>
-                </div>
-                Mit dieser Funktion wird das interne Datenbankschema aktualisiert. Nutzen Sie diese Funktion nach dem Aufspielen
-                einer neuen Serverrevision, um den bestehenden Datenbestand in das neue Format zu konvertieren.
+                <p>Mit dieser Funktion wird ein neues CA-Zertifikat generiert, was eine Aktualisierung aller Zertifikate
+                    dieser HoneySens-Installation nach sich zieht. Dies wird erforderlich, wenn sich das derzeit genutzte
+                    Zertifikat seinem Ablaufdatum annähert. Nach dem Start des Prozesses wird die Webanwendung automatisch
+                    neu geladen.
+                </p>
+                <hr />
+                <p>
+                    <strong>SHA1-Fingerprint des aktuellen Zertifikats:</strong> <%- showCaFP() %><br />
+                    <strong>Gültigkeit bis:</strong> <%- showCaExpire() %>
+                </p>
+                <hr />
+                <p><strong>Achtung: Dieser Vorgang kann nicht r&uuml;ckg&auml;ngig gemacht werden!</strong></p>
+                <button type="button" class="refreshCA btn btn-primary btn-block" data-loading-text="In Bearbeitung...">
+                    Zertifikate verl&auml;ngern
+                </button>
             </div>
         </div>
     </div>

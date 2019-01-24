@@ -9,7 +9,7 @@ function(HoneySens, MaintenanceView, SettingsView, OverviewTpl) {
             regions: {settings: 'div.settings', maintenance: 'div.maintenance'},
             onRender: function() {
                 this.getRegion('settings').show(new SettingsView({model: this.model}));
-                this.getRegion('maintenance').show(new MaintenanceView());
+                this.getRegion('maintenance').show(new MaintenanceView({model: this.model}));
             }
         });
     });

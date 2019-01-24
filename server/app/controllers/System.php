@@ -61,11 +61,10 @@ class System extends RESTResource {
         });
         */
 
-        $app->put('/api/system/db', function() use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/system/ca', function() use ($app, $em, $services, $config, $messages) {
             $controller = new System($em, $services, $config);
-            $messages = array();
-            $controller->updateDBSchema($messages, $em);
-            echo json_encode(array('messages' => $messages));
+            $controller->refreshCertificates($em);
+            echo json_encode([]);
         });
 
         $app->post('/api/system/install', function() use ($app, $em, $services, $config, $messages) {
@@ -210,6 +209,15 @@ class System extends RESTResource {
         }
     }
 
+    /**
+     * Currently unused legacy function that performs a schema update on the DB.
+     * That's identical to using the doctrine CLI and issuing a schema update there.
+     * Left here for potential debugging purposes.
+     *
+     * @param $messages
+     * @param $em
+     * @throws ForbiddenException
+     */
     function updateDBSchema(&$messages, $em) {
         // This can only be invoked from an admin session
         if($_SESSION['user']['role'] != User::ROLE_ADMIN) {
@@ -224,6 +232,39 @@ class System extends RESTResource {
     }
 
     /**
+     * Performs the certificate recreation process:
+     * 1. Creation of a new CA certificate from an existing key and regeneration of all sensor certificates (keeping their private keys).
+     * 2. For self-signed setups: Creation of a new TLS certificate and signing that with the new CA.
+     * 3. Restart of affected services.
+     *
+     * @param $em
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     */
+    function refreshCertificates($em) {
+        // This can only be invoked from an admin session
+        if($_SESSION['user']['role'] != User::ROLE_ADMIN) {
+            throw new ForbiddenException();
+        }
+        $caKeyPath = APPLICATION_PATH . '/../data/CA/ca.key';
+        $caCrtPath = APPLICATION_PATH . '/../data/CA/ca.crt';
+        if(!file_exists($caKeyPath)) {
+            throw new BadRequestException();
+        }
+        // Create new CA cert from existing private key
+        exec('/etc/my_init.d/02_regen_honeysens_ca.sh force');
+        // Recreate TLS certificates
+        exec('/etc/my_init.d/03_regen_https_cert.sh force');
+        // Recreate sensor certs signed with the new CA cert
+        $sensorController = new Sensors($em, $this->getServiceManager(), $this->getConfig());
+        foreach($em->getRepository('HoneySens\app\models\entities\Sensor')->findAll() as $sensor) {
+            $sensorController->regenerateCert($sensor, $caCrtPath);
+        }
+        // Restart affected services
+        exec('sudo ' . APPLICATION_PATH . '/scripts/restart.sh');
+    }
+
+    /**
      * Performs the initial configuration of a newly installed system.
      * Expects an object with the following parameters:
      * {
@@ -235,6 +276,7 @@ class System extends RESTResource {
      * @param $data
      * @return array
      * @throws ForbiddenException
+     * @throws BadRequestException
      */
     function install($data) {
         $em = $this->getEntityManager();

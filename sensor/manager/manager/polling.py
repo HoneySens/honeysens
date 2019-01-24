@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import binascii
-import cryptography
 import fcntl
 import json
 import os
@@ -68,11 +67,16 @@ def get_ip_address(iface):
 
 
 def collect_data():
-    # Certificate fingerpring
+    # Client certificate fingerprinting
     with open('{}/{}'.format(_config_dir, _config.get('general', 'certfile')), 'r') as f:
         sensor_crt_src = f.read()
     sensor_crt = x509.load_pem_x509_certificate(sensor_crt_src, default_backend())
     sensor_crt_fp = binascii.hexlify(sensor_crt.fingerprint(hashes.SHA256()))
+    # Server certificate fingerprinting
+    with open('{}/{}'.format(_config_dir, _config.get('server', 'certfile')), 'r') as f:
+        server_crt_src = f.read()
+    server_crt = x509.load_pem_x509_certificate(server_crt_src, default_backend())
+    server_crt_fp = binascii.hexlify(server_crt.fingerprint(hashes.SHA256()))
     # Analyze RAM usage
     p = subprocess.Popen(['free', '-m'], stdout=subprocess.PIPE)
     out, err = p.communicate()
@@ -87,6 +91,7 @@ def collect_data():
     return {'timestamp': int(time.time()),
             'status': status_code,
             'crt_fp': sensor_crt_fp,
+            'srv_crt_fp': server_crt_fp,
             'ip': get_ip_address(_interface),
             'free_mem': free_mem,
             'disk_usage': disk_usage,
@@ -97,8 +102,11 @@ def collect_data():
 def send_data(data):
     signing_key = open('{}/{}'.format(_config_dir, _config.get('general', 'keyfile')), 'r').read()
     crt_fp = data['crt_fp']
-    del data['crt_fp']
-    post_data = {'sensor': _config.get('general', 'sensor_id'), 'crt_fp': crt_fp, 'status': communication.encode_data(json.dumps(data).encode('ascii')), 'signature': communication.sign_data(signing_key, data)}
+    srv_crt_fp = data['srv_crt_fp']
+    del data['crt_fp'], data['srv_crt_fp']
+    post_data = {'sensor': _config.get('general', 'sensor_id'), 'crt_fp': crt_fp, 'srv_crt_fp': srv_crt_fp,
+                 'status': communication.encode_data(json.dumps(data).encode('ascii')),
+                 'signature': communication.sign_data(signing_key, data)}
     return communication.perform_https_request(_config, _config_dir, 'api/sensors/status', communication.REQUEST_TYPE_POST, post_data=post_data)
 
 
@@ -150,11 +158,16 @@ def update_config(config_data):
     # Save new config
     with open('{}/honeysens.cfg'.format(_config_dir), 'w') as f:
         _config.write(f)
-    # Certificate update
+    # Client certificate update
     if 'sensor_crt' in config_data:
-        print('New certificate received, saving to disk')
+        print('New client certificate received, saving to disk')
         with open('{}/{}'.format(_config_dir, _config.get('general', 'certfile')), 'w') as f:
             f.write(str(config_data['sensor_crt']))
+    # Server certificate update
+    if 'server_crt' in config_data:
+        print('New server certificate received, saving to disk')
+        with open('{}/{}'.format(_config_dir, _config.get('server', 'certfile')), 'w') as f:
+            f.write(str(config_data['server_crt']))
     # Rewrite config archive
     # TODO Track if a config option was changed and only do that when necessary
     with tarfile.open(_config_archive, 'w:gz') as config_archive:
