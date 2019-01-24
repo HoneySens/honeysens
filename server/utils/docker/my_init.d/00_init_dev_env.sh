@@ -95,3 +95,6 @@ sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/my_init.d/02_regen_honeysens_ca.sh /e
 echo "Adjusting permissions so that /srv/data is writeable for the web server"
 chown -R www-data:www-data /srv/data
 chmod -R 777 /srv/data
+
+echo "Adjusting sudo configuration"
+cp -v /srv/utils/docker/sudoers.conf /etc/sudoers.d/honeysens

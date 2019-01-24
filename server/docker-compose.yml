@@ -2,7 +2,7 @@ version: "3"
 services:
 
   honeysens:
-    image: honeysens/server:18.12.01
+    image: honeysens/server:1.0.2
     restart: always
     ports:
       - 443:443

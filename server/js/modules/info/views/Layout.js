@@ -8,6 +8,11 @@ function(HoneySens, Regions, LayoutTpl) {
             template: LayoutTpl,
             regions: {
                 content: 'div.content'
+            },
+            initialize: function() {
+                this.listenTo(HoneySens.vent, 'info:shown', function() {
+                    this.$el.find('span.title').html('HoneySens');
+                });
             }
         });
     });

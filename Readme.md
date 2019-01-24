@@ -1,6 +1,6 @@
 ![HoneySens](logo.png?raw=true "HoneySens Logo")
-# HoneySens Community Edition
-HoneySens is a honeypot management platform that supports the deployment of various open source honeypots on a variety of hardware and software architectures. This repository contains the freely available Community Edition (CE), which ships with a limited number of honeypot services and currently only supports deployment on BeagleBone devices. The Community Edition forms the basis for the commercial distribution of HoneySens, which can be obtained from [T-Systems Multimedia Solutions](https://honeysens.de). With each new release, features from the commercial version are backported to the Community Edition.
+# HoneySens
+HoneySens is a honeypot management platform that supports the deployment of various open source honeypots on different hardware and software platforms.
 
 ## Architecture
 Each HoneySens installation features a containerized server instance that is used to manage and evaluate events from attached honeypots. The honeypots themselves run within containers on so-called *sensors*, which can be physical or virtual systems running a management process that talks to the server and controls the locally running honeypot containers (*services*). Sensor management as well as the evaluation of event data collected from honeypot services is performed through a web interface offered by the server. HTTPS is the exclusive connection channel for the communication between sensor and server, thus minimizing the dependency of 3rd party network infrastructure. HoneySens is designed for the deployment and management of honeypots in small or medium-sized corporate IP landscapes and mainly meant to detect intruders that originate from within the network. A deployment of sensors with public-facing IP addresses is possible, but might just overwhelm the user with thousands of unfiltered (and mostly uncritical) events per hour. Use at your own risk.
@@ -8,13 +8,18 @@ Each HoneySens installation features a containerized server instance that is use
 ![architecture](architecture.png?raw=true "HoneySens architecture")
 
 ## Features
-The HoneySens Community Edition offers a reduced feature set in comparison to the commercial version, particularly in terms of the supported sensor platforms: Right now, the [BeagleBone Black](https://beagleboard.org/black) is the only available candidate. However, firmware for additional platforms will be made available in the future.
+Supported Sensor platforms:
+* [BeagleBone Black](https://beagleboard.org/black)
+* [Docker (x86)](https://www.docker.com/products/docker-engine)
 
 In terms of honeypot software, we adapt popular open source honeypots so that they are compatible with the event submission API offered by our sensor management daemon (which is in turn part of each sensor firmware). Honeypots are then deployed as *services* to sensors, the exact distribution being the responsibility of the administrator.
 
-The Community Edition currently ships with modules for the following honeypots:
+We currently ship with modules for the following honeypots:
+* [conpot](https://github.com/mushorg/conpot)
 * [cowrie](https://github.com/cowrie/cowrie)
 * [dionea](https://github.com/DinoTools/dionaea)
+* [glastopf](https://github.com/mushorg/glastopf)
+* [rdpy](https://github.com/citronneur/rdpy)
 
 In addition to that, HoneySens offers the *recon* service, which is essentially a catch-all daemon that responds to all TCP/UDP requests received by a sensor that are not handled already by any other running honeypot service.
 
@@ -32,14 +37,22 @@ To initiate the build process, launch make from within the `server/` directory i
 After the build process is complete, the resulting Docker images `honeysens/server-dev` and `honeysens/server` are available on your system.
 
 ### Sensor
-The build process for the sensor firmware depends heavily on the sensor platform. For the BeagleBone Black, our build process relies on the [OMAP image builder](https://github.com/RobertCNelson/omap-image-builder) project. Since the image builder only supports building on ARM devices ([source](https://github.com/RobertCNelson/omap-image-builder/issues/118)), we recommended to do so as well. Apart from GNU make and git, the build process only relies on tools that are typically part of a default Linux installation. Consult the Makefile for details.
+The build process for the sensor firmware depends heavily on the sensor platform. 
+
+#### BeagleBone Black
+Here, the build process relies on the [OMAP image builder](https://github.com/RobertCNelson/omap-image-builder) project. Since the image builder only supports building on ARM devices ([source](https://github.com/RobertCNelson/omap-image-builder/issues/118)), we recommended to do so as well. Apart from GNU make and git, the build process only relies on tools that are typically part of a default Linux installation. Consult the Makefile for details.
 
 To initiate the BeagleBone Black firmware build process, `cd` to the directory `sensor/platforms/bbb/` and execute `make`. If the build was successful, the resulting firmware tarball can be found in `sensor/platforms/bbb/out/dist/`. The target `make clean` can be utilized to clean the `out/` directory.
+
+#### Docker (x86)
+To build a dockerized sensors image, `cd` into the directory `sensor/patforms/docker_x86` and issue `make`. This will generate and register a docker image as `honeysens/sensorx86:<revision>`. Additionally, a firmware archive ready to be uploaded to the HoneySens web interface will be written to `sensor/platforms/docker_x86/out/dist/`. The target `make clean` can also be utilized to clean the build directory.
+
+A sensor update and deployment script 1s supplied under `sensor/platforms/docker_x86/launcher/launch.py`.
 
 ### Services
 In the HoneySens architecture, *services* denominate low-interaction honeypots that are deployed as Docker containers to sensors. Depending on the hardware platform of each sensor, these dockerized honeypots can be built for multiple architectures (currently `amd64` and `armhf`). Since the build process is done entirely within containers, a recent installation of the [Docker Engine](https://www.docker.com/products/docker-engine) and GNU make are sufficient to build each service, even cross-platform.
 
-To build a service, simply `cd` to the service directory, such as `sensor/services/recon/`, and issue `make amd64`, `make armhf` or `make all`. Please keep in mind that HoneySens CE currently only supports the ARM-based BeagleBone Black platform, which is why only the `armhf` version might be of use. After a successful build, the resulting service tarball(s) can be found in `sensor/services/<service>/out/dist/`. They contain the docker image together with some additional metadata about the honeypot service itself and are ready to be uploaded to the HoneySens web interface. The resulting docker images will also be registered on the build host within the `honeysens/<service>` namespace. The target `make clean` can be utilized to clean the `out/` directory.
+To build a service, simply `cd` to the service directory, such as `sensor/services/recon/`, and issue `make amd64`, `make armhf` or `make all`. Please keep in mind that HoneySens currently only supports the ARM-based BeagleBone Black platform, which is why only the `armhf` version might be of use. After a successful build, the resulting service tarball(s) can be found in `sensor/services/<service>/out/dist/`. They contain the docker image together with some additional metadata about the honeypot service itself and are ready to be uploaded to the HoneySens web interface. The resulting docker images will also be registered on the build host within the `honeysens/<service>` namespace. The target `make clean` can be utilized to clean the `out/` directory.
 
 ## Deployment
 First ensure that the server image has been registered on the target host (either after a build done on the same host or with `docker load`).  For the actual deployment, usage of [Docker Compose](https://docs.docker.com/compose/) is recommended. The `server/` directory contains a file `docker-compose.yml` that can be used as a blueprint for a deployment. Please consult that file and adjust as necessary. Afterwards, simply change to that directory and issue `docker-compose up` to initiate the deployment process. This will start two containers, one for the API and web interface, the other one hosts the internal service registry.
