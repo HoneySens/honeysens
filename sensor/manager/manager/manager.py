@@ -23,7 +23,7 @@ from . import hooks
 from . import polling
 from . import services
 from . import state
-from .platforms import dummy, bbb
+from .platforms import dummy, bbb, docker
 from .utils import constants
 
 manager = None
@@ -80,6 +80,8 @@ class Manager:
     def init_platform(self):
         if self.platform == 'bbb':
             self.platform = bbb.Platform(hooks, self.interface, self.config_dir, self.config_archive)
+        elif self.platform == 'docker':
+            self.platform = docker.Platform(hooks, self.interface, self.config_dir, self.config_archive)
         else:
             self.platform = dummy.Platform(hooks, self.interface, self.config_dir, self.config_archive)
 

@@ -1,0 +1,22 @@
+#!/usr/bin/env python2
+
+import ConfigParser
+import os
+
+honeysens_cfg_path = '/honeysens.cfg'  # The manager is responsible for the /honeysens.cfg symlink
+
+# Add proxy environment data if required
+if os.path.isfile(honeysens_cfg_path):
+    config = ConfigParser.ConfigParser()
+    try:
+        config.readfp(open(honeysens_cfg_path))
+        if config.get('proxy', 'mode') == '1':
+            os.environ['HTTP_PROXY'] = 'http://127.0.0.1:3128/'
+            os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:3128/'
+            print('Proxy registered: {}'.format(os.environ['HTTPS_PROXY']))
+    except Exception as e:
+        print('Error: Could not parse configuration')
+        exit()
+
+# Second argument is the process display name
+os.execlp('docker', 'docker', 'daemon')

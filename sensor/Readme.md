@@ -1,9 +1,9 @@
 # HoneySens Sensor
 Sources for building platform-dependent sensors. The general idea here is that
 for each platform there exists a process how firmware has to be built, e.g.
-BeagleBones use images to be written on SD cards as regular containers. During each of 
-those build processes the manager daemon is installed, which later on performs 
-its own platform-specific routines, if necessary.
+BeagleBones use images to be written on SD cards and dockerized sensors are built
+as regular containers. During each of those build processes the manager daemon is
+installed, which later on performs its own platform-specific routines, if necessary.
 
 Honeypot software itself is run within "service" containers, which is why each platform
 has to provide the means to run docker containers.

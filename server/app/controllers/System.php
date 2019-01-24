@@ -251,6 +251,7 @@ class System extends RESTResource {
         // Persistence
         $connection = $em->getConnection();
         $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("1", "bbb", "BeagleBone Black", "BeagleBone Black is a low-cost, community-supported development platform.", "bbb")')->execute();
+        $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("2", "docker_x86", "Docker (x86)", "Dockerized sensor platform to be used on generic x86 hardware.", "docker_x86")')->execute();
         $admin = $em->getRepository('HoneySens\app\models\entities\User')->find(1);
         $admin->setPassword(sha1($data->password));
         $config->set('server', 'host', $data->serverEndpoint);

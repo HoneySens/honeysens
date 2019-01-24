@@ -1,0 +1,16 @@
+#!/usr/bin/with-contenv sh
+
+if [ -z "$CONFIG_FILE" ]; then
+  echo "Error: Environment variable CONFIG_FILE is not set"
+  exit 1
+fi
+
+IFACE=""
+if [ -n "$INTERFACE" ]; then
+    IFACE="-i $INTERFACE"
+fi
+
+# Force unbuffered stdout
+export PYTHONUNBUFFERED=1
+
+exec manager -p docker $IFACE /etc/manager/$CONFIG_FILE
