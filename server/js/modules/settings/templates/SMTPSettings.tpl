@@ -1,7 +1,13 @@
 <form class="serverConfig form-group">
-    <div class="form-group">
-        <label for="smtpServer" class="control-label">Server</label>
-        <input type="text" name="smtpServer" class="form-control" value="<%- smtpServer %>" placeholder="Hostname oder IP-Adresse" />
+    <div class="row">
+        <div class="col-sm-6 form-group">
+            <label for="smtpServer" class="control-label">Server</label>
+            <input type="text" name="smtpServer" class="form-control" value="<%- smtpServer %>" placeholder="Hostname oder IP-Adresse" />
+        </div>
+        <div class="col-sm-6 form-group">
+            <label class="control-label">Port</label>
+            <input type="text" name="smtpPort" class="form-control" value="<%- smtpPort %>" placeholder="25/587" />
+        </div>
     </div>
     <div class="form-group">
         <label class="control-label">Absender</label>

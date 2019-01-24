@@ -55,6 +55,7 @@ class Settings extends RESTResource {
         if($this->getSessionUserID() == null) {
             $settings['smtpEnabled'] = $config->getBoolean('smtp', 'enabled');
 			$settings['smtpServer'] = $config['smtp']['server'];
+			$settings['smtpPort'] = $config['smtp']['port'];
 			$settings['smtpFrom'] = $config['smtp']['from'];
 			$settings['smtpUser'] = $config['smtp']['user'];
 			$settings['smtpPassword'] = $config['smtp']['password'];
@@ -75,6 +76,7 @@ class Settings extends RESTResource {
      *
      * @param \stdClass $data
      * @return array
+     * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
 	public function update($data) {
 		$this->assureAllowed('update');
@@ -87,12 +89,14 @@ class Settings extends RESTResource {
             ->check($data);
        if($data->smtpEnabled) {
            V::attribute('smtpServer', V::stringType())
+               ->attribute('smtpPort', V::intVal()->between(0, 65535))
                ->attribute('smtpFrom', V::email())
                ->attribute('smtpUser', V::optional(V::stringType()))
                ->attribute('smtpPassword', V::stringType())
                ->check($data);
        } else {
            V::attribute('smtpServer', V::optional(V::stringType()))
+               ->attribute('smtpPort', V::optional(V::intVal()->between(0, 65535)))
                ->attribute('smtpFrom', V::optional(V::email()))
                ->attribute('smtpUser', V::optional(V::stringType()))
                ->attribute('smtpPassword', V::optional(V::stringType()))
@@ -104,6 +108,7 @@ class Settings extends RESTResource {
         $config->set('server', 'portHTTPS', $data->serverPortHTTPS);
         $config->set('smtp', 'enabled', $data->smtpEnabled ? 'true' : 'false');
         $config->set('smtp', 'server', $data->smtpServer);
+        $config->set('smtp', 'port', $data->smtpPort);
         $config->set('smtp', 'from', $data->smtpFrom);
         $config->set('smtp', 'user', $data->smtpUser);
         $config->set('smtp', 'password', $data->smtpPassword);
@@ -116,6 +121,7 @@ class Settings extends RESTResource {
             'serverPortHTTPS' => $config['server']['portHTTPS'],
             'smtpEnabled' => $config->getBoolean('smtp', 'enabled'),
             'smtpServer' => $config['smtp']['server'],
+            'smtpPort' => $config['smtp']['port'],
             'smtpFrom' => $config['smtp']['from'],
             'smtpUser' => $config['smtp']['user'],
             'smtpPassword' => $config['smtp']['password'],
@@ -129,12 +135,13 @@ class Settings extends RESTResource {
         V::objectType()
             ->attribute('recipient', V::stringType())
             ->attribute('smtpServer', V::stringType())
+            ->attribute('smtpPort', V::intVal()->between(0, 65535))
             ->attribute('smtpUser', V::optional(V::stringType()))
             ->attribute('smtpFrom', V::optional(V::stringType()))
             ->attribute('smtpPassword', V::optional(V::stringType()))
             ->check($data);
         // Send mail
         $contactService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
-        $contactService->sendTestMail($data->recipient, $data->smtpServer, 587, $data->smtpUser, $data->smtpPassword, $data->smtpFrom);
+        $contactService->sendTestMail($data->recipient, $data->smtpServer, $data->smtpPort, $data->smtpUser, $data->smtpPassword, $data->smtpFrom);
     }
 }

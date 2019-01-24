@@ -36,6 +36,12 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
                                 notEmpty: {}
                             }
                         },
+                        smtpPort: {
+                            validators: {
+                                notEmpty: {},
+                                between: {min: 0, max: 65535, message: 'Gültige Portnummern: 0-65535'}
+                            }
+                        },
                         smtpFrom: {
                             validators: {
                                 notEmpty: {},
@@ -51,10 +57,12 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
                         return;
                     }
                     var smtpServer = view.$el.find('input[name="smtpServer"]').val(),
+                        smtpPort = view.$el.find('input[name="smtpPort"]').val(),
                         smtpFrom = view.$el.find('input[name="smtpFrom"]').val(),
                         smtpUser = view.$el.find('input[name="smtpUser"]').val(),
                         smtpPassword = view.$el.find('input[name="smtpPassword"]').val(),
-                        changedAttributes = {smtpServer: smtpServer, smtpFrom: smtpFrom, smtpUser: smtpUser, smtpPassword: smtpPassword};
+                        changedAttributes = {smtpServer: smtpServer, smtpPort: smtpPort, smtpFrom: smtpFrom,
+                            smtpUser: smtpUser, smtpPassword: smtpPassword};
                     if(view.submitTestMail) {
                         var smtpModel = new Backbone.Model();
                         smtpModel.url = function() {return 'api/settings/testmail'};
