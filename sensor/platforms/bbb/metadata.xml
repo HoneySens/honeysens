@@ -6,6 +6,10 @@
   <description>Debian-based firmware that runs dockerized services</description>
   <changelog>
     <entry>
+        <version>1.0.5</version>
+        <desc>Fixed a bug that prevented service downloads through proxies</desc>
+    </entry>
+    <entry>
         <version>1.0.4</version>
         <desc>Support for remote server certificate updates</desc>
     </entry>
