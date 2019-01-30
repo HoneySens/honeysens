@@ -14,7 +14,7 @@ RUN apk --no-cache add libevent-dev libdnet-dev libpcap-dev pcre-dev libedit-dev
 RUN apk add 'docker>17.05.0' --no-cache --repository http://nl.alpinelinux.org/alpine/v3.6/community
 RUN apk add 'docker-py>2.3.0' --no-cache --repository http://nl.alpinelinux.org/alpine/v3.6/community
 RUN apk add macchanger --no-cache --repository http://nl.alpinelinux.org/alpine/v3.6/community
-RUN apk add cntlm --no-cache --repository http://nl.alpinelinux.org/alpine/edge/testing
+RUN apk add cntlm --no-cache --repository http://nl.alpinelinux.org/alpine/v3.9/community
 
 COPY manager /opt/manager
 COPY platforms/docker_x86/prepare.sh platforms/docker_x86/install_arpd.sh platforms/docker_x86/honeyd.diff platforms/docker_x86/arpd.diff platforms/docker_x86/ifup.sh /root/
