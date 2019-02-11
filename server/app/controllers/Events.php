@@ -329,7 +329,7 @@ class Events extends RESTResource {
 		// Send mails for each incident
 		$mailService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
 		foreach($events as $event) {
-            $mailService->sendIncident($config, $em, $event);
+            if($em->contains($event)) $mailService->sendIncident($config, $em, $event);
 		}
 		return $events;
 	}
