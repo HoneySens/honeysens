@@ -33,10 +33,13 @@ class ContactService {
 	
 	public function sendIncident($config, $em, $event) {
         if($config['smtp']['enabled'] != 'true') return;
+        $division = $event->getSensor()->getDivision();
 	    $qb = $em->createQueryBuilder();
 	    $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c')
             ->where('c.sendAllEvents = :all')
-            ->setParameter('all', true);
+            ->andWhere('c.division = :division')
+            ->setParameter('all', true)
+            ->setParameter('division', $division);
         if($event->getClassification() >= $event::CLASSIFICATION_LOW_HP) {
             $qb->orWhere('c.sendCriticalEvents = :critical')
                 ->setParameter('critical', true);
