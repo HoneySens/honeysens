@@ -12,6 +12,7 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
         Views.SensorList = Marionette.LayoutView.extend({
             template: SensorListTpl,
             className: 'row',
+            servicesEditable: false,
             regions: {
                 groupFilter: 'div.groupFilter',
                 list: 'div.table-responsive'
@@ -23,11 +24,14 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                 },
                 'click button.toggleServiceEdit': function(e) {
                     e.preventDefault();
-                    this.$el.find('input[type="checkbox"]').attr('disabled', !this.$el.find('input[type="checkbox"]').attr('disabled'));
+                    this.servicesEditable = !this.servicesEditable;
+                    this.$el.find('input[type="checkbox"]').attr('disabled', !this.servicesEditable);
+                    this.$el.find('span.serviceEditLabel').html(this.servicesEditable ? 'sperren' : 'bearbeiten');
                 }
             },
             onRender: function() {
-                var columns = [{
+                var view = this,
+                    columns = [{
                     name: 'id',
                     label: 'ID',
                     editable: false,
@@ -68,52 +72,52 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                     })
                 }];
                 // Service columns
-                //if(HoneySens.assureAllowed('sensors', 'update')) {
-                    HoneySens.data.models.services.forEach(function (service) {
-                        columns.push({
-                            name: service.id,
-                            label: service.get('name'),
-                            editable: false,
-                            sortable: false,
-                            cell: Backgrid.Cell.extend({
-                                template: SensorListServiceCellTpl,
-                                events: {
-                                    'change input[type="checkbox"]': function (e) {
-                                        e.preventDefault();
-                                        var services = this.model.get('services');
-                                        if ($(e.target).is(':checked')) {
-                                            if (!_.contains(_.pluck(services, 'service'), service.id)) services.push({
-                                                service: service.id,
-                                                revision: null
-                                            });
-                                        } else {
-                                            services = _.without(services, _.find(services, function (s) {
-                                                return s.service == service.id
-                                            }));
-                                        }
-                                        this.model.save({services: services}, {wait: true});
+                HoneySens.data.models.services.forEach(function (service) {
+                    columns.push({
+                        name: service.id,
+                        label: service.get('name'),
+                        editable: false,
+                        sortable: false,
+                        cell: Backgrid.Cell.extend({
+                            template: SensorListServiceCellTpl,
+                            events: {
+                                'change input[type="checkbox"]': function (e) {
+                                    e.preventDefault();
+                                    var services = this.model.get('services');
+                                    if ($(e.target).is(':checked')) {
+                                        if (!_.contains(_.pluck(services, 'service'), service.id)) services.push({
+                                            service: service.id,
+                                            revision: null
+                                        });
+                                    } else {
+                                        services = _.without(services, _.find(services, function (s) {
+                                            return s.service == service.id
+                                        }));
                                     }
-                                },
-                                render: function () {
-                                    this.$el.html(this.template(this.model.attributes));
-                                    // Check if service is set on the model
-                                    if (_.contains(_.pluck(this.model.get('services'), 'service'), service.id)) {
-                                        this.$el.find('input[type="checkbox"]').prop('checked', true);
-                                    }
-                                    return this;
+                                    this.model.save({services: services}, {wait: true});
                                 }
-                            }),
-                            headerCell: Backgrid.HeaderCell.extend({
-                                className: 'rotated',
-                                render: function () {
-                                    Backgrid.HeaderCell.prototype.render.apply(this);
-                                    this.$el.wrapInner('<div><span class="serviceLabel"></span></div>');
-                                    return this;
+                            },
+                            render: function () {
+                                this.$el.html(this.template(this.model.attributes));
+                                // Check if service is set on the model
+                                if (_.contains(_.pluck(this.model.get('services'), 'service'), service.id)) {
+                                    this.$el.find('input[type="checkbox"]').prop('checked', true);
                                 }
-                            })
-                        });
+                                // Enable/disable checkbox depending on editing mode
+                                this.$el.find('input[type="checkbox"]').attr('disabled', !view.servicesEditable);
+                                return this;
+                            }
+                        }),
+                        headerCell: Backgrid.HeaderCell.extend({
+                            className: 'rotated',
+                            render: function () {
+                                Backgrid.HeaderCell.prototype.render.apply(this);
+                                this.$el.wrapInner('<div><span class="serviceLabel"></span></div>');
+                                return this;
+                            }
+                        })
                     });
-                //}
+                });
                 // Status and actions columns
                 columns.push({
                     label: 'Status',
