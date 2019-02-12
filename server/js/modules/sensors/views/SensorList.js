@@ -20,6 +20,10 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                 'click button.add': function(e) {
                     e.preventDefault();
                     HoneySens.request('sensors:add');
+                },
+                'click button.toggleServiceEdit': function(e) {
+                    e.preventDefault();
+                    this.$el.find('input[type="checkbox"]').attr('disabled', !this.$el.find('input[type="checkbox"]').attr('disabled'));
                 }
             },
             onRender: function() {
