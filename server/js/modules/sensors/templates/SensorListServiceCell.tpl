@@ -1,1 +1,1 @@
-<input type="checkbox" <% if(_.templateHelpers.isAllowed('sensors', 'update') == false) { %>disabled<% } %>/>
+<input type="checkbox" disabled="disabled" />
