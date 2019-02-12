@@ -2,7 +2,7 @@ version: "3"
 services:
 
   honeysens:
-    image: honeysens/server:1.0.2
+    image: honeysens/server:1.0.3
     container_name: honeysens-server
     restart: always
     ports:

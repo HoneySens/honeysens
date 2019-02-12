@@ -226,6 +226,11 @@ while True:
         config.set('smtp', 'port', '25')
         config.set('server', 'config_version', '1.0.2')
         config_version = '1.0.2'
+    # 1.0.2 -> 1.0.3
+    if config_version == '1.0.2':
+        print('Upgrading configuration 1.0.2 -> 1.0.3')
+        config.set('server', 'config_version', '1.0.3')
+        config_version = '1.0.3'
 
     # Write new config file
     config.set('server', 'config_version', server_version)

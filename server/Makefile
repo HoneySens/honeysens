@@ -1,5 +1,5 @@
 PREFIX := HoneySens-Server
-REVISION := 1.0.2
+REVISION := 1.0.3
 OUTDIR := out
 
 dist: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar
