@@ -9,8 +9,11 @@ server/app/vendor/*
 server/node_modules/*
 
 # Build dirs
-server/out/*
-sensor/platforms/bbb/out/*
-sensor/services/cowrie/out/*
-sensor/services/dionaea/out/*
-sensor/services/recon/out/*
+server/out/
+sensor/platforms/bbb/out/
+sensor/services/conpot/out/
+sensor/services/cowrie/out/
+sensor/services/dionaea/out/
+sensor/services/glastopf/out/
+sensor/services/rdpy/out/
+sensor/services/recon/out/
