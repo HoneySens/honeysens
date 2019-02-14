@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Initializes this container based on a HoneySens server repository mounted under /mnt
 
-if [ ! -f /mnt/Gruntfile.js ]; then
+if [[ ! -f /mnt/Gruntfile.js ]]; then
     echo "Error: /mnt/Gruntfile.js not found, please mount the server sources under /mnt"
     exit 1
 fi
@@ -18,7 +18,7 @@ echo "Grunt target: $GRUNT_TARGET"
 echo "Assembling project in /srv"
 cp /mnt/Gruntfile.js /mnt/package.json /srv
 npm install --prefix /srv
-grunt $GRUNT_TARGET --base /srv --gruntfile /srv/Gruntfile.js --src="/mnt" --dst="/srv" --force
+grunt ${GRUNT_TARGET} --base /srv --gruntfile /srv/Gruntfile.js --src="/mnt" --dst="/srv" --force
 
 if [[ ! -z "$BUILD_ONLY" ]]; then
     echo "BUILD_ONLY is set, removing build artifacts and exiting"
@@ -33,7 +33,7 @@ cp -v /srv/utils/docker/apache.* /etc/apache2/sites-available/
 sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/apache2/sites-available/apache.ssl.conf /etc/apache2/sites-available/apache.http.conf
 a2ensite apache.http apache.ssl
 
-if [ ! -f /srv/data/config.cfg ]; then
+if [[ ! -f /srv/data/config.cfg ]]; then
     echo "Adjusting HoneySens configuration"
     cp -v /srv/data/config.clean.cfg /srv/data/config.cfg
     sed -i -e 's/password.*/password = honeysens/' -e 's#certfile.*#certfile = /srv/data/https.chain.crt#' -e 's#app_path.*#app_path = /srv#' -e 's/debug.*/debug = true/' /srv/data/config.cfg
@@ -52,12 +52,8 @@ sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/service/sensorcfg-creation-worker/run
 mkdir /etc/service/grunt-watch
 cat > /etc/service/grunt-watch/run << DELIMITER
 #!/bin/bash
-if [[ ! -z "\$GRUNT_SIMPLE_WATCH" && "\$GRUNT_SIMPLE_WATCH" = "yes" ]]; then
-	WATCH_TARGET="simple-watch"
-else
-	WATCH_TARGET="watch"
-fi
-exec /usr/local/bin/grunt \$WATCH_TARGET --base /srv --gruntfile /srv/Gruntfile.js --src="/mnt" --dst="/srv" --force
+echo "Grunt watch task: \$DEV_WATCH_TASK"
+exec /usr/local/bin/grunt \$DEV_WATCH_TASK --base /srv --gruntfile /srv/Gruntfile.js --src="/mnt" --dst="/srv" --force
 DELIMITER
 chmod +x /etc/service/grunt-watch/run
 mkdir /etc/service/motd

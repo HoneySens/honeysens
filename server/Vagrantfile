@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
     d.build_dir = "."
     d.dockerfile = "Dockerfile.dev"
     d.build_args = ["-t", "honeysens/server-dev:1.0.3"]
-    d.create_args = ["-e", "BRANDING_ENABLED=no", "-e", "GRUNT_SIMPLE_WATCH=yes"]
+    d.create_args = ["-e", "BRANDING_ENABLED=no", "-e", "DEV_WATCH_TASK=simple-watch"]
     d.ports = ["80:80", "443:443"]
     d.force_host_vm = true
     d.vagrant_vagrantfile = "Vagrantfile.boot2docker"
