@@ -10,14 +10,15 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
-    grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-latex');
     grunt.loadNpmTasks('grunt-mkdir');
     grunt.loadNpmTasks('grunt-shell');
-    // grunt-simple-watch is a replacement for grunt-contrib-watch that utilizes a different polling mechanism
+    // Watch task backends
+    grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-simple-watch');
+    grunt.loadNpmTasks('grunt-chokidar');
 
-    grunt.initConfig({
+    var gruntConfig = {
         pkg: grunt.file.readJSON('package.json'),
         stylesheets: [
             srcPrefix + '/css/bootstrap.css',
@@ -191,9 +192,13 @@ module.exports = function(grunt) {
                 options: { spawn: false }
             }
         }
-    });
+    };
+    // Supply watch options to the chokidar task
+    gruntConfig.chokidar = gruntConfig.watch;
 
-    // only work on updated files
+    grunt.initConfig(gruntConfig);
+
+    // Watch for changes and adjust tasks accordingly
     var changedAppFiles = Object.create(null),
         onAppChange = grunt.util._.debounce(function(path) {
             grunt.config('copy.app.src', Object.keys(changedAppFiles));
@@ -203,20 +208,21 @@ module.exports = function(grunt) {
         onJSChange = grunt.util._.debounce(function(path) {
             grunt.config('copy.js.src', Object.keys(changedJSFiles));
             changedJSFiles = Object.create(null);
-        });
-    grunt.event.on('watch', function(action, filepath) {
-	// Slice the source prefix from filepath so that the resulting path lies within copy.(app|js).cwd
-	filepath = filepath.slice(filepath.indexOf(srcPrefix) + srcPrefix.length + 1);
-        if(grunt.file.isMatch('app/**', filepath)  ) {
-            if(!grunt.file.isMatch('app/index.php', filepath)) {
-                changedAppFiles[filepath] = action;
+        }, 200),
+        watchEvent = grunt.cli.tasks.indexOf('chokidar') > -1 ? 'chokidar' : 'watch';
+    grunt.event.on(watchEvent, function(action, filepath) {
+        // Slice the source prefix from filepath so that the resulting path lies within copy.(app|js).cwd
+        filepath = filepath.slice(filepath.indexOf(srcPrefix) + srcPrefix.length + 1);
+            if(grunt.file.isMatch('app/**', filepath)  ) {
+                if(!grunt.file.isMatch('app/index.php', filepath)) {
+                    changedAppFiles[filepath] = action;
+                }
+                onAppChange();
+            } else if(grunt.file.isMatch('js/**', filepath)) {
+                // Slice 'js/' from filepath
+                changedJSFiles[filepath.slice(3)] = action;
+                onJSChange();
             }
-            onAppChange();
-        } else if(grunt.file.isMatch('js/**', filepath)) {
-            // Slice 'js/' from filepath
-            changedJSFiles[filepath.slice(3)] = action;
-            onJSChange();
-        }
     });
 
     grunt.registerTask('docs', [

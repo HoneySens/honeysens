@@ -11,6 +11,7 @@ services:
       - honeysens-dev
     environment:
       - BRANDING_ENABLED
+      - DEV_WATCH_TASK
     volumes:
       - honeysens_dev_data:/srv/data
       - honeysens_dev_db:/var/lib/mysql
