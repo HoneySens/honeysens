@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>1.0.3</dd>
+        <dd>1.0.4</dd>
         <dt>Lizenz</dt>
         <dd><a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0 Software License</a></dd>
         <dt>Entwicklung</dt>
@@ -46,6 +46,14 @@
             </div>
             <div id="releasenotes" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong><br/>
+                    <p>
+                    <ul>
+                        <li>Dienste-Refkonfiguration in der Sensor&uuml;bersicht ist jetzt global sperrbar</li>
+                        <li>Fehlerkorrektur im Zusammenhang mit dem automatischen Mailversand</li>
+                    </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong><br/>
                     <p>Anpassung des Impressums</p>
                     <hr />

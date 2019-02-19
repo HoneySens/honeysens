@@ -231,6 +231,11 @@ while True:
         print('Upgrading configuration 1.0.2 -> 1.0.3')
         config.set('server', 'config_version', '1.0.3')
         config_version = '1.0.3'
+    # 1.0.3 -> 1.0.4
+    if config_version == '1.0.3':
+        print('Upgrading configuration 1.0.3 -> 1.0.4')
+        config.set('server', 'config_version', '1.0.4')
+        config_version = '1.0.4'
 
     # Write new config file
     config.set('server', 'config_version', server_version)
