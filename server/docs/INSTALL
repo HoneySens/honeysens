@@ -1,0 +1,36 @@
+--------------------
+- HoneySens Server -
+-   Installation   -
+--------------------
+
+Eine HoneySens-Serverinstallation besteht derzeit aus einer Reihe von Docker-Containern, die mittels Docker Compose
+gestartet und verwaltet werden. Eine aktuelle Installation der Docker Engine und von Docker Compose sind somit
+Voraussetzung zum Betrieb. Einige benötigte Images sind frei verfügbar und können direkt aus dem Internet bezogen werden,
+bspw. die Docker-Registry. Falls auf dem Zielsystem kein direkter Internetzugang besteht, sollten diese zusätzlichen
+Images auf einem anderen Host zunächst mittels "docker pull" heruntergeladen, dann über "docker save" gespeichert und
+auf dem Zielhost mit "docker load" wieder geladen werden. Für Details genügt ein Blick in das beiliegende
+Compose-File, docker-compose.yml.
+
+Die üblichen Schritte zur Inbetriebnahme einer neuen Serverinstallation:
+
+1. Server-Image laden:
+docker load -i server-<version>.tar
+
+2. Compose-File anpassen
+Alle für die beiden Container benötigten Parameter lassen sich aus dem Compose-File ableiten.
+Falls ein individuelles TLS-Schlüsselpaar für den Server genutzt werden soll, kann dies hier ebenfalls als
+Volume/Bind-mount an den angegebenen Pfad spezifiziert werden. Alternativ generiert der Server beim Start
+ein selbstsigniertes TLS-Zertifikat.
+
+Hinweis: Wichtig ist, dass für die Container die im Compose-File angegebenen Namen "honeysens" und "honeysens-registry"
+beibehalten werden, da sich beide im User-defined-network "honeysens" über diese Namen zu erreichen versuchen.
+
+3. Starten:
+docker-compose up
+
+4. Installation prüfen:
+Auf Port 443 kann über HTTPS das Webinterface angesprochen werden.
+Bei einer Erstinstallation führt ein Assistent durch vier Einrichtungsschritte, anschließend ist die Login-Seite
+sichtbar und es kann die Anmeldung am System erfolgen. Hier ist zu überprüfen, ob links in der Sidebar unter dem
+Menüpunkt "Dienste" die "Service-Registry" als "Online" (grün) angezeigt wird. Ist dies der Fall,
+kommunizieren beide Container erfolgreich.
