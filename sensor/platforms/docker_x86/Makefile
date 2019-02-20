@@ -8,9 +8,9 @@ default: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 clean:
 	rm -rf ${OUTDIR}
 
-${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/firmware.img ${OUTDIR}/build/metadata.xml | DIR.${OUTDIR}/dist
-	cp -v launcher/launch.py ${OUTDIR}/build/
-	tar -czf $@ -C ${OUTDIR}/build/ firmware.img metadata.xml launch.py
+${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/firmware.img ${OUTDIR}/build/metadata.xml ${OUTDIR}/build/docker-compose.yml | DIR.${OUTDIR}/dist
+	mkdir -p ${OUTDIR}/build/conf
+	tar -czf $@ -C ${OUTDIR}/build/ firmware.img metadata.xml docker-compose.yml conf/
 
 ${OUTDIR}/build/firmware.img: | DIR.${OUTDIR}/build
 	docker build --build-arg REVISION=${REVISION} -t honeysens/sensorx86:${REVISION} -f Dockerfile ../../
@@ -18,6 +18,9 @@ ${OUTDIR}/build/firmware.img: | DIR.${OUTDIR}/build
 
 ${OUTDIR}/build/metadata.xml: | DIR.${OUTDIR}/build
 	sed 's/$$REVISION/${REVISION}/' metadata.xml > $@
+
+${OUTDIR}/build/docker-compose.yml: | DIR.${OUTDIR}/build
+	sed 's/$$REVISION/${REVISION}/' docker-compose.yml > $@
 
 DIR.${OUTDIR}/%:
 	mkdir -p $(@:DIR.%=%)

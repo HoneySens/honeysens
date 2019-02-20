@@ -5,8 +5,6 @@ DEFAULT_IFACE = 'eth0'
 COLLECTOR_PORT = '5556'
 CFG_SYMLINK = '/honeysens.cfg'
 REVISION_MARKER = '/revision'  # File that marks the current revision
-UPDATE_FW_DESTINATION = '/mnt/firmware'  # Where to store newly downloaded firmware
-UPDATE_TAG_DESTINATION = '/mnt/tag'  # A file that contains the tag of the updated firmware
 
 
 class Hooks:

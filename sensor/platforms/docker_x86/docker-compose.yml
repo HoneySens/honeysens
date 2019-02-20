@@ -1,0 +1,17 @@
+services:
+  sensor:
+    environment:
+    - CONFIG_FILE
+    - PREV_PREFIX
+    - HOST_PWD
+    image: honeysens/sensorx86:1.0.4
+    privileged: true
+    restart: unless-stopped
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.host.sock
+    - ${HOST_PWD}:/mnt
+    - ${HOST_PWD}/conf:/etc/manager
+    - docker_overlay:/var/lib/docker
+version: '3'
+volumes:
+  docker_overlay: null

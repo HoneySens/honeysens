@@ -10,6 +10,9 @@
 #make
 #make install
 
+# Docker Compose
+pip install docker-compose
+
 # Build sensor manager
 mkdir /etc/manager
 cd /opt/manager

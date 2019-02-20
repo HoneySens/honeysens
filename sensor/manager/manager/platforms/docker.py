@@ -6,10 +6,20 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import time
+import yaml
 
 from manager.platforms.generic import GenericPlatform
 from manager.utils import communication
 from manager.utils import constants
+
+# We expect this to be the host's docker socket that is mounted into the sensor container
+HOST_DOCKER_SOCKET = 'unix:///var/run/docker.host.sock'
+# Project directory that contains the files docker-compose.yml and .env that belong to this sensor deployment,
+# usually mounted as volume from the host fs
+COMPOSEFILE_DIR = '/mnt'
+# Path to store newly downloaded firmware
+UPDATE_FW_DESTINATION = '/tmp/firmware'
 
 
 class Platform(GenericPlatform):
@@ -20,6 +30,7 @@ class Platform(GenericPlatform):
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
         print('Initializing platform module: Docker')
+        hook_mgr.register_hook(constants.Hooks.ON_INIT, self.cleanup_prev_sensor)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.update_resolv_conf)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.apply_config)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.update)
@@ -37,6 +48,17 @@ class Platform(GenericPlatform):
             subprocess.call(['s6-svc', '-wr', '-t', '-u', '/var/run/s6/services/docker/'])
         else:
             subprocess.call(['s6-svc', '-wu', '-u', '/var/run/s6/services/docker/'])
+
+    # Only used during unattended updates: Removes artifacts of the previous (now unused) sensor container
+    def cleanup_prev_sensor(self):
+        if 'PREV_PREFIX' in os.environ:
+            print('PLATFORM: Cleaning up sensor artifacts with prefix {}'.format(os.environ['PREV_PREFIX']))
+            subprocess.call(['/usr/bin/docker-compose',
+                             '-H', HOST_DOCKER_SOCKET,
+                             '-p', os.environ['PREV_PREFIX'],
+                             'down', '-v'],
+                            cwd=COMPOSEFILE_DIR,
+                            env=os.environ.copy())
 
     def update_resolv_conf(self, config, server_response, reset_network):
         # DNS is provided via go-dnsmasq, but dockerd does its own DNS resolution by interpreting 'domain'
@@ -83,7 +105,7 @@ class Platform(GenericPlatform):
 
     def update(self, config, server_response, reset_network):
         # Don't update if an update is already scheduled
-        if os.path.isfile(constants.UPDATE_FW_DESTINATION) and os.path.isfile(constants.UPDATE_TAG_DESTINATION):
+        if os.path.isfile(UPDATE_FW_DESTINATION):
             print('PLATFORM: Firmware update already scheduled')
             return
         if 'firmware' in server_response and 'docker_x86' in server_response['firmware']:
@@ -104,12 +126,44 @@ class Platform(GenericPlatform):
                         fw_archive.extractall(tempdir)
                     if not os.path.isfile('{}/firmware.img'.format(tempdir)):
                         raise Exception()
-                    print('PLATFORM: Moving firmware to {}'.format(constants.UPDATE_FW_DESTINATION))
-                    shutil.move('{}/firmware.img'.format(tempdir), constants.UPDATE_FW_DESTINATION)
-                    os.chmod(constants.UPDATE_FW_DESTINATION, 0666)
-                    print('PLATFORM: Writing new image tag {} to {}'.format(target_revision, constants.UPDATE_TAG_DESTINATION))
-                    with open(constants.UPDATE_TAG_DESTINATION, 'w') as f:
-                        f.write(target_revision)
+                    print('PLATFORM: Moving firmware to {}'.format(UPDATE_FW_DESTINATION))
+                    shutil.move('{}/firmware.img'.format(tempdir), UPDATE_FW_DESTINATION)
+                    os.chmod(UPDATE_FW_DESTINATION, 0666)
+                    print('PLATFORM: Loading new firmware')
+                    subprocess.call(['/usr/bin/docker', '-H', HOST_DOCKER_SOCKET, 'load', '-i', UPDATE_FW_DESTINATION])
+                    next_project = 'hs_{}_{}'.format(config.get('general', 'sensor_id'), int(time.time()))
+                    print('PLATFORM: Launching new sensor container within compose prefix {}'.format(next_project))
+                    # Update compose file with the new image version
+                    with open('{}/docker-compose.yml'.format(COMPOSEFILE_DIR)) as f:
+                        compose_content = yaml.load(f)
+                    compose_content['services']['sensor']['image'] = 'honeysens/sensorx86:{}'.format(target_revision)
+                    with open('{}/docker-compose.yml'.format(COMPOSEFILE_DIR), 'w') as f:
+                        yaml.dump(compose_content, f, default_flow_style=False)
+                    # Create a unique compose project name for the new sensor deployment
+                    with open('{}/.env'.format(COMPOSEFILE_DIR), 'r') as f:
+                        current_project = f.read().strip().split('=')[1]
+                    with open('{}/.env'.format(COMPOSEFILE_DIR), 'w') as f:
+                        f.write('COMPOSE_PROJECT_NAME={}'.format(next_project))
+                    # Set PREV_PREFIX to the current compose prefix so that the new container can properly clean up
+                    new_env = os.environ.copy()
+                    new_env['PREV_PREFIX'] = current_project
+
+                    print(new_env)
+
+                    subprocess.call(['/usr/bin/docker-compose',
+                                     '-H', HOST_DOCKER_SOCKET,
+                                     'up', '-d'],
+                                    cwd=COMPOSEFILE_DIR,
+                                    env=new_env)
+                    # Shut the old sensor (ourselves) down
+                    subprocess.call(['/usr/bin/docker-compose',
+                                     '-H', HOST_DOCKER_SOCKET,
+                                     '-p', current_project,
+                                     'down'],
+                                    cwd=COMPOSEFILE_DIR,
+                                    env=os.environ.copy())
                 except Exception as e:
                     print('PLATFORM: Error during update process ({})'.format(e.message))
                     shutil.rmtree(tempdir)
+                    if os.path.isfile(UPDATE_FW_DESTINATION):
+                        os.remove(UPDATE_FW_DESTINATION)
