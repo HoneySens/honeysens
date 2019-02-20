@@ -22,6 +22,7 @@ _catchall_target = None # The service instance that netfilter currently redirect
 
 
 def init(config_dir, config, hook_mgr, platform, interface):
+    print('Initializing service module')
     global _config_dir, _config, _platform, _interface
     _config_dir = config_dir
     _config = config
@@ -30,7 +31,6 @@ def init(config_dir, config, hook_mgr, platform, interface):
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, register_registry_cert)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, enable_docker)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, apply_services)
-    print('Initializing service module')
 
 
 def start(service):

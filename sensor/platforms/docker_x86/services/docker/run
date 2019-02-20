@@ -19,4 +19,4 @@ if os.path.isfile(honeysens_cfg_path):
         exit()
 
 # Second argument is the process display name
-os.execlp('docker', 'docker', 'daemon')
+os.execlp('dockerd', 'dockerd')
