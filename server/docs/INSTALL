@@ -26,7 +26,7 @@ Hinweis: Wichtig ist, dass für die Container die im Compose-File angegebenen Na
 beibehalten werden, da sich beide im User-defined-network "honeysens" über diese Namen zu erreichen versuchen.
 
 3. Starten:
-docker-compose up
+docker-compose up -d
 
 4. Installation prüfen:
 Auf Port 443 kann über HTTPS das Webinterface angesprochen werden.
