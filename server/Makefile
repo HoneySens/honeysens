@@ -19,11 +19,11 @@ ${OUTDIR}/dev/docker-compose: | DIR.${OUTDIR}/dev
 	chmod +x $@
 	$@ --version
 
-${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/server-${REVISION}.tar ${OUTDIR}/build/docker-compose.yml | DIR.${OUTDIR}/dist
-	cp -v docs/INSTALL ${OUTDIR}/build/
-	tar -czf $@ -C ${OUTDIR}/build/ server-${REVISION}.tar docker-compose.yml INSTALL
+${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/${PREFIX}-${REVISION}/server-${REVISION}.tar ${OUTDIR}/build/${PREFIX}-${REVISION}/docker-compose.yml | DIR.${OUTDIR}/dist
+	cp -v docs/INSTALL ${OUTDIR}/build/${PREFIX}-${REVISION}/
+	tar -czf $@ -C ${OUTDIR}/build/ ${PREFIX}-${REVISION}/
 
-${OUTDIR}/build/server-${REVISION}.tar: ${OUTDIR}/web/data/config.cfg | DIR.${OUTDIR}/build
+${OUTDIR}/build/${PREFIX}-${REVISION}/server-${REVISION}.tar: ${OUTDIR}/web/data/config.cfg | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
 	docker build -t honeysens/server:${REVISION} .
 	docker save -o $@ honeysens/server:${REVISION}
 
@@ -32,7 +32,7 @@ ${OUTDIR}/web/data/config.cfg: | DIR.$(OUTDIR)/web
 	docker run -v $(shell pwd):/mnt -v $(shell pwd)/${OUTDIR}/web:/srv -e BUILD_ONLY=1 --rm honeysens/server-dev:${REVISION} || true
 	cp ${OUTDIR}/web/data/config.clean.cfg ${OUTDIR}/web/data/config.cfg
 
-${OUTDIR}/build/docker-compose.yml: | DIR.${OUTDIR}/build
+${OUTDIR}/build/${PREFIX}-${REVISION}/docker-compose.yml: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
 	sed 's/$$REVISION/${REVISION}/' docker-compose.yml > $@
 
 DIR.${OUTDIR}/%:
