@@ -36,13 +36,15 @@ class ContactService {
         $division = $event->getSensor()->getDivision();
 	    $qb = $em->createQueryBuilder();
 	    $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c')
-            ->where('c.sendAllEvents = :all')
-            ->andWhere('c.division = :division')
-            ->setParameter('all', true)
+            ->where('c.division = :division')
             ->setParameter('division', $division);
         if($event->getClassification() >= $event::CLASSIFICATION_LOW_HP) {
-            $qb->orWhere('c.sendCriticalEvents = :critical')
+            $qb->andWhere('c.sendAllEvents = :all OR c.sendCriticalEvents = :critical')
+                ->setParameter('all', true)
                 ->setParameter('critical', true);
+        } else {
+            $qb->andWhere('c.sendAllEvents = :all')
+                ->setParameter('all', true);
         }
         $contacts = $qb->getQuery()->getResult();
 		if(count($contacts) == 0) return array('success' => true);
