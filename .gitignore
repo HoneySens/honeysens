@@ -11,6 +11,7 @@ server/node_modules/*
 # Build dirs
 server/out/
 sensor/platforms/bbb/out/
+sensor/platforms/docker_x86/out/
 sensor/services/conpot/out/
 sensor/services/cowrie/out/
 sensor/services/dionaea/out/

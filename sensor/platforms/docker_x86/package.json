@@ -1,0 +1,14 @@
+{
+  "name": "dockerized_sensor",
+  "version": "1.0.0",
+  "description": "Dockerized Sensor for HoneySens",
+  "author": "Pascal Brückner",
+  "devDependencies": {
+    "grunt": "^1.0.3",
+    "grunt-chokidar": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-shell": "^3.0.1",
+    "grunt-simple-watch": "^0.1.3"
+  }
+}

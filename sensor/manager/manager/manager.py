@@ -36,15 +36,17 @@ class Manager:
     config_dir = None
     interface = None
     platform = None
+    skip_init = None
     zmq_context = zmq.Context()
     events = {}
     events_lock = threading.Lock()
 
-    def __init__(self, config_archive, interface, platform):
+    def __init__(self, config_archive, interface, platform, skip_init):
         self.config_archive = config_archive
         self.init_config()
         self.init_interface(interface)
         self.platform = platform  # Temporarily save the name of the requested platform here, after start() the instance
+        self.skip_init = skip_init
 
     def init_config(self):
         if not os.path.isfile(self.config_archive):
@@ -91,7 +93,7 @@ class Manager:
         hooks.execute_hook(constants.Hooks.ON_INIT)
         # Apply initial configuration
         print('Applying initial configuration')
-        state.apply_config(self.config, {}, True)
+        state.apply_config(self.config, {}, self.skip_init is not True)
         # Polling
         polling.start(self.config_dir, self.config, self.config_archive, self.interface, self.platform)
         event_processor.start(self.config_dir, self.config, self.events, self.events_lock)
@@ -121,10 +123,11 @@ def main():
     parser.add_argument('config', help='Sensor configuration archive')
     parser.add_argument('-i', '--interface', help='Network interface to use')
     parser.add_argument('-p', '--platform', help='Platform module')
+    parser.add_argument('-s', '--skip-init', action='store_true', help='Skips initial networking initialization (development use only)')
     args = parser.parse_args()
     # Register SIGINT handler
     signal.signal(signal.SIGINT, sigint_handler)
-    manager = Manager(args.config, args.interface, args.platform)
+    manager = Manager(args.config, args.interface, args.platform, args.skip_init)
     manager.start()
 
 
