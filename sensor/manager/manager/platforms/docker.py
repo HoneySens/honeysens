@@ -147,9 +147,6 @@ class Platform(GenericPlatform):
                     # Set PREV_PREFIX to the current compose prefix so that the new container can properly clean up
                     new_env = os.environ.copy()
                     new_env['PREV_PREFIX'] = current_project
-
-                    print(new_env)
-
                     subprocess.call(['/usr/bin/docker-compose',
                                      '-H', HOST_DOCKER_SOCKET,
                                      'up', '-d'],

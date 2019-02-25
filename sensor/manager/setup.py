@@ -13,12 +13,13 @@ setup(
     packages=find_packages(),
     install_requires=[
         'colorama',
+        'debinterface',
         'docker',
         'netifaces',
         'pycrypto',
         'pycurl',
-        'pyzmq',
-        'debinterface'
+        'pyyaml',
+        'pyzmq'
     ],
     entry_points={
         'console_scripts': [

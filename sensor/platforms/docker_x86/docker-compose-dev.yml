@@ -1,0 +1,18 @@
+version: "3"
+services:
+
+  sensor:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      - DEV_WATCH_TASK
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.host.sock
+      - ../../:/mnt
+      - ./conf:/etc/manager
+      - docker_overlay:/var/lib/docker
+
+volumes:
+  docker_overlay: null

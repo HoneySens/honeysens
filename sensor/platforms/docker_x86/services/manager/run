@@ -1,8 +1,16 @@
 #!/usr/bin/with-contenv sh
 
+CONFIG_FILE=$(find /etc/manager -type f -print -mindepth 1 -maxdepth 1 | head -1)
 if [ -z "$CONFIG_FILE" ]; then
-  echo "Error: Environment variable CONFIG_FILE is not set"
+  echo "Error: No config file found"
   exit 1
+else
+  echo "Using config file $CONFIG_FILE"
+fi
+
+if [ "$SKIP_INIT" ]; then
+  echo "Development mode: Skipping network initialization"
+  SKIP_INIT="-s"
 fi
 
 IFACE=""
@@ -13,4 +21,4 @@ fi
 # Force unbuffered stdout
 export PYTHONUNBUFFERED=1
 
-exec manager -p docker $IFACE /etc/manager/$CONFIG_FILE
+exec manager -p docker $SKIP_INIT $IFACE $CONFIG_FILE
