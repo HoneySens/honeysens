@@ -11,14 +11,17 @@ import time
 from .utils import constants
 
 
+IPTABLES_PATH = '/sbin/iptables'
+# Name of the iptables sensor chain managed by this process
+IPTABLES_CHAIN_LABEL = 'SENSOR'
+
 _config_dir = None
 _config = None
 _docker = None
 _services = None  # service_name -> {'container': container ID || None, 'image': image}
 _platform = None  # An instance of the current platform module
 _interface = None
-_iptables_exec = '/sbin/iptables'
-_catchall_target = None # The service instance that netfilter currently redirects packets to
+_catchall_target = None  # The service instance that netfilter currently redirects packets to
 
 
 def init(config_dir, config, hook_mgr, platform, interface):
@@ -28,9 +31,37 @@ def init(config_dir, config, hook_mgr, platform, interface):
     _config = config
     _platform = platform
     _interface = interface
+    hook_mgr.register_hook(constants.Hooks.ON_INIT, init_firewall)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, register_registry_cert)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, enable_docker)
+    hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, adjust_firewall)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, apply_services)
+
+
+def init_firewall():
+    # Create sensor chains for both default and nat tables
+    with open(os.devnull, 'w') as devnull:
+        subprocess.call([IPTABLES_PATH, '-N', IPTABLES_CHAIN_LABEL], stderr=devnull)
+        subprocess.call([IPTABLES_PATH, '-t', 'nat', '-N', IPTABLES_CHAIN_LABEL], stderr=devnull)
+    # Flush sensor chains
+    subprocess.call([IPTABLES_PATH, '-F', IPTABLES_CHAIN_LABEL])
+    subprocess.call([IPTABLES_PATH, '-t', 'nat', '-F', IPTABLES_CHAIN_LABEL])
+
+
+def adjust_firewall(config, server_response, reset_network):
+    # Redirect incoming packets to sensor chains
+    with open(os.devnull, 'w') as devnull:
+        if reset_network:
+            # On network changes, ensure that each of these rules is at the top or bottom of their respective chains
+            # by removing the existing rules
+            if subprocess.call([IPTABLES_PATH, '-C', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) == 0:
+                subprocess.call([IPTABLES_PATH, '-D', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
+            if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) == 0:
+                subprocess.call([IPTABLES_PATH, '-t', 'nat', '-D', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
+        if subprocess.call([IPTABLES_PATH, '-C', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) != 0:
+            subprocess.call([IPTABLES_PATH, '-I', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
+        if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) != 0:
+            subprocess.call([IPTABLES_PATH, '-t', 'nat', '-A', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
 
 
 def start(service):
@@ -43,7 +74,8 @@ def start(service):
     if _services[service]['container'] is not None and get_full_image_name(_services[service]['container'].image) != _services[service]['image']:
         print('SERVICES: Removing stale container for service {}'.format(service))
         destroy(service)
-        _services[service]['image'] = None
+        _services[service]['container'] = None
+    newly_registered = False
     if _services[service]['container'] is None:
         # Search for existing container with the appropriate name, otherwise create a new one
         container = None
@@ -76,6 +108,7 @@ def start(service):
                     'COLLECTOR_HOST': collector_host,
                     'COLLECTOR_PORT': constants.COLLECTOR_PORT})
         _services[service]['container'] = container
+        newly_registered = True
     # Ensure that service container really exists
     containers = _docker.containers.list(all=True)
     container = _services[service]['container']
@@ -86,17 +119,16 @@ def start(service):
     if container not in _docker.containers.list():
         print('SERVICES: Starting container for service {}'.format(service))
         container.start()
-        # Forward all incoming new and non-established traffic to catch-all containers via netfilter
-        if _services[service]['catch_all'] is True:
-            # Wait for the container to have an IP assigned
-            print('SERVICES: Waiting for the container to have an IP address assigned')
-            container_ip = None
-            while container_ip is None:
-                time.sleep(1)
-                container_ip = get_ip_from(service)
-                print('Container IP: {}'.format(container_ip))
-            print('Adding forwarding rules for catch-all container {}'.format(service))
-            enable_catchall_for(service, container_ip)
+    # Forward all incoming new and non-established traffic to catch-all containers via netfilter
+    if _services[service]['catch_all'] is True and newly_registered:
+        # Wait for the container to have an IP assigned
+        container_ip = get_ip_from(service)
+        while container_ip is None:
+            print('SERVICES: Waiting for container {} to have an IP address assigned'.format(service))
+            time.sleep(1)
+            container_ip = get_ip_from(service)
+        print('SERVICES: Adding forwarding rules for catch-all container {} ({})'.format(service, container_ip))
+        enable_catchall_for(service, container_ip)
 
 
 def stop(service):
@@ -242,8 +274,11 @@ def get_ip_from(service):
 
 def enable_catchall_for(service, ip):
     global _catchall_target
-    subprocess.call([_iptables_exec, '-t', 'nat', '-A', 'PREROUTING', '-i', _interface, '-j', 'DNAT', '--to-destination', ip])
-    subprocess.call([_iptables_exec, '-I', 'FORWARD', '-d', ip, '-j', 'ACCEPT'])
+    with open(os.devnull, 'w') as devnull:
+        if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', IPTABLES_CHAIN_LABEL, '-j', 'DNAT', '--to-destination', ip], stderr=devnull) != 0:
+            subprocess.call([IPTABLES_PATH, '-t', 'nat', '-A', IPTABLES_CHAIN_LABEL, '-j', 'DNAT', '--to-destination', ip])
+        if subprocess.call([IPTABLES_PATH, '-C', IPTABLES_CHAIN_LABEL, '-d', ip, '-j', 'ACCEPT'], stderr=devnull) != 0:
+            subprocess.call([IPTABLES_PATH, '-I', IPTABLES_CHAIN_LABEL, '-d', ip, '-j', 'ACCEPT'])
     _catchall_target = service
 
 
@@ -251,6 +286,23 @@ def disable_catchall_for(service):
     global _catchall_target
     if _catchall_target == service:
         ip = get_ip_from(service)
-        subprocess.call([_iptables_exec, '-t', 'nat', '-D', 'PREROUTING', '-i', _interface, '-j', 'DNAT', '--to-destination', ip])
-        subprocess.call([_iptables_exec, '-D', 'FORWARD', '-d', ip, '-j', 'ACCEPT'])
+        with open(os.devnull, 'w') as devnull:
+            if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', IPTABLES_CHAIN_LABEL, '-j', 'DNAT', '--to-destination', ip], stderr=devnull) == 0:
+                subprocess.call([IPTABLES_PATH, '-t', 'nat', '-D', IPTABLES_CHAIN_LABEL, '-j', 'DNAT', '--to-destination', ip])
+            if subprocess.call([IPTABLES_PATH, '-C', IPTABLES_CHAIN_LABEL, '-d', ip, '-j', 'ACCEPT'], stderr=devnull) == 0:
+                subprocess.call([IPTABLES_PATH, '-D', IPTABLES_CHAIN_LABEL, '-d', ip, '-j', 'ACCEPT'])
         _catchall_target = None
+
+
+def cleanup():
+    _docker.close()
+    # Flush and remove sensor netfilter chains
+    with open(os.devnull, 'w') as devnull:
+        if subprocess.call([IPTABLES_PATH, '-C', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) == 0:
+            subprocess.call([IPTABLES_PATH, '-D', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
+        if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) == 0:
+            subprocess.call([IPTABLES_PATH, '-t', 'nat', '-D', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
+    subprocess.call([IPTABLES_PATH, '-F', IPTABLES_CHAIN_LABEL])
+    subprocess.call([IPTABLES_PATH, '-t', 'nat', '-F', IPTABLES_CHAIN_LABEL])
+    subprocess.call([IPTABLES_PATH, '-X', IPTABLES_CHAIN_LABEL])
+    subprocess.call([IPTABLES_PATH, '-t', 'nat', '-X', IPTABLES_CHAIN_LABEL])

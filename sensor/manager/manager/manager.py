@@ -104,15 +104,16 @@ class Manager:
         commands.start(self.zmq_context)
 
     def cleanup(self):
-        # Stop threads
+        # TODO Stop threads
+        services.cleanup()
         shutil.rmtree(self.config_dir)
 
     def interface_available(self):
         return self.interface in netifaces.interfaces()
 
 
-def sigint_handler(signal, frame):
-    print('Received SIGINT, performing graceful shutdown')
+def sigterm_handler(signal, frame):
+    print('Received SIGTERM, performing graceful shutdown')
     manager.cleanup()
     sys.exit(0)
 
@@ -125,8 +126,8 @@ def main():
     parser.add_argument('-p', '--platform', help='Platform module')
     parser.add_argument('-s', '--skip-init', action='store_true', help='Skips initial networking initialization (development use only)')
     args = parser.parse_args()
-    # Register SIGINT handler
-    signal.signal(signal.SIGINT, sigint_handler)
+    # Register SIGTERM handler
+    signal.signal(signal.SIGTERM, sigterm_handler)
     manager = Manager(args.config, args.interface, args.platform, args.skip_init)
     manager.start()
 

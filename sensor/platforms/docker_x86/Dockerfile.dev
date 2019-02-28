@@ -7,6 +7,7 @@ ARG REVISION=unversioned
 
 COPY setup_prepare.sh setup_dev.sh honeyd.diff arpd.diff ifup.sh /opt/
 COPY init/00_init_dev_env.sh /etc/cont-init.d/
+COPY shutdown/00_stop_docker.sh /etc/cont-finish.d/
 RUN /opt/setup_prepare.sh $REVISION
 RUN /opt/setup_dev.sh
 
