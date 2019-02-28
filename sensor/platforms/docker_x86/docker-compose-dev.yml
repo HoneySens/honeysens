@@ -6,7 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     environment:
+      - IFACE=eth0
       - DEV_WATCH_TASK
+    network_mode: host
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.host.sock

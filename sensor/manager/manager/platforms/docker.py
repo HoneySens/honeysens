@@ -31,6 +31,7 @@ class Platform(GenericPlatform):
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
         print('Initializing platform module: Docker')
         hook_mgr.register_hook(constants.Hooks.ON_INIT, self.cleanup_prev_sensor)
+        hook_mgr.register_hook(constants.Hooks.ON_INIT, self.init_networking)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.update_resolv_conf)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.apply_config)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.update)
@@ -59,6 +60,28 @@ class Platform(GenericPlatform):
                              'down', '-v'],
                             cwd=COMPOSEFILE_DIR,
                             env=os.environ.copy())
+
+    # Configures the network stack depending on the chosen network mode
+    def init_networking(self):
+        # Figure out our own container ID
+        my_id = None
+        with open('/proc/self/cgroup', 'rb') as f:
+            raw_cgroup = f.read()
+        for cgroup in raw_cgroup.split('\n'):
+            if 'docker' in cgroup:
+                my_id = cgroup.split('/')[-1]
+                break
+        print('Local container ID: {}'.format(my_id))
+        # Figure out which network mode this container launched with
+        p = subprocess.Popen(['/usr/bin/docker',
+                              '-H', HOST_DOCKER_SOCKET,
+                              'inspect', my_id,
+                              '-f', '{{.HostConfig.NetworkMode}}'],
+                             stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        network_mode = out.strip()
+        print('Network mode: {}'.format(network_mode))
+
 
     def update_resolv_conf(self, config, server_response, reset_network):
         # DNS is provided via go-dnsmasq, but dockerd does its own DNS resolution by interpreting 'domain'

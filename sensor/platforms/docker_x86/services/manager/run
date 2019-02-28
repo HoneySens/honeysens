@@ -13,9 +13,8 @@ if [ "$SKIP_INIT" ]; then
   SKIP_INIT="-s"
 fi
 
-IFACE=""
-if [ -n "$INTERFACE" ]; then
-    IFACE="-i $INTERFACE"
+if [ "$IFACE" ]; then
+  IFACE="-i $IFACE"
 fi
 
 # Force unbuffered stdout
