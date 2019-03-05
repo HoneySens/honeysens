@@ -16,6 +16,9 @@ cp -vr /mnt/platforms/docker_x86/services/cntlm /etc/services.d
 cp -vr /mnt/platforms/docker_x86/services/docker /etc/services.d
 cp -vr /mnt/platforms/docker_x86/services/manager /etc/services.d
 
+echo "Adding shutdown scripts"
+cp -vr /mnt/platforms/docker_x86/shutdown/* /etc/cont-finish.d/
+
 mkdir -p /etc/services.d/grunt-watch
 cat > /etc/services.d/grunt-watch/run << DELIMITER
 #!/usr/bin/with-contenv bash

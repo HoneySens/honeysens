@@ -7,9 +7,10 @@ import subprocess
 from manager.utils import constants
 
 
-class GenericPlatform:
+class GenericPlatform(object):
 
     cntlm_cfg_path = '/etc/cntlm.conf'
+    services_network_name = None
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
         pass
@@ -19,6 +20,15 @@ class GenericPlatform:
 
     def enable_docker(self, force_restart):
         pass
+
+    def set_services_network_iface(self, name):
+        self.services_network_name = name
+
+    def get_services_network_iface(self):
+        return self.services_network_name
+
+    def generate_services_network_iface(self):
+        return 'services'
 
     def update_iface_configuration(self, iface, mode, address=None, netmask=None, gateway=None, dns=None):
         ifaces = interfaces.Interfaces()

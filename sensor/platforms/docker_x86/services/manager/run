@@ -8,9 +8,9 @@ else
   echo "Using config file $CONFIG_FILE"
 fi
 
-if [ "$SKIP_INIT" ]; then
-  echo "Development mode: Skipping network initialization"
-  SKIP_INIT="-s"
+if [ "$DEV_MODE" ]; then
+  echo "Starting manager in development mode"
+  DEV_MODE="-d"
 fi
 
 if [ "$IFACE" ]; then
@@ -20,4 +20,4 @@ fi
 # Force unbuffered stdout
 export PYTHONUNBUFFERED=1
 
-exec manager -p docker $SKIP_INIT $IFACE $CONFIG_FILE
+exec manager -p docker $DEV_MODE $IFACE $CONFIG_FILE

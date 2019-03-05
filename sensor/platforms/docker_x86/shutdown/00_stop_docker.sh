@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-# Explicitly stops the docker service. This should be happening on shutdown anyway, but for some reason
-# the s6 init system kills docker too early, which causes the containers to malfunction when attempting to start
-# them after a container restart. This workaround seems to fix that.
+#!/usr/bin/with-contenv sh
+# Workaround that explicitly sets the docker service status to 'down'. Otherwise the dockerd doesn't shut down properly
+# if there are some containers still running (could be a bug in either dockerd or the s6 init system), which
+# causes issues on the next restart.
 s6-svc -wd -d /var/run/s6/services/docker/

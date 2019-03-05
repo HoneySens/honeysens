@@ -50,6 +50,21 @@ class Platform(GenericPlatform):
         else:
             subprocess.call(['s6-svc', '-wu', '-u', '/var/run/s6/services/docker/'])
 
+    def set_services_network_iface(self, name):
+        # Only proceed on changed to avoid unnecessary writes to disk
+        old_name = self.get_services_network_iface()
+        if old_name != name:
+            print('PLATFORM: Registering services interface {}'.format(name))
+            super(Platform, self).set_services_network_iface(name)
+            # Export the services bridge name into an env variable to be consumed by external processes
+            with open('/var/run/s6/container_environment/SERVICES_IFACE', 'w') as f:
+                f.write(name)
+
+    # In case other sensor containers are running on the same host network stack,
+    # guard against bridge naming conflicts by handing out individualized names
+    def generate_services_network_iface(self):
+        return 'services-' + self.get_container_id()[0:6]
+
     # Only used during unattended updates: Removes artifacts of the previous (now unused) sensor container
     def cleanup_prev_sensor(self):
         if 'PREV_PREFIX' in os.environ:
@@ -63,25 +78,17 @@ class Platform(GenericPlatform):
 
     # Configures the network stack depending on the chosen network mode
     def init_networking(self):
-        # Figure out our own container ID
-        my_id = None
-        with open('/proc/self/cgroup', 'rb') as f:
-            raw_cgroup = f.read()
-        for cgroup in raw_cgroup.split('\n'):
-            if 'docker' in cgroup:
-                my_id = cgroup.split('/')[-1]
-                break
-        print('Local container ID: {}'.format(my_id))
+        cont_id = self.get_container_id()
+        print('Local container ID: {}'.format(cont_id))
         # Figure out which network mode this container launched with
         p = subprocess.Popen(['/usr/bin/docker',
                               '-H', HOST_DOCKER_SOCKET,
-                              'inspect', my_id,
+                              'inspect', cont_id,
                               '-f', '{{.HostConfig.NetworkMode}}'],
                              stdout=subprocess.PIPE)
         out, err = p.communicate()
         network_mode = out.strip()
         print('Network mode: {}'.format(network_mode))
-
 
     def update_resolv_conf(self, config, server_response, reset_network):
         # DNS is provided via go-dnsmasq, but dockerd does its own DNS resolution by interpreting 'domain'
@@ -187,3 +194,14 @@ class Platform(GenericPlatform):
                     shutil.rmtree(tempdir)
                     if os.path.isfile(UPDATE_FW_DESTINATION):
                         os.remove(UPDATE_FW_DESTINATION)
+
+    def get_container_id(self):
+        # Use /proc magic to FIgure out our own container ID
+        my_id = None
+        with open('/proc/self/cgroup', 'rb') as f:
+            raw_cgroup = f.read()
+        for cgroup in raw_cgroup.split('\n'):
+            if 'docker' in cgroup:
+                my_id = cgroup.split('/')[-1]
+                break
+        return my_id

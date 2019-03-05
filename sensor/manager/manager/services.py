@@ -14,6 +14,8 @@ from .utils import constants
 IPTABLES_PATH = '/sbin/iptables'
 # Name of the iptables sensor chain managed by this process
 IPTABLES_CHAIN_LABEL = 'SENSOR'
+# Label of the docker user-defined network that we designate for services
+SERVICE_NETWORK = 'services'
 
 _config_dir = None
 _config = None
@@ -34,6 +36,7 @@ def init(config_dir, config, hook_mgr, platform, interface):
     hook_mgr.register_hook(constants.Hooks.ON_INIT, init_firewall)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, register_registry_cert)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, enable_docker)
+    hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, setup_networking)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, adjust_firewall)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, apply_services)
 
@@ -46,6 +49,23 @@ def init_firewall():
     # Flush sensor chains
     subprocess.call([IPTABLES_PATH, '-F', IPTABLES_CHAIN_LABEL])
     subprocess.call([IPTABLES_PATH, '-t', 'nat', '-F', IPTABLES_CHAIN_LABEL])
+
+
+def setup_networking(config, server_response, reset_network):
+    if SERVICE_NETWORK not in [n.name for n in _docker.networks.list()]:
+        # Create the service network if it's not there yet
+        bridge_name = _platform.generate_services_network_iface()
+        ipam_pool = docker.types.IPAMPool(subnet='192.168.111.0/24', iprange='192.168.111.0/25')
+        ipam_cfg = docker.types.IPAMConfig(pool_configs=[ipam_pool])
+        print('SERVICES: Creating services network on bridge {}'.format(bridge_name))
+        _docker.networks.create(SERVICE_NETWORK, ipam=ipam_cfg, options={'com.docker.network.bridge.name': bridge_name})
+        _platform.set_services_network_iface(bridge_name)
+    else:
+        # Register the name of an existing bridge interface with the platform module
+        for n in _docker.networks.list():
+            if n.name == SERVICE_NETWORK:
+                _platform.set_services_network_iface(n.attrs['Options']['com.docker.network.bridge.name'])
+                break
 
 
 def adjust_firewall(config, server_response, reset_network):
@@ -104,7 +124,7 @@ def start(service):
                     'COLLECTOR_PORT': constants.COLLECTOR_PORT,
                     'INTERFACE': _interface})
             else:
-                container = _docker.containers.create(image_name, name=service, ports=ports, cap_add=caps, environment={
+                container = _docker.containers.create(image_name, name=service, network=SERVICE_NETWORK, ports=ports, cap_add=caps, environment={
                     'COLLECTOR_HOST': collector_host,
                     'COLLECTOR_PORT': constants.COLLECTOR_PORT})
         _services[service]['container'] = container
@@ -266,7 +286,7 @@ def get_full_image_name(image):
 def get_ip_from(service):
     ip = None
     try:
-        ip = _docker.containers.get(service).attrs['NetworkSettings']['Networks']['bridge']['IPAddress']
+        ip = _docker.containers.get(service).attrs['NetworkSettings']['Networks'][SERVICE_NETWORK]['IPAddress']
     except Exception as e:
         pass
     return ip
@@ -295,7 +315,6 @@ def disable_catchall_for(service):
 
 
 def cleanup():
-    _docker.close()
     # Flush and remove sensor netfilter chains
     with open(os.devnull, 'w') as devnull:
         if subprocess.call([IPTABLES_PATH, '-C', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) == 0:
