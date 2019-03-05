@@ -9,7 +9,7 @@ COPY platforms/docker_x86/setup_prepare.sh latforms/docker_x86/honeyd.diff platf
 COPY manager /opt/manager
 COPY platforms/docker_x86/dhcpcd.conf /etc/
 COPY platforms/docker_x86/services/ platforms/docker_x86/services/ /etc/services.d/
-COPY shutdown/00_stop_docker.sh /etc/cont-finish.d/
+COPY shutdown/00_stop_docker.sh shutdown/01_cleanup_network.sh /etc/cont-finish.d/
 
 RUN /opt/setup_prepare.sh $REVISION
 RUN /opt/setup_release.sh

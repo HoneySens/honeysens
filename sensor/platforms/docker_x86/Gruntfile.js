@@ -31,7 +31,7 @@ module.exports = function(grunt) {
             },
             manager_restart: {
                 command: [
-                    'echo true > /var/run/s6/container_environment/SKIP_INIT',
+                    'echo true > /var/run/s6/container_environment/DEV_MODE',
                     's6-svc -wr -t -u /var/run/s6/services/manager/'
                 ].join('&&')
             }

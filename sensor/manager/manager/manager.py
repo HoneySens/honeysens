@@ -36,21 +36,21 @@ class Manager:
     config_dir = None
     interface = None
     platform = None
-    skip_init = None
+    dev_mode = False
     zmq_context = zmq.Context()
     events = {}
     events_lock = threading.Lock()
 
-    def __init__(self, config_archive, interface, platform, skip_init):
+    def __init__(self, config_archive, interface, platform, dev_mode):
         self.config_archive = config_archive
         self.init_config()
         self.init_interface(interface)
         self.platform = platform  # Temporarily save the name of the requested platform here, after start() the instance
-        self.skip_init = skip_init
+        self.dev_mode = dev_mode
 
     def init_config(self):
         if not os.path.isfile(self.config_archive):
-            print('Error: Could not open configuration archive {}'.format(self.config_archive))
+            print('manager: Error: Could not open configuration archive {}'.format(self.config_archive))
             exit()
         # Unpack and parse
         try:
@@ -59,14 +59,14 @@ class Manager:
                 config_archive.extractall(self.config_dir)
             self.config.readfp(open('{}/honeysens.cfg'.format(self.config_dir)))
         except Exception as e:
-            print('Error: Could not parse configuration ({})'.format(str(e)))
+            print('manager: Error: Could not parse configuration ({})'.format(str(e)))
         # Create config symlink for 3rd parties
         if os.path.islink(constants.CFG_SYMLINK):
             os.remove(constants.CFG_SYMLINK)
         os.symlink('{}/honeysens.cfg'.format(self.config_dir), constants.CFG_SYMLINK)
         # Performing configuration update if required
         config_updater.update(self.config_archive, self.config_dir, self.config)
-        print('Configuration from {} initialized'.format(self.config_archive))
+        print('manager: Configuration from {} initialized'.format(self.config_archive))
 
     def init_interface(self, interface):
         # Fall back to default interface in case none was provided
@@ -92,8 +92,8 @@ class Manager:
         services.init(self.config_dir, self.config, hooks, self.platform, self.interface)
         hooks.execute_hook(constants.Hooks.ON_INIT)
         # Apply initial configuration
-        print('Applying initial configuration')
-        state.apply_config(self.config, {}, self.skip_init is not True)
+        print('manager: Applying initial configuration')
+        state.apply_config(self.config, {}, self.dev_mode is False)
         # Polling
         polling.start(self.config_dir, self.config, self.config_archive, self.interface, self.platform)
         event_processor.start(self.config_dir, self.config, self.events, self.events_lock)
@@ -101,20 +101,22 @@ class Manager:
         print('===============================================================')
         print('Manager: Startup sequence completed, launching command endpoint')
         print('===============================================================')
-        commands.start(self.zmq_context)
+        commands.start(self.zmq_context, self)
 
-    def cleanup(self):
-        # TODO Stop threads
+    def shutdown(self):
+        print('manager: cleaning up')
+        polling.stop()
         services.cleanup()
         shutil.rmtree(self.config_dir)
+        print('manager: shutdown complete')
 
     def interface_available(self):
         return self.interface in netifaces.interfaces()
 
 
 def sigterm_handler(signal, frame):
-    print('Received SIGTERM, performing graceful shutdown')
-    manager.cleanup()
+    print('manager: received SIGTERM, performing graceful shutdown')
+    manager.shutdown()
     sys.exit(0)
 
 
@@ -124,11 +126,11 @@ def main():
     parser.add_argument('config', help='Sensor configuration archive')
     parser.add_argument('-i', '--interface', help='Network interface to use')
     parser.add_argument('-p', '--platform', help='Platform module')
-    parser.add_argument('-s', '--skip-init', action='store_true', help='Skips initial networking initialization (development use only)')
+    parser.add_argument('-d', '--dev-mode', action='store_true', help='Development mode')
     args = parser.parse_args()
-    # Register SIGTERM handler
+    # Register signal handlers
     signal.signal(signal.SIGTERM, sigterm_handler)
-    manager = Manager(args.config, args.interface, args.platform, args.skip_init)
+    manager = Manager(args.config, args.interface, args.platform, args.dev_mode)
     manager.start()
 
 

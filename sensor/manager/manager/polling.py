@@ -185,3 +185,9 @@ def start(config_dir, config, config_archive, interface, platform):
     _interface = interface
     _platform = platform
     worker()
+
+
+def stop():
+    if _timer is not None:
+        print('POLLING: Stopping worker')
+        _timer.cancel()
