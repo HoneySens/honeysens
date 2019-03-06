@@ -48,6 +48,7 @@ class Settings extends RESTResource {
 			'serverHost' => $config['server']['host'],
 			'serverPortHTTPS' => $config['server']['portHTTPS'],
             'sensorsUpdateInterval' => $config['sensors']['update_interval'],
+            'sensorsServiceNetwork' => $config['sensors']['service_network'],
             'caFP' => openssl_x509_fingerprint($caCert),
             'caExpire' => openssl_x509_parse($caCert)['validTo_time_t']
         );
@@ -73,6 +74,7 @@ class Settings extends RESTResource {
      * - smtpUser: SMTP Username to authenticate with
      * - smtpPassword: SMTP Password to authenticate with
      * - sensorsUpdateInterval: The delay between status update connection attempts initiated by sensors
+     * - sensorsServiceNetwork: The internal network range that sensors should use for service containers
      *
      * @param \stdClass $data
      * @return array
@@ -86,6 +88,7 @@ class Settings extends RESTResource {
             ->attribute('serverPortHTTPS', V::intVal()->between(0, 65535))
             ->attribute('smtpEnabled', V::boolType())
             ->attribute('sensorsUpdateInterval', V::intVal()->between(1, 60))
+            ->attribute('sensorsServiceNetwork', V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/'))
             ->check($data);
        if($data->smtpEnabled) {
            V::attribute('smtpServer', V::stringType())
@@ -113,6 +116,7 @@ class Settings extends RESTResource {
         $config->set('smtp', 'user', $data->smtpUser);
         $config->set('smtp', 'password', $data->smtpPassword);
         $config->set('sensors', 'update_interval', $data->sensorsUpdateInterval);
+        $config->set('sensors', 'service_network', $data->sensorsServiceNetwork);
 		$config->save();
 		$this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
         return array(
@@ -125,7 +129,8 @@ class Settings extends RESTResource {
             'smtpFrom' => $config['smtp']['from'],
             'smtpUser' => $config['smtp']['user'],
             'smtpPassword' => $config['smtp']['password'],
-            'sensorsUpdateInterval' => $config['sensors']['update_interval']
+            'sensorsUpdateInterval' => $config['sensors']['update_interval'],
+            'sensorsServiceNetwork' => $config['sensors']['service_network']
         );
 	}
 

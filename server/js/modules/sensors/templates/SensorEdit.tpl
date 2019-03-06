@@ -133,6 +133,15 @@
                             <label for="customMAC" class="control-label">Individuelle MAC-Adresse</label>
                             <input type="text" name="customMAC" class="form-control" placeholder="00:11:22:33:44:55" />
                         </div>
+                        <div class="form-group networkServiceNetwork">
+                            <label for="serviceNetwork" class="control-label">Interner Netzbereich f&uuml;r Honeypot-Services (frei lassen f&uuml;r systemweiten Standardwert)</label>
+                            <div class="input-group">
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Spezifiziert den IP-Adressbereich, den Sensordienste zur internen Adressierung nutzen. Falls dieser mit lokalen Adressbereichen im Konflikt steht, ist hier ein freier und ungenutzter Adessraum anzugeben. ">
+                                    <span class="glyphicon glyphicon-question-sign"></span>
+                                </div>
+                                <input type="text" name="serviceNetwork" class="form-control" value="<%- service_network %>" />
+                            </div>
+                        </div>
                     </fieldset>
                     <fieldset>
                         <legend>HTTP(S)-Proxy</legend>

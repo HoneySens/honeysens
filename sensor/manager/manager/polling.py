@@ -119,6 +119,8 @@ def update_config(config_data):
         _config.set('server', 'port_https', str(config_data['server_endpoint_port_https']))
     if 'update_interval' in config_data:
         _config.set('server', 'interval', str(config_data['update_interval']))
+    if 'service_network' in config_data:
+        _config.set('general', 'service_network', str(config_data['service_network']))
     if 'network_ip_mode' in config_data and str(config_data['network_ip_mode']) != _config.get('network', 'mode'):
         _config.set('network', 'mode', str(config_data['network_ip_mode']))
         network_changed = True

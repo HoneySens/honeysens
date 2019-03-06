@@ -90,6 +90,9 @@ class Sensors extends RESTResource {
             // Replace the update interval with the global default if no custom value was set for the sensor
             $sensorData['update_interval'] = $sensor->getUpdateInterval() != null ?
                 $sensor->getUpdateInterval() : $config['sensors']['update_interval'];
+            // Replace the service network with the global default if no custom value was set for the sensor
+            $sensorData['service_network'] = $sensor->getServiceNetwork() != null ?
+                $sensor->getServiceNetwork() : $config['sensors']['service_network'];
             // Replace service assignments with elaborate service data
             $services = array();
             $serviceRepository = $em->getRepository('HoneySens\app\models\entities\Service');
@@ -271,6 +274,7 @@ class Sensors extends RESTResource {
      * - network_mac_mode: 0 or 1, use the default or a custom MAC address
      * - proxy_mode: 0 or 1, disable or enable HTTPS proxy support
      * - update_interval: null (use global default) or anything higher than 1 to specify the interval in minutes (max of 60)
+     * - service_network: null (use global default) or a string such as '192.168.111.0/24' that is used for internal services
      * - firmware: null (use global defaults for any platform) or a valid id to force a specific firmware revision
      *
      * Depending on the previous attributes the following ones may also be required:
@@ -302,6 +306,7 @@ class Sensors extends RESTResource {
             ->attribute('network_mac_mode', V::intVal()->between(0, 1))
             ->attribute('proxy_mode', V::intVal()->between(0, 1))
             ->attribute('update_interval', V::optional(V::intVal()->between(1, 60)))
+            ->attribute('service_network', V::optional(V::stringType()->length(9, 18)))
             ->attribute('firmware', V::optional(V::intVal()))
             ->check($data);
         // Persistence
@@ -322,6 +327,7 @@ class Sensors extends RESTResource {
             ->setNetworkMACMode($data->network_mac_mode)
             ->setProxyMode($data->proxy_mode)
             ->setUpdateInterval($data->update_interval)
+            ->setServiceNetwork($data->service_network)
             ->setFirmware($firmware);
         // Validate and persist additional attributes depending on the previous ones
         if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_CUSTOM) {
@@ -464,6 +470,7 @@ class Sensors extends RESTResource {
      * - proxy_mode: 0 or 1, disable or enable HTTPS proxy support
      * - services: array of service assignments that are supposed to run on this sensor
      * - update_interval: null (use global default) or anything higher than 1 to specify the interval in minutes (max of 60)
+     * - service_network: null (use global default) or a string such as '192.168.111.0/24' that is used for internal services
      * - firmware: null (use global defaults for any platform) or a valid id to force a specific firmware revision
      *
      * Depending on the previous attributes the following ones may also be required:
@@ -497,6 +504,7 @@ class Sensors extends RESTResource {
             ->attribute('network_mac_mode', V::intVal()->between(0, 1))
             ->attribute('proxy_mode', V::intVal()->between(0, 1))
             ->attribute('update_interval', V::optional(V::intVal()->between(1, 60)))
+            ->attribute('service_network', V::optional(V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/')))
             ->attribute('firmware', V::optional(V::intVal()))
             ->attribute('services', V::arrayVal()->each(V::objectType()
                 ->attribute('service', V::intVal())
@@ -579,6 +587,7 @@ class Sensors extends RESTResource {
         }
         $sensor->setFirmware($firmware);
         $sensor->setUpdateInterval($data->update_interval);
+        $sensor->setServiceNetwork($data->service_network);
         // Service handling, merge with existing data
         $serviceRepository = $em->getRepository('HoneySens\app\models\entities\Service');
         $revisionRepository = $em->getRepository('HoneySens\app\models\entities\ServiceRevision');

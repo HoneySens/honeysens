@@ -80,6 +80,8 @@ function(HoneySens, SensorEditTpl) {
             },
             onRender: function() {
                 var view = this;
+                // Enable help popovers
+                this.$el.find('[data-toggle="popover"]').popover();
                 // Busy view spinner
                 this.$el.find('div.loading').html(HoneySens.Views.spinner.spin().el);
                 // Initialize validation
@@ -117,6 +119,14 @@ function(HoneySens, SensorEditTpl) {
                             validators: {
                                 between: {min: 1, max: 60, message: 'Das Intervall kann minimal 1 und maximal 60 Minuten betragen'}
                             }
+                        },
+                        serviceNetwork: {
+                            validators: {
+                                regexp: {
+                                    regexp: /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/,
+                                    message: 'Netzbereich bitte als IP-Adresse mit Netzmaske (z.B. 192.168.1.0/24) spezifizieren'
+                                }
+                            }
                         }
                     }
                 }).on('success.form.bv', function(e) {
@@ -135,6 +145,7 @@ function(HoneySens, SensorEditTpl) {
                             location = view.$el.find('input[name="location"]').val(),
                             division = view.$el.find('select[name="division"]').val(),
                             updateInterval = view.$el.find('input[name="updateInterval"]').val() || null,
+                            serviceNetwork = view.$el.find('input[name="serviceNetwork"]').val() || null,
                             serverEndpointMode = view.$el.find('input[name="serverEndpoint"]:checked').val(),
                             serverHost = view.$el.find('input[name="serverHost"]').val(),
                             serverPortHTTPS = view.$el.find('input[name="serverPortHTTPS"]').val(),
@@ -156,6 +167,7 @@ function(HoneySens, SensorEditTpl) {
                             location: location,
                             division: division,
                             update_interval: updateInterval,
+                            service_network: serviceNetwork,
                             server_endpoint_mode: serverEndpointMode,
                             server_endpoint_host: serverHost,
                             server_endpoint_port_https: serverPortHTTPS,
