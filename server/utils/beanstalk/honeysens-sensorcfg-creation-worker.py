@@ -92,6 +92,7 @@ while True:
     sensor_config.set('general', 'hostname', job_data['hostname'])
     sensor_config.set('general', 'certfile', 'cert.pem')
     sensor_config.set('general', 'keyfile', 'key.pem')
+    sensor_config.set('general', 'service_network', job_data['service_network'])
     sensor_config.set('network', 'mode', job_data['network_ip_mode'])
     sensor_config.set('network', 'address', job_data['network_ip_address'])
     sensor_config.set('network', 'netmask', job_data['network_ip_netmask'])

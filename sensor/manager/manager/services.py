@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import time
+#import traceback
 
 from .utils import constants
 
@@ -52,20 +53,27 @@ def init_firewall():
 
 
 def setup_networking(config, server_response, reset_network):
+    service_network = config.get('general', 'service_network')
+    # Check if there is an existing service network
+    for n in _docker.networks.list():
+        if n.name == SERVICE_NETWORK:
+            if n.attrs['IPAM']['Config'][0]['Subnet'] != service_network:
+                # In case that network config doesn't match our subnet definition, remove it
+                print('SERVICES: Existing service network uses an outdated subnet range, removing it')
+                destroy_all()
+                n.remove()
+            else:
+                # Register the name of an existing bridge interface with the platform module
+                _platform.set_services_network_iface(n.attrs['Options']['com.docker.network.bridge.name'])
+            break
     if SERVICE_NETWORK not in [n.name for n in _docker.networks.list()]:
         # Create the service network if it's not there yet
         bridge_name = _platform.generate_services_network_iface()
-        ipam_pool = docker.types.IPAMPool(subnet='192.168.111.0/24', iprange='192.168.111.0/25')
+        ipam_pool = docker.types.IPAMPool(subnet=service_network, iprange=service_network)
         ipam_cfg = docker.types.IPAMConfig(pool_configs=[ipam_pool])
-        print('SERVICES: Creating services network on bridge {}'.format(bridge_name))
+        print('SERVICES: Creating services network {} on bridge {}'.format(service_network, bridge_name))
         _docker.networks.create(SERVICE_NETWORK, ipam=ipam_cfg, options={'com.docker.network.bridge.name': bridge_name})
         _platform.set_services_network_iface(bridge_name)
-    else:
-        # Register the name of an existing bridge interface with the platform module
-        for n in _docker.networks.list():
-            if n.name == SERVICE_NETWORK:
-                _platform.set_services_network_iface(n.attrs['Options']['com.docker.network.bridge.name'])
-                break
 
 
 def adjust_firewall(config, server_response, reset_network):
@@ -181,6 +189,7 @@ def destroy(service):
                 pass
             c.remove()
             _docker.images.remove(image_id)
+            _services[service]['container'] = None
 
 
 def stop_all():
@@ -198,13 +207,6 @@ def destroy_all():
 
 
 def apply_services(config, server_response, reset_network):
-    global _services
-    # Prepare service list with containers already registered on this system
-    if _services is None:
-        _services = {}
-        for c in _docker.containers.list(all=True):
-            print('SERVICES: Registering existing container {}'.format(c.name))
-            _services[c.name] = {'container': None}
     # Apply the service configuration we received
     if 'services' in server_response:
         arch = _platform.get_architecture()
@@ -228,8 +230,9 @@ def apply_services(config, server_response, reset_network):
                                            'container': None}
             try:
                 start(service_name)
-            except Exception:
-                print('SERVICES: Could not start service {}, internal error'.format(service_name))
+            except Exception as e:
+                print('SERVICES: Could not start service {} ({})'.format(service_name, str(e)))
+                # traceback.print_exc()
         # Delete
         for candidate in (set(_services.keys()) - set(service_assignments.keys())):
             print('SERVICES: Removing service {} due to it being no longer active'.format(candidate))
@@ -254,7 +257,7 @@ def register_registry_cert(config, server_response, reset_network):
 
 
 def enable_docker(config, server_response, reset_network):
-    global _docker
+    global _docker, _services
     # dockerd has to be restarted to apply new proxy settings
     _platform.enable_docker(reset_network)
     _docker = docker.from_env()
@@ -266,6 +269,12 @@ def enable_docker(config, server_response, reset_network):
             print('SERVICES: Warning: Docker subsystem not usable')
             return
         time.sleep(1)
+    # Prepare service list with containers already registered on this system
+    if _services is None:
+        _services = {}
+        for c in _docker.containers.list(all=True):
+            print('SERVICES: Registering existing container {}'.format(c.name))
+            _services[c.name] = {'container': None}
 
 
 # True, if the docker subsystem is initialized, online and reachable

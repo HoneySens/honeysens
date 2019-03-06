@@ -28,8 +28,11 @@ class BeanstalkService {
         $jobData = $sensor->getState();
         $jobData['cert'] = $sensor->getCert()->getContent();
         $jobData['key'] = $sensor->getCert()->getKey();
-        // If this sensor has a custom configuration without a specific firmware configured, we have to rely on the default one
+        // TODO Seems to be unused, check and remove
+        // If this sensor has a custom configuration without a specific firmware configured, we rely on the default one
         $jobData['firmware'] = $sensor->getFirmware() != null ? $sensor->getFirmware()->getId() : null;
+        // If this sensor doesn't have a custom service network defined, we rely on the system-wide configuration
+        $jobData['service_network'] = $sensor->getServiceNetwork() != null ? $sensor->getServiceNetwork() : $this->appConfig['sensors']['service_network'];
         if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_DEFAULT) {
             $jobData['server_endpoint_host'] = $this->appConfig['server']['host'];
             $jobData['server_endpoint_port_https'] = $this->appConfig['server']['portHTTPS'];

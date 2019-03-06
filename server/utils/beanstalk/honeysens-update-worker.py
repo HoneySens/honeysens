@@ -236,6 +236,12 @@ while True:
         print('Upgrading configuration 1.0.3 -> 1.0.4')
         config.set('server', 'config_version', '1.0.4')
         config_version = '1.0.4'
+    # 1.0.4 -> next
+    if config_version == '1.0.4':
+        print('Upgrading configuration 1.0.4 -> next')
+        config.set('sensor', 'service_network', '10.10.10.0/24')
+        db.cursor().execute('ALTER TABLE sensors ADD serviceNetwork VARCHAR(255) DEFAULT NULL')
+        config_version = 'next'
 
     # Write new config file
     config.set('server', 'config_version', server_version)

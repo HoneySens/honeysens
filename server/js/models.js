@@ -187,7 +187,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'proxy_password': null,
                 'config_archive_status': 0,
                 'firmware': null,
-                'services': []
+                'services': [],
+                'service_network': null
 			},
 			initialize: function() {
 				this.status = new Models.SensorStati();

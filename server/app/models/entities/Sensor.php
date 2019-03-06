@@ -139,7 +139,7 @@ class Sensor {
     protected $configArchiveStatus = 0;
 
     /**
-     * Update interval in minutes.
+     * Custom update interval in minutes.
      *
      * @Column(type="integer", nullable=true)
      */
@@ -156,6 +156,13 @@ class Sensor {
      * @OneToMany(targetEntity="HoneySens\app\models\entities\ServiceAssignment", mappedBy="sensor")
      */
     protected $services;
+
+    /**
+     * Custom service network to use on that sensor.
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $serviceNetwork = null;
 
     public function __construct() {
         $this->status = new ArrayCollection();
@@ -463,7 +470,7 @@ class Sensor {
     /**
      * Get updateInterval
      *
-     * @return integer
+     * @return integer|null
      */
     public function getUpdateInterval() {
         return $this->updateInterval;
@@ -530,6 +537,26 @@ class Sensor {
         return $this->services;
     }
 
+    /**
+     * Set serviceNetwork
+     *
+     * @param string $serviceNetwork
+     * @return Sensor
+     */
+    public function setServiceNetwork($serviceNetwork) {
+        $this->serviceNetwork = $serviceNetwork;
+        return $this;
+    }
+
+    /**
+     * Get serviceNetwork
+     *
+     * @return string|null
+     */
+    public function getServiceNetwork() {
+        return $this->serviceNetwork;
+    }
+
 	public function getState() {
 		$cert = $this->getCert() ? $this->getCert()->getId() : '';
 		$crt_fp = $this->getCert() ? $this->getCert()->getFingerprint() : '';
@@ -572,7 +599,8 @@ class Sensor {
             'config_archive_status' => $this->getConfigArchiveStatus(),
             'update_interval' => $this->getUpdateInterval(),
             'firmware' => $firmware,
-            'services' => $services
+            'services' => $services,
+            'service_network' => $this->getServiceNetwork()
 		);
 	}
 }
