@@ -5,7 +5,7 @@ services:
     - PREV_PREFIX
     - HOST_PWD
     network_mode: host
-    image: honeysens/sensorx86:1.0.4
+    image: honeysens/sensorx86:$REVISION
     privileged: true
     restart: unless-stopped
     volumes:

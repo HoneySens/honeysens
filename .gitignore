@@ -1,6 +1,7 @@
 # IDE and VM
 .idea
 .project
+HoneySens.iml
 server/.vagrant/*
 server/.settings/*
 
@@ -12,9 +13,15 @@ server/node_modules/*
 server/out/
 sensor/platforms/bbb/out/
 sensor/platforms/docker_x86/out/
+sensor/platforms/docker_x86/conf/
 sensor/services/conpot/out/
 sensor/services/cowrie/out/
 sensor/services/dionaea/out/
 sensor/services/glastopf/out/
 sensor/services/rdpy/out/
 sensor/services/recon/out/
+
+# Build artifacts
+package-lock.json
+server/app/composer.lock
+server/app/composer.phar

@@ -11,8 +11,8 @@ has to provide the means to run docker containers.
 ## Build instructions
 * Platforms: Look up the Readme files within each platform directory for specific instructions. There is currently no
   "build everything" method, because the build process depends on the host architecture (e.g. the BBB ARM firmware can't
-  be built on x86 hosts, not even with QEMU)
-* Services: These should follow a generic structure and can be built using the provided Makefiles
+  be built on x86 hosts, not even with QEMU).
+* Services: These follow a defined structure and can be built using the provided Makefiles.
 
 ## Directory structure
 * `manager/`: Manager daemon sources

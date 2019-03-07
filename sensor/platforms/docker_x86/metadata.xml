@@ -6,6 +6,10 @@
     <description>Dockerized sensor platform to be used on generic x86 systems</description>
     <changelog>
         <entry>
+            <version>1.1.0</version>
+            <desc>Deployment is now done with Docker Compose, also supports custom service network ranges</desc>
+        </entry>
+        <entry>
             <version>1.0.4</version>
             <desc>Fixed a bug that prevented service download through proxies</desc>
         </entry>
