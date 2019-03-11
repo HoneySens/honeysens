@@ -117,7 +117,7 @@ class EventDetail {
      * @return EventDetails
      */
     public function setData($data) {
-        $this->data = $data;
+        $this->data = substr($data, 0, 255);
         return $this;
     }
 
