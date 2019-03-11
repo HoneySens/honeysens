@@ -107,7 +107,7 @@ class Events extends RESTResource {
             $qb->andWhere('e.id > :lastid')
                 ->setParameter('lastid', $criteria['lastID']);
         }
-        if(V::key('sort_by', V::in(['timestamp', 'sensor', 'classification', 'source']))
+        if(V::key('sort_by', V::in(['id', 'sensor', 'timestamp', 'classification', 'source', 'summary', 'status']))
             ->key('order', V::in(['asc', 'desc']))
             ->validate($criteria)) {
             $qb->orderBy('e.' . $criteria['sort_by'], $criteria['order']);

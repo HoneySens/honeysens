@@ -67,7 +67,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                         name: 'id',
                         label: 'ID',
                         editable: false,
-                        sortable: false,
+                        sortType: 'toggle',
                         cell: Backgrid.IntegerCell.extend({
                             orderSeparator: ''
                         })
@@ -114,12 +114,13 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                         name: 'summary',
                         label: 'Details',
                         editable: false,
-                        sortable: false,
+                        sortType: 'toggle',
                         cell: 'string'
                     }, {
+                        name: 'status',
                         label: 'Status',
                         editable: false,
-                        sortable: false,
+                        sortType: 'toggle',
                         cell: Backgrid.Cell.extend({
                             template: EventListStatusCellTpl,
                             events: {
@@ -160,7 +161,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                                 this.listenTo(this.model, 'change', function() {
                                     this.render();
                                 });
-                                return this
+                                return this;
                             }
                         })
                     }, {
