@@ -643,12 +643,7 @@ class Sensors extends RESTResource {
         // Remove all events that belong to this sensor
         // TODO Consider moving those into some sort of archive
         $events = $em->getRepository('HoneySens\app\models\entities\Event')->findBy(array('sensor' => $sensor));
-        foreach($events as $event) {
-            $em->remove($event);
-        }
-        // Remove service association
-        // TODO Replace this with an implicit cascade operation
-        $sensor->getServices()->clear();
+        foreach($events as $event) $em->remove($event);
         $em->remove($sensor);
         $em->flush();
 	}

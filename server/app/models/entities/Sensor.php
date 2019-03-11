@@ -49,7 +49,7 @@ class Sensor {
 	protected $cert;
 	
 	/**
-	 * @OneToMany(targetEntity="HoneySens\app\models\entities\SensorStatus", mappedBy="sensor", cascade={"remove"});
+	 * @OneToMany(targetEntity="HoneySens\app\models\entities\SensorStatus", mappedBy="sensor", cascade={"remove"})
 	 */
 	protected $status;
 
@@ -153,7 +153,7 @@ class Sensor {
     /**
      * The services that are configured to run on this sensor.
      *
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\ServiceAssignment", mappedBy="sensor")
+     * @OneToMany(targetEntity="HoneySens\app\models\entities\ServiceAssignment", mappedBy="sensor", cascade={"remove"})
      */
     protected $services;
 
