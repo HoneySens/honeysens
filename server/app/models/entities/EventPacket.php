@@ -1,6 +1,8 @@
 <?php
 namespace HoneySens\app\models\entities;
 
+use HoneySens\app\models\Utils;
+
 /**
  * An IP packet that belongs to a certain event.
  *
@@ -192,7 +194,7 @@ class EventPacket {
      * @return EventPacket
      */
     public function setPayload($payload) {
-        $this->payload = $payload;
+        $this->payload = Utils::shortenBase64(255, $payload);
         return $this;
     }
 
