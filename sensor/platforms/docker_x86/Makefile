@@ -20,19 +20,19 @@ ${OUTDIR}/utils/docker-compose: | DIR.${OUTDIR}/utils
 	chmod +x $@
 	$@ --version
 
-${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/${PREFIX}-${REVISION}/firmware.img ${OUTDIR}/build/${PREFIX}-${REVISION}/metadata.xml ${OUTDIR}/build/${PREFIX}-${REVISION}/docker-compose.yml | DIR.${OUTDIR}/dist
-	mkdir -p ${OUTDIR}/build/${PREFIX}-${REVISION}/conf
-	cp -v .env README.md ${OUTDIR}/build/${PREFIX}-${REVISION}/
-	tar -czf $@ -C ${OUTDIR}/build/ ${PREFIX}-${REVISION}/
+${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/firmware.img ${OUTDIR}/build/metadata.xml ${OUTDIR}/build/docker-compose.yml | DIR.${OUTDIR}/dist
+	mkdir -p ${OUTDIR}/build/conf
+	cp -v .env README.md ${OUTDIR}/build/
+	tar -czf $@ -C ${OUTDIR}/build/ firmware.img metadata.xml docker-compose.yml conf/ .env README.md
 
-${OUTDIR}/build/${PREFIX}-${REVISION}/firmware.img: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
+${OUTDIR}/build/firmware.img: | DIR.${OUTDIR}/build
 	docker build --build-arg REVISION=${REVISION} -t honeysens/sensorx86:${REVISION} -f Dockerfile ../../
 	docker save -o $@ honeysens/sensorx86:${REVISION}
 
-${OUTDIR}/build/${PREFIX}-${REVISION}/metadata.xml: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
+${OUTDIR}/build/metadata.xml: | DIR.${OUTDIR}/build
 	sed 's/$$REVISION/${REVISION}/' metadata.xml > $@
 
-${OUTDIR}/build/${PREFIX}-${REVISION}/docker-compose.yml: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
+${OUTDIR}/build/docker-compose.yml: | DIR.${OUTDIR}/build
 	sed 's/$$REVISION/${REVISION}/' docker-compose.yml > $@
 
 DIR.${OUTDIR}/%:
