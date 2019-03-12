@@ -15,7 +15,7 @@ function(HoneySens, ServiceUploadTpl) {
             onRender: function() {
                 var view = this,
                     spinner = HoneySens.Views.inlineSpinner.spin();
-                view.$el.find('div.progress, span.progress-text, div.serviceVerify, div.alert').hide();
+                view.$el.find('div.progress, span.progress-text, div.alert, span.imageValidating').hide();
                 view.$el.find('div.loadingInline').html(spinner.el);
                 view.$el.find('#serviceUpload').fileupload({
                     url: 'api/services',
@@ -32,17 +32,31 @@ function(HoneySens, ServiceUploadTpl) {
                         view.$el.find('span.progress-loaded').text((data.loaded / (1000 * 1000)).toFixed(1));
                         view.$el.find('span.progress-total').text(+(data.total / (1000 * 1000)).toFixed(1));
                         if(parseInt(data.loaded / data.total * 100) >= 97) {
-                            view.$el.find('div.serviceVerify').show();
+                            view.$el.find('span.imageValidating').show();
                         }
                     },
                     fail: function(e, data) {
-                        var errorMsg = JSON.parse(data.jqXHR.responseText);
-                        view.$el.find('span.imageValidating').hide();
-                        view.$el.find('div.alert-' + errorMsg.code).show();
+                        var errorMsg ='Es ist ein Fehler aufgetreten';
+                        try {
+                            switch (JSON.parse(data.jqXHR.responseText).code) {
+                                case 1:
+                                    errorMsg = 'Das hochgeladene Service-Archiv besitzt kein gültiges Format!';
+                                    break;
+                                case 2:
+                                    errorMsg = 'Das Service-Archiv beinhaltet keine gültigen Metadaten!';
+                                    break;
+                                case 3:
+                                    errorMsg = 'Service wurde erfolgreich registriert!';
+                                    break;
+                            }
+                        } catch(e) {
+                            if (e instanceof SyntaxError) errorMsg = 'Service-Archiv ungültig';
+                        }
+                        view.$el.find('div.imageInvalid span.errorMsg').text(errorMsg);
+                        view.$el.find('div.imageInvalid').show().siblings().hide();
                     },
                     done: function(e, data) {
-                        view.$el.find('span.imageValidating').hide();
-                        view.$el.find('div.alert-success').show();
+                        view.$el.find('div.alert-success').show().siblings().hide();
                     }
                 });
             }

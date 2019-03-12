@@ -1,15 +1,21 @@
 define(['app/app',
-        'tpl!app/modules/platforms/templates/ModalFirmwareUpload.tpl',
+        'tpl!app/modules/platforms/templates/FirmwareUpload.tpl',
         'app/views/common',
         'jquery.fileupload'],
-function(HoneySens, ModalFirmwareUploadTpl) {
+function(HoneySens, FirmwareUploadTpl) {
     HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.FirmwareUpload = Marionette.ItemView.extend({
-            template: ModalFirmwareUploadTpl,
+            template: FirmwareUploadTpl,
+            className: 'container-fluid',
+            events: {
+                'click button.cancel': function() {
+                    HoneySens.request('view:content').overlay.empty();
+                }
+            },
             onRender: function() {
                 var view = this,
                     spinner = HoneySens.Views.inlineSpinner.spin();
-                view.$el.find('#imageInfo, div.progress, div.progress-text, div.imageVerify span:not(.glyphicon,.errorMsg)').hide();
+                view.$el.find('#imageInfo, div.progress, span.progress-text, div.imageVerify span:not(.glyphicon,.errorMsg), div.imageVerify div.alert').hide();
                 view.$el.find('div.loadingInline').html(spinner.el);
                 view.$el.find('#imageUpload').fileupload({
                     url: 'api/platforms/firmware',
@@ -18,7 +24,7 @@ function(HoneySens, ModalFirmwareUploadTpl) {
                     start: function () {
                         // TODO use an add callback instead of this to allow saving of the XHR object and allow abortion of the upload task
                         view.$el.find('span.fileinput-button').hide().siblings('div.progress').show();
-                        view.$el.find('div.progress-text').show();
+                        view.$el.find('span.progress-text').show();
                     },
                     progressall: function(e, data) {
                         var progress = parseInt(data.loaded / data.total * 100) + '%';
@@ -29,31 +35,34 @@ function(HoneySens, ModalFirmwareUploadTpl) {
                             view.$el.find('div.imageVerify span.imageValidating').show();
                         }
                     },
+                    fail: function(e, data) {
+                        var errorMsg = 'Es ist ein Fehler aufgetreten';
+                        try {
+                            switch (JSON.parse(data.jqXHR.responseText).code) {
+                                case 1:
+                                    errorMsg = 'Firmware ungültig';
+                                    break;
+                                case 2:
+                                    errorMsg = 'Firmware enthält fehlerhafte Metadaten';
+                                    break;
+                                case 3:
+                                    errorMsg = 'Firmware ist bereits vorhanden';
+                                    break;
+                            }
+                        } catch(e) {
+                            if (e instanceof SyntaxError) errorMsg = 'Firmware ungültig'
+                        }
+                        view.$el.find('div.imageVerify span.errorMsg').text(errorMsg);
+                        view.$el.find('div.imageVerify div.imageInvalid').show().siblings().hide();
+                    },
                     done: function(e, data) {
                         var file = data.result.files[0];
-                        view.$el.find('div.imageVerify span.imageValid').show().siblings('span').hide();
+                        view.$el.find('div.imageVerify div.imageValid').show().siblings().hide();
                         view.$el.find('p.imageName').text(_.escape(file.image.name));
                         view.$el.find('p.imageVersion').text(_.escape(file.image.version));
                         view.$el.find('p.imageDescription').text(_.escape(file.image.description));
                         view.$el.find('#imageInfo').show();
-                        view.$el.find('button.btn-default').removeClass('btn-default').addClass('btn-primary').text('Ok');
                         HoneySens.data.models.platforms.fetch();
-                    },
-                    fail: function(e, data) {
-                        var errorMsg = 'Es ist ein Fehler aufgetreten';
-                        switch (JSON.parse(data.jqXHR.responseText).code) {
-                            case 1:
-                                errorMsg = 'Firmware ungültig';
-                                break;
-                            case 2:
-                                errorMsg = 'Firmware enthält fehlerhafte Metadaten';
-                                break;
-                            case 3:
-                                errorMsg = 'Firmware ist bereits vorhanden';
-                                break;
-                        }
-                        view.$el.find('div.imageVerify span.errorMsg').text(errorMsg);
-                        view.$el.find('div.imageVerify span.imageInvalid').show().siblings('span').hide();
                     }
                 });
             }
