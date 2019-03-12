@@ -3,7 +3,9 @@
 from __future__ import absolute_import
 
 import argparse
+import coloredlogs
 import ConfigParser
+import logging
 import netifaces
 import os
 import shutil
@@ -40,17 +42,28 @@ class Manager:
     zmq_context = zmq.Context()
     events = {}
     events_lock = threading.Lock()
+    logger = None
 
     def __init__(self, config_archive, interface, platform, dev_mode):
         self.config_archive = config_archive
+        self.dev_mode = dev_mode
+        self.init_logging()
         self.init_config()
         self.init_interface(interface)
         self.platform = platform  # Temporarily save the name of the requested platform here, after start() the instance
-        self.dev_mode = dev_mode
+
+    def init_logging(self):
+        self.logger = logging.getLogger(__name__)
+        if self.dev_mode:
+            logging_lvl = 'DEBUG'
+        else:
+            logging_lvl = 'INFO'
+        coloredlogs.install(level=logging_lvl, fmt='%(asctime)s [%(name)s] %(levelname)s %(message)s')
+        self.logger.info('Starting up...')
 
     def init_config(self):
         if not os.path.isfile(self.config_archive):
-            print('manager: Error: Could not open configuration archive {}'.format(self.config_archive))
+            self.logger.critical('Could not open configuration archive {}'.format(self.config_archive))
             exit()
         # Unpack and parse
         try:
@@ -59,14 +72,15 @@ class Manager:
                 config_archive.extractall(self.config_dir)
             self.config.readfp(open('{}/honeysens.cfg'.format(self.config_dir)))
         except Exception as e:
-            print('manager: Error: Could not parse configuration ({})'.format(str(e)))
+            self.logger.critical('Could not parse configuration ({})'.format(str(e)))
+            exit()
         # Create config symlink for 3rd parties
         if os.path.islink(constants.CFG_SYMLINK):
             os.remove(constants.CFG_SYMLINK)
         os.symlink('{}/honeysens.cfg'.format(self.config_dir), constants.CFG_SYMLINK)
         # Performing configuration update if required
         config_updater.update(self.config_archive, self.config_dir, self.config)
-        print('manager: Configuration from {} initialized'.format(self.config_archive))
+        self.logger.info('Configuration from {} initialized'.format(self.config_archive))
 
     def init_interface(self, interface):
         # Fall back to default interface in case none was provided
@@ -75,9 +89,10 @@ class Manager:
         else:
             self.interface = interface
         # Ensure interface existence
-        print('PLATFORM: Waiting for {} to become available...'.format(self.interface))
         while not self.interface_available():
             time.sleep(1)
+            self.logger.warning('Waiting for {} to become available...'.format(self.interface))
+        self.logger.info('Sensor interface {} found'.format(self.interface))
 
     def init_platform(self):
         if self.platform == 'bbb':
@@ -92,30 +107,29 @@ class Manager:
         services.init(self.config_dir, self.config, hooks, self.platform, self.interface)
         hooks.execute_hook(constants.Hooks.ON_INIT)
         # Apply initial configuration
-        print('manager: Applying initial configuration')
+        state.init()
+        self.logger.info('Applying initial configuration')
         state.apply_config(self.config, {}, self.dev_mode is False)
         # Polling
         polling.start(self.config_dir, self.config, self.config_archive, self.interface, self.platform)
         event_processor.start(self.config_dir, self.config, self.events, self.events_lock)
         collector.start(self.zmq_context, self.events, self.events_lock)
-        print('===============================================================')
-        print('Manager: Startup sequence completed, launching command endpoint')
-        print('===============================================================')
+        self.logger.info('Startup sequence completed, launching command endpoint')
         commands.start(self.zmq_context, self)
 
     def shutdown(self):
-        print('manager: cleaning up')
+        self.logger.info('Cleaning up')
         polling.stop()
         services.cleanup()
         shutil.rmtree(self.config_dir)
-        print('manager: shutdown complete')
+        self.logger.info('Shutdown complete')
 
     def interface_available(self):
         return self.interface in netifaces.interfaces()
 
 
 def sigterm_handler(signal, frame):
-    print('manager: received SIGTERM, performing graceful shutdown')
+    manager.logger.warning('Received SIGTERM, performing graceful shutdown')
     manager.shutdown()
     sys.exit(0)
 

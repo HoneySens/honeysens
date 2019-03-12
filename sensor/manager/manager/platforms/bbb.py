@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import logging
 import os
 import shutil
 import subprocess
@@ -15,19 +16,21 @@ from manager.utils import constants
 
 class Platform(GenericPlatform):
 
-    interface = None
     config_dir = None
     config_archive = None
-    proxy_cfg_dir = '/etc/systemd/system/docker.service.d'
-    proxy_cfg_file = '{}/http-proxy.conf'.format(proxy_cfg_dir)
+    interface = None
     led_exec = '/opt/led.sh'
     led_status_normal = 'green'
     led_status_error = 'orange'
     led_status_incident = 'red'
     led_status_off = 'off'
+    logger = None
+    proxy_cfg_dir = '/etc/systemd/system/docker.service.d'
+    proxy_cfg_file = '{}/http-proxy.conf'.format(proxy_cfg_dir)
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
-        print('Initializing platform module: BeagleBone Black')
+        self.logger = logging.getLogger(__name__)
+        self.logger.info('Initializing platform module: BeagleBone Black')
         # Switch off the LED initially
         self.set_led(self.led_status_off)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.apply_config)
@@ -51,7 +54,7 @@ class Platform(GenericPlatform):
     # Enables the docker daemon (if it's not already running) or forces a restart of dockerd
     def enable_docker(self, force_restart):
         if force_restart:
-            print('PLATFORM: Restarting docker service')
+            self.logger.info('Restarting docker service')
             self.restart_systemd_unit('docker')
         else:
             self.start_systemd_unit('docker')
@@ -74,7 +77,7 @@ class Platform(GenericPlatform):
                 if config.get('proxy', 'user') != '':
                     credentials = '{}:{}@'.format(config.get('proxy', 'user'), config.get('proxy', 'password'))
                 proxy = 'https://{}{}:{}/'.format(credentials, config.get('proxy', 'host'), config.get('proxy', 'port'))
-                print('PLATFORM: Registering proxy {}'.format(proxy))
+                self.logger.info('Registering proxy {}'.format(proxy))
                 # Reconfigure cntlm
                 GenericPlatform.configure_cntlm(self, '{}:{}'.format(config.get('proxy', 'host'), config.get('proxy', 'port')),
                                                 config.get('proxy', 'user'), config.get('proxy', 'password'))
@@ -103,18 +106,18 @@ class Platform(GenericPlatform):
 
     def on_poll(self, config_data):
         if 'unhandledEvents' in config_data and config_data['unhandledEvents']:
-            print('PLATFORM: LED set to incident')
+            self.logger.debug('LED set to incident')
             self.set_led(self.led_status_incident)
         else:
-            print('PLATFORM: LED set to normal')
+            self.logger.debug('LED set to normal')
             self.set_led(self.led_status_normal)
 
     def on_poll_error(self):
-        print('PLATFORM: LED set to error')
+        self.logger.debug('LED set to error')
         self.set_led(self.led_status_error)
 
     def on_event(self):
-        print('PLATFORM: Event happened, LED set to incident')
+        self.logger.debug('Event happened, LED set to incident')
         self.set_led(self.led_status_incident)
 
     def start_systemd_unit(self, unit):
@@ -144,49 +147,49 @@ class Platform(GenericPlatform):
             # TODO Signal update process during next polls
             tempdir = tempfile.mkdtemp()
             try:
-                print('PLATFORM: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
-                print('PLATFORM: Removing all containers to free some space')
+                self.logger.info('Update: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
+                self.logger.info('Update: Removing all containers to free some space')
                 services.destroy_all()
-                print('PLATFORM: Downloading new firmware from {}'.format(target_uri))
+                self.logger.info('Update: Downloading new firmware from {}'.format(target_uri))
                 fw_tempfile = '{}/firmware.tar.gz'.format(tempdir)
                 with open(fw_tempfile, 'w') as f:
                     communication.perform_https_request(config, self.config_dir, target_uri, communication.REQUEST_TYPE_GET, file_descriptor=f)
-                print('PLATFORM: Firmware written to {}'.format(fw_tempfile))
-                print('PLATFORM: Inspecting archive')
+                self.logger.info('Update: Firmware written to {}'.format(fw_tempfile))
+                self.logger.info('Update: Inspecting archive')
                 with tarfile.open(fw_tempfile) as fw_archive:
                     files = fw_archive.getnames()
                     if 'firmware.img' not in files or 'metadata.xml' not in files:
-                        print('PLATFORM: Error: Invalid archive contents')
+                        self.logger.error('Update: Invalid archive contents')
                         raise Exception()
-                print('PLATFORM: Writing image to microSD card')
+                self.logger.info('Update: Writing image to microSD card')
                 ext_dev = '/dev/mmcblk0'
                 int_dev = '/dev/mmcblk1'
                 # Check for both internal and external block devices to avoid updating when no SD card is inserted
                 if not os.path.exists(ext_dev) or not os.path.exists(int_dev):
-                    print('PLATFORM: Error: No microSD card found')
+                    self.logger.error('Update: No microSD card found')
                     raise Exception()
                 ret = subprocess.call(['/bin/tar', '-xf', fw_tempfile, '--to-command=dd bs=512k of={}'.format(ext_dev), 'firmware.img'])
                 if ret != 0:
-                    print('PLATFORM: Error: Can\'t write to microSD card')
+                    self.logger.error('Update: Can\'t write to microSD card')
                     raise Exception()
                 # Save current sensor configuration
-                print('PLATFORM: Preserving sensor configuration, mounting {}p1'.format(ext_dev))
+                self.logger.info('Update: Preserving sensor configuration, mounting {}p1'.format(ext_dev))
                 ret = subprocess.call(['/bin/mount', '{}p1'.format(ext_dev), '/mnt'])
                 if ret != 0:
-                    print('PLATFORM: Error: Can\'t mount microSD partition')
+                    self.logger.error('Update: Can\'t mount microSD partition')
                     raise Exception()
                 shutil.copy(self.config_archive, '/mnt')
                 ret = subprocess.call(['/bin/umount', '/mnt'])
                 if ret != 0:
-                    print('PLATFORM: Error: Unmount of microSD partition failed')
+                    self.logger.error('Update: Unmount of microSD partition failed')
                     raise Exception()
                 # Cleanup and reboot, the bootloader on the newly written microSD card
                 # should be executed prior to the interal one, thus triggering a reflashing of the system
-                print('PLATFORM: Rebooting to trigger update')
+                self.logger.info('Update: Rebooting to trigger update')
                 shutil.rmtree(tempdir)
                 subprocess.call('/sbin/reboot')
             except Exception as e:
-                print('PLATFORM: Error during update process ({})'.format(e.message))
+                self.logger.error('Error during update process ({})'.format(e.message))
                 shutil.rmtree(tempdir)
 
     def set_led(self, status):

@@ -2,12 +2,13 @@ from __future__ import absolute_import
 
 import docker
 import json
+import logging
 import netifaces
 import os
 import shutil
 import subprocess
 import time
-#import traceback
+# import traceback
 
 from .utils import constants
 
@@ -18,17 +19,20 @@ IPTABLES_CHAIN_LABEL = 'SENSOR'
 # Label of the docker user-defined network that we designate for services
 SERVICE_NETWORK = 'services'
 
-_config_dir = None
+_catchall_target = None  # The service instance that netfilter currently redirects packets to
 _config = None
+_config_dir = None
 _docker = None
+_interface = None
+_logger = None
 _services = None  # service_name -> {'container': container ID || None, 'image': image}
 _platform = None  # An instance of the current platform module
-_interface = None
-_catchall_target = None  # The service instance that netfilter currently redirects packets to
 
 
 def init(config_dir, config, hook_mgr, platform, interface):
-    print('Initializing service module')
+    global _logger
+    _logger = logging.getLogger(__name__)
+    _logger.info('Initializing service module')
     global _config_dir, _config, _platform, _interface
     _config_dir = config_dir
     _config = config
@@ -59,7 +63,7 @@ def setup_networking(config, server_response, reset_network):
         if n.name == SERVICE_NETWORK:
             if n.attrs['IPAM']['Config'][0]['Subnet'] != service_network:
                 # In case that network config doesn't match our subnet definition, remove it
-                print('SERVICES: Existing service network uses an outdated subnet range, removing it')
+                _logger.warning('Existing service network uses an outdated subnet range, removing it')
                 destroy_all()
                 n.remove()
             else:
@@ -71,7 +75,7 @@ def setup_networking(config, server_response, reset_network):
         bridge_name = _platform.generate_services_network_iface()
         ipam_pool = docker.types.IPAMPool(subnet=service_network, iprange=service_network)
         ipam_cfg = docker.types.IPAMConfig(pool_configs=[ipam_pool])
-        print('SERVICES: Creating services network {} on bridge {}'.format(service_network, bridge_name))
+        _logger.info('Creating services network {} on bridge {}'.format(service_network, bridge_name))
         _docker.networks.create(SERVICE_NETWORK, ipam=ipam_cfg, options={'com.docker.network.bridge.name': bridge_name})
         _platform.set_services_network_iface(bridge_name)
 
@@ -100,7 +104,7 @@ def start(service):
     collector_host = netifaces.ifaddresses(constants.DOCKER_BRIDGE)[2][0]['addr']
     # Remove known stale container if necessary
     if _services[service]['container'] is not None and get_full_image_name(_services[service]['container'].image) != _services[service]['image']:
-        print('SERVICES: Removing stale container for service {}'.format(service))
+        _logger.info('Removing stale container for service {}'.format(service))
         destroy(service)
         _services[service]['container'] = None
     newly_registered = False
@@ -111,18 +115,18 @@ def start(service):
             if service in c.name:
                 # Destroy incompatible containers
                 if get_full_image_name(c.image) != _services[service]['image']:
-                    print('SERVICES: Removing incompatible container for service {}'.format(service))
+                    _logger.info('Removing incompatible container for service {}'.format(service))
                     destroy(service)
                 else:
                     container = c
         if container is None:
             image_name = _services[service]['image']
             # Check image availability
-            print('SERVICES: Refreshing image for service {} - {}'.format(service, image_name))
+            _logger.info('Refreshing image for service {} - {}'.format(service, image_name))
             image = _docker.images.pull(image_name)
             # Extract exposed ports
             ports = _services[service]['port_assignment']
-            print('SERVICES: Creating new container for service {}'.format(service))
+            _logger.info('Creating new container for service {}'.format(service))
             # Launch containers with administrative network capabilities (so that they can set their own netfilter rules etc.)
             caps = ["NET_ADMIN"]
             # Create new container, either in raw or bridged mode
@@ -145,17 +149,17 @@ def start(service):
         #raise Exception('Stale container ID {}'.format(cid))
     # Ensure that service container isn't running already
     if container not in _docker.containers.list():
-        print('SERVICES: Starting container for service {}'.format(service))
+        _logger.info('Starting container for service {}'.format(service))
         container.start()
     # Forward all incoming new and non-established traffic to catch-all containers via netfilter
     if _services[service]['catch_all'] is True and newly_registered:
         # Wait for the container to have an IP assigned
         container_ip = get_ip_from(service)
         while container_ip is None:
-            print('SERVICES: Waiting for container {} to have an IP address assigned'.format(service))
+            _logger.warning('Waiting for container {} to have an IP address assigned'.format(service))
             time.sleep(1)
             container_ip = get_ip_from(service)
-        print('SERVICES: Adding forwarding rules for catch-all container {} ({})'.format(service, container_ip))
+        _logger.info('Adding forwarding rules for catch-all container {} ({})'.format(service, container_ip))
         enable_catchall_for(service, container_ip)
 
 
@@ -164,7 +168,7 @@ def stop(service):
         raise Exception('Unknown service {}'.format(service))
     container = _services[service]['container']
     if container in _docker.containers.list():
-        print('SERVICES: Stopping container for service {}'.format(service))
+        _logger.info('Stopping container for service {}'.format(service))
         disable_catchall_for(service)
         try:
             container.stop()
@@ -179,7 +183,7 @@ def destroy(service):
         if service in c.name:
             image_id = c.image.id
             disable_catchall_for(service)
-            print('SERVICES: Removing container and image for service {}'.format(service))
+            _logger.info('Removing container and image for service {}'.format(service))
             try:
                 c.stop()
             except Exception:
@@ -203,7 +207,7 @@ def destroy_all():
         try:
             destroy(s)
         except Exception:
-            print('SERVICES: Could not destroy service {}, internal error'.format(s))
+            _logger.error('Could not destroy service {}, internal error'.format(s))
 
 
 def apply_services(config, server_response, reset_network):
@@ -213,7 +217,7 @@ def apply_services(config, server_response, reset_network):
         service_assignments = server_response['services']
         for service_name, service_archs in service_assignments.iteritems():
             if arch not in service_archs:
-                print('SERVICES: Service {} not available on this architecture ({})'.format(service_name, arch))
+                _logger.warning('Service {} not available on this architecture ({})'.format(service_name, arch))
                 continue
             service_image = '{}:{}/{}'.format(_config.get('server', 'name'), _config.get('server', 'port_https'), service_archs[arch]['uri'])
             # Add/update
@@ -231,15 +235,15 @@ def apply_services(config, server_response, reset_network):
             try:
                 start(service_name)
             except Exception as e:
-                print('SERVICES: Could not start service {} ({})'.format(service_name, str(e)))
+                _logger.error('Could not start service {} ({})'.format(service_name, str(e)))
                 # traceback.print_exc()
         # Delete
         for candidate in (set(_services.keys()) - set(service_assignments.keys())):
-            print('SERVICES: Removing service {} due to it being no longer active'.format(candidate))
+            _logger.info('Removing service {} due to it being no longer active'.format(candidate))
             try:
                 destroy(candidate)
             except Exception:
-                print('SERVICES: Couldn\'t remove service {}'.format(candidate))
+                _logger.error('Couldn\'t remove service {}'.format(candidate))
                 continue
             _services.pop(candidate)
 
@@ -251,7 +255,7 @@ def register_registry_cert(config, server_response, reset_network):
     server_cert_path = '{}/ca.crt'.format(server_cert_dir)
     if not os.path.isfile(server_cert_path):
         if not os.path.isdir(server_cert_dir):
-            print('SERVICES: Creating {}'.format(server_cert_dir))
+            _logger.info('Creating {}'.format(server_cert_dir))
             os.makedirs(server_cert_dir)
         shutil.copy('{}/{}'.format(_config_dir, _config.get('server', 'certfile')), server_cert_path)
 
@@ -266,14 +270,14 @@ def enable_docker(config, server_response, reset_network):
     while check_docker() is False:
         attempts += 1
         if attempts >= 10:
-            print('SERVICES: Warning: Docker subsystem not usable')
+            _logger.error('Warning: Docker subsystem not usable')
             return
         time.sleep(1)
     # Prepare service list with containers already registered on this system
     if _services is None:
         _services = {}
         for c in _docker.containers.list(all=True):
-            print('SERVICES: Registering existing container {}'.format(c.name))
+            _logger.info('Registering existing container {}'.format(c.name))
             _services[c.name] = {'container': None}
 
 

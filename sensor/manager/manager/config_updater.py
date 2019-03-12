@@ -1,10 +1,15 @@
 from __future__ import absolute_import
 
+import logging
 import os
 import tarfile
 
+_logger = None
+
 
 def update(config_archive, config_dir, config):
+    global _logger
+    _logger = logging.getLogger(__name__)
     update_applied = False
 
     # Figure out if an update is necessary
@@ -24,7 +29,7 @@ def update(config_archive, config_dir, config):
 
     # Rewrite the config if an update did happen
     if update_applied:
-        print('CONFIG_UPDATER: Updating configuration')
+        _logger.info('Updating sensor configuration file')
         with open('{}/honeysens.cfg'.format(config_dir), 'w') as f:
             config.write(f)
         # Rewrite config archive

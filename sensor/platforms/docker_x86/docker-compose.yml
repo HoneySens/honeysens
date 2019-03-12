@@ -8,6 +8,7 @@ services:
     image: honeysens/sensorx86:$REVISION
     privileged: true
     restart: unless-stopped
+    tty: true
     volumes:
     - /var/run/docker.sock:/var/run/docker.host.sock
     - ${HOST_PWD}:/mnt

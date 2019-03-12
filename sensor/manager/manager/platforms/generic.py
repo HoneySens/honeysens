@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from debinterface import interfaces
+import logging
 import os
 import subprocess
 
@@ -10,10 +11,11 @@ from manager.utils import constants
 class GenericPlatform(object):
 
     cntlm_cfg_path = '/etc/cntlm.conf'
+    logger = None
     services_network_name = None
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
-        pass
+        self.logger = logging.getLogger(__name__)
 
     def get_architecture(self):
         return None
@@ -65,7 +67,7 @@ class GenericPlatform(object):
         ifaces.writeInterfaces()
 
     def update_mac_address(self, iface, mac):
-        print('Changing MAC address of {} to {}'.format(iface, mac))
+        self.logger.info('Changing MAC address of {} to {}'.format(iface, mac))
         subprocess.call(['/usr/bin/macchanger', '-m', mac, iface])
 
     def get_current_revision(self):

@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import logging
 import os
 import re
 import shutil
@@ -24,12 +25,14 @@ UPDATE_FW_DESTINATION = '/tmp/firmware'
 
 class Platform(GenericPlatform):
 
-    interface = None
     config_dir = None
     config_archive = None
+    interface = None
+    logger = None
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
-        print('Initializing platform module: Docker')
+        self.logger = logging.getLogger(__name__)
+        self.logger.info('Initializing platform module: Docker')
         hook_mgr.register_hook(constants.Hooks.ON_INIT, self.cleanup_prev_sensor)
         hook_mgr.register_hook(constants.Hooks.ON_INIT, self.init_networking)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.update_resolv_conf)
@@ -45,7 +48,7 @@ class Platform(GenericPlatform):
     # Enables the docker daemon (if it's not already running) or forces a restart of dockerd
     def enable_docker(self, force_restart):
         if force_restart:
-            print('PLATFORM: Restarting docker service')
+            self.logger.info('Restarting docker service')
             subprocess.call(['s6-svc', '-wr', '-t', '-u', '/var/run/s6/services/docker/'])
         else:
             subprocess.call(['s6-svc', '-wu', '-u', '/var/run/s6/services/docker/'])
@@ -54,7 +57,7 @@ class Platform(GenericPlatform):
         # Only proceed on changed to avoid unnecessary writes to disk
         old_name = self.get_services_network_iface()
         if old_name != name:
-            print('PLATFORM: Registering services interface {}'.format(name))
+            self.logger.info('Registering services interface {}'.format(name))
             super(Platform, self).set_services_network_iface(name)
             # Export the services bridge name into an env variable to be consumed by external processes
             with open('/var/run/s6/container_environment/SERVICES_IFACE', 'w') as f:
@@ -68,7 +71,7 @@ class Platform(GenericPlatform):
     # Only used during unattended updates: Removes artifacts of the previous (now unused) sensor container
     def cleanup_prev_sensor(self):
         if 'PREV_PREFIX' in os.environ:
-            print('PLATFORM: Cleaning up sensor artifacts with prefix {}'.format(os.environ['PREV_PREFIX']))
+            self.logger.info('Cleaning up sensor artifacts with prefix {}'.format(os.environ['PREV_PREFIX']))
             subprocess.call(['/usr/bin/docker-compose',
                              '-H', HOST_DOCKER_SOCKET,
                              '-p', os.environ['PREV_PREFIX'],
@@ -79,7 +82,7 @@ class Platform(GenericPlatform):
     # Configures the network stack depending on the chosen network mode
     def init_networking(self):
         cont_id = self.get_container_id()
-        print('Local container ID: {}'.format(cont_id))
+        self.logger.info('Local container ID: {}'.format(cont_id))
         # Figure out which network mode this container launched with
         p = subprocess.Popen(['/usr/bin/docker',
                               '-H', HOST_DOCKER_SOCKET,
@@ -88,7 +91,7 @@ class Platform(GenericPlatform):
                              stdout=subprocess.PIPE)
         out, err = p.communicate()
         network_mode = out.strip()
-        print('Network mode: {}'.format(network_mode))
+        self.logger.info('Network mode: {}'.format(network_mode))
 
     def update_resolv_conf(self, config, server_response, reset_network):
         # DNS is provided via go-dnsmasq, but dockerd does its own DNS resolution by interpreting 'domain'
@@ -98,7 +101,7 @@ class Platform(GenericPlatform):
         with open('/etc/resolv.conf', 'rb') as f:
             resolv_content = f.read()
         if 'search' in resolv_content or 'domain' in resolv_content:
-            print('PLATFORM: Removing search and domain entries from /etc/resolv.conf')
+            self.logger.info('Removing search and domain entries from /etc/resolv.conf')
             # Replace 'search' and 'domain' statements with comments
             resolv_content = re.sub('search\s\S+', '#', re.sub('domain\s\S+', '#', resolv_content))
             with open('/etc/resolv.conf', 'wb') as f:
@@ -106,7 +109,7 @@ class Platform(GenericPlatform):
             reset_network = True
         if reset_network:
             # Force a restart of go-dnsmasq to apply /etc/hosts changes
-            print('PLATFORM: Restarting go-dnsmasq')
+            self.logger.info('Restarting go-dnsmasq')
             subprocess.call(['killall', 'go-dnsmasq'])
 
     def apply_config(self, config, server_response, reset_network):
@@ -136,7 +139,7 @@ class Platform(GenericPlatform):
     def update(self, config, server_response, reset_network):
         # Don't update if an update is already scheduled
         if os.path.isfile(UPDATE_FW_DESTINATION):
-            print('PLATFORM: Firmware update already scheduled')
+            self.logger.warning('Firmware update already scheduled')
             return
         if 'firmware' in server_response and 'docker_x86' in server_response['firmware']:
             current_revision = GenericPlatform.get_current_revision(self)
@@ -145,24 +148,24 @@ class Platform(GenericPlatform):
             if current_revision != target_revision:
                 tempdir = tempfile.mkdtemp()
                 try:
-                    print('PLATFORM: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
-                    print('PLATFORM: Downloading new firmware from {}'.format(target_uri))
+                    self.logger.info('Update: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
+                    self.logger.info('Update: Downloading new firmware from {}'.format(target_uri))
                     fw_tempfile = '{}/firmware.tar.gz'.format(tempdir)
                     with open(fw_tempfile, 'w') as f:
                         communication.perform_https_request(config, self.config_dir, target_uri, communication.REQUEST_TYPE_GET, file_descriptor=f)
-                    print('PLATFORM: Firmware written to {}'.format(fw_tempfile))
-                    print('PLATFORM: Extracting firmware')
+                    self.logger.info('Update: Firmware written to {}'.format(fw_tempfile))
+                    self.logger.info('Update: Extracting firmware')
                     with tarfile.open(fw_tempfile) as fw_archive:
                         fw_archive.extractall(tempdir)
                     if not os.path.isfile('{}/firmware.img'.format(tempdir)):
                         raise Exception()
-                    print('PLATFORM: Moving firmware to {}'.format(UPDATE_FW_DESTINATION))
+                    self.logger.info('Update: Moving firmware to {}'.format(UPDATE_FW_DESTINATION))
                     shutil.move('{}/firmware.img'.format(tempdir), UPDATE_FW_DESTINATION)
                     os.chmod(UPDATE_FW_DESTINATION, 0666)
-                    print('PLATFORM: Loading new firmware')
+                    self.logger.info('Update: Loading new firmware')
                     subprocess.call(['/usr/bin/docker', '-H', HOST_DOCKER_SOCKET, 'load', '-i', UPDATE_FW_DESTINATION])
                     next_project = 'hs_{}_{}'.format(config.get('general', 'sensor_id'), int(time.time()))
-                    print('PLATFORM: Launching new sensor container within compose prefix {}'.format(next_project))
+                    self.logger.info('Update: Launching new sensor container within compose prefix {}'.format(next_project))
                     # Update compose file with the new image version
                     with open('{}/docker-compose.yml'.format(COMPOSEFILE_DIR)) as f:
                         compose_content = yaml.load(f)
@@ -190,7 +193,7 @@ class Platform(GenericPlatform):
                                     cwd=COMPOSEFILE_DIR,
                                     env=os.environ.copy())
                 except Exception as e:
-                    print('PLATFORM: Error during update process ({})'.format(e.message))
+                    self.logger.error('Error during update process ({})'.format(e.message))
                     shutil.rmtree(tempdir)
                     if os.path.isfile(UPDATE_FW_DESTINATION):
                         os.remove(UPDATE_FW_DESTINATION)
