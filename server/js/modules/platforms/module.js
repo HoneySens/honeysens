@@ -3,9 +3,9 @@ define(['app/app',
         'app/modules/platforms/views/Layout',
         'app/modules/platforms/views/PlatformList',
         'app/modules/platforms/views/PlatformDetails',
-        'app/modules/platforms/views/ModalFirmwareUpload',
+        'app/modules/platforms/views/FirmwareUpload',
         'app/modules/platforms/views/ModalFirmwareRemove'],
-function(HoneySens, Routing, LayoutView, PlatformListView, PlatformDetailsView, ModalFirmwareUploadView, ModalFirmwareRemoveView) {
+function(HoneySens, Routing, LayoutView, PlatformListView, PlatformDetailsView, FirmwareUploadView, ModalFirmwareRemoveView) {
     var PlatformsModule = Routing.extend({
         name: 'platforms',
         startWithParent: false,
@@ -32,7 +32,7 @@ function(HoneySens, Routing, LayoutView, PlatformListView, PlatformDetailsView, 
                 HoneySens.request('view:content').overlay.show(new PlatformDetailsView({model: model}));
             });
             HoneySens.reqres.setHandler('platforms:firmware:add', function() {
-                HoneySens.request('view:modal').show(new ModalFirmwareUploadView());
+                HoneySens.request('view:content').overlay.show(new FirmwareUploadView());
             });
             HoneySens.reqres.setHandler('platforms:firmware:remove', function(model) {
                 HoneySens.request('view:modal').show(new ModalFirmwareRemoveView({model: model}));
