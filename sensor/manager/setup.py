@@ -12,7 +12,7 @@ setup(
     license='BSD',
     packages=find_packages(),
     install_requires=[
-        'colorama',
+        'coloredlogs',
         'debinterface',
         'docker',
         'netifaces',

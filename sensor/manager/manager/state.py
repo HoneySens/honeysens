@@ -1,10 +1,19 @@
 from __future__ import absolute_import
 
+import logging
 import re
 
 from . import hooks
 from . import services
 from .utils import constants
+
+_logger = None
+
+
+def init():
+    global _logger
+    _logger = logging.getLogger(__name__)
+    _logger.info('Initializing state module')
 
 
 def is_ip(value):
@@ -16,7 +25,7 @@ def is_ip(value):
 
 
 def update_server_endpoint(host, name):
-    print('Updating server endpoint in /etc/hosts')
+    _logger.info('Updating server endpoint in /etc/hosts')
     with open('/etc/hosts', 'rb') as f:
         hosts_content = f.read()
     if 'honeysens-server' in hosts_content:

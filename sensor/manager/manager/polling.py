@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import binascii
 import fcntl
 import json
+import logging
 import os
 import socket
 import struct
@@ -22,20 +23,20 @@ from . import state
 from .utils import communication
 from .utils import constants
 
-
-_timer = None
-_config_dir = None
 _config = None
 _config_archive = None
+_config_dir = None
 _interface = None
+_logger = None
 _platform = None
+_timer = None
 
 
 def worker():
     global _timer
     # Send status data to server
     try:
-        print('POLLING: Performing polling process')
+        _logger.info('Performing polling process')
         hooks.execute_hook(constants.Hooks.ON_BEFORE_POLL, [_config, _config_dir])
         sys.stdout.flush()
         r = send_data(collect_data())
@@ -45,12 +46,12 @@ def worker():
             state.apply_config(_config, result, network_changed)
             hooks.execute_hook(constants.Hooks.ON_POLL, [result])
         except Exception as e:
-            print('Warning: Exception when trying to apply new configuration ({})'.format(str(e)))
+            _logger.error('Exception when trying to apply new configuration ({})'.format(str(e)))
             # traceback.print_exc()
         next_execution = _config.getint('server', 'interval') * 60
     except Exception as e:
         # traceback.print_exc()
-        print('Warning: Polling failed, retrying in 60 seconds ({})'.format(str(e)))
+        _logger.warning('Polling failed, retrying in 60 seconds ({})'.format(str(e)))
         hooks.execute_hook(constants.Hooks.ON_POLL_ERROR)
         # Retry in one minute if something fails (server unreachable, etc.)
         next_execution = 60
@@ -162,12 +163,12 @@ def update_config(config_data):
         _config.write(f)
     # Client certificate update
     if 'sensor_crt' in config_data:
-        print('New client certificate received, saving to disk')
+        _logger.info('New client certificate received, saving to disk')
         with open('{}/{}'.format(_config_dir, _config.get('general', 'certfile')), 'w') as f:
             f.write(str(config_data['sensor_crt']))
     # Server certificate update
     if 'server_crt' in config_data:
-        print('New server certificate received, saving to disk')
+        _logger.info('New server certificate received, saving to disk')
         with open('{}/{}'.format(_config_dir, _config.get('server', 'certfile')), 'w') as f:
             f.write(str(config_data['server_crt']))
     # Rewrite config archive
@@ -179,8 +180,9 @@ def update_config(config_data):
 
 
 def start(config_dir, config, config_archive, interface, platform):
-    global _config_dir, _config, _config_archive, _interface, _platform
-    print('Starting polling worker')
+    global _config_dir, _config, _config_archive, _interface, _platform, _logger
+    _logger = logging.getLogger(__name__)
+    _logger.info('Starting polling worker')
     _config_dir = config_dir
     _config = config
     _config_archive = config_archive
@@ -191,5 +193,5 @@ def start(config_dir, config, config_archive, interface, platform):
 
 def stop():
     if _timer is not None:
-        print('POLLING: Stopping worker')
+        _logger.info('Stopping worker')
         _timer.cancel()

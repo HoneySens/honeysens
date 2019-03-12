@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import json
+import logging
 import threading
 import time
 from Crypto.PublicKey import RSA
@@ -11,13 +12,15 @@ from . import hooks
 from .utils import communication
 from .utils import constants
 
+_logger = None
+
 
 def worker(config_dir, config, events, events_lock):
     try:
         sensor_id = config.get('general', 'sensor_id')
         key = RSA.importKey(open('{}/{}'.format(config_dir, config.get('general', 'keyfile'), 'r')).read())
     except Exception as e:
-        print('Warning: Event processor couldn\'t be started ({})'.format(str(e)))
+        _logger.error('Event processor couldn\'t be started ({})'.format(str(e)))
 
     while True:
         with events_lock:
@@ -27,7 +30,7 @@ def worker(config_dir, config, events, events_lock):
                 send_candidates += e
             # Process send the queue
             if len(send_candidates) > 0:
-                print('Sending {} collected event(s) to the server'.format(len(send_candidates)))
+                _logger.info('Sending {} collected event(s) to the server'.format(len(send_candidates)))
                 event_data = {
                     'sensor': sensor_id,
                     'events': communication.encode_data(json.dumps(send_candidates).encode('ascii'))
@@ -48,13 +51,15 @@ def worker(config_dir, config, events, events_lock):
                         if c['source'] in events:
                             events.pop(c['source'])
                 except Exception as e:
-                    print(str(e))
+                    _logger.error(str(e))
                 hooks.execute_hook(constants.Hooks.ON_EVENT)
         time.sleep(2)
 
 
 def start(config_dir, config, events, events_lock):
-    print('Starting event processor')
+    global _logger
+    _logger = logging.getLogger(__name__)
+    _logger.info('Starting event processor')
     thread = threading.Thread(target=worker, args=(config_dir, config, events, events_lock))
     # TODO Replace this with signalling and a graceful shutdown
     thread.daemon = True

@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import colorama
 import sys
 import zmq
 
@@ -8,7 +7,6 @@ from .utils import constants
 
 
 def start(zmq_context, manager):
-    colorama.init()
     socket = zmq_context.socket(zmq.REP)
     socket.bind(constants.CMD_SOCKET)
 
@@ -18,7 +16,7 @@ def start(zmq_context, manager):
         if 'cmd' not in msg:
             socket.send_json({'status': 'error'})
         if msg['cmd'] == 'status':
-            response = 'H{}o{}neySens Sensor Manager\nVersion 1.0.0'.format(colorama.Fore.RED, colorama.Fore.RESET)
+            response = 'HoneySens Sensor Manager is ready'
         elif msg['cmd'] == 'shutdown':
             manager.shutdown()
             do_shutdown = True

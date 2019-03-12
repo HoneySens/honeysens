@@ -1,13 +1,11 @@
 from __future__ import absolute_import
 
-
 hooks = {}  # {hook => [cb1(), cb2(), ...], ...}
 
 
 def register_hook(hook, callback):
     if hook not in hooks:
         hooks[hook] = []
-    # print('Registering callback for hook {}'.format(hook))
     hooks[hook].append(callback)
 
 
