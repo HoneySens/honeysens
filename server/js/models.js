@@ -167,7 +167,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'division': null,
                 'cert': null,
 				'cert_fp': '',
-                'update_interval': '',
+                'update_interval': null,
                 'last_status': '',
                 'last_status_ts': '',
                 'sw_version': '',
@@ -196,6 +196,12 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
 			},
             getFirmware: function() {
                 if(this.get('firmware')) return HoneySens.data.models.platforms.getFirmware(this.get('firmware'));
+            },
+            isTimedOut: function() {
+                var now = new Date().getTime() / 1000;
+                // Compare with global update interval in case no individual interval has been set
+                var update_interval = this.get('update_interval') === null ? HoneySens.data.settings.get('sensorsUpdateInterval') : this.get('update_interval');
+                return (now - this.get('last_status_ts')) > ((update_interval * 60) + 60); // 1 minute timeout tolerance
             }
 		});
 
@@ -244,6 +250,12 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
 			INSTALL_PHASE1: 3,
 			UPDATEINSTALL_PHASE2: 4
 		};
+
+		Models.SensorStatus.serviceStatus = {
+		    RUNNING: 0,
+            SCHEDULED: 1,
+            ERROR: 2
+        };
 
 		Models.SensorStati = Backbone.Collection.extend({
 			model: Models.SensorStatus,

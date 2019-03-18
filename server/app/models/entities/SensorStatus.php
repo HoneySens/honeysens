@@ -1,6 +1,8 @@
 <?php
 namespace HoneySens\app\models\entities;
 
+use stdClass;
+
 /**
  * @Entity
  * @Table(name="statuslogs")
@@ -12,6 +14,10 @@ class SensorStatus {
 	const STATUS_UPDATE_PHASE1 = 2;
 	const STATUS_INSTALL_PHASE1 = 3;
 	const STATUS_UPDATEINSTALL_PHASE2 = 4;
+
+	const SERVICE_STATUS_RUNNING = 0;
+	const SERVICE_STATUS_SCHEDULED = 1;
+	const SERVICE_STATUS_ERROR = 2;
 	
 	/**
 	 * @Id
@@ -63,6 +69,14 @@ class SensorStatus {
 	 * @Column(type="string")
 	 */
 	protected $swVersion;
+
+    /**
+     * JSON-serialized stdClass object that stores service status data as
+     * reported by the sensor: {service_name: service_status, ...}.
+     *
+     * @Column(type="string", nullable=true)
+     */
+	protected $serviceStatus;
 	
     /**
      * Get id
@@ -228,8 +242,28 @@ class SensorStatus {
 	 * Get sensor software version
 	 */
 	public function getSWVersion() {
-		return $this->swVersion;
+	    return $this->swVersion;
 	}
+
+    /**
+     * Sets the service status, expects an object with attributes {$service_name => $service_status, ...}.
+     *
+     * @param stdClass $serviceStatus
+     * @return $this
+     */
+	public function setServiceStatus($serviceStatus) {
+	    $this->serviceStatus = json_encode($serviceStatus);
+        return $this;
+    }
+
+    /**
+     * Returns the service status as an object with attributes {$service_name => $service_status, ...}.
+     *
+     * @return stdClass
+     */
+    public function getServiceStatus() {
+	    return json_decode($this->serviceStatus);
+    }
 	
 	public function getState() { 
 		return array(
@@ -241,7 +275,8 @@ class SensorStatus {
 			'free_mem' => $this->getFreeMem(),
 			'disk_usage' => $this->getDiskUsage(),
 			'disk_total' => $this->getDiskTotal(),
-			'sw_version' => $this->getSWVersion()
+			'sw_version' => $this->getSWVersion(),
+            'service_status' => $this->getServiceStatus()
 		);
 	}
 }

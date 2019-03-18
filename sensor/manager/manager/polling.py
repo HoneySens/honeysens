@@ -12,13 +12,14 @@ import sys
 import tarfile
 import threading
 import time
-import traceback
+# import traceback
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography import x509
 
 from . import hooks
+from manager import services
 from . import state
 from .utils import communication
 from .utils import constants
@@ -26,6 +27,7 @@ from .utils import constants
 _config = None
 _config_archive = None
 _config_dir = None
+_first_poll = True
 _interface = None
 _logger = None
 _platform = None
@@ -33,7 +35,7 @@ _timer = None
 
 
 def worker():
-    global _timer
+    global _timer, _first_poll
     # Send status data to server
     try:
         _logger.info('Performing polling process')
@@ -45,6 +47,7 @@ def worker():
         try:
             state.apply_config(_config, result, network_changed)
             hooks.execute_hook(constants.Hooks.ON_POLL, [result])
+            _first_poll = False
         except Exception as e:
             _logger.error('Exception when trying to apply new configuration ({})'.format(str(e)))
             # traceback.print_exc()
@@ -68,12 +71,12 @@ def get_ip_address(iface):
 
 
 def collect_data():
-    # Client certificate fingerprinting
+    # Client certificate fingerprint
     with open('{}/{}'.format(_config_dir, _config.get('general', 'certfile')), 'r') as f:
         sensor_crt_src = f.read()
     sensor_crt = x509.load_pem_x509_certificate(sensor_crt_src, default_backend())
     sensor_crt_fp = binascii.hexlify(sensor_crt.fingerprint(hashes.SHA256()))
-    # Server certificate fingerprinting
+    # Server certificate fingerprint
     with open('{}/{}'.format(_config_dir, _config.get('server', 'certfile')), 'r') as f:
         server_crt_src = f.read()
     server_crt = x509.load_pem_x509_certificate(server_crt_src, default_backend())
@@ -87,17 +90,23 @@ def collect_data():
     st = os.statvfs('/')
     disk_total = st.f_blocks * st.f_frsize / 1024 / 1024
     disk_usage = (st.f_blocks - st.f_bfree) * st.f_frsize / 1024 / 1024
+    # Service status: Don't return service status for the very first poll, because services aren't started yet
+    if _first_poll:
+        service_status = {}
+    else:
+        service_status = services.get_status()
     #if update_running:
         #status_code = 2
-    return {'timestamp': int(time.time()),
-            'status': status_code,
-            'crt_fp': sensor_crt_fp,
-            'srv_crt_fp': server_crt_fp,
-            'ip': get_ip_address(_interface),
-            'free_mem': free_mem,
-            'disk_usage': disk_usage,
+    return {'crt_fp': sensor_crt_fp,
             'disk_total': disk_total,
-            'sw_version': _platform.get_current_revision()}
+            'disk_usage': disk_usage,
+            'free_mem': free_mem,
+            'ip': get_ip_address(_interface),
+            'service_status': service_status,
+            'srv_crt_fp': server_crt_fp,
+            'status': status_code,
+            'sw_version': _platform.get_current_revision(),
+            'timestamp': int(time.time())}
 
 
 def send_data(data):

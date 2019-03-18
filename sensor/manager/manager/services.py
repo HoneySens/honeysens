@@ -99,6 +99,7 @@ def adjust_firewall(config, server_response, reset_network):
 def start(service):
     if service not in _services:
         raise Exception('Unknown service {}'.format(service))
+    service_label = get_container_name(service)
     containers = _docker.containers.list(all=True)
     # Determine docker bridge IP
     collector_host = netifaces.ifaddresses(constants.DOCKER_BRIDGE)[2][0]['addr']
@@ -112,7 +113,7 @@ def start(service):
         # Search for existing container with the appropriate name, otherwise create a new one
         container = None
         for c in containers:
-            if service in c.name:
+            if service_label in c.name:
                 # Destroy incompatible containers
                 if get_full_image_name(c.image) != _services[service]['image']:
                     _logger.info('Removing incompatible container for service {}'.format(service))
@@ -131,12 +132,12 @@ def start(service):
             caps = ["NET_ADMIN"]
             # Create new container, either in raw or bridged mode
             if _services[service]['raw_network_access'] is True:
-                container = _docker.containers.create(image_name, name=service, network_mode='host', cap_add=caps, environment={
+                container = _docker.containers.create(image_name, name=service_label, network_mode='host', cap_add=caps, environment={
                     'COLLECTOR_HOST': collector_host,
                     'COLLECTOR_PORT': constants.COLLECTOR_PORT,
                     'INTERFACE': _interface})
             else:
-                container = _docker.containers.create(image_name, name=service, network=SERVICE_NETWORK, ports=ports, cap_add=caps, environment={
+                container = _docker.containers.create(image_name, name=service_label, network=SERVICE_NETWORK, ports=ports, cap_add=caps, environment={
                     'COLLECTOR_HOST': collector_host,
                     'COLLECTOR_PORT': constants.COLLECTOR_PORT})
         _services[service]['container'] = container
@@ -180,7 +181,7 @@ def stop(service):
 def destroy(service):
     containers = _docker.containers.list(all=True)
     for c in containers:
-        if service in c.name:
+        if get_container_name(service) in c.name:
             image_id = c.image.id
             disable_catchall_for(service)
             _logger.info('Removing container and image for service {}'.format(service))
@@ -215,35 +216,37 @@ def apply_services(config, server_response, reset_network):
     if 'services' in server_response:
         arch = _platform.get_architecture()
         service_assignments = server_response['services']
-        for service_name, service_archs in service_assignments.iteritems():
+        for service_id, service_archs in service_assignments.iteritems():
             if arch not in service_archs:
-                _logger.warning('Service {} not available on this architecture ({})'.format(service_name, arch))
+                _logger.warning('Service {} not available on this architecture ({})'.format(service_id, arch))
                 continue
             service_image = '{}:{}/{}'.format(_config.get('server', 'name'), _config.get('server', 'port_https'), service_archs[arch]['uri'])
             # Add/update
-            if service_name in _services:
-                _services[service_name]['image'] = service_image
-                _services[service_name]['raw_network_access'] = service_archs[arch]['rawNetworkAccess']
-                _services[service_name]['catch_all'] = service_archs[arch]['catchAll']
-                _services[service_name]['port_assignment'] = json.loads(service_archs[arch]['portAssignment'])
+            if service_id in _services:
+                _services[service_id]['label'] = service_archs[arch]['label']
+                _services[service_id]['image'] = service_image
+                _services[service_id]['raw_network_access'] = service_archs[arch]['rawNetworkAccess']
+                _services[service_id]['catch_all'] = service_archs[arch]['catchAll']
+                _services[service_id]['port_assignment'] = json.loads(service_archs[arch]['portAssignment'])
             else:
-                _services[service_name] = {'image': service_image,
-                                           'raw_network_access': service_archs[arch]['rawNetworkAccess'],
-                                           'catch_all': service_archs[arch]['catchAll'],
-                                           'port_assignment': json.loads(service_archs[arch]['portAssignment']),
-                                           'container': None}
+                _services[service_id] = {'label': service_archs[arch]['label'],
+                                         'image': service_image,
+                                         'raw_network_access': service_archs[arch]['rawNetworkAccess'],
+                                         'catch_all': service_archs[arch]['catchAll'],
+                                         'port_assignment': json.loads(service_archs[arch]['portAssignment']),
+                                         'container': None}
             try:
-                start(service_name)
+                start(service_id)
             except Exception as e:
-                _logger.error('Could not start service {} ({})'.format(service_name, str(e)))
+                _logger.error('Could not start service {} [{}] ({})'.format(service_id, service_archs[arch]['label'], str(e)))
                 # traceback.print_exc()
         # Delete
         for candidate in (set(_services.keys()) - set(service_assignments.keys())):
-            _logger.info('Removing service {} due to it being no longer active'.format(candidate))
+            _logger.info('Removing service {} due to it not being scheduled'.format(candidate))
             try:
                 destroy(candidate)
-            except Exception:
-                _logger.error('Couldn\'t remove service {}'.format(candidate))
+            except Exception as e:
+                _logger.error('Couldn\'t cleanly remove service {} ({})'.format(candidate, str(e)))
                 continue
             _services.pop(candidate)
 
@@ -278,7 +281,7 @@ def enable_docker(config, server_response, reset_network):
         _services = {}
         for c in _docker.containers.list(all=True):
             _logger.info('Registering existing container {}'.format(c.name))
-            _services[c.name] = {'container': None}
+            _services[get_service_id(c.name)] = {'container': c}
 
 
 # True, if the docker subsystem is initialized, online and reachable
@@ -292,6 +295,25 @@ def check_docker():
     return result
 
 
+# Returns a dict with the status of each scheduled service
+def get_status():
+    result = {}
+    for service, service_data in _services.iteritems():
+        if service_data['container'] is None:
+            status = constants.ServiceStatus.SCHEDULED
+        else:
+            try:
+                service_data['container'].reload()
+                if service_data['container'].status == 'running':
+                    status = constants.ServiceStatus.RUNNING
+                else:
+                    status = constants.ServiceStatus.ERROR
+            except Exception:
+                status = constants.ServiceStatus.ERROR
+        result[service] = status
+    return result
+
+
 def get_full_image_name(image):
     return image.attrs['RepoTags'][0]
 
@@ -299,10 +321,25 @@ def get_full_image_name(image):
 def get_ip_from(service):
     ip = None
     try:
-        ip = _docker.containers.get(service).attrs['NetworkSettings']['Networks'][SERVICE_NETWORK]['IPAddress']
+        ip = _docker.containers.get(get_container_name(service)).attrs['NetworkSettings']['Networks'][SERVICE_NETWORK]['IPAddress']
     except Exception as e:
         pass
     return ip
+
+
+def get_service_id(container_name):
+    # Only return a service id using our internal naming scheme if the container name matches that scheme
+    if container_name[0] == 's' and container_name[1:].isdigit():
+        return container_name[1:]
+    else:
+        return container_name
+
+
+def get_container_name(service_id):
+    if service_id.isdigit():
+        return 's{}'.format(service_id)
+    else:
+        return service_id
 
 
 def enable_catchall_for(service, ip):
