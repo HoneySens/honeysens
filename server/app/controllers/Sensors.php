@@ -106,6 +106,7 @@ class Sensors extends RESTResource {
                 if(array_key_exists($targetRevision, $revisions)) {
                     foreach($revisions[$targetRevision] as $arch => $r) {
                         $serviceData[$arch] = array(
+                            'label' => $service->getLabel(),
                             'uri' => sprintf('%s:%s-%s', $service->getRepository(), $r->getArchitecture(), $r->getRevision()),
                             'rawNetworkAccess' => $r->getRawNetworkAccess(),
                             'catchAll' => $r->getCatchAll(),
@@ -115,7 +116,7 @@ class Sensors extends RESTResource {
                 }
                 // Clients expect an associative array here.
                 // StdClass instead of an empty associative array ensures a serialized '{}' instead of an '[]'.
-                $services[$service->getLabel()] = count($serviceData) > 0 ? $serviceData : new \StdClass;
+                $services[$service->getId()] = count($serviceData) > 0 ? $serviceData : new \StdClass;
             }
             // Clients expect an associative array here.
             $sensorData['services'] = count($services) > 0 ? $services : new \StdClass;
@@ -394,6 +395,10 @@ class Sensors extends RESTResource {
      * - free_mem: Free RAM on the sensor
      * - sw_version: Current sensor firmware revision
      *
+     * TODO The following objects are only optional to preserve API compatibility with older sensors
+     * The status data JSON object also MAY contain the following attributes:
+     * - service_status: associative JSON array {service_name: service_status, ...}
+     *
      * @param \stdClass $data
      * @return SensorStatus
      * @throws BadRequestException
@@ -416,11 +421,12 @@ class Sensors extends RESTResource {
             ->attribute('disk_usage', V::intVal())
             ->attribute('disk_total', V::intVal())
             ->attribute('sw_version', V::stringType())
+            ->attribute('service_status', V::objectType()->each(V::intVal()->between(0,2), V::stringType()), false)
             ->check($statusData);
         $em = $this->getEntityManager();
         $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($data->sensor);
         V::objectType()->check($sensor);
-        // Check timestamp validity: accept timestamps that aren't older than two minutes
+        // Check timestamp validity: only accept timestamps that aren't older than two minutes
         $now = new \DateTime();
         if(($sensor->getLastStatus() != null && $statusData->timestamp < $sensor->getLastStatus()->getTimestamp()->format('U'))
             || $statusData->timestamp < ($now->format('U') - 120)) {
@@ -453,6 +459,7 @@ class Sensors extends RESTResource {
             ->setDiskUsage($statusData->disk_usage)
             ->setDiskTotal($statusData->disk_total)
             ->setSWVersion($statusData->sw_version);
+        if(property_exists($statusData, 'service_status')) $status->setServiceStatus($statusData->service_status);
         $em->persist($status);
         $em->flush();
         return $status;

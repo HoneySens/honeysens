@@ -25,7 +25,7 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                 'click button.toggleServiceEdit': function(e) {
                     e.preventDefault();
                     this.servicesEditable = !this.servicesEditable;
-                    this.$el.find('input[type="checkbox"]').attr('disabled', !this.servicesEditable);
+                    this.displayServiceCheckboxes(this.$el);
                     this.$el.find('span.serviceEditLabel').html(this.servicesEditable ? 'sperren' : 'bearbeiten');
                 }
             },
@@ -97,14 +97,54 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                                     this.model.save({services: services}, {wait: true});
                                 }
                             },
+                            initialize: function(options) {
+                                // Re-render this cell on model changes
+                                this.listenTo(this.model, 'change', function() {
+                                    this.render();
+                                });
+                            },
                             render: function () {
                                 this.$el.html(this.template(this.model.attributes));
                                 // Check if service is set on the model
-                                if (_.contains(_.pluck(this.model.get('services'), 'service'), service.id)) {
-                                    this.$el.find('input[type="checkbox"]').prop('checked', true);
+                                var serviceActive = _.contains(_.pluck(this.model.get('services'), 'service'), service.id);
+                                if (serviceActive) this.$el.find('input[type="checkbox"]').prop('checked', true);
+                                // Show/hide checkbox depending on editing mode
+                                view.displayServiceCheckboxes(this.$el);
+                                // Dye the cell background depending on service status and show an indicator,
+                                // but only if the sensor is online and the service is marked as active
+                                var lastServiceStatus = this.model.get('last_service_status');
+                                if(serviceActive && !this.model.isTimedOut()) {
+                                    if (_.has(lastServiceStatus, service.id)) {
+                                        // Current service status data is available
+                                        switch (lastServiceStatus[service.id]) {
+                                            case 0:
+                                                this.$el.removeClass('info danger').addClass('success');
+                                                this.$el.find('span.statusScheduled, span.statusError').addClass('hide');
+                                                this.$el.find('span.statusSuccess').removeClass('hide');
+                                                break;
+                                            case 1:
+                                                this.$el.removeClass('success danger').addClass('info');
+                                                this.$el.find('span.statusSuccess, span.statusError').addClass('hide');
+                                                this.$el.find('span.statusScheduled').removeClass('hide');
+                                                break;
+                                            case 2:
+                                                this.$el.removeClass('success info').addClass('danger');
+                                                this.$el.find('span.statusSuccess, span.statusScheduled').addClass('hide');
+                                                this.$el.find('span.statusError').removeClass('hide');
+                                                break;
+                                        }
+                                    } else {
+                                        // Sensor isn't aware of the service yet - it's scheduled
+                                        this.$el.removeClass('success danger').addClass('info');
+                                        this.$el.find('span.statusSuccess, span.statusError').addClass('hide');
+                                        this.$el.find('span.statusScheduled').removeClass('hide');
+                                    }
+                                } else {
+                                    this.$el.removeClass('success info danger');
+                                    this.$el.find('span.statusSuccess, span.statusScheduled, span.statusError').addClass('hide');
                                 }
-                                // Enable/disable checkbox depending on editing mode
-                                this.$el.find('input[type="checkbox"]').attr('disabled', !view.servicesEditable);
+                                // Enable help popovers
+                                this.$el.find('[data-toggle="popover"]').popover();
                                 return this;
                             }
                         }),
@@ -127,12 +167,10 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                         template: SensorListStatusCellTpl,
                         render: function() {
                             // Mix template helpers into template data
-                            var templateData = this.model.attributes;
+                            var templateData = this.model.attributes,
+                                model = this.model;
                             templateData.isTimedOut = function() {
-                                var now = new Date().getTime() / 1000;
-                                // Compare with global update interval in case no individual interval has been set
-                                var update_interval = this.update_interval === null ? HoneySens.data.settings.get('sensorsUpdateInterval') : this.update_interval;
-                                return (now - this.last_status_ts) > ((update_interval * 60) + 60); // 1 minute timeout tolerance
+                                return model.isTimedOut();
                             };
                             templateData.showLastStatusTS = function() {
                                 var now = new Date().getTime() / 1000,
@@ -148,13 +186,13 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                             // Calculate td classification (for color indication)
                             var className = '',
                                 lastStatus = this.model.get('last_status');
-                            if(templateData.isTimedOut() || lastStatus == Models.SensorStatus.status.ERROR) {
+                            if(this.model.isTimedOut() || lastStatus === Models.SensorStatus.status.ERROR) {
                                 className = 'danger';
-                            } else if(lastStatus == Models.SensorStatus.status.UPDATE_PHASE1
-                                || lastStatus == Models.SensorStatus.status.INSTALL_PHASE1
-                                || lastStatus == Models.SensorStatus.status.UPDATEINSTALL_PHASE2) {
+                            } else if(lastStatus === Models.SensorStatus.status.UPDATE_PHASE1
+                                || lastStatus === Models.SensorStatus.status.INSTALL_PHASE1
+                                || lastStatus === Models.SensorStatus.status.UPDATEINSTALL_PHASE2) {
                                 className = 'info';
-                            } else if(lastStatus == Models.SensorStatus.status.RUNNING) {
+                            } else if(lastStatus === Models.SensorStatus.status.RUNNING) {
                                 className = 'success';
                             }
                             this.$el.addClass(className);
@@ -217,6 +255,16 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
             onShow: function() {
                 // Readjust table margin so that all service labels are visible
                 this.$el.find('table.table').css('margin-top', Math.max(this.$el.find('span.serviceLabel').width() - 45, 0));
+            },
+            displayServiceCheckboxes: function($anchor) {
+                if(this.servicesEditable) {
+                    $anchor.find('div.statusIndicator').addClass('hide');
+                    $anchor.find('input[type="checkbox"]').removeClass('hide');
+                }
+                else {
+                    $anchor.find('div.statusIndicator').removeClass('hide');
+                    $anchor.find('input[type="checkbox"]').addClass('hide');
+                }
             },
             templateHelpers: {
                 hasDivision: function() {

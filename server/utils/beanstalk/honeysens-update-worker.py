@@ -241,6 +241,7 @@ while True:
         print('Upgrading configuration 1.0.4 -> next')
         config.set('sensor', 'service_network', '10.10.10.0/24')
         db.cursor().execute('ALTER TABLE sensors ADD serviceNetwork VARCHAR(255) DEFAULT NULL')
+        db.cursor().execute('ALTER TABLE statuslogs ADD serviceStatus VARCHAR(255) DEFAULT NULL')
         config_version = 'next'
 
     # Write new config file

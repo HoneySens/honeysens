@@ -563,6 +563,7 @@ class Sensor {
 		$last_status = $this->getLastStatus();
 		$last_status_ts = $last_status ? $last_status->getTimestamp()->format('U') : '';
         $last_status_code = $last_status ? $last_status->getStatus() : null;
+        $last_service_status = $last_status ? $last_status->getServiceStatus() : null;
 		$sw_version = $last_status ? $last_status->getSWVersion() : '';
 		$last_ip = $last_status ? $last_status->getIP() : null;
 		$firmware = $this->firmware ? $this->firmware->getId() : null;
@@ -580,6 +581,7 @@ class Sensor {
 			'crt_fp' => $crt_fp,
 			'last_status' => $last_status_code,
 			'last_status_ts' => $last_status_ts,
+			'last_service_status' => $last_service_status,
 			'sw_version' => $sw_version,
 			'last_ip' => $last_ip,
             'server_endpoint_mode' => $this->getServerEndpointMode(),

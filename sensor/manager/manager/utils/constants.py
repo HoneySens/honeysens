@@ -14,3 +14,9 @@ class Hooks:
     ON_BEFORE_POLL = 3  # cb(config, config_dir)
     ON_POLL_ERROR = 4  # cb()
     ON_EVENT = 5  # cb()
+
+
+class ServiceStatus:
+    RUNNING = 0
+    SCHEDULED = 1
+    ERROR = 2
