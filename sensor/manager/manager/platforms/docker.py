@@ -19,8 +19,6 @@ HOST_DOCKER_SOCKET = 'unix:///var/run/docker.host.sock'
 # Project directory that contains the files docker-compose.yml and .env that belong to this sensor deployment,
 # usually mounted as volume from the host fs
 COMPOSEFILE_DIR = '/mnt'
-# Path to store newly downloaded firmware
-UPDATE_FW_DESTINATION = '/tmp/firmware'
 
 
 class Platform(GenericPlatform):
@@ -137,8 +135,8 @@ class Platform(GenericPlatform):
                 subprocess.call(['ifup', self.interface])
 
     def update(self, config, server_response, reset_network):
-        # Don't update if an update is already scheduled
-        if os.path.isfile(UPDATE_FW_DESTINATION):
+        # Don't update if an update is already running
+        if self.is_update_in_progress():
             self.logger.warning('Firmware update already scheduled')
             return
         if 'firmware' in server_response and 'docker_x86' in server_response['firmware']:
@@ -148,6 +146,7 @@ class Platform(GenericPlatform):
             if current_revision != target_revision:
                 tempdir = tempfile.mkdtemp()
                 try:
+                    self.set_update_in_progress(True)
                     self.logger.info('Update: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
                     self.logger.info('Update: Downloading new firmware from {}'.format(target_uri))
                     fw_tempfile = '{}/firmware.tar.gz'.format(tempdir)
@@ -159,11 +158,9 @@ class Platform(GenericPlatform):
                         fw_archive.extractall(tempdir)
                     if not os.path.isfile('{}/firmware.img'.format(tempdir)):
                         raise Exception()
-                    self.logger.info('Update: Moving firmware to {}'.format(UPDATE_FW_DESTINATION))
-                    shutil.move('{}/firmware.img'.format(tempdir), UPDATE_FW_DESTINATION)
-                    os.chmod(UPDATE_FW_DESTINATION, 0666)
+                    os.chmod('{}/firmware.img'.format(tempdir), 0666)
                     self.logger.info('Update: Loading new firmware')
-                    subprocess.call(['/usr/bin/docker', '-H', HOST_DOCKER_SOCKET, 'load', '-i', UPDATE_FW_DESTINATION])
+                    subprocess.call(['/usr/bin/docker', '-H', HOST_DOCKER_SOCKET, 'load', '-i', '{}/firmware.img'.format(tempdir)])
                     next_project = 'hs_{}_{}'.format(config.get('general', 'sensor_id'), int(time.time()))
                     self.logger.info('Update: Launching new sensor container within compose prefix {}'.format(next_project))
                     # Update compose file with the new image version
@@ -195,8 +192,7 @@ class Platform(GenericPlatform):
                 except Exception as e:
                     self.logger.error('Error during update process ({})'.format(e.message))
                     shutil.rmtree(tempdir)
-                    if os.path.isfile(UPDATE_FW_DESTINATION):
-                        os.remove(UPDATE_FW_DESTINATION)
+                    self.set_update_in_progress(False)
 
     def get_container_id(self):
         # Use /proc magic to FIgure out our own container ID

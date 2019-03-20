@@ -7,6 +7,7 @@ import netifaces
 import os
 import shutil
 import subprocess
+import threading
 import time
 # import traceback
 
@@ -26,6 +27,7 @@ _docker = None
 _interface = None
 _logger = None
 _services = None  # service_name -> {'container': container ID || None, 'image': image}
+_services_lock = threading.Lock()
 _platform = None  # An instance of the current platform module
 
 
@@ -107,7 +109,8 @@ def start(service):
     if _services[service]['container'] is not None and get_full_image_name(_services[service]['container'].image) != _services[service]['image']:
         _logger.info('Removing stale container for service {}'.format(service))
         destroy(service)
-        _services[service]['container'] = None
+        with _services_lock:
+            _services[service]['container'] = None
     newly_registered = False
     if _services[service]['container'] is None:
         # Search for existing container with the appropriate name, otherwise create a new one
@@ -140,7 +143,8 @@ def start(service):
                 container = _docker.containers.create(image_name, name=service_label, network=SERVICE_NETWORK, ports=ports, cap_add=caps, environment={
                     'COLLECTOR_HOST': collector_host,
                     'COLLECTOR_PORT': constants.COLLECTOR_PORT})
-        _services[service]['container'] = container
+        with _services_lock:
+            _services[service]['container'] = container
         newly_registered = True
     # Ensure that service container really exists
     containers = _docker.containers.list(all=True)
@@ -194,17 +198,22 @@ def destroy(service):
                 pass
             c.remove()
             _docker.images.remove(image_id)
-            _services[service]['container'] = None
+            with _services_lock:
+                _services[service]['container'] = None
 
 
 def stop_all():
     if _services is not None:
-        for s in _services:
+        with _services_lock:
+            services = _services.keys()
+        for s in services:
             stop(s)
 
 
 def destroy_all():
-    for s in _services:
+    with _services_lock:
+        services = _services.keys()
+    for s in services:
         try:
             destroy(s)
         except Exception:
@@ -222,19 +231,20 @@ def apply_services(config, server_response, reset_network):
                 continue
             service_image = '{}:{}/{}'.format(_config.get('server', 'name'), _config.get('server', 'port_https'), service_archs[arch]['uri'])
             # Add/update
-            if service_id in _services:
-                _services[service_id]['label'] = service_archs[arch]['label']
-                _services[service_id]['image'] = service_image
-                _services[service_id]['raw_network_access'] = service_archs[arch]['rawNetworkAccess']
-                _services[service_id]['catch_all'] = service_archs[arch]['catchAll']
-                _services[service_id]['port_assignment'] = json.loads(service_archs[arch]['portAssignment'])
-            else:
-                _services[service_id] = {'label': service_archs[arch]['label'],
-                                         'image': service_image,
-                                         'raw_network_access': service_archs[arch]['rawNetworkAccess'],
-                                         'catch_all': service_archs[arch]['catchAll'],
-                                         'port_assignment': json.loads(service_archs[arch]['portAssignment']),
-                                         'container': None}
+            with _services_lock:
+                if service_id in _services:
+                    _services[service_id]['label'] = service_archs[arch]['label']
+                    _services[service_id]['image'] = service_image
+                    _services[service_id]['raw_network_access'] = service_archs[arch]['rawNetworkAccess']
+                    _services[service_id]['catch_all'] = service_archs[arch]['catchAll']
+                    _services[service_id]['port_assignment'] = json.loads(service_archs[arch]['portAssignment'])
+                else:
+                    _services[service_id] = {'label': service_archs[arch]['label'],
+                                             'image': service_image,
+                                             'raw_network_access': service_archs[arch]['rawNetworkAccess'],
+                                             'catch_all': service_archs[arch]['catchAll'],
+                                             'port_assignment': json.loads(service_archs[arch]['portAssignment']),
+                                             'container': None}
             try:
                 start(service_id)
             except Exception as e:
@@ -248,7 +258,8 @@ def apply_services(config, server_response, reset_network):
             except Exception as e:
                 _logger.error('Couldn\'t cleanly remove service {} ({})'.format(candidate, str(e)))
                 continue
-            _services.pop(candidate)
+            with _services_lock:
+                _services.pop(candidate)
 
 
 def register_registry_cert(config, server_response, reset_network):
@@ -278,10 +289,11 @@ def enable_docker(config, server_response, reset_network):
         time.sleep(1)
     # Prepare service list with containers already registered on this system
     if _services is None:
-        _services = {}
-        for c in _docker.containers.list(all=True):
-            _logger.info('Registering existing container {}'.format(c.name))
-            _services[get_service_id(c.name)] = {'container': c}
+        with _services_lock:
+            _services = {}
+            for c in _docker.containers.list(all=True):
+                _logger.info('Registering existing container {}'.format(c.name))
+                _services[get_service_id(c.name)] = {'container': c}
 
 
 # True, if the docker subsystem is initialized, online and reachable
@@ -298,19 +310,20 @@ def check_docker():
 # Returns a dict with the status of each scheduled service
 def get_status():
     result = {}
-    for service, service_data in _services.iteritems():
-        if service_data['container'] is None:
-            status = constants.ServiceStatus.SCHEDULED
-        else:
-            try:
-                service_data['container'].reload()
-                if service_data['container'].status == 'running':
-                    status = constants.ServiceStatus.RUNNING
-                else:
+    with _services_lock:
+        for service, service_data in _services.iteritems():
+            if service_data['container'] is None:
+                status = constants.ServiceStatus.SCHEDULED
+            else:
+                try:
+                    service_data['container'].reload()
+                    if service_data['container'].status == 'running':
+                        status = constants.ServiceStatus.RUNNING
+                    else:
+                        status = constants.ServiceStatus.ERROR
+                except Exception:
                     status = constants.ServiceStatus.ERROR
-            except Exception:
-                status = constants.ServiceStatus.ERROR
-        result[service] = status
+            result[service] = status
     return result
 
 

@@ -17,7 +17,11 @@ if [ "$IFACE" ]; then
   IFACE="-i $IFACE"
 fi
 
+if [ "$LOG_LVL" ]; then
+  LOG_LVL="-l $LOG_LVL"
+fi
+
 # Force unbuffered stdout
 export PYTHONUNBUFFERED=1
 
-exec manager -p docker $DEV_MODE $IFACE $CONFIG_FILE
+exec manager -p docker $DEV_MODE $IFACE $LOG_LVL $CONFIG_FILE

@@ -16,6 +16,12 @@ class Hooks:
     ON_EVENT = 5  # cb()
 
 
+class SensorStatus:
+    ERROR = 0  # Currently unused
+    RUNNING = 1
+    UPDATING = 2
+
+
 class ServiceStatus:
     RUNNING = 0
     SCHEDULED = 1
