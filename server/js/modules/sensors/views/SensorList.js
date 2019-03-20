@@ -186,15 +186,9 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                             // Calculate td classification (for color indication)
                             var className = '',
                                 lastStatus = this.model.get('last_status');
-                            if(this.model.isTimedOut() || lastStatus === Models.SensorStatus.status.ERROR) {
-                                className = 'danger';
-                            } else if(lastStatus === Models.SensorStatus.status.UPDATE_PHASE1
-                                || lastStatus === Models.SensorStatus.status.INSTALL_PHASE1
-                                || lastStatus === Models.SensorStatus.status.UPDATEINSTALL_PHASE2) {
-                                className = 'info';
-                            } else if(lastStatus === Models.SensorStatus.status.RUNNING) {
-                                className = 'success';
-                            }
+                            if(this.model.isTimedOut() || lastStatus === Models.SensorStatus.status.ERROR) className = 'danger';
+                            else if(lastStatus === Models.SensorStatus.status.UPDATING) className = 'info';
+                            else if(lastStatus === Models.SensorStatus.status.RUNNING) className = 'success';
                             this.$el.addClass(className);
                             // Render template
                             this.$el.html(this.template(templateData));

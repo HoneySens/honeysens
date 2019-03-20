@@ -138,59 +138,63 @@ class Platform(GenericPlatform):
         subprocess.call(['date', '-s', time.strftime('%Y/%m/%d %H:%M:%S', t)])
 
     def update(self, config, server_response, reset_network):
-        if 'firmware' not in server_response or 'bbb' not in server_response['firmware']:
+        # Don't update if an update is already running
+        if self.is_update_in_progress():
+            self.logger.warning('Firmware update already scheduled')
             return
-        current_revision = GenericPlatform.get_current_revision(self)
-        target_revision = server_response['firmware']['bbb']['revision']
-        target_uri = server_response['firmware']['bbb']['uri']
-        if current_revision != target_revision:
-            # TODO Signal update process during next polls
-            tempdir = tempfile.mkdtemp()
-            try:
-                self.logger.info('Update: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
-                self.logger.info('Update: Removing all containers to free some space')
-                services.destroy_all()
-                self.logger.info('Update: Downloading new firmware from {}'.format(target_uri))
-                fw_tempfile = '{}/firmware.tar.gz'.format(tempdir)
-                with open(fw_tempfile, 'w') as f:
-                    communication.perform_https_request(config, self.config_dir, target_uri, communication.REQUEST_TYPE_GET, file_descriptor=f)
-                self.logger.info('Update: Firmware written to {}'.format(fw_tempfile))
-                self.logger.info('Update: Inspecting archive')
-                with tarfile.open(fw_tempfile) as fw_archive:
-                    files = fw_archive.getnames()
-                    if 'firmware.img' not in files or 'metadata.xml' not in files:
-                        self.logger.error('Update: Invalid archive contents')
+        if 'firmware' in server_response and 'bbb' in server_response['firmware']:
+            current_revision = GenericPlatform.get_current_revision(self)
+            target_revision = server_response['firmware']['bbb']['revision']
+            target_uri = server_response['firmware']['bbb']['uri']
+            if current_revision != target_revision:
+                tempdir = tempfile.mkdtemp()
+                try:
+                    self.set_update_in_progress(True)
+                    self.logger.info('Update: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
+                    self.logger.info('Update: Removing all containers to free some space')
+                    services.destroy_all()
+                    self.logger.info('Update: Downloading new firmware from {}'.format(target_uri))
+                    fw_tempfile = '{}/firmware.tar.gz'.format(tempdir)
+                    with open(fw_tempfile, 'w') as f:
+                        communication.perform_https_request(config, self.config_dir, target_uri, communication.REQUEST_TYPE_GET, file_descriptor=f)
+                    self.logger.info('Update: Firmware written to {}'.format(fw_tempfile))
+                    self.logger.info('Update: Inspecting archive')
+                    with tarfile.open(fw_tempfile) as fw_archive:
+                        files = fw_archive.getnames()
+                        if 'firmware.img' not in files or 'metadata.xml' not in files:
+                            self.logger.error('Update: Invalid archive content')
+                            raise Exception()
+                    self.logger.info('Update: Writing image to microSD card')
+                    ext_dev = '/dev/mmcblk0'
+                    int_dev = '/dev/mmcblk1'
+                    # Check for both internal and external block devices to avoid updating when no SD card is inserted
+                    if not os.path.exists(ext_dev) or not os.path.exists(int_dev):
+                        self.logger.error('Update: No microSD card found')
                         raise Exception()
-                self.logger.info('Update: Writing image to microSD card')
-                ext_dev = '/dev/mmcblk0'
-                int_dev = '/dev/mmcblk1'
-                # Check for both internal and external block devices to avoid updating when no SD card is inserted
-                if not os.path.exists(ext_dev) or not os.path.exists(int_dev):
-                    self.logger.error('Update: No microSD card found')
-                    raise Exception()
-                ret = subprocess.call(['/bin/tar', '-xf', fw_tempfile, '--to-command=dd bs=512k of={}'.format(ext_dev), 'firmware.img'])
-                if ret != 0:
-                    self.logger.error('Update: Can\'t write to microSD card')
-                    raise Exception()
-                # Save current sensor configuration
-                self.logger.info('Update: Preserving sensor configuration, mounting {}p1'.format(ext_dev))
-                ret = subprocess.call(['/bin/mount', '{}p1'.format(ext_dev), '/mnt'])
-                if ret != 0:
-                    self.logger.error('Update: Can\'t mount microSD partition')
-                    raise Exception()
-                shutil.copy(self.config_archive, '/mnt')
-                ret = subprocess.call(['/bin/umount', '/mnt'])
-                if ret != 0:
-                    self.logger.error('Update: Unmount of microSD partition failed')
-                    raise Exception()
-                # Cleanup and reboot, the bootloader on the newly written microSD card
-                # should be executed prior to the interal one, thus triggering a reflashing of the system
-                self.logger.info('Update: Rebooting to trigger update')
-                shutil.rmtree(tempdir)
-                subprocess.call('/sbin/reboot')
-            except Exception as e:
-                self.logger.error('Error during update process ({})'.format(e.message))
-                shutil.rmtree(tempdir)
+                    ret = subprocess.call(['/bin/tar', '-xf', fw_tempfile, '--to-command=dd bs=512k of={}'.format(ext_dev), 'firmware.img'])
+                    if ret != 0:
+                        self.logger.error('Update: Can\'t write to microSD card')
+                        raise Exception()
+                    # Save current sensor configuration
+                    self.logger.info('Update: Preserving sensor configuration, mounting {}p1'.format(ext_dev))
+                    ret = subprocess.call(['/bin/mount', '{}p1'.format(ext_dev), '/mnt'])
+                    if ret != 0:
+                        self.logger.error('Update: Can\'t mount microSD partition')
+                        raise Exception()
+                    shutil.copy(self.config_archive, '/mnt')
+                    ret = subprocess.call(['/bin/umount', '/mnt'])
+                    if ret != 0:
+                        self.logger.error('Update: Unmount of microSD partition failed')
+                        raise Exception()
+                    # Cleanup and reboot, the bootloader on the newly written microSD card
+                    # should be executed prior to the interal one, thus triggering a reflashing of the system
+                    self.logger.info('Update: Rebooting to trigger update')
+                    shutil.rmtree(tempdir)
+                    subprocess.call('/sbin/reboot')
+                except Exception as e:
+                    self.logger.error('Error during update process ({})'.format(e.message))
+                    shutil.rmtree(tempdir)
+                    self.set_update_in_progress(False)
 
     def set_led(self, status):
         if status in [self.led_status_normal, self.led_status_error, self.led_status_incident, self.led_status_off]:

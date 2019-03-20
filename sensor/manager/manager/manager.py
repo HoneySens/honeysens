@@ -8,6 +8,7 @@ import ConfigParser
 import logging
 import netifaces
 import os
+import Queue
 import shutil
 import signal
 import sys
@@ -36,30 +37,29 @@ class Manager:
     config_archive = None
     config = ConfigParser.ConfigParser()
     config_dir = None
-    interface = None
-    platform = None
     dev_mode = False
-    zmq_context = zmq.Context()
     events = {}
     events_lock = threading.Lock()
+    interface = None
     logger = None
+    platform = None
+    state_queue = Queue.Queue()
+    state_worker = None
+    zmq_context = zmq.Context()
 
-    def __init__(self, config_archive, interface, platform, dev_mode):
+    def __init__(self, config_archive, interface, platform, dev_mode, log_lvl):
         self.config_archive = config_archive
         self.dev_mode = dev_mode
-        self.init_logging()
+        self.init_logging(log_lvl)
         self.init_config()
         self.init_interface(interface)
         self.platform = platform  # Temporarily save the name of the requested platform here, after start() the instance
 
-    def init_logging(self):
+    def init_logging(self, log_lvl):
         self.logger = logging.getLogger(__name__)
-        if self.dev_mode:
-            logging_lvl = 'DEBUG'
-        else:
-            logging_lvl = 'INFO'
-        coloredlogs.install(level=logging_lvl, fmt='%(asctime)s [%(name)s] %(levelname)s %(message)s')
+        coloredlogs.install(level=log_lvl.upper(), fmt='%(asctime)s [%(name)s] %(levelname)s %(message)s')
         self.logger.info('Starting up...')
+        self.logger.info('Log level: {}'.format(log_lvl))
 
     def init_config(self):
         if not os.path.isfile(self.config_archive):
@@ -107,11 +107,12 @@ class Manager:
         services.init(self.config_dir, self.config, hooks, self.platform, self.interface)
         hooks.execute_hook(constants.Hooks.ON_INIT)
         # Apply initial configuration
-        state.init()
+        self.state_worker = state.StateWorker(self.state_queue)
+        self.state_worker.start()
         self.logger.info('Applying initial configuration')
-        state.apply_config(self.config, {}, self.dev_mode is False)
+        self.state_worker.apply_config(self.config, {}, self.dev_mode is False)
         # Polling
-        polling.start(self.config_dir, self.config, self.config_archive, self.interface, self.platform)
+        polling.start(self.config_dir, self.config, self.config_archive, self.interface, self.platform, self.state_queue)
         event_processor.start(self.config_dir, self.config, self.events, self.events_lock)
         collector.start(self.zmq_context, self.events, self.events_lock)
         self.logger.info('Startup sequence completed, launching command endpoint')
@@ -120,6 +121,8 @@ class Manager:
     def shutdown(self):
         self.logger.info('Cleaning up')
         polling.stop()
+        self.state_worker.stop()
+        self.state_worker.join()
         services.cleanup()
         shutil.rmtree(self.config_dir)
         self.logger.info('Shutdown complete')
@@ -138,13 +141,14 @@ def main():
     global manager
     parser = argparse.ArgumentParser()
     parser.add_argument('config', help='Sensor configuration archive')
-    parser.add_argument('-i', '--interface', help='Network interface to use')
-    parser.add_argument('-p', '--platform', help='Platform module')
     parser.add_argument('-d', '--dev-mode', action='store_true', help='Development mode')
+    parser.add_argument('-i', '--interface', help='Network interface to use')
+    parser.add_argument('-l', '--log-level', choices=['debug', 'info', 'warning'], default='info', help='Logging level')
+    parser.add_argument('-p', '--platform', help='Platform module')
     args = parser.parse_args()
     # Register signal handlers
     signal.signal(signal.SIGTERM, sigterm_handler)
-    manager = Manager(args.config, args.interface, args.platform, args.dev_mode)
+    manager = Manager(args.config, args.interface, args.platform, args.dev_mode, args.log_level)
     manager.start()
 
 

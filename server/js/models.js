@@ -246,9 +246,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
 		Models.SensorStatus.status = {
 			ERROR: 0,
 			RUNNING: 1,
-			UPDATE_PHASE1: 2,
-			INSTALL_PHASE1: 3,
-			UPDATEINSTALL_PHASE2: 4
+			UPDATING: 2
 		};
 
 		Models.SensorStatus.serviceStatus = {

@@ -20,7 +20,6 @@ from cryptography import x509
 
 from . import hooks
 from manager import services
-from . import state
 from .utils import communication
 from .utils import constants
 
@@ -31,6 +30,7 @@ _first_poll = True
 _interface = None
 _logger = None
 _platform = None
+_state_queue = None
 _timer = None
 
 
@@ -45,7 +45,8 @@ def worker():
         result = json.loads(r['content'])
         network_changed = update_config(result)
         try:
-            state.apply_config(_config, result, network_changed)
+            _logger.debug('Enqueuing state configuration')
+            _state_queue.put({'config': _config, 'server_response': result, 'network_changed': network_changed})
             hooks.execute_hook(constants.Hooks.ON_POLL, [result])
             _first_poll = False
         except Exception as e:
@@ -81,11 +82,15 @@ def collect_data():
         server_crt_src = f.read()
     server_crt = x509.load_pem_x509_certificate(server_crt_src, default_backend())
     server_crt_fp = binascii.hexlify(server_crt.fingerprint(hashes.SHA256()))
+    # Sensor status
+    if _platform.is_update_in_progress():
+        status = constants.SensorStatus.UPDATING
+    else:
+        status = constants.SensorStatus.RUNNING
     # Analyze RAM usage
     p = subprocess.Popen(['free', '-m'], stdout=subprocess.PIPE)
     out, err = p.communicate()
     free_mem = out.decode('utf-8').split('\n')[2].split()[3]
-    status_code = 1
     # Get disk usage for / in MB
     st = os.statvfs('/')
     disk_total = st.f_blocks * st.f_frsize / 1024 / 1024
@@ -95,8 +100,6 @@ def collect_data():
         service_status = {}
     else:
         service_status = services.get_status()
-    #if update_running:
-        #status_code = 2
     return {'crt_fp': sensor_crt_fp,
             'disk_total': disk_total,
             'disk_usage': disk_usage,
@@ -104,7 +107,7 @@ def collect_data():
             'ip': get_ip_address(_interface),
             'service_status': service_status,
             'srv_crt_fp': server_crt_fp,
-            'status': status_code,
+            'status': status,
             'sw_version': _platform.get_current_revision(),
             'timestamp': int(time.time())}
 
@@ -188,8 +191,8 @@ def update_config(config_data):
     return network_changed
 
 
-def start(config_dir, config, config_archive, interface, platform):
-    global _config_dir, _config, _config_archive, _interface, _platform, _logger
+def start(config_dir, config, config_archive, interface, platform, state_queue):
+    global _config_dir, _config, _config_archive, _interface, _platform, _logger, _state_queue
     _logger = logging.getLogger(__name__)
     _logger.info('Starting polling worker')
     _config_dir = config_dir
@@ -197,6 +200,7 @@ def start(config_dir, config, config_archive, interface, platform):
     _config_archive = config_archive
     _interface = interface
     _platform = platform
+    _state_queue = state_queue
     worker()
 
 
