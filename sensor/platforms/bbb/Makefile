@@ -25,8 +25,9 @@ ${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/armhf
 	cp -v bbb-flasher.patch ${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/
 	cp -vr ../../manager ${OUTDIR}/build/image-root/opt/
 	cp -v prepare.sh ${OUTDIR}/build/image-root/root/
-	cp -v manager.service ${OUTDIR}/build/image-root/etc/systemd/system/
-	cp -v led.sh ${OUTDIR}/build/image-root/opt/
+	cp -v manager.service usb_audit/usb-audit@.service ${OUTDIR}/build/image-root/etc/systemd/system/
+	cp -v usb_audit/90-usb-audit.rules ${OUTDIR}/build/image-root/etc/udev/rules.d/
+	cp -v led.sh usb_audit/usb_audit.sh ${OUTDIR}/build/image-root/opt/
 	mount -t proc proc ${OUTDIR}/build/image-root/proc/
 	mount -t sysfs sys ${OUTDIR}/build/image-root/sys/
 	mount -o bind /dev ${OUTDIR}/build/image-root/dev/
