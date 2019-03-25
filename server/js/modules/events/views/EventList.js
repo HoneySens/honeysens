@@ -58,136 +58,145 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                 delete HoneySens.data.models.events.queryParams.division;
 
                 var columns = [{
-                        name: '',
-                        cell: 'select-row',
-                        headerCell: 'select-all',
-                        editable: false,
-                        sortable: false
-                    }, {
-                        name: 'id',
-                        label: 'ID',
-                        editable: false,
-                        sortType: 'toggle',
-                        cell: Backgrid.IntegerCell.extend({
-                            orderSeparator: ''
-                        })
-                    }, {
-                        name: 'timestamp',
-                        label: 'Zeitpunkt',
-                        editable: false,
-                        sortType: 'toggle',
-                        cell: Backgrid.Cell.extend({
-                            render: function() {
-                                this.$el.html(HoneySens.Views.EventTemplateHelpers.showTimestamp(this.model.get('timestamp')));
-                                return this;
-                            }
-                        })
-                    }, {
-                        name: 'sensor',
-                        label: 'Sensor',
-                        editable: false,
-                        sortType: 'toggle',
-                        cell: Backgrid.Cell.extend({
-                            render: function() {
-                                this.$el.html(HoneySens.Views.EventTemplateHelpers.showSensor(this.model.get('sensor')));
-                                return this;
-                            }
-                        })
-                    }, {
-                        name: 'classification',
-                        label: 'Klassifikation',
-                        editable: false,
-                        sortType: 'toggle',
-                        cell: Backgrid.Cell.extend({
-                            render: function() {
-                                this.$el.html(HoneySens.Views.EventTemplateHelpers.showClassification(this.model.get('classification')));
-                                return this;
-                            }
-                        })
-                    }, {
-                        name: 'source',
-                        label: 'Quelle',
-                        editable: false,
-                        sortType: 'toggle',
-                        cell: 'string'
-                    }, {
-                        name: 'summary',
-                        label: 'Details',
-                        editable: false,
-                        sortType: 'toggle',
-                        cell: 'string'
-                    }, {
-                        name: 'status',
-                        label: 'Status',
-                        editable: false,
-                        sortType: 'toggle',
-                        cell: Backgrid.Cell.extend({
-                            template: EventListStatusCellTpl,
-                            events: {
-                                'mouseenter button.editStatus': function(e) {
-                                    e.preventDefault();
-                                    this.$el.find('button.editStatus').popover('show');
-                                },
-                                'mouseleave': function(e) {
-                                    e.preventDefault();
-                                    if(e.target.tagName.toLowerCase() != 'select') {
-                                        this.$el.find('button.editStatus').popover('hide');
-                                    }
-                                },
-                                'click button.btn-primary': function(e) {
-                                    e.preventDefault();
-                                    var statusCode = this.$el.find('div.popover.fade select.statusCode').val(),
-                                        comment = this.$el.find('div.popover.fade textarea').val(),
-                                        view = this;
-                                    this.model.save({status: statusCode, comment: comment}, {wait: true, success: function() {
-                                        view.$el.find('button.editStatus').popover('hide');
-                                    }});
-                                    this.$el.find('div.popover.fade button.btn-primary').prop('disabled', true);
+                    name: '',
+                    cell: 'select-row',
+                    headerCell: 'select-all',
+                    editable: false,
+                    sortable: false
+                }, {
+                    name: 'id',
+                    label: 'ID',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: Backgrid.IntegerCell.extend({
+                        orderSeparator: ''
+                    })
+                }, {
+                    name: 'timestamp',
+                    label: 'Zeitpunkt',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: Backgrid.Cell.extend({
+                        render: function() {
+                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showTimestamp(this.model.get('timestamp')));
+                            return this;
+                        }
+                    })
+                }, {
+                    name: 'sensor',
+                    label: 'Sensor',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: Backgrid.Cell.extend({
+                        render: function() {
+                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showSensor(this.model.get('sensor')));
+                            return this;
+                        }
+                    })
+                }, {
+                    name: 'classification',
+                    label: 'Klassifikation',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: Backgrid.Cell.extend({
+                        render: function() {
+                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showClassification(this.model.get('classification')));
+                            return this;
+                        }
+                    })
+                }, {
+                    name: 'source',
+                    label: 'Quelle',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: 'string'
+                }, {
+                    name: 'summary',
+                    label: 'Details',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: Backgrid.Cell.extend({
+                        render: function() {
+                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showSummary(
+                                this.model.get('summary'),
+                                this.model.get('numberOfPackets'),
+                                this.model.get('numberOfDetails')
+                            ));
+                            return this;
+                        }
+                    })
+                }, {
+                    name: 'status',
+                    label: 'Status',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: Backgrid.Cell.extend({
+                        template: EventListStatusCellTpl,
+                        events: {
+                            'mouseenter button.editStatus': function(e) {
+                                e.preventDefault();
+                                this.$el.find('button.editStatus').popover('show');
+                            },
+                            'mouseleave': function(e) {
+                                e.preventDefault();
+                                if(e.target.tagName.toLowerCase() != 'select') {
+                                    this.$el.find('button.editStatus').popover('hide');
                                 }
                             },
-                            render: function() {
-                                this.$el.html(this.template(this.model.attributes));
-                                // initialize popover for editing
-                                this.$el.find('button.editStatus').popover({
-                                    html: true,
-                                    content: function() {
-                                        return $(this).siblings('div.popover').find('div.popover-content').html();
-                                    },
-                                    placement: 'left',
-                                    trigger: 'manual',
-                                    container: this.$el.find('button.editStatus').parent()
-                                });
-                                // subscribe to model 'change' event
-                                this.listenTo(this.model, 'change', function() {
-                                    this.render();
-                                });
-                                return this;
+                            'click button.btn-primary': function(e) {
+                                e.preventDefault();
+                                var statusCode = this.$el.find('div.popover.fade select.statusCode').val(),
+                                    comment = this.$el.find('div.popover.fade textarea').val(),
+                                    view = this;
+                                this.model.save({status: statusCode, comment: comment}, {wait: true, success: function() {
+                                    view.$el.find('button.editStatus').popover('hide');
+                                }});
+                                this.$el.find('div.popover.fade button.btn-primary').prop('disabled', true);
                             }
-                        })
-                    }, {
-                        label: 'Aktionen',
-                        editable: false,
-                        sortable: false,
-                        cell: Backgrid.Cell.extend({
-                            template: EventListActionsCellTpl,
-                            events: {
-                                'click button.showEvent': function(e) {
-                                    e.preventDefault();
-                                    HoneySens.request('view:content').overlay.show(new EventDetailsView({model: this.model}));
+                        },
+                        render: function() {
+                            this.$el.html(this.template(this.model.attributes));
+                            // initialize popover for editing
+                            this.$el.find('button.editStatus').popover({
+                                html: true,
+                                content: function() {
+                                    return $(this).siblings('div.popover').find('div.popover-content').html();
                                 },
-                                'click button.removeEvent': function(e) {
-                                    e.preventDefault();
-                                    var dialog = new ModalEventRemoveView({model: this.model});
-                                    HoneySens.request('view:modal').show(dialog);
-                                }
+                                placement: 'left',
+                                trigger: 'manual',
+                                container: this.$el.find('button.editStatus').parent()
+                            });
+                            // subscribe to model 'change' event
+                            this.listenTo(this.model, 'change', function() {
+                                this.render();
+                            });
+                            return this;
+                        }
+                    })
+                }, {
+                    label: 'Aktionen',
+                    editable: false,
+                    sortable: false,
+                    cell: Backgrid.Cell.extend({
+                        template: EventListActionsCellTpl,
+                        events: {
+                            'click button.showEvent': function(e) {
+                                e.preventDefault();
+                                HoneySens.request('view:content').overlay.show(new EventDetailsView({model: this.model}));
                             },
-                            render: function() {
-                                this.$el.html(this.template(this.model.attributes));
-                                this.$el.find('button').tooltip();
-                                return this;
+                            'click button.removeEvent': function(e) {
+                                e.preventDefault();
+                                var dialog = new ModalEventRemoveView({model: this.model});
+                                HoneySens.request('view:modal').show(dialog);
                             }
-                        })
-                    }];
+                        },
+                        render: function() {
+                            this.$el.html(this.template(this.model.attributes));
+                            this.$el.find('button').tooltip();
+                            return this;
+                        }
+                    })
+                }];
                 var row = Backgrid.Row.extend({
                     render: function() {
                         Backgrid.Row.prototype.render.call(this);

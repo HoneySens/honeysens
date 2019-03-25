@@ -33,6 +33,13 @@ function(HoneySens, Models, Spinner) {
             showSensor: function (sensor) {
                 var sensor = sensor || this.sensor;
                 return HoneySens.data.models.sensors.get(sensor).get('name');
+            },
+            showSummary: function (summary, numberOfPackets, numberOfDetails) {
+                var summary = summary || this.summary;
+                var interactionCount;
+                interactionCount = parseInt(numberOfPackets) + parseInt(numberOfDetails);
+                summary = summary + ` (${interactionCount})`;
+                return summary;
             }
         };
 

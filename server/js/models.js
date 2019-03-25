@@ -1,7 +1,7 @@
 define(['app/app', 'backbone.paginator'], function(HoneySens) {
-	HoneySens.module('Models', function(Models, HoneySens, Backbone, Marionette, $, _) {
-		Models.Event = Backbone.Model.extend({
-			urlRoot: 'api/events',
+    HoneySens.module('Models', function(Models, HoneySens, Backbone, Marionette, $, _) {
+        Models.Event = Backbone.Model.extend({
+            urlRoot: 'api/events',
             defaults: {
                 new: false // Marker used to highlight new events that appeared after an incremental update
             },
@@ -22,33 +22,33 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                     packets: packets
                 };
             }
-		});
+        });
 
-		Models.Event.classification = {
-			UNKNOWN: 0,
-			ICMP: 1,
-			CONN_ATTEMPT: 2,
-			LOW_HP: 3,
-			PORTSCAN: 4
-		};
+        Models.Event.classification = {
+            UNKNOWN: 0,
+            ICMP: 1,
+            CONN_ATTEMPT: 2,
+            LOW_HP: 3,
+            PORTSCAN: 4
+        };
 
-		Models.Event.status = {
-			UNEDITED: 0,
-			BUSY: 1,
-			RESOLVED: 2,
-			IGNORED: 3
-		};
+        Models.Event.status = {
+            UNEDITED: 0,
+            BUSY: 1,
+            RESOLVED: 2,
+            IGNORED: 3
+        };
 
-		Models.Events = Backbone.PageableCollection.extend({
-			model: Models.Event,
+        Models.Events = Backbone.PageableCollection.extend({
+            model: Models.Event,
             mode: 'server',
-			url: function() {
-				if(this.length > 0) {
-					return 'api/events/?last_id=' + (this.last().get('id'));
-				} else {
-					return 'api/events/';
-				}
-			},
+            url: function() {
+                if(this.length > 0) {
+                    return 'api/events/?last_id=' + (this.last().get('id'));
+                } else {
+                    return 'api/events/';
+                }
+            },
             state: {
                 firstPage: 0,
                 pageSize: 15,
@@ -61,26 +61,26 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             parseRecords: function(resp, options) {
                 return resp.items;
             }
-		});
+        });
 
-		Models.EventDetail = Backbone.Model.extend({
-			initialize: function() {
-				var timestamp = this.get('timestamp') == null ? null : new Date(this.get('timestamp') * 1000);
-				this.set('timestamp', timestamp);
-			}
-		});
+        Models.EventDetail = Backbone.Model.extend({
+            initialize: function() {
+                var timestamp = this.get('timestamp') == null ? null : new Date(this.get('timestamp') * 1000);
+                this.set('timestamp', timestamp);
+            }
+        });
 
-		Models.EventDetail.type = {
-			GENERIC: 0,
-			INTERACTION: 1
-		};
+        Models.EventDetail.type = {
+            GENERIC: 0,
+            INTERACTION: 1
+        };
 
-		Models.EventDetails = Backbone.Collection.extend({
-			model: Models.EventDetail,
-			url: function() {
-				return 'api/eventdetails/by-event/' + this.event.id;
-			}
-		});
+        Models.EventDetails = Backbone.Collection.extend({
+            model: Models.EventDetail,
+            url: function() {
+                return 'api/eventdetails/by-event/' + this.event.id;
+            }
+        });
 
         Models.EventPacket = Backbone.Model.extend({
             defaults: {
@@ -105,13 +105,13 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             model: Models.EventPacket
         });
 
-		Models.EventFilterCondition = Backbone.Model.extend({
-			defaults: {
+        Models.EventFilterCondition = Backbone.Model.extend({
+            defaults: {
                 'field': 1,
                 'type': 0,
                 'value': null
-			}
-		});
+            }
+        });
 
         Models.EventFilterCondition.field = {
             CLASSIFICATION: 0,
@@ -136,7 +136,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'division': null,
                 'name': null,
                 'type': 0,
-				'count': 0,
+                'count': 0,
                 'conditions': []
             },
             getConditionCollection: function() {
@@ -158,20 +158,20 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             mode: 'client'
         });
 
-		Models.Sensor = Backbone.Model.extend({
-			status: null,
-			defaults: {
+        Models.Sensor = Backbone.Model.extend({
+            status: null,
+            defaults: {
                 'hostname': '',
-				'name' : '',
-				'location': '',
+                'name' : '',
+                'location': '',
                 'division': null,
                 'cert': null,
-				'cert_fp': '',
+                'cert_fp': '',
                 'update_interval': null,
                 'last_status': '',
                 'last_status_ts': '',
                 'sw_version': '',
-				'last_ip' : '',
+                'last_ip' : '',
                 'server_endpoint_mode': 0,
                 'server_endpoint_host': null,
                 'server_endpoint_port_https': null,
@@ -189,11 +189,11 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'firmware': null,
                 'services': [],
                 'service_network': null
-			},
-			initialize: function() {
-				this.status = new Models.SensorStati();
-				this.status.sensor = this;
-			},
+            },
+            initialize: function() {
+                this.status = new Models.SensorStati();
+                this.status.sensor = this;
+            },
             getFirmware: function() {
                 if(this.get('firmware')) return HoneySens.data.models.platforms.getFirmware(this.get('firmware'));
             },
@@ -203,66 +203,66 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 var update_interval = this.get('update_interval') === null ? HoneySens.data.settings.get('sensorsUpdateInterval') : this.get('update_interval');
                 return (now - this.get('last_status_ts')) > ((update_interval * 60) + 60); // 1 minute timeout tolerance
             }
-		});
+        });
 
-		Models.Sensors = Backbone.PageableCollection.extend({
-			model: Models.Sensor,
-			url: 'api/sensors',
+        Models.Sensors = Backbone.PageableCollection.extend({
+            model: Models.Sensor,
+            url: 'api/sensors',
             mode: 'client'
-		});
+        });
 
-		Models.SSLCert = Backbone.Model.extend({
-			defaults: {
-				'content': '',
-				'fingerprint': ''
-			}
-		});
+        Models.SSLCert = Backbone.Model.extend({
+            defaults: {
+                'content': '',
+                'fingerprint': ''
+            }
+        });
 
-		Models.SSLCerts = Backbone.Collection.extend({
-			model: Models.SSLCert,
-			url: 'api/certs/'
-		});
+        Models.SSLCerts = Backbone.Collection.extend({
+            model: Models.SSLCert,
+            url: 'api/certs/'
+        });
 
-		Models.Firmware = Backbone.Model.extend({
-			defaults: {
-				'name': '',
-				'version': '',
-				'description': '',
-				'changelog': ''
-			}
-		});
+        Models.Firmware = Backbone.Model.extend({
+            defaults: {
+                'name': '',
+                'version': '',
+                'description': '',
+                'changelog': ''
+            }
+        });
 
-		Models.FirmwareCollection = Backbone.Collection.extend({
-			model: Models.Firmware,
-			url: 'api/platforms/firmware'
-		});
+        Models.FirmwareCollection = Backbone.Collection.extend({
+            model: Models.Firmware,
+            url: 'api/platforms/firmware'
+        });
 
-		Models.SensorStatus = Backbone.Model.extend({
-			initialize: function() {
-				this.set('timestamp', new Date(this.get('timestamp') * 1000));
-			}
-		});
+        Models.SensorStatus = Backbone.Model.extend({
+            initialize: function() {
+                this.set('timestamp', new Date(this.get('timestamp') * 1000));
+            }
+        });
 
-		Models.SensorStatus.status = {
-			ERROR: 0,
-			RUNNING: 1,
-			UPDATING: 2
-		};
+        Models.SensorStatus.status = {
+            ERROR: 0,
+            RUNNING: 1,
+            UPDATING: 2
+        };
 
-		Models.SensorStatus.serviceStatus = {
-		    RUNNING: 0,
+        Models.SensorStatus.serviceStatus = {
+            RUNNING: 0,
             SCHEDULED: 1,
             ERROR: 2
         };
 
-		Models.SensorStati = Backbone.Collection.extend({
-			model: Models.SensorStatus,
-			url: function() {
-				return 'api/sensors/status/by-sensor/' + this.sensor.id;
-			}
-		});
+        Models.SensorStati = Backbone.Collection.extend({
+            model: Models.SensorStatus,
+            url: function() {
+                return 'api/sensors/status/by-sensor/' + this.sensor.id;
+            }
+        });
 
-		Models.ServiceRevision = Backbone.Model.extend({
+        Models.ServiceRevision = Backbone.Model.extend({
             defaults: {
                 'revision': '',
                 'architecture': '',
@@ -271,38 +271,38 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             }
         });
 
-		Models.ServiceRevisions = Backbone.Collection.extend({
+        Models.ServiceRevisions = Backbone.Collection.extend({
             model: Models.ServiceRevision,
             url: 'api/services/revisions'
         });
 
-		Models.ServiceVersion = Backbone.Model.extend({
-			defaults: {
-				'architectures': [],
-				'revisions': []
-			},
+        Models.ServiceVersion = Backbone.Model.extend({
+            defaults: {
+                'architectures': [],
+                'revisions': []
+            },
             getRevisions: function() {
-			    return new Models.ServiceRevisions(this.get('revisions'));
+                return new Models.ServiceRevisions(this.get('revisions'));
             }
-		});
+        });
 
-		Models.ServiceVersions = Backbone.Collection.extend({
-			model: Models.ServiceVersion
-		});
+        Models.ServiceVersions = Backbone.Collection.extend({
+            model: Models.ServiceVersion
+        });
 
-		Models.Service = Backbone.Model.extend({
-			defaults: {
-				'name': '',
-				'description': '',
-				'repository': '',
+        Models.Service = Backbone.Model.extend({
+            defaults: {
+                'name': '',
+                'description': '',
+                'repository': '',
                 'versions': [],
                 'default_revision': null,
                 'assignments': []
-			},
-			getVersions: function() {
-				return new Models.ServiceVersions(this.get('versions'));
-			}
-		});
+            },
+            getVersions: function() {
+                return new Models.ServiceVersions(this.get('versions'));
+            }
+        });
 
         Models.Services = Backbone.PageableCollection.extend({
             model: Models.Service,
@@ -443,8 +443,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             HoneySens.data.models.platforms = new Models.Platforms();
             HoneySens.data.models.stats = new Models.Stats();
             HoneySens.data.session.user = new Models.User();
-		});
-	});
+        });
+    });
 
-	return HoneySens.Models;
+    return HoneySens.Models;
 });

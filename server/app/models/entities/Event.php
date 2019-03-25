@@ -347,7 +347,9 @@ class Event {
 			'source' => $this->getSource(),
 			'summary' => $this->getSummary(),
             'status' => $this->getStatus(),
-            'comment' => $this->getComment()
+            'comment' => $this->getComment(),
+            'numberOfPackets' => sizeof($this->getPackets()),
+            'numberOfDetails' => sizeof($this->getDetails())
 		);
 	}
 }
