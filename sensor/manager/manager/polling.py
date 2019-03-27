@@ -28,6 +28,7 @@ _config_archive = None
 _config_dir = None
 _first_poll = True
 _interface = None
+_last_successful_poll = None
 _logger = None
 _platform = None
 _state_queue = None
@@ -35,7 +36,7 @@ _timer = None
 
 
 def worker():
-    global _timer, _first_poll
+    global _timer, _first_poll, _last_successful_poll
     # Send status data to server
     try:
         _logger.info('Performing polling process')
@@ -44,6 +45,7 @@ def worker():
         r = send_data(collect_data())
         result = json.loads(r['content'])
         network_changed = update_config(result)
+        _last_successful_poll = int(time.time())
         try:
             _logger.debug('Enqueuing state configuration')
             _state_queue.put({'config': _config, 'server_response': result, 'network_changed': network_changed})
@@ -191,6 +193,18 @@ def update_config(config_data):
     return network_changed
 
 
+def is_online():
+    if _last_successful_poll is None:
+        return False
+    interval = _config.getint('server', 'interval') * 60
+    return (int(time.time()) - _last_successful_poll) <= interval
+
+
+def conn_error():
+    global _last_successful_poll
+    _last_successful_poll = None
+
+
 def start(config_dir, config, config_archive, interface, platform, state_queue):
     global _config_dir, _config, _config_archive, _interface, _platform, _logger, _state_queue
     _logger = logging.getLogger(__name__)
@@ -201,6 +215,7 @@ def start(config_dir, config, config_archive, interface, platform, state_queue):
     _interface = interface
     _platform = platform
     _state_queue = state_queue
+    hooks.register_hook(constants.Hooks.ON_POLL_ERROR, conn_error)
     worker()
 
 

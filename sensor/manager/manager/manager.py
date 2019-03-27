@@ -14,7 +14,6 @@ import signal
 import sys
 import tarfile
 import tempfile
-import threading
 import time
 import zmq
 
@@ -34,12 +33,13 @@ manager = None
 
 class Manager:
 
+    collector = None
     config_archive = None
     config = ConfigParser.ConfigParser()
     config_dir = None
     dev_mode = False
-    events = {}
-    events_lock = threading.Lock()
+    event_processor = None
+    event_queue = Queue.Queue()
     interface = None
     logger = None
     platform = None
@@ -113,8 +113,10 @@ class Manager:
         self.state_worker.apply_config(self.config, {}, self.dev_mode is False)
         # Polling
         polling.start(self.config_dir, self.config, self.config_archive, self.interface, self.platform, self.state_queue)
-        event_processor.start(self.config_dir, self.config, self.events, self.events_lock)
-        collector.start(self.zmq_context, self.events, self.events_lock)
+        self.event_processor = event_processor.EventProcessor(self.event_queue, self.config, self.config_dir)
+        self.event_processor.start()
+        self.collector = collector.Collector(self.zmq_context, self.platform, self.event_queue, hooks)
+        self.collector.start()
         self.logger.info('Startup sequence completed, launching command endpoint')
         commands.start(self.zmq_context, self)
 
@@ -123,6 +125,10 @@ class Manager:
         polling.stop()
         self.state_worker.stop()
         self.state_worker.join()
+        self.collector.stop()
+        self.collector.join()
+        self.event_processor.stop()
+        self.event_processor.join()
         services.cleanup()
         shutil.rmtree(self.config_dir)
         self.logger.info('Shutdown complete')

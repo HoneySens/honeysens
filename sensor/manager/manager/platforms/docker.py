@@ -29,6 +29,7 @@ class Platform(GenericPlatform):
     logger = None
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
+        super(Platform, self).__init__(hook_mgr, interface, config_dir, config_archive)
         self.logger = logging.getLogger(__name__)
         self.logger.info('Initializing platform module: Docker')
         hook_mgr.register_hook(constants.Hooks.ON_INIT, self.cleanup_prev_sensor)
@@ -55,7 +56,6 @@ class Platform(GenericPlatform):
         # Only proceed on changed to avoid unnecessary writes to disk
         old_name = self.get_services_network_iface()
         if old_name != name:
-            self.logger.info('Registering services interface {}'.format(name))
             super(Platform, self).set_services_network_iface(name)
             # Export the services bridge name into an env variable to be consumed by external processes
             with open('/var/run/s6/container_environment/SERVICES_IFACE', 'w') as f:

@@ -19,7 +19,7 @@ Message format (JSON):
                 'flags': <set flags (string)>
             }],
             'protocol': <protocol id (int)>
-            'port': <TCP/UDP port number (ingt)>
+            'port': <TCP/UDP port number (int)>
             'timestamp': <unix timestamp>
             'payload': <payload string>
         }, ...]
@@ -34,33 +34,56 @@ import zmq
 
 from .utils import constants
 
-_logger = None
 
+class Collector(threading.Thread):
 
-def worker(zmq_context, events, events_lock):
-    socket = zmq_context.socket(zmq.REP)
-    try:
-        docker_bridge_ip = netifaces.ifaddresses(constants.DOCKER_BRIDGE)[2][0]['addr']
-        socket.bind('tcp://{}:{}'.format(docker_bridge_ip, constants.COLLECTOR_PORT))
-    except ValueError as e:
-        _logger.error('Collector couldn\'t be started ({})'.format(str(e)))
+    ev_restart = threading.Event()
+    ev_stop = threading.Event()
+    logger = None
+    platform = None
+    queue = None
+    zmq_context = None
 
-    while True:
-        msg = socket.recv_json()
-        with events_lock:
-            if msg['source'] not in events:
-                events[msg['source']] = []
-            events[msg['source']].append(msg)
-            socket.send_json({'status': 'ok'})
-            # socket.send_json({'status': 'err', 'response': str(e)})
+    def __init__(self, zmq_context, platform, queue, hook_mgr):
+        threading.Thread.__init__(self)
+        self.ev_restart.set()
+        self.platform = platform
+        self.queue = queue
+        self.zmq_context = zmq_context
+        self.logger = logging.getLogger(__name__)
+        self.logger.info('Initializing collector')
+        hook_mgr.register_hook(constants.Hooks.ON_SERVICE_NETWORK_CHANGE, self.restart)
 
+    def run(self):
+        socket = self.zmq_context.socket(zmq.REP)
+        poller = zmq.Poller()
 
-def start(zmq_context, events, events_lock):
-    global _logger
-    _logger = logging.getLogger(__name__)
-    _logger.info('Starting collector service')
-    thread = threading.Thread(target=worker, args=(zmq_context, events, events_lock))
-    # TODO Replace this with signalling and a graceful shutdown
-    thread.daemon = True
-    thread.start()
+        while self.ev_restart.is_set():
+            try:
+                binding_ip = netifaces.ifaddresses(self.platform.get_services_network_iface())[2][0]['addr']
+                self.logger.info('Listening on tcp://{}:{}'.format(binding_ip, constants.COLLECTOR_PORT))
+                socket.bind('tcp://{}:{}'.format(binding_ip, constants.COLLECTOR_PORT))
+                poller.register(socket, zmq.POLLIN)
+            except ValueError as e:
+                self.logger.error('Collector couldn\'t be started ({})'.format(str(e)))
+                return
 
+            while not self.ev_stop.is_set():
+                socks = dict(poller.poll(1000))
+                if socks.get(socket) == zmq.POLLIN:
+                    self.logger.debug('Event received')
+                    msg = socket.recv_json()
+                    self.queue.put(msg)
+                    socket.send_json({'status': 'ok'})
+                    # socket.send_json({'status': 'err', 'response': str(e)})
+            socket.unbind('tcp://{}:{}'.format(binding_ip, constants.COLLECTOR_PORT))
+            self.ev_stop.clear()
+        self.logger.info('Stopping collector')
+
+    def restart(self):
+        self.ev_restart.set()
+        self.ev_stop.set()
+
+    def stop(self):
+        self.ev_restart.clear()
+        self.ev_stop.set()
