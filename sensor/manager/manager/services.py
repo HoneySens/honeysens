@@ -24,6 +24,7 @@ _catchall_target = None  # The service instance that netfilter currently redirec
 _config = None
 _config_dir = None
 _docker = None
+_hook_mgr = None
 _interface = None
 _logger = None
 _services = None  # service_name -> {'container': container ID || None, 'image': image}
@@ -32,14 +33,14 @@ _platform = None  # An instance of the current platform module
 
 
 def init(config_dir, config, hook_mgr, platform, interface):
-    global _logger
+    global _logger, _config_dir, _config, _platform, _interface, _hook_mgr
     _logger = logging.getLogger(__name__)
     _logger.info('Initializing service module')
-    global _config_dir, _config, _platform, _interface
     _config_dir = config_dir
     _config = config
-    _platform = platform
+    _hook_mgr = hook_mgr
     _interface = interface
+    _platform = platform
     hook_mgr.register_hook(constants.Hooks.ON_INIT, init_firewall)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, register_registry_cert)
     hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, enable_docker)
@@ -80,6 +81,7 @@ def setup_networking(config, server_response, reset_network):
         _logger.info('Creating services network {} on bridge {}'.format(service_network, bridge_name))
         _docker.networks.create(SERVICE_NETWORK, ipam=ipam_cfg, options={'com.docker.network.bridge.name': bridge_name})
         _platform.set_services_network_iface(bridge_name)
+        _hook_mgr.execute_hook(constants.Hooks.ON_SERVICE_NETWORK_CHANGE, [])
 
 
 def adjust_firewall(config, server_response, reset_network):
@@ -104,14 +106,13 @@ def start(service):
     service_label = get_container_name(service)
     containers = _docker.containers.list(all=True)
     # Determine docker bridge IP
-    collector_host = netifaces.ifaddresses(constants.DOCKER_BRIDGE)[2][0]['addr']
+    collector_host = netifaces.ifaddresses(_platform.get_services_network_iface())[2][0]['addr']
     # Remove known stale container if necessary
     if _services[service]['container'] is not None and get_full_image_name(_services[service]['container'].image) != _services[service]['image']:
         _logger.info('Removing stale container for service {}'.format(service))
         destroy(service)
         with _services_lock:
             _services[service]['container'] = None
-    newly_registered = False
     if _services[service]['container'] is None:
         # Search for existing container with the appropriate name, otherwise create a new one
         container = None
@@ -145,7 +146,6 @@ def start(service):
                     'COLLECTOR_PORT': constants.COLLECTOR_PORT})
         with _services_lock:
             _services[service]['container'] = container
-        newly_registered = True
     # Ensure that service container really exists
     containers = _docker.containers.list(all=True)
     container = _services[service]['container']
@@ -157,14 +157,13 @@ def start(service):
         _logger.info('Starting container for service {}'.format(service))
         container.start()
     # Forward all incoming new and non-established traffic to catch-all containers via netfilter
-    if _services[service]['catch_all'] is True and newly_registered:
+    if _services[service]['catch_all'] is True:
         # Wait for the container to have an IP assigned
         container_ip = get_ip_from(service)
         while container_ip is None:
             _logger.warning('Waiting for container {} to have an IP address assigned'.format(service))
             time.sleep(1)
             container_ip = get_ip_from(service)
-        _logger.info('Adding forwarding rules for catch-all container {} ({})'.format(service, container_ip))
         enable_catchall_for(service, container_ip)
 
 
@@ -359,6 +358,7 @@ def enable_catchall_for(service, ip):
     global _catchall_target
     with open(os.devnull, 'w') as devnull:
         if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', IPTABLES_CHAIN_LABEL, '-j', 'DNAT', '--to-destination', ip], stderr=devnull) != 0:
+            _logger.info('Adding forwarding rules for catch-all container {} ({})'.format(service, ip))
             subprocess.call([IPTABLES_PATH, '-t', 'nat', '-A', IPTABLES_CHAIN_LABEL, '-j', 'DNAT', '--to-destination', ip])
         if subprocess.call([IPTABLES_PATH, '-C', IPTABLES_CHAIN_LABEL, '-d', ip, '-j', 'ACCEPT'], stderr=devnull) != 0:
             subprocess.call([IPTABLES_PATH, '-I', IPTABLES_CHAIN_LABEL, '-d', ip, '-j', 'ACCEPT'])

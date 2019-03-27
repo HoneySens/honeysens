@@ -29,7 +29,7 @@ class StateWorker(threading.Thread):
                 state_config = self.queue.get(True, 1)
             except Queue.Empty:
                 continue
-            self.logger.debug('Configuration received, starting application process')
+            self.logger.debug('Configuration received')
             self.apply_config(state_config['config'], state_config['server_response'], state_config['network_changed'])
             self.logger.debug('Configuration application done, notifying queue')
             self.queue.task_done()

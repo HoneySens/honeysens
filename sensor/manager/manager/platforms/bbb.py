@@ -29,6 +29,7 @@ class Platform(GenericPlatform):
     proxy_cfg_file = '{}/http-proxy.conf'.format(proxy_cfg_dir)
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
+        super(Platform, self).__init__(hook_mgr, interface, config_dir, config_archive)
         self.logger = logging.getLogger(__name__)
         self.logger.info('Initializing platform module: BeagleBone Black')
         # Switch off the LED initially

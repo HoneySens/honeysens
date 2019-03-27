@@ -1,6 +1,4 @@
 CMD_SOCKET = 'tcp://127.0.0.1:5555'
-# Replace this with 'eth0' to expose the collector port to the outside (for development purposes)
-DOCKER_BRIDGE = 'docker0'
 DEFAULT_IFACE = 'eth0'
 COLLECTOR_PORT = '5556'
 CFG_SYMLINK = '/honeysens.cfg'
@@ -14,6 +12,7 @@ class Hooks:
     ON_BEFORE_POLL = 3  # cb(config, config_dir)
     ON_POLL_ERROR = 4  # cb()
     ON_EVENT = 5  # cb()
+    ON_SERVICE_NETWORK_CHANGE = 6  # cd()
 
 
 class SensorStatus:

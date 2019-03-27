@@ -25,7 +25,9 @@ class GenericPlatform(object):
         pass
 
     def set_services_network_iface(self, name):
-        self.services_network_name = name
+        if name != self.services_network_name:
+            self.logger.info('Registering services interface {}'.format(name))
+            self.services_network_name = name
 
     def get_services_network_iface(self):
         return self.services_network_name
