@@ -136,7 +136,7 @@ class Platform(GenericPlatform):
 
     def update(self, config, server_response, reset_network):
         # Don't update if an update is already running
-        if self.is_update_in_progress():
+        if self.is_firmware_update_in_progress():
             self.logger.warning('Firmware update already scheduled')
             return
         if 'firmware' in server_response and 'docker_x86' in server_response['firmware']:
@@ -146,7 +146,7 @@ class Platform(GenericPlatform):
             if current_revision != target_revision:
                 tempdir = tempfile.mkdtemp()
                 try:
-                    self.set_update_in_progress(True)
+                    self.set_firmware_update_in_progress(True)
                     self.logger.info('Update: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
                     self.logger.info('Update: Downloading new firmware from {}'.format(target_uri))
                     fw_tempfile = '{}/firmware.tar.gz'.format(tempdir)
@@ -192,7 +192,7 @@ class Platform(GenericPlatform):
                 except Exception as e:
                     self.logger.error('Error during update process ({})'.format(e.message))
                     shutil.rmtree(tempdir)
-                    self.set_update_in_progress(False)
+                    self.set_firmware_update_in_progress(False)
 
     def get_container_id(self):
         # Use /proc magic to FIgure out our own container ID

@@ -34,6 +34,7 @@ manager = None
 class Manager:
 
     collector = None
+    commands = None
     config_archive = None
     config = ConfigParser.ConfigParser()
     config_dir = None
@@ -117,8 +118,10 @@ class Manager:
         self.event_processor.start()
         self.collector = collector.Collector(self.zmq_context, self.platform, self.event_queue, hooks)
         self.collector.start()
+        self.commands = commands.CommandProcessor(self.zmq_context, self)
         self.logger.info('Startup sequence completed, launching command endpoint')
-        commands.start(self.zmq_context, self)
+        self.commands.start()
+        self.shutdown()
 
     def shutdown(self):
         self.logger.info('Cleaning up')
@@ -130,17 +133,25 @@ class Manager:
         self.event_processor.stop()
         self.event_processor.join()
         services.cleanup()
+        self.platform.cleanup()
         shutil.rmtree(self.config_dir)
         self.logger.info('Shutdown complete')
+        sys.exit(0)
 
     def interface_available(self):
         return self.interface in netifaces.interfaces()
 
+    def set_logging_level(self, level):
+        coloredlogs.set_level(level.upper())
+        self.logger.info('Log level: {}'.format(level))
+
+    def get_platform(self):
+        return self.platform
+
 
 def sigterm_handler(signal, frame):
     manager.logger.warning('Received SIGTERM, performing graceful shutdown')
-    manager.shutdown()
-    sys.exit(0)
+    manager.commands.stop()
 
 
 def main():

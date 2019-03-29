@@ -6,12 +6,29 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import threading
 import time
 
+from manager import polling
 from manager import services
 from manager.platforms.generic import GenericPlatform
 from manager.utils import communication
 from manager.utils import constants
+
+LED_MODE_OFF = 0
+LED_MODE_STEADY_RED = 1
+LED_MODE_STEADY_GREEN = 2
+LED_MODE_STEADY_ORANGE = 3
+LED_MODE_FLASH_RED = 4
+LED_MODE_FLASH_GREEN = 5
+LED_MODE_FLASH_ORANGE = 6
+
+LED_GPIO_PIN_A = 60
+LED_GPIO_PIN_B = 26
+LED_GPIO_HIGH = 'high'
+LED_GPIO_LOW = 'low'
+LED_CONTROLLER_INTERVAL = 1.0  # LED worker timing (in seconds)
+LED_TRANSIENT_DURATION = 6 # Number of cycles (of length LED_CONTROLLER_INTERVAL) the transient mode should last
 
 
 class Platform(GenericPlatform):
@@ -19,11 +36,7 @@ class Platform(GenericPlatform):
     config_dir = None
     config_archive = None
     interface = None
-    led_exec = '/opt/led.sh'
-    led_status_normal = 'green'
-    led_status_error = 'orange'
-    led_status_incident = 'red'
-    led_status_off = 'off'
+    led_controller = None
     logger = None
     proxy_cfg_dir = '/etc/systemd/system/docker.service.d'
     proxy_cfg_file = '{}/http-proxy.conf'.format(proxy_cfg_dir)
@@ -32,14 +45,13 @@ class Platform(GenericPlatform):
         super(Platform, self).__init__(hook_mgr, interface, config_dir, config_archive)
         self.logger = logging.getLogger(__name__)
         self.logger.info('Initializing platform module: BeagleBone Black')
-        # Switch off the LED initially
-        self.set_led(self.led_status_off)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.apply_config)
         hook_mgr.register_hook(constants.Hooks.ON_APPLY_CONFIG, self.update)
-        hook_mgr.register_hook(constants.Hooks.ON_POLL, self.on_poll)
         hook_mgr.register_hook(constants.Hooks.ON_BEFORE_POLL, self.update_system_time)
-        hook_mgr.register_hook(constants.Hooks.ON_POLL_ERROR, self.on_poll_error)
-        hook_mgr.register_hook(constants.Hooks.ON_EVENT, self.on_event)
+        hook_mgr.register_hook(constants.Hooks.ON_POLL, self.refresh_led_status)
+        hook_mgr.register_hook(constants.Hooks.ON_CONN_ERROR, self.refresh_led_status)
+        hook_mgr.register_hook(constants.Hooks.ON_SERVICE_DOWNLOAD_START, self.refresh_led_status)
+        hook_mgr.register_hook(constants.Hooks.ON_SERVICE_DOWNLOAD_END, self.refresh_led_status)
         self.interface = interface
         self.config_dir = config_dir
         self.config_archive = config_archive
@@ -48,6 +60,8 @@ class Platform(GenericPlatform):
         subprocess.call(['mkdir', '-p', self.proxy_cfg_dir])
         subprocess.call(['systemctl', 'daemon-reload'])
         self.start_systemd_unit('cntlm')
+        self.led_controller = LEDController()
+        self.led_controller.start()
 
     def get_architecture(self):
         return 'armhf'
@@ -105,21 +119,17 @@ class Platform(GenericPlatform):
             # Restart network interfaces
             self.start_systemd_unit('networking')
 
-    def on_poll(self, config_data):
-        if 'unhandledEvents' in config_data and config_data['unhandledEvents']:
-            self.logger.debug('LED set to incident')
-            self.set_led(self.led_status_incident)
+    def refresh_led_status(self):
+        last_server_response = polling.get_last_server_response()
+        if self.is_firmware_update_in_progress() or self.is_service_update_in_progress():
+            self.led_controller.set_mode(LED_MODE_FLASH_GREEN)
+        elif not polling.is_online():
+            self.led_controller.set_mode(LED_MODE_FLASH_RED)
         else:
-            self.logger.debug('LED set to normal')
-            self.set_led(self.led_status_normal)
-
-    def on_poll_error(self):
-        self.logger.debug('LED set to error')
-        self.set_led(self.led_status_error)
-
-    def on_event(self):
-        self.logger.debug('Event happened, LED set to incident')
-        self.set_led(self.led_status_incident)
+            if 'unhandledEvents' in last_server_response and last_server_response['unhandledEvents']:
+                self.led_controller.set_mode(LED_MODE_STEADY_RED)
+            else:
+                self.led_controller.set_mode(LED_MODE_STEADY_GREEN)
 
     def start_systemd_unit(self, unit):
         subprocess.call(['systemctl', 'start', unit])
@@ -136,11 +146,12 @@ class Platform(GenericPlatform):
             return
         req_time = r['headers']['date']
         t = time.localtime(time.mktime(time.strptime(req_time, '%a, %d %b %Y %H:%M:%S %Z')) - time.timezone)
-        subprocess.call(['date', '-s', time.strftime('%Y/%m/%d %H:%M:%S', t)])
+        with open(os.devnull, 'w') as devnull:
+            subprocess.call(['date', '-s', time.strftime('%Y/%m/%d %H:%M:%S', t)], stdout=devnull)
 
     def update(self, config, server_response, reset_network):
         # Don't update if an update is already running
-        if self.is_update_in_progress():
+        if self.is_firmware_update_in_progress():
             self.logger.warning('Firmware update already scheduled')
             return
         if 'firmware' in server_response and 'bbb' in server_response['firmware']:
@@ -150,7 +161,8 @@ class Platform(GenericPlatform):
             if current_revision != target_revision:
                 tempdir = tempfile.mkdtemp()
                 try:
-                    self.set_update_in_progress(True)
+                    self.set_firmware_update_in_progress(True)
+                    self.refresh_led_status()
                     self.logger.info('Update: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
                     self.logger.info('Update: Removing all containers to free some space')
                     services.destroy_all()
@@ -195,8 +207,118 @@ class Platform(GenericPlatform):
                 except Exception as e:
                     self.logger.error('Error during update process ({})'.format(e.message))
                     shutil.rmtree(tempdir)
-                    self.set_update_in_progress(False)
+                    self.set_firmware_update_in_progress(False)
 
-    def set_led(self, status):
-        if status in [self.led_status_normal, self.led_status_error, self.led_status_incident, self.led_status_off]:
-            subprocess.call([self.led_exec, status])
+    def notify_led(self, mode):
+        # Sets a transient led mode as a form of notification
+        self.led_controller.set_mode(mode, True)
+
+    def cleanup(self):
+        self.led_controller.stop()
+        self.led_controller.join()
+
+
+class LEDController(threading.Thread):
+
+    ev_stop = threading.Event()
+    logger = None
+    mode = LED_MODE_OFF  # Active desired mode, can be temporarily overwritten by a transient mode
+    mode_lock = threading.Lock()
+    status = None  # The current LED state, either LED_MODE_OFF or LED_MODE_STEADY_*
+    transient_mode = None  # Overwrites the default mode for a short amount of time
+    transient_time_remaining = 0  # Remaining overwrite duration
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.logger = logging.getLogger(__name__)
+        self.logger.info('Initializing LED controller')
+        # Enable required GPIO pins
+        for pin in [LED_GPIO_PIN_A, LED_GPIO_PIN_B]:
+            try:
+                with open('/sys/class/gpio/export', 'wb') as f:
+                    f.write(str(pin))
+                self.logger.debug('GPIO {} enabled'.format(pin))
+            except IOError:
+                self.logger.debug('GPIO {} is already enabled'.format(pin))
+
+    def run(self):
+        while not self.ev_stop.is_set():
+            self.mode_lock.acquire()
+            if self.transient_time_remaining > 0:
+                self.process_mode(self.transient_mode)
+                self.transient_time_remaining -= 1
+            else:
+                self.process_mode(self.mode)
+            self.mode_lock.release()
+            self.ev_stop.wait(LED_CONTROLLER_INTERVAL)
+        self.logger.info('Stopping LED controller')
+
+    def stop(self):
+        self.ev_stop.set()
+
+    def set_mode(self, mode, transient=False):
+        self.mode_lock.acquire()
+        if transient:
+            self.logger.debug('Setting transient LED mode ({})'.format(mode))
+            self.transient_mode = mode
+            self.transient_time_remaining = LED_TRANSIENT_DURATION
+        else:
+            self.logger.debug('Setting steady LED mode ({})'.format(mode))
+            self.mode = mode
+        self.mode_lock.release()
+
+    def process_mode(self, mode):
+        # Applies the given mode to the current status
+        status_target = self.mode2status(mode)
+        if mode in [LED_MODE_FLASH_GREEN, LED_MODE_FLASH_RED, LED_MODE_FLASH_ORANGE]:
+            # Dynamic transient modes: Toggle between off and the selected mode
+            if self.status != status_target:
+                self.set_status(status_target)
+            else:
+                self.set_status(LED_MODE_OFF)
+        else:
+            # Static transient modes: Just set the mode directly
+            if self.status != status_target:
+                self.set_status(status_target)
+
+    def set_status(self, mode):
+        # Changes the current LED status
+        if mode not in [LED_MODE_OFF, LED_MODE_STEADY_RED, LED_MODE_STEADY_GREEN, LED_MODE_STEADY_ORANGE]:
+            raise Exception('Invalid LED mode ({})'.format(mode))
+        if mode == LED_MODE_OFF:
+            self.logger.debug('LED: turning off')
+            self.set_pin(LED_GPIO_PIN_A, LED_GPIO_HIGH)
+            self.set_pin(LED_GPIO_PIN_B, LED_GPIO_HIGH)
+            self.status = LED_MODE_OFF
+        elif mode == LED_MODE_STEADY_RED:
+            self.logger.debug('LED: red')
+            self.set_pin(LED_GPIO_PIN_A, LED_GPIO_HIGH)
+            self.set_pin(LED_GPIO_PIN_B, LED_GPIO_LOW)
+            self.status = LED_MODE_STEADY_RED
+        elif mode == LED_MODE_STEADY_GREEN:
+            self.logger.debug('LED: green')
+            self.set_pin(LED_GPIO_PIN_A, LED_GPIO_LOW)
+            self.set_pin(LED_GPIO_PIN_B, LED_GPIO_HIGH)
+            self.status = LED_MODE_STEADY_GREEN
+        elif mode == LED_MODE_STEADY_ORANGE:
+            self.logger.debug('LED: orange')
+            self.set_pin(LED_GPIO_PIN_A, LED_GPIO_LOW)
+            self.set_pin(LED_GPIO_PIN_B, LED_GPIO_LOW)
+            self.status = LED_MODE_STEADY_ORANGE
+
+    def set_pin(self, pin, value):
+        if pin not in [LED_GPIO_PIN_A, LED_GPIO_PIN_B] or value not in [LED_GPIO_LOW, LED_GPIO_HIGH]:
+            raise Exception('Invalid pin data ({}, {})'.format(pin, value))
+        with open('/sys/class/gpio/gpio{}/direction'.format(pin), 'wb') as f:
+            f.write(value)
+
+    def mode2status(self, mode):
+        # Translates all LED modes into their respective steady modes that are compatible with set_status()
+        if mode == LED_MODE_FLASH_RED:
+            return LED_MODE_STEADY_RED
+        elif mode == LED_MODE_FLASH_GREEN:
+            return LED_MODE_STEADY_GREEN
+        elif mode == LED_MODE_FLASH_ORANGE:
+            return LED_MODE_STEADY_ORANGE
+        else:
+            return mode
