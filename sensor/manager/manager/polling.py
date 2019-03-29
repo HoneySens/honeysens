@@ -28,6 +28,7 @@ _config_archive = None
 _config_dir = None
 _first_poll = True
 _interface = None
+_last_server_response = {}
 _last_successful_poll = None
 _logger = None
 _platform = None
@@ -36,7 +37,8 @@ _timer = None
 
 
 def worker():
-    global _timer, _first_poll, _last_successful_poll
+    global _timer, _first_poll, _last_successful_poll, _last_server_response
+    result = {}
     # Send status data to server
     try:
         _logger.info('Performing polling process')
@@ -46,10 +48,10 @@ def worker():
         result = json.loads(r['content'])
         network_changed = update_config(result)
         _last_successful_poll = int(time.time())
+        _last_server_response = result
         try:
             _logger.debug('Enqueuing state configuration')
             _state_queue.put({'config': _config, 'server_response': result, 'network_changed': network_changed})
-            hooks.execute_hook(constants.Hooks.ON_POLL, [result])
             _first_poll = False
         except Exception as e:
             _logger.error('Exception when trying to apply new configuration ({})'.format(str(e)))
@@ -58,10 +60,12 @@ def worker():
     except Exception as e:
         # traceback.print_exc()
         _logger.warning('Polling failed, retrying in 60 seconds ({})'.format(str(e)))
-        hooks.execute_hook(constants.Hooks.ON_POLL_ERROR)
+        trigger_conn_error()
         # Retry in one minute if something fails (server unreachable, etc.)
         next_execution = 60
 
+    # Execute hooks regardless of polling result
+    hooks.execute_hook(constants.Hooks.ON_POLL)
     # Reschedule worker
     _timer = threading.Timer(next_execution, worker, args=())
     _timer.setDaemon(True)
@@ -85,7 +89,7 @@ def collect_data():
     server_crt = x509.load_pem_x509_certificate(server_crt_src, default_backend())
     server_crt_fp = binascii.hexlify(server_crt.fingerprint(hashes.SHA256()))
     # Sensor status
-    if _platform.is_update_in_progress():
+    if _platform.is_firmware_update_in_progress():
         status = constants.SensorStatus.UPDATING
     else:
         status = constants.SensorStatus.RUNNING
@@ -200,9 +204,14 @@ def is_online():
     return (int(time.time()) - _last_successful_poll) <= interval
 
 
-def conn_error():
+def trigger_conn_error():
     global _last_successful_poll
     _last_successful_poll = None
+    hooks.execute_hook(constants.Hooks.ON_CONN_ERROR)
+
+
+def get_last_server_response():
+    return _last_server_response
 
 
 def start(config_dir, config, config_archive, interface, platform, state_queue):
@@ -215,7 +224,6 @@ def start(config_dir, config, config_archive, interface, platform, state_queue):
     _interface = interface
     _platform = platform
     _state_queue = state_queue
-    hooks.register_hook(constants.Hooks.ON_POLL_ERROR, conn_error)
     worker()
 
 

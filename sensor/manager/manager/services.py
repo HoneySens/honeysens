@@ -81,7 +81,7 @@ def setup_networking(config, server_response, reset_network):
         _logger.info('Creating services network {} on bridge {}'.format(service_network, bridge_name))
         _docker.networks.create(SERVICE_NETWORK, ipam=ipam_cfg, options={'com.docker.network.bridge.name': bridge_name})
         _platform.set_services_network_iface(bridge_name)
-        _hook_mgr.execute_hook(constants.Hooks.ON_SERVICE_NETWORK_CHANGE, [])
+        _hook_mgr.execute_hook(constants.Hooks.ON_SERVICE_NETWORK_CHANGE)
 
 
 def adjust_firewall(config, server_response, reset_network):
@@ -127,8 +127,15 @@ def start(service):
         if container is None:
             image_name = _services[service]['image']
             # Check image availability
+            _platform.set_service_update_in_progress(True)
             _logger.info('Refreshing image for service {} - {}'.format(service, image_name))
-            image = _docker.images.pull(image_name)
+            _hook_mgr.execute_hook(constants.Hooks.ON_SERVICE_DOWNLOAD_START)
+            try:
+                _docker.images.pull(image_name)
+            except docker.errors.APIError as e:
+                _logger.info('Could not update image {} ({})'.format(image_name, str(e)))
+            _platform.set_service_update_in_progress(False)
+            _hook_mgr.execute_hook(constants.Hooks.ON_SERVICE_DOWNLOAD_END)
             # Extract exposed ports
             ports = _services[service]['port_assignment']
             _logger.info('Creating new container for service {}'.format(service))

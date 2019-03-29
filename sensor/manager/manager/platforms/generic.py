@@ -13,7 +13,8 @@ class GenericPlatform(object):
     cntlm_cfg_path = '/etc/cntlm.conf'
     logger = None
     services_network_name = None
-    update_in_progress = False
+    firmware_update_in_progress = False
+    service_update_in_progress = False
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
         self.logger = logging.getLogger(__name__)
@@ -35,11 +36,17 @@ class GenericPlatform(object):
     def generate_services_network_iface(self):
         return 'services'
 
-    def set_update_in_progress(self, state):
-        self.update_in_progress = state
+    def set_firmware_update_in_progress(self, state):
+        self.firmware_update_in_progress = state
 
-    def is_update_in_progress(self):
-        return self.update_in_progress
+    def is_firmware_update_in_progress(self):
+        return self.firmware_update_in_progress
+
+    def set_service_update_in_progress(self, state):
+        self.service_update_in_progress = state
+
+    def is_service_update_in_progress(self):
+        return self.service_update_in_progress
 
     def update_iface_configuration(self, iface, mode, address=None, netmask=None, gateway=None, dns=None):
         ifaces = interfaces.Interfaces()
@@ -119,3 +126,7 @@ class GenericPlatform(object):
             for opt in cntlm_cfg:
                 f.write(opt)
                 f.write('\n')
+
+    def cleanup(self):
+        # Room for platforms to perform cleanup operations on manager shutdown
+        pass

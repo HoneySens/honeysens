@@ -89,7 +89,7 @@ class EventProcessor(threading.Thread):
                     raise Exception('Server response {}: {}'.format(result['status'], result['content']))
             except Exception as e:
                 self.logger.warning('Could not submit events ({})'.format(str(e)))
-                hooks.execute_hook(constants.Hooks.ON_POLL_ERROR)
+                polling.trigger_conn_error()
                 return
             # Remove successfully sent events from the event queue
             for c in send_cand:
