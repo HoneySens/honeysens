@@ -9,6 +9,7 @@ define(['app/app',
         'backgrid-paginator',
         'backgrid-select-filter',
         'backgrid-select-all',
+        'backgrid-filter',
         'app/views/common'],
 function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, EventListTpl, EventListStatusCellTpl, EventListActionsCellTpl) {
     HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
@@ -32,7 +33,8 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                 sensorFilter: 'div.sensorFilter',
                 classificationFilter: 'div.classificationFilter',
                 list: 'div.table-responsive',
-                paginator: 'div.paginator'
+                paginator: 'div.paginator',
+                eventFilter: 'div.eventFilter'
             },
             events: {
                 'click button.massEdit': function(e) {
@@ -289,6 +291,16 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                     ]
                 });
                 this.classificationFilter.show(this.classificationFilterView);
+                // Search box
+                var eventFilter = new Backgrid.Extension.ServerSideFilter({
+                    template: function(data) {
+                        return '<span class="search">&nbsp;</span><input class="form-control" type="search" ' + (data.placeholder ? 'placeholder="' + data.placeholder + '"' : '') + ' name="' + data.name + '" ' + (data.value ? 'value="' + data.value + '"' : '') + '/><a class="clear" data-backgrid-action="clear" href="#">&times;</a>';
+                    },
+                    collection: this.collection,
+                    name: "filter",
+                    placeholder: "Suchbegriff"
+                });
+                this.eventFilter.show(eventFilter);
                 // Display control box when models are selected and update counter
                 this.listenTo(this.collection, 'backgrid:selected', function() {
                     view.updateSelectionControlPanel()
