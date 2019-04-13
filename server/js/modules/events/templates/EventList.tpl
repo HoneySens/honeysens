@@ -11,6 +11,9 @@
         <label>Klassifikation:&nbsp;</label>
         <div class="classificationFilter" style="display: inline-block;"></div>
     </div>
+    <div class="form-group">
+        <div class="eventFilter" style="display: inline-block;"></div>
+    </div>
 </div>
 <div class="table-responsive"></div>
 <div class="selectionOptions pull-left hidden">

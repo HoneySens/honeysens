@@ -87,7 +87,8 @@ class Events extends RESTResource {
      * - classification: classification (int) to limit results (0 to 4)
      * - status: status (int) to limit results (0 to 3)
      * - page: page number of result list (only together with 'per_page'), default 0
-     * - per_page: number of results per page (only together with 'page'), default 15, max 60
+     * - per_page: number of results per page (only together with 'page'), default 15, max
+     * - filter: search term to find events that contain the given string
      *
      * If no criteria are given, all events are returned matching the default parameters.
 	 *
@@ -107,7 +108,24 @@ class Events extends RESTResource {
             $qb->andWhere('e.id > :lastid')
                 ->setParameter('lastid', $criteria['lastID']);
         }
-        if(V::key('sort_by', V::in(['id', 'sensor', 'timestamp', 'classification', 'source', 'summary', 'status']))
+        if(V::key('filter', V::stringType())->validate($criteria)) {
+            // Parse both source and comment fields against the filter string
+            $qb->orWhere('e.source LIKE :source')
+                ->setParameter('source', '%'. $criteria['filter'] . '%');
+            $qb->orWhere('e.comment LIKE :comment')
+                ->setParameter('comment', '%'. $criteria['filter'] . '%');
+            // Also try to parse the filter string into a date
+            $date = false;
+            try {
+                $date = new \DateTime($criteria['filter']);
+            } catch (\Exception $e) {}
+            if ($date) {
+                $timestamp = $date->format('Y-m-d');
+                $qb->orWhere('e.timestamp LIKE :timestamp')
+                    ->setParameter('timestamp', $timestamp . '%');
+            }
+        }
+        if(V::key('sort_by', V::in(['id', 'sensor', 'timestamp', 'classification', 'source', 'summary', 'status', 'comment']))
             ->key('order', V::in(['asc', 'desc']))
             ->validate($criteria)) {
             $qb->orderBy('e.' . $criteria['sort_by'], $criteria['order']);
@@ -131,6 +149,7 @@ class Events extends RESTResource {
             $qb->andWhere('e.status = :status')
                 ->setParameter('status', $criteria['status']);
         }
+
         if(V::key('id', V::intVal())->validate($criteria)) {
             $qb->andWhere('e.id = :id')
                 ->setParameter('id', $criteria['id']);
@@ -148,6 +167,7 @@ class Events extends RESTResource {
                 // Default behaviour: return only the first x events
                 $qb->setFirstResult(0)->setMaxResults(15);
             }
+
             $events = array();
             foreach($qb->getQuery()->getResult() as $event) {
                 $events[] = $event->getState();

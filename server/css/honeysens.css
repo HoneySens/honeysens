@@ -89,6 +89,12 @@ div.backgrid-paginator > ul > li:first-child > a {border-top-left-radius: 4px; b
 div.backgrid-paginator > ul > li:last-child > a {border-top-right-radius: 4px; border-bottom-right-radius: 4px}
 /* Backgrid filters above tables */
 div.filters div.form-group:not(.pull-right) {margin-right: 1em}
+/* Backgrid search filter */
+.backgrid-filter .search {position: relative; left: 12px; z-index: 1000; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box}
+.backgrid-filter .search:before {position: absolute; top: 50%; left: 0; width: 6px; height: 6px; margin-top: -6px; background: transparent; border: 3px solid gray; -webkit-border-radius: 12px; -moz-border-radius: 12px; border-radius: 12px; content: ""; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box}
+.backgrid-filter .search:after {position: absolute; top: 50%; left: 10px; width: 3px; height: 7px; margin-top: 2px; background-color: gray; content: ""; -webkit-transform: rotate(-45deg); -moz-transform: rotate(-45deg); -ms-transform: rotate(-45deg); -o-transform: rotate(-45deg); transform: rotate(-45deg); -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box}
+.backgrid-filter .clear {position: relative; top: 2px; right: 25px; z-index: 1000; font-family: sans-serif; font-size: 20px; font-weight: bold; color: gray; text-decoration: none}
+.backgrid-filter input {padding-left: 30px}
 /* Backgrid select-all extension styling */
 table.table .select-row-cell, table.table .select-all-header-cell {text-align: center}
 table.table tr.selected td {background-color: #dff0d8}
