@@ -41,10 +41,10 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
-                    <a class="collapsed" data-toggle="collapse" data-parent="#infoTopics" href="#releasenotes">Release Notes</a>
+                    <a class="collapsed" data-toggle="collapse" data-parent="#infoTopics" href="#releasenotesServer">Release Notes: Server</a>
                 </h4>
             </div>
-            <div id="releasenotes" class="panel-collapse collapse">
+            <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong><br/>
                     <p>
@@ -67,14 +67,14 @@
                     </ul>
                     </p>
                     <hr />
-                	<span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.1</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.1</strong><br/>
                     <p>
-                    	<ul>
-                			<li>Umstellung der Zertifikate auf SHA-256</li>
-                			<li>Erweiterung der Ansicht f&uuml;r Beobachter um Ereigniskommentare und Sensorkonfiguration</li>
-                			<li>verschiedene Darstellungsfehler im Frontend sowie mehrere kleinere Fehler behoben</li>
-						</ul>
-					</p>
+                        <ul>
+                            <li>Umstellung der Zertifikate auf SHA-256</li>
+                            <li>Erweiterung der Ansicht f&uuml;r Beobachter um Ereigniskommentare und Sensorkonfiguration</li>
+                            <li>verschiedene Darstellungsfehler im Frontend sowie mehrere kleinere Fehler behoben</li>
+                        </ul>
+                    </p>
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.0</strong><br/>
                     <p>Unterst&uuml;tzung f&uuml;r Orchestrierungsdienste, unz&auml;hlige Bugfixes und Detailverbesserungen.</p>
@@ -88,6 +88,62 @@
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 0.2.4</strong><br/>
                     <p>Simultanes Bearbeiten oder Entfernen mehrerer Ereignisse erm&ouml;glicht, au&szlig;erdem zahlreiche Bugfixes.</p>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="collapsed" data-toggle="collapse" data-parent="#infoTopics" href="#releasenotesBBB">Release Notes: Plattform BeagleBone Black</a>
+                </h4>
+            </div>
+            <div id="releasenotesBBB" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.5</strong><br/>
+                    <p>Fixed a bug that prevented service downloads through proxies</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong><br/>
+                    <p>Support for remote server certificate updates</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong><br/>
+                    <p>Support for remote certificate updates</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong><br/>
+                    <p>Static DNS servers are now properly recognized, local USB dnsmasq disabled to close port 53</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.1</strong><br/>
+                    <p>NTLM proxy support via cntlm and disk usage reporting added. Requires server 1.0.0</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.0</strong><br/>
+                    <p>Rebuilt image based on Debian 9 for compatibility with HoneySens Server 1.0.x</p>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="collapsed" data-toggle="collapse" data-parent="#infoTopics" href="#releasenotesDocker">Release Notes: Plattform Docker (x86)</a>
+                </h4>
+            </div>
+            <div id="releasenotesDocker" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.1.0</strong><br/>
+                    <p>Deployment is now done with Docker Compose, also supports custom service network ranges</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong><br/>
+                    <p>Fixed a bug that prevented service download through proxies</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong><br/>
+                    <p>Support for remote server certificate updates</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong><br/>
+                    <p>Support for remote certificate updates</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.1</strong><br/>
+                    <p>TLM proxy support via cntlm and disk usage reporting added. Requires server 1.0.0.</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.0</strong><br/>
+                    <p>Initial release compatible with HoneySens server 1.0.x</p>
                 </div>
             </div>
         </div>
