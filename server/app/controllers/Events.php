@@ -87,7 +87,7 @@ class Events extends RESTResource {
      * - classification: classification (int) to limit results (0 to 4)
      * - status: status (int) to limit results (0 to 3)
      * - page: page number of result list (only together with 'per_page'), default 0
-     * - per_page: number of results per page (only together with 'page'), default 15, max
+     * - per_page: number of results per page (only together with 'page'), default 15, max 60
      * - filter: search term to find events that contain the given string
      *
      * If no criteria are given, all events are returned matching the default parameters.
