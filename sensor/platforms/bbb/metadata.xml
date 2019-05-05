@@ -6,6 +6,10 @@
   <description>Debian-based firmware that runs dockerized services</description>
   <changelog>
     <entry>
+        <version>2.0.0</version>
+        <desc>Support for event caching, an adjustable service network range, new LED notification modes and USB auditing</desc>
+    </entry>
+    <entry>
         <version>1.0.5</version>
         <desc>Fixed a bug that prevented service downloads through proxies</desc>
     </entry>
