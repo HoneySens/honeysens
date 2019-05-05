@@ -1,5 +1,5 @@
 PREFIX := HoneySens-Server
-REVISION := 1.0.4
+REVISION := 2.0.0
 OUTDIR := out
 # (watch|simple-watch|chokidar)
 export DEV_WATCH_TASK := chokidar

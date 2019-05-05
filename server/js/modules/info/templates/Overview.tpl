@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>1.0.4</dd>
+        <dd>2.0.0</dd>
         <dt>Lizenz</dt>
         <dd><a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0 Software License</a></dd>
         <dt>Entwicklung</dt>
@@ -46,12 +46,25 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
+                    <p>
+                        <ul>
+                            <li>Zus&auml;tzliche Such-, Filter und Sortierfunktionen f&uuml;r die Ereignis&uuml;bersicht</li>
+                            <li>Interner Netzbereich f&uuml;r Honeypot-Services ist nun frei definierbar</li>
+                            <li>&Uuml;berarbeitung der clientseitigen Formularvalidierung</li>
+                            <li>Status von Diensten wird nun in der Sensor&uuml;bersicht dargestellt</li>
+                            <li>Wartungs-Kurzdoku ist nun Teil der Server-Distribution</li>
+                            <li>Firmware-Release-Notes im Frontend hinterlegt</li>
+                            <li>Unz&auml;hlige Fehlerkorrekturen in Front- und Backend</li>
+                        </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong><br/>
                     <p>
-                    <ul>
-                        <li>Dienste-Refkonfiguration in der Sensor&uuml;bersicht ist jetzt global sperrbar</li>
-                        <li>Fehlerkorrektur im Zusammenhang mit dem automatischen Mailversand</li>
-                    </ul>
+                        <ul>
+                            <li>Dienste-Refkonfiguration in der Sensor&uuml;bersicht ist jetzt global sperrbar</li>
+                            <li>Fehlerkorrektur im Zusammenhang mit dem automatischen Mailversand</li>
+                        </ul>
                     </p>
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong><br/>
