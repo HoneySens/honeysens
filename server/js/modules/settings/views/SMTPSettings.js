@@ -29,7 +29,7 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
                         
-                        // Stop here if we nothing else but the validation result was requested
+                        // Stop here if nothing else but the validation result was requested
                         if(view.validateOnly) {
                             view.validateOnly = false;
                             return;
@@ -58,12 +58,8 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
             },
             isFormValid: function() {
                 var $form = this.$el.find('form.serverConfig');
-                // TODO this is a workaround because bootstrapValidator returns a valid form in case it's collapsed
-                // In the future the form should stay collapsed if it's valid.
-                $('#settings-smtp').collapse('show');
                 this.validateOnly = true;
-                $form.validator('validate');
-                return $form.data('bootstrapValidator').isValid();
+                return !$form.validator('validate').has('.has-error').length;
             }
         });
     });
