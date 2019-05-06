@@ -2,7 +2,7 @@
 # Basic container initialization for both productive and development environments
 
 # Basic requirements
-apk --no-cache add py-pip py-curl ca-certificates alpine-sdk python-dev linux-headers docker dhcpcd py-cryptography docker docker-py macchanger cntlm
+apk --no-cache add py-pip py-curl ca-certificates alpine-sdk python-dev linux-headers docker dhcpcd py-cryptography docker docker-py macchanger cntlm zeromq-dev libffi-dev yaml-dev
 
 # Install arpd and honeyd dependencies
 # apk --no-cache add libevent-dev libdnet-dev libpcap-dev pcre-dev libedit-dev automake autoconf zlib-dev libtool

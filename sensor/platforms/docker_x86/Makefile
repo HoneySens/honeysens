@@ -1,5 +1,5 @@
 PREFIX := HoneySens-Firmware-dockerx86
-REVISION := 1.1.0
+REVISION := 2.0.0
 OUTDIR := out
 METADATA := metadata.xml
 # (watch|simple-watch|chokidar)
