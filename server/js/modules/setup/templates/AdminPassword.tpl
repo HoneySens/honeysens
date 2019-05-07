@@ -1,8 +1,8 @@
 <h2>Administrator-Zugang</h2>
 <hr />
 <form>
-    <p>Dieser Assistent wird Sie beim einrichten eines neuen HoneySens-Servers begleiten.</p>
-    <p>Bitte legen Sie zun&auml;st ein Passwort für den Administrator-Account fest.</p>
+    <p>Dieser Assistent wird Sie beim Einrichten eines neuen HoneySens-Servers begleiten.</p>
+    <p>Bitte legen Sie zun&auml;chst ein Passwort für den Administrator-Account fest.</p>
     <div class="form-group has-feedback">
         <label for="adminPassword">Administrator-Passwort</label>
         <input type="password" name="adminPassword" id="adminPassword" class="form-control" required minlength="6" data-minlength-error="Passwortl&auml;nge zwischen 6 und 255 Zeichen" maxlength="255"/>
