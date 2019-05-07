@@ -239,7 +239,7 @@ while True:
     # 1.0.4 -> 2.0.0
     if config_version == '2.0.0':
         print('Upgrading configuration 1.0.4 -> 2.0.0')
-        config.set('sensor', 'service_network', '10.10.10.0/24')
+        config.set('sensors', 'service_network', '10.10.10.0/24')
         db.cursor().execute('ALTER TABLE sensors ADD serviceNetwork VARCHAR(255) DEFAULT NULL')
         db.cursor().execute('ALTER TABLE statuslogs ADD serviceStatus VARCHAR(255) DEFAULT NULL')
         config_version = '2.0.0'
