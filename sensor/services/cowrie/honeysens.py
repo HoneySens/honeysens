@@ -9,7 +9,7 @@ import cowrie.core.output
 
 class Output(cowrie.core.output.Output):
 
-    def __init__(self, cfg):
+    def __init__(self):
         self.disabled = False
         self.collector_host = None
         self.collector_port = None
@@ -24,7 +24,7 @@ class Output(cowrie.core.output.Output):
             self.collector_port = os.environ['COLLECTOR_PORT']
             print('HoneySens collector available at tcp://{}:{}'.format(self.collector_host, self.collector_port))
 
-        cowrie.core.output.Output.__init__(self, cfg)
+        cowrie.core.output.Output.__init__(self)
 
     def start(self):
         self.zmq_context = zmq.Context()
@@ -59,7 +59,7 @@ class Output(cowrie.core.output.Output):
                      'data': 'Login failed [{}/{}]'.format(entry['username'], entry['password']),
                      'type': 1})
 
-        elif entry['eventid'] == 'cowrie.command.success':
+        elif entry['eventid'] == 'cowrie.command.input':
             session = entry['session']
             if session in self.sessions:
                 self.sessions[session]['messages'].append(
@@ -100,7 +100,7 @@ class Output(cowrie.core.output.Output):
             session = entry['session']
             if session in self.sessions:
                 self.sessions[session]['messages'].append(
-                    {'timestamp': int(time.time()), 'data': 'Client version: [{}]'.format(entry['version']), 'type': 1})
+                    {'timestamp': int(time.time()), 'data': 'Client identifier: [{}]'.format(entry['version']), 'type': 1})
 
         elif entry['eventid'] == 'cowrie.client.size':
             session = entry['session']

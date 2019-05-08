@@ -8,5 +8,5 @@
     <catchAll>false</catchAll>
     <portAssignment>{"2222/tcp":22}</portAssignment>
     <revision>$REVISION</revision>
-    <revisionDescription>Upstream version 1.2.0 with just SSH enabled</revisionDescription>
+    <revisionDescription>Upstream version 1.6.0 with just SSH enabled</revisionDescription>
 </service>
