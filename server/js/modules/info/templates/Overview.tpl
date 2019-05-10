@@ -6,12 +6,12 @@
         <dt>Revision</dt>
         <dd>2.0.0</dd>
         <dt>Lizenz</dt>
-        <dd><a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0 Software License</a></dd>
+        <dd><a href="https://www.apache.org/licenses/LICENSE-2.0.html" target="_blank">Apache 2.0 Software License</a></dd>
         <dt>Entwicklung</dt>
         <!--<dd>Pascal Br&uuml;ckner</dd>-->
         <dd>T-Systems Multimedia Solutions</dd>
         <dt>Website</dt>
-        <dd><a href="https://honeysens.org/">honeysens.org</a></dd>
+        <dd><a href="https://honeysens.org/" target="_blank">honeysens.org</a></dd>
     </dl>
     <div class="well">
         Die HoneySens-Plattform ist ein auf der Idee von Honeypots basierendes Integrationswerkzeug zur Absicherung
