@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="ie6 oldie"> <![endif]-->
+<!--[if IE 7]>    <html class="ie7 oldie"> <![endif]-->
+<!--[if IE 8]>    <html class="ie8 oldie"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html><!--<![endif]--><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="description" content="">
+    <meta name="author" content="Matthias Edler-Golla, wachenfeld-golla.de">
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no;">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>LOGO! Login</title>
+    <link rel="apple-touch-icon-precomposed" href="images/logo_home_iphone.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="images/logo_home_ipad.png">
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-startup-image" href="images/StartupGraphic.png">
+    <link rel="stylesheet" href="css/stylesheet.css">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- this script helps older IE versions to understand html5 -->
+    <!--[if lt IE 9 ]>
+<script src="js/html5.js"></script>
+	<![endif]-->
+    <script type="text/javascript" src="css/utility.js">
+    </script>
+    <script type="text/javascript" src="css/storage.js">
+    </script>
+    <script type="text/javascript" src="css/bigint.js">
+    </script>
+    <script type="text/javascript" src="css/encrypt.js">
+    </script>
+    <script type="text/javascript" src="css/ajax.js">
+    </script>
+    <script type="text/javascript" src="css/login.js">
+    </script>
+    <script type="text/javascript" src="css/pagecommon.js">
+    </script>
+    <script type="text/javascript" language="javascript">
+        function OnPasswordFocus(oPassword) {
+            if (oPassword && oPassword.value) {
+                oPassword.select();
+            }
+        }
+        function OnLanguageChange(oSelectLanguage) {
+            if (oSelectLanguage) {
+                var iTargeLanguage = oSelectLanguage.options[oSelectLanguage.selectedIndex].value;
+                var iCurrentLanguage = LocalStorage.Instance().Get("logo_current_language");
+                if (iTargeLanguage != iCurrentLanguage) {
+                    LocalStorage.Instance().Set("logo_current_language", iTargeLanguage);
+                    window.location.replace("/logo_login.shtm?!App-Language=" + iTargeLanguage);
+                }
+            }
+        }
+        function LoginPageLogin() {
+            var sPublicKey1 = document.body.getAttribute("logo_public_key1");
+            var sPublicKey2 = document.body.getAttribute("logo_public_key2");
+            var oInputPassword = document.getElementById("input_password");
+            var oButtonLogin = document.getElementById("button_login");
+            var sPassword = oInputPassword.value;
+            var bKeepSignIn = document.getElementById("check_keepsignin").checked;
+            var bLogToCustomizedSite = 0;//document.getElementById("check_logoncustomized").checked;
+            LocalLogin(sPublicKey1, sPublicKey2, sPassword, bKeepSignIn, bLogToCustomizedSite, oButtonLogin, oInputPassword);
+            return false;
+        }
+        function Initialize() {
+            //initialize:
+            //input password:
+            var oInputPassword = document.getElementById("input_password");
+            var sPassword = LocalStorage.Instance().Get("logo_current_password");
+            if (sPassword)
+                oInputPassword.value = sPassword;
+            //select language:
+            var oSelectLanguage = document.getElementById("select_language");
+            var iCurLanguage = LocalStorage.Instance().Get("logo_current_language");
+            var iIndex;
+            for (iIndex = 0; iIndex < oSelectLanguage.options.length; iIndex++) {
+                if (oSelectLanguage.options[iIndex].value == iCurLanguage)
+                    break;
+            }
+            if (iIndex < oSelectLanguage.options.length) {
+                //found the save language:
+                oSelectLanguage.selectedIndex = iIndex;
+            }
+            else {
+                //use english as default:
+                LocalStorage.Instance().Set("logo_current_language", 1);
+                oSelectLanguage.selectedIndex = 1;
+            }
+            //button login:
+            document.getElementById("button_login").disabled = "";
+            //check logto customized site:
+            if (LocalStorage.Instance().Get("logo_current_logto_customized_site")) {
+                document.getElementById("check_logoncustomized").checked = true;
+            }
+            //check keep sign in
+            if (LocalStorage.Instance().Get("logo_current_autologin")) {
+                document.getElementById("check_keepsignin").checked = true;
+            }
+            else {
+                oInputPassword.focus();
+            }
+        }
+    </script>
+</head>
+<body class="login" onload="Initialize();" logo_public_key1="0" logo_public_key2="0">
+    <!--[if lt IE 7 ]>
+<p style="background-color:red;color:#fff;padding:1em;text-align:center;font-size:1em;">Sorry, but this web app does not work with an old version of Internet Explorer!<br />Please use a <strong>modern browser</strong> (Firefox, Google Chrome, Safari, Opera, Internet Explorer <strong>8</strong> …)</p>
+<![endif]-->
+    <header>
+<article>
+<h1 id="logo" onfocus="this.blur()"><span></span></h1>
+</article>
+
+<div id="desktopUtilities">
+<div>
+</div>
+</div><!-- /desktopUtilities -->
+</header>
+    <aside id="desktopUserName">
+<h2>Welcome</h2>
+<p>Please log on</p>
+</aside>
+    <nav id="desktopMenue">
+</nav>
+    <div class="desktopContent">
+        <figure id="Logo_Hardware"><img src="images/logo_hardware.jpg" alt="LOGO! Hardware"></figure>
+        <div class="content">
+            <h3>
+                Log on
+            </h3>
+            <form id="login">
+            <dl>
+                <dt>
+                    Name
+                </dt>
+                <dd>
+                    <input id="input_username" placeholder="Login Name" value="Web User" disabled="true" readonly="true" type="text">
+                </dd>
+                <dt>
+                    Password
+                </dt>
+                <dd>
+                    <input id="input_password" maxlength="10" onfocus="OnPasswordFocus(this);" type="password">
+                </dd>
+                <dt>
+                    Language
+                </dt>
+                <dd>
+                    <select id="select_language" onchange="OnLanguageChange(this);">
+                        <option value="0">Deutsch</option>
+                        <option value="1" selected="selected">English</option>
+                        <option value="2">Français</option>
+                        <option value="4">Italiano</option>
+                        <option value="3">Español</option>
+                        <option value="5">中文</option>
+                    </select>
+                </dd>
+            </dl>
+            <fieldset>
+		  <!--
+                <input id="check_logoncustomized" name="logonCustomizedWeb" type="checkbox" />
+                <label for="check_logoncustomized" onselectstart="return false;">
+                    to customized site
+                </label>
+                <br>
+                -->
+                <input id="check_keepsignin" name="staySignedIn" type="checkbox">
+                <label for="check_keepsignin" onselectstart="return false;">
+                    Keep me logged on
+                </label>
+            </fieldset>
+            
+            <div>
+                <button id="button_login" onclick="return LoginPageLogin();" failed_by_password="Invalid password" webserver_disabled="Web server is disabled.">
+                    Log on
+                </button>
+                <!--
+                <a id="disclaimer" href="http://www.siemens.com/industrialsecurity">Security information</a>
+                -->
+            </div>
+            </form>
+        </div>
+        <!-- /content -->
+    </div>
+    <!-- /desktopContent -->
+    <!-- media-Query-Support for IE older than 9 -->
+    <!--[if lt IE 9 ]>
+<script src="js/respond.min.js"></script>
+<![endif]-->
+    <!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.
+chromium.org/developers/how-tos/chrome-frame-getting-started -->
+    <!--[if lt IE 7 ]>
+<script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+<script>window.attachEvent("onload",function(){CFInstall.check({mode:"overlay"})})</script>
+<![endif]-->
+
+
+</body></html>
