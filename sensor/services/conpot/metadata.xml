@@ -8,5 +8,5 @@
     <catchAll>false</catchAll>
     <portAssignment>{"80/tcp":80, "102/tcp":102, "502/tcp":502, "47808/udp":47808}</portAssignment>
     <revision>$REVISION</revision>
-    <revisionDescription>Based on git revision 783422a47a20d93e6a14b1b432e59872930fc03d</revisionDescription>
+    <revisionDescription>Upstream version 0.5.2 with custom ICS web landing page</revisionDescription>
 </service>

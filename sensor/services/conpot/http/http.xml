@@ -1,0 +1,85 @@
+<http enabled="True" host="0.0.0.0" port="80">
+    <global>
+        <config>
+            <!-- what protocol shall we use by default? -->
+            <entity name="protocol_version">HTTP/1.1</entity>
+            <!-- if we find any date header to be delivered, should we update it to a real value? -->
+            <entity name="update_header_date">true</entity>
+            <!-- should we disable the HTTP HEAD method? -->
+            <entity name="disable_method_head">false</entity>
+            <!-- should we disable the HTTP TRACE method? -->
+            <entity name="disable_method_trace">false</entity>
+            <!-- should we disable the HTTP OPTIONS method? -->
+            <entity name="disable_method_options">false</entity>
+            <!-- TARPIT: how much latency should we introduce to any response by default? -->
+            <entity name="tarpit">0</entity>
+        </config>
+
+        <!-- these headers will be sent with each response -->
+        <headers>
+            <!-- this date header will be updated, if enabled above -->
+            <entity name="Date">Sat, 28 Apr 1984 07:30:00 GMT</entity>
+        </headers>
+    </global>
+
+    <!-- how should the different URI requests be handled -->
+    <htdocs>
+        <node name="/">
+            <!-- force response status code to 302 -->
+            <status>302</status>
+            <headers>
+                <!-- these headers will be sent along with this response -->
+                <entity name="Content-Type">text/html</entity>
+                <entity name="Location">/index.html</entity>
+            </headers>
+        </node>
+        <node name="/index.html">
+            <headers>
+                <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
+                <entity name="Content-Type">text/html</entity>
+                <entity name="Set-cookie">path=/</entity>
+            </headers>
+        </node>
+        <node name="/index.htm">
+            <!-- this node will inherit the payload from the referenced alias node without telling the browser -->
+            <alias>/index.html</alias>
+        </node>
+	<node name="/css/ajax.js"></node>
+	<node name="/css/bigint.js"></node>
+	<node name="/css/encrypt.js"></node>
+	<node name="/css/login.js"></node>
+	<node name="/css/pagecommon.js"></node>
+	<node name="/css/storage.js"></node>
+	<node name="/css/style.css"></node>
+	<node name="/css/stylesheet.css"></node>
+	<node name="/css/utility.js"></node>
+	<node name="/images/StartupGraphic.png"></node>
+	<node name="/images/favicon.ico"></node>
+	<node name="/images/logo_hardware.jpg"></node>
+	<node name="/images/logo_home_ipad.png"></node>
+	<node name="/images/logo_home_iphone.png"></node>
+	<node name="/p/desktopUserName_HG.gif"></node>
+	<node name="/p/Siemens_Logo_Desktop.gif"></node>
+	<node name="/p/logo_desktop_logo.gif"></node>
+	<node name="/p/desktop_menu_HG.gif"></node>
+    </htdocs>
+
+    <!-- how should the different status codes be handled -->
+    <statuscodes>
+        <status name="400">
+                <!-- 400 (BAD REQUEST) errors should be super fast and responsive -->
+                <tarpit>0</tarpit>
+                <entity name="Content-Type">text/html</entity>
+        </status>
+        <status name="404">
+                <!-- 404 (NOT FOUND) errors should be super fast and responsive -->
+                <tarpit>0</tarpit>
+                <entity name="Content-Type">text/html</entity>
+        </status>
+        <status name="501">
+                <!-- 501 (NOT IMPLEMENTED) errors should be super fast and responsive -->
+                <tarpit>0</tarpit>
+                <entity name="Content-Type">text/html</entity>
+        </status>
+    </statuscodes>
+</http>
