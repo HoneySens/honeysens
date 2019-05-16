@@ -38,7 +38,7 @@ function(HoneySens, Models, Spinner) {
                 var summary = summary || this.summary;
                 var interactionCount;
                 interactionCount = parseInt(numberOfPackets) + parseInt(numberOfDetails);
-                summary = summary + ` (${interactionCount})`;
+                summary = summary + ' (' + interactionCount + ')';
                 return summary;
             }
         };
