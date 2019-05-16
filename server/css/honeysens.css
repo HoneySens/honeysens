@@ -70,6 +70,9 @@ div.panelIcon {font-size: 2.3em; margin-right: .4em}
 /* Fix forms within tables */
 table td form.form-horizontal div.form-group {margin: 0;}
 
+/* Enable the usage of input-group-addons together with form feedback */
+div.input-group-addon span.form-control-feedback {position: relative; width: 13px; height: 13px; line-height: 13px}
+
 /* Align horizontal description list labels to the left if required */
 dl.dl-horizontal.label-left dt {text-align: left;}
 
