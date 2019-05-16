@@ -35,11 +35,13 @@
                                     </button>
                                 </span>
                                 <input type="number" name="updateInterval" class="form-control" value="<%- getUpdateInterval() %>" min="1" max="60" data-max-error="Das Intervall muss minimal 1 und maximal 60 Minuten betragen" <% if(!hasCustomUpdateInterval()) { %>disabled<% } %>/>
+                                <div class="input-group-addon">
+                                    <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                                </div>
                                 <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Intervall in Minuten, in dem dieser Sensor den Server kontaktiert.">
                                     <span class="glyphicon glyphicon-question-sign"></span>
                                 </div>
                             </div>
-                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group">
@@ -174,11 +176,13 @@
                                     </button>
                                 </span>
                                 <input pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$" data-pattern-error="Netzbereich bitte als IP-Adresse mit Netzmaske (z.B. 192.168.1.0/24) spezifizieren" type="text" class="form-control" name="serviceNetwork" value="<%- getServiceNetwork() %>" <% if(!hasCustomServiceNetwork()) { %>disabled<% } %> />
+                                <div class="input-group-addon">
+                                    <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                                </div>
                                 <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Spezifiziert den IP-Adressbereich, den Sensordienste zur internen Adressierung nutzen. Falls dieser mit lokalen Adressbereichen im Konflikt steht, ist hier ein freier und ungenutzter Adessraum anzugeben.">
                                     <span class="glyphicon glyphicon-question-sign"></span>
                                 </div>
                             </div>
-                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                     </fieldset>
