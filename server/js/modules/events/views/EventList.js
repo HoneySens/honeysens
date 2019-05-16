@@ -294,11 +294,11 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                 // Search box
                 var eventFilter = new Backgrid.Extension.ServerSideFilter({
                     template: function(data) {
-                        return '<span class="search">&nbsp;</span><input class="form-control" type="search" ' + (data.placeholder ? 'placeholder="' + data.placeholder + '"' : '') + ' name="' + data.name + '" ' + (data.value ? 'value="' + data.value + '"' : '') + '/><a class="clear" data-backgrid-action="clear" href="#">&times;</a>';
+                        return '<span class="search">&nbsp;</span><input style="width: 30em;" class="form-control" type="search" ' + (data.placeholder ? 'placeholder="' + data.placeholder + '"' : '') + ' name="' + data.name + '" ' + (data.value ? 'value="' + data.value + '"' : '') + '/><a class="clear" data-backgrid-action="clear" href="#">&times;</a>';
                     },
                     collection: this.collection,
                     name: "filter",
-                    placeholder: "Suchbegriff"
+                    placeholder: "Suche nach Datum, Quelle oder Kommentar"
                 });
                 this.eventFilter.show(eventFilter);
                 // Display control box when models are selected and update counter
