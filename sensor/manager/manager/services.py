@@ -237,20 +237,24 @@ def apply_services(config, server_response, reset_network):
                 continue
             service_image = '{}:{}/{}'.format(_config.get('server', 'name'), _config.get('server', 'port_https'), service_archs[arch]['uri'])
             # Add/update
-            with _services_lock:
-                if service_id in _services:
-                    _services[service_id]['label'] = service_archs[arch]['label']
-                    _services[service_id]['image'] = service_image
-                    _services[service_id]['raw_network_access'] = service_archs[arch]['rawNetworkAccess']
-                    _services[service_id]['catch_all'] = service_archs[arch]['catchAll']
-                    _services[service_id]['port_assignment'] = json.loads(service_archs[arch]['portAssignment'])
-                else:
-                    _services[service_id] = {'label': service_archs[arch]['label'],
-                                             'image': service_image,
-                                             'raw_network_access': service_archs[arch]['rawNetworkAccess'],
-                                             'catch_all': service_archs[arch]['catchAll'],
-                                             'port_assignment': json.loads(service_archs[arch]['portAssignment']),
-                                             'container': None}
+            try:
+                with _services_lock:
+                    if service_id in _services:
+                        _services[service_id]['label'] = service_archs[arch]['label']
+                        _services[service_id]['image'] = service_image
+                        _services[service_id]['raw_network_access'] = service_archs[arch]['rawNetworkAccess']
+                        _services[service_id]['catch_all'] = service_archs[arch]['catchAll']
+                        _services[service_id]['port_assignment'] = json.loads(service_archs[arch]['portAssignment'])
+                    else:
+                        _services[service_id] = {'label': service_archs[arch]['label'],
+                                                 'image': service_image,
+                                                 'raw_network_access': service_archs[arch]['rawNetworkAccess'],
+                                                 'catch_all': service_archs[arch]['catchAll'],
+                                                 'port_assignment': json.loads(service_archs[arch]['portAssignment']),
+                                                 'container': None}
+            except Exception as e:
+                _logger.error('Could not update service data for service {} ({})'.format(service_id, str(e)))
+                continue
             try:
                 start(service_id)
             except Exception as e:
