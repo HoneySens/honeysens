@@ -155,7 +155,10 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         Models.EventFilters = Backbone.PageableCollection.extend({
             model: Models.EventFilter,
             url: 'api/eventfilters',
-            mode: 'client'
+            mode: 'client',
+            state: {
+                pageSize: 1024
+            }
         });
 
         Models.Sensor = Backbone.Model.extend({
@@ -208,7 +211,10 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         Models.Sensors = Backbone.PageableCollection.extend({
             model: Models.Sensor,
             url: 'api/sensors',
-            mode: 'client'
+            mode: 'client',
+            state: {
+                pageSize: 1024
+            }
         });
 
         Models.SSLCert = Backbone.Model.extend({
