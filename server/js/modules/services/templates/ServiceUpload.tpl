@@ -20,7 +20,7 @@
             </div>
             <div class="form-group serviceVerify">
                 <span class="imageValidating"><div class="pull-left loadingInline"></div>&nbsp;&Uuml;berpr&uuml;fe Archiv</span>
-                <div class="imageValid alert alert-success"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Service wurde erfolgreich registriert</div>
+                <div class="imageValid alert alert-success"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Das Service-Archiv <span class="archiveName"></span> wurde erfolgreich auf dem Server registriert</div>
                 <div class="imageInvalid alert alert-danger"><span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;<span class="errorMsg"></span></div>
             </div>
         </form>

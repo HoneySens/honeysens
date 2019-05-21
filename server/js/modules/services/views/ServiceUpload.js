@@ -56,6 +56,7 @@ function(HoneySens, ServiceUploadTpl) {
                         view.$el.find('div.imageInvalid').show().siblings().hide();
                     },
                     done: function(e, data) {
+                        view.$el.find('span.archiveName').text(data.files[0].name);
                         view.$el.find('div.alert-success').show().siblings().hide();
                     }
                 });
