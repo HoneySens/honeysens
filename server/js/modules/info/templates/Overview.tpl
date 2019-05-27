@@ -30,7 +30,7 @@
                 <div class="panel-body">
                     <div class="panelIcon pull-left"><span class="glyphicon glyphicon-book"></span></div>
                     <p><a href="docs/user_manual.pdf" target="_blank">Benutzerhandbuch</a>
-                        <br />f&uuml;r Version 1.0.x</p>
+                        <br />f&uuml;r HoneySens in Version 2.0.x</p>
                     <hr />
                     <div class="panelIcon pull-left"><span class="glyphicon glyphicon-book"></span></div>
                     <p><a href="docs/admin_manual.pdf" target="_blank">Administrationshandbuch</a>
@@ -112,6 +112,9 @@
             </div>
             <div id="releasenotesBBB" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
+                    <p>Support for event caching, an adjustable service network range, new LED notification modes and USB auditing</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.5</strong><br/>
                     <p>Fixed a bug that prevented service downloads through proxies</p>
                     <hr />
@@ -140,6 +143,9 @@
             </div>
             <div id="releasenotesDocker" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
+                    <p>Fully reworked networking and logging as well as support for event caching, an adjustable service network range and deployment/update with Docker Compose</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.1.0</strong><br/>
                     <p>Deployment is now done with Docker Compose, also supports custom service network ranges</p>
                     <hr />
