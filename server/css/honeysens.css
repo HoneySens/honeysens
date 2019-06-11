@@ -16,6 +16,9 @@ a, a:active, a:focus, a.btn:active, a.btn:focus, a.btn:active:focus, button, but
     outline: 0;
 }
 
+/* Add some spacing to captions within infobox containers (that contain lots of text) */
+div.infobox h4 {padding-top: 15px}
+
 /* Fix forms in popovers within a DataTable */
 table.table div.popover div.form-group {display: block; margin-bottom: 15px}
 table.table div.popover .form-control {display: block; width: 100%}
@@ -244,3 +247,4 @@ div.selectionOptions button.btn {vertical-align: baseline}
 	
 	div.main {padding: 10px 20px 0 70px}
 }
+
