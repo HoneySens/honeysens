@@ -9,7 +9,7 @@ $messages = array();
 $em = initDoctrine($config);
 initDBSchema($messages, $em);
 initDBEventManager($em);
-$services = initServiceManager($config);
+$services = initServiceManager($config, $em);
 initRoutes($app, $em, $services, $config, $messages);
 initSession();
 $app->run();

@@ -37,6 +37,7 @@ if [[ ! -f /srv/data/config.cfg ]]; then
     echo "Adjusting HoneySens configuration"
     cp -v /srv/data/config.clean.cfg /srv/data/config.cfg
     sed -i -e 's/password.*/password = honeysens/' -e 's#certfile.*#certfile = /srv/data/https.chain.crt#' -e 's#app_path.*#app_path = /srv#' -e 's/debug.*/debug = true/' /srv/data/config.cfg
+    sed -i -e 's/password.*/password = honeysens/' -e 's#/opt/HoneySens#/srv#' -e 's/debug.*/debug = true/' /srv/data/config.cfg
     chown www-data:www-data /srv/data/config.cfg
     chmod a+w /srv/data/config.cfg
 fi
@@ -45,10 +46,9 @@ echo "Adding services"
 cp -vr /srv/utils/docker/services/apache2 /etc/service
 cp -vr /srv/utils/docker/services/mysql /etc/service
 cp -vr /srv/utils/docker/services/beanstalkd /etc/service
-cp -vr /srv/utils/docker/services/sensorcfg-creation-worker /etc/service
+cp -vr /srv/utils/docker/services/tasks /etc/service
 cp -vr /srv/utils/docker/services/update-worker /etc/service
-cp -vr /srv/utils/docker/services/service-registry-worker /etc/service
-sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/service/sensorcfg-creation-worker/run /etc/service/update-worker/run /etc/service/service-registry-worker/run
+sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/service/update-worker/run /etc/service/tasks/run
 mkdir /etc/service/grunt-watch
 cat > /etc/service/grunt-watch/run << DELIMITER
 #!/bin/bash

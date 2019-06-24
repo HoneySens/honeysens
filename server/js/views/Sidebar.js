@@ -1,10 +1,13 @@
 define(['app/app',
-        'tpl!app/templates/Sidebar.tpl',
-        'app/views/common'],
-function(HoneySens, SidebarTpl) {
+        'app/common/views/Menu',
+        'tpl!app/templates/Sidebar.tpl'],
+function(HoneySens, MenuView, SidebarTpl) {
     HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-        Views.Sidebar = Marionette.ItemView.extend({
+        Views.Sidebar = Marionette.LayoutView.extend({
             template: SidebarTpl,
+            regions: {
+                content: 'div.sidebar-content'
+            },
             events: {
                 'mouseenter': function() {
                     this.$el.addClass('expanded');
@@ -30,7 +33,7 @@ function(HoneySens, SidebarTpl) {
                 });
             },
             onRender: function() {
-                this.$el.find('ul.nav-sidebar').append(Views.createMenu(HoneySens.menuItems));
+                this.content.show(new MenuView({model: new Backbone.Model({items: HoneySens.menuItems})}));
             },
             templateHelpers: {
                 showVersion: function() {

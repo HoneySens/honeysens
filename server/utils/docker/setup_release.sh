@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Build task processor
+(cd /opt/HoneySens/tasks && python setup.py install)
+
 # MySQL
 sed -i 's/password.*/password = honeysens/' /opt/HoneySens/data/config.cfg
 
@@ -30,6 +33,5 @@ cp -var /opt/HoneySens/data /var/lib/mysql /opt/HoneySens/templates/
 cp -vr /opt/HoneySens/utils/docker/services/apache2 /etc/service
 cp -vr /opt/HoneySens/utils/docker/services/mysql /etc/service
 cp -vr /opt/HoneySens/utils/docker/services/beanstalkd /etc/service
-cp -vr /opt/HoneySens/utils/docker/services/sensorcfg-creation-worker /etc/service
+cp -vr /opt/HoneySens/utils/docker/services/tasks /etc/service
 cp -vr /opt/HoneySens/utils/docker/services/update-worker /etc/service
-cp -vr /opt/HoneySens/utils/docker/services/service-registry-worker /etc/service

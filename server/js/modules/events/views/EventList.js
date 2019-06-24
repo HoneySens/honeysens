@@ -3,6 +3,7 @@ define(['app/app',
         'backgrid',
         'app/modules/events/views/EventDetails',
         'app/modules/events/views/ModalEventRemove',
+        'app/common/views/BackgridDatepickerFilter',
         'tpl!app/modules/events/templates/EventList.tpl',
         'tpl!app/modules/events/templates/EventListStatusCell.tpl',
         'tpl!app/modules/events/templates/EventListActionsCell.tpl',
@@ -11,7 +12,7 @@ define(['app/app',
         'backgrid-select-all',
         'backgrid-filter',
         'app/views/common'],
-function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, EventListTpl, EventListStatusCellTpl, EventListActionsCellTpl) {
+function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, BackgridDatepickerFilter, EventListTpl, EventListStatusCellTpl, EventListActionsCellTpl) {
     HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         function getSensorSelectOptions() {
             var division = parseInt($('div.groupFilter select').val()),
@@ -34,9 +35,14 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                 classificationFilter: 'div.classificationFilter',
                 list: 'div.table-responsive',
                 paginator: 'div.paginator',
-                eventFilter: 'div.eventFilter'
+                eventFilter: 'div.eventFilter',
+                dateFilter: 'div.dateFilter'
             },
             events: {
+                'click button.massExport': function(e) {
+                    e.preventDefault();
+                    HoneySens.request('events:export:list', this.collection, new Models.Events(this.grid.getSelectedModels()));
+                },
                 'click button.massEdit': function(e) {
                     e.preventDefault();
                     HoneySens.request('events:edit', new Models.Events(this.grid.getSelectedModels()));
@@ -46,6 +52,12 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                     var models = new Models.Events(this.grid.getSelectedModels());
                     var dialog = new ModalEventRemoveView({collection: models});
                     HoneySens.request('view:modal').show(dialog);
+                },
+                'click a.exportPage': function() {
+                    HoneySens.request('events:export:page', this.collection);
+                },
+                'click a.exportAll': function() {
+                    HoneySens.request('events:export:all', this.collection);
                 }
             },
             onRender: function() {
@@ -291,10 +303,17 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ev
                     ]
                 });
                 this.classificationFilter.show(this.classificationFilterView);
+                // Date filter
+                this.dateFilterView = new BackgridDatepickerFilter({
+                    collection: this.collection,
+                    fromField: 'fromTS',
+                    toField: 'toTS'
+                });
+                this.dateFilter.show(this.dateFilterView);
                 // Search box
                 var eventFilter = new Backgrid.Extension.ServerSideFilter({
                     template: function(data) {
-                        return '<span class="search">&nbsp;</span><input style="width: 30em;" class="form-control" type="search" ' + (data.placeholder ? 'placeholder="' + data.placeholder + '"' : '') + ' name="' + data.name + '" ' + (data.value ? 'value="' + data.value + '"' : '') + '/><a class="clear" data-backgrid-action="clear" href="#">&times;</a>';
+                        return '<span class="search">&nbsp;</span><input style="width: 25em;" class="form-control" type="search" ' + (data.placeholder ? 'placeholder="' + data.placeholder + '"' : '') + ' name="' + data.name + '" ' + (data.value ? 'value="' + data.value + '"' : '') + '/><a class="clear" data-backgrid-action="clear" href="#">&times;</a>';
                     },
                     collection: this.collection,
                     name: "filter",

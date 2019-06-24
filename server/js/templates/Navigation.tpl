@@ -12,7 +12,7 @@
         <div id="counter"></div>
         <p class="navbar-text pull-right"><span class="glyphicon glyphicon-user"></span>&nbsp;<strong><%- name %></strong> (<a class="logout" href="#logout">Logout</a>)</p>
     </div>
-    <ul class="nav navbar-nav"></ul>
+    <div class="navbar-menu"></div>
 </div>
 <div class="popover">
     <div class="popover-content">

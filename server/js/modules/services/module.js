@@ -2,11 +2,11 @@ define(['app/app',
         'app/routing',
         'app/modules/services/views/Layout',
         'app/modules/services/views/ServiceList',
-        'app/modules/services/views/ServiceUpload',
+        'app/common/views/FileUpload',
         'app/modules/services/views/ServiceDetails',
         'app/modules/services/views/ModalServiceRemove',
         'app/modules/services/views/ModalServiceRevisionRemove'],
-function(HoneySens, Routing, LayoutView, ServiceListView, ServiceUploadView, ServiceDetailsView, ModalServiceRemoveView, ModalServiceRevisionRemoveView) {
+function(HoneySens, Routing, LayoutView, ServiceListView, FileUploadView, ServiceDetailsView, ModalServiceRemoveView, ModalServiceRevisionRemoveView) {
     var ServicesModule = Routing.extend({
         name: 'services',
         startWithParent: false,
@@ -30,7 +30,7 @@ function(HoneySens, Routing, LayoutView, ServiceListView, ServiceUploadView, Ser
                 HoneySens.vent.trigger('services:shown');
             });
             HoneySens.reqres.setHandler('services:add', function() {
-                HoneySens.request('view:content').overlay.show(new ServiceUploadView());
+                HoneySens.request('view:content').overlay.show(new FileUploadView());
             });
             HoneySens.reqres.setHandler('services:remove', function(model) {
                 HoneySens.request('view:modal').show(new ModalServiceRemoveView({model: model}));

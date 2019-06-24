@@ -43,22 +43,6 @@ function(HoneySens, Models, Spinner) {
             }
         };
 
-        // Creates a menu from the global application menu data (and therefore from all submodules)
-        Views.createMenu = function(items) {
-            var result = '',
-                view = this;
-            $.each(items, function() {
-                var subitems = '';
-                if(this.hasOwnProperty('items')) {
-                    subitems = '<ul class="nav">' + view.createMenu(this.items) + '</ul>';
-                }
-                if(HoneySens.assureAllowed(this.permission.domain, this.permission.action)) {
-                    result += '<li><a href="#' + this.uri + '"><span class="' + this.iconClass + '"></span><span class="menuLabel">&nbsp;&nbsp;' + this.title + '</span></a>' + subitems + '</li>';
-                }
-            });
-            return result;
-        };
-
         // Initialize spinner views
         Views.spinner = new Spinner({lines: 13, length: 4, width: 2, radius: 6, corners: 1, rotate: 0, direction: 1, color: '#000',
             speed: 1, trail: 60, shadow: false, hwaccel: false, className: 'spinner', zIndex: 2e9, top: '50%', left: '50%'});
@@ -148,5 +132,27 @@ function(HoneySens, Models, Spinner) {
             animateIn: animateIn,
             animateOut: animateOut
         });
+
+        // Periodically checks status for the given task model on the server, optionally executes a callback when the
+        // task is done or if there was an error during a request (parameters 'done' and 'error' of the options object).
+        Views.waitForTask = function(task, options) {
+            options = options || {};
+            var status = task.get('status');
+            if(status === Models.Task.status.SCHEDULED || status === Models.Task.status.RUNNING) {
+                setTimeout(function() {
+                    task.fetch({
+                        success: function(model) {
+                            Views.waitForTask(model, options);
+                        },
+                        error: function(model, resp) {
+                            if(options.hasOwnProperty('error')) options.error(model, resp);
+                        }
+                    });
+                }, 1000);
+            } else {
+                if(status === Models.Task.status.DONE && options.hasOwnProperty('done')) options.done(task);
+                else if(status === Models.Task.status.ERROR && options.hasOwnProperty('error')) options.error(task, null);
+            }
+        }
     });
 });

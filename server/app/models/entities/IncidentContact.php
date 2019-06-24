@@ -1,8 +1,6 @@
 <?php
 namespace HoneySens\app\models\entities;
 
-use HoneySens\app\models\entities\User;
-
 
 /**
  * @Entity

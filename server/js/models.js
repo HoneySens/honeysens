@@ -297,6 +297,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         });
 
         Models.Service = Backbone.Model.extend({
+            urlRoot: 'api/services',
             defaults: {
                 'name': '',
                 'description': '',
@@ -436,6 +437,41 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             url: 'api/stats'
         });
 
+        Models.Task = Backbone.Model.extend({
+            urlRoot: 'api/tasks',
+            defaults: {
+                user: null,
+                type: 0,
+                status: 0,
+                params: {},
+                result: {}
+            },
+            downloadResult: function(removeAfterwards) {
+                var removalFlag = removeAfterwards ? '1' : '0';
+                if(this.get('status') === Models.Task.status.DONE)
+                    window.location.href = '/api/tasks/' + this.id + '/result/' + removalFlag;
+            }
+        });
+
+        Models.Task.type = {
+            SENSORCFG_CREATOR: 0,
+            UPLOAD_VERIFIER: 1,
+            REGISTRY_MANAGER: 2,
+            EVENT_EXTRACTOR: 3
+        };
+
+        Models.Task.status = {
+            SCHEDULED: 0,
+            RUNNING: 1,
+            DONE: 2,
+            ERROR: 3
+        };
+
+        Models.Tasks = Backbone.Collection.extend({
+            model: Models.Task,
+            url: 'api/tasks/'
+        });
+
         // Initialize runtime models
         HoneySens.addInitializer(function() {
             HoneySens.data.models.sensors = new Models.Sensors();
@@ -448,6 +484,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             HoneySens.data.models.services = new Models.Services();
             HoneySens.data.models.platforms = new Models.Platforms();
             HoneySens.data.models.stats = new Models.Stats();
+            HoneySens.data.models.tasks = new Models.Tasks();
             HoneySens.data.session.user = new Models.User();
         });
     });

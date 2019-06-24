@@ -251,8 +251,9 @@
             <p>Bitte laden Sie die Sensor-Konfiguration mit einem Klick auf den nachfolgenden Button herunter. Sie wird für die Einrichtung eines
                 neuen Sensors unabhängig von der verwendeten Plattform zwingend benötigt.</p>
             <div class="configArchive">
-                <h5 class="text-center"><strong>Bitte warten, Konfiguration wird erzeugt...</strong></h5>
-                <a class="btn btn-primary btn-block hide"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Sensor-Konfiguration</a>
+                <h5 class="text-center hide"><strong>Bitte warten, Konfiguration wird erzeugt...</strong></h5>
+                <div class="alert alert-danger hide">Es ist ein Fehler beim Erzeugen der Sensorkonfiguration aufgetreten.</div>
+                <button type="button" class="btn btn-primary btn-block reqConfig"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Sensor-Konfiguration</button>
             </div>
             <hr />
             <% if(firmwareExists()) { %>

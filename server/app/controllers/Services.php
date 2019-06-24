@@ -1,13 +1,12 @@
 <?php
 namespace HoneySens\app\controllers;
-use FileUpload\PathResolver;
-use FileUpload\FileSystem;
-use FileUpload\FileUpload;
 use FileUpload\File;
 
 use HoneySens\app\models\entities\Service;
 use HoneySens\app\models\entities\ServiceRevision;
+use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
+use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
 use Respect\Validation\Validator as V;
@@ -15,9 +14,8 @@ use Respect\Validation\Validator as V;
 class Services extends RESTResource {
 
     const CREATE_ERROR_NONE = 0;
-    const CREATE_ERROR_INVALID_IMAGE = 1;
-    const CREATE_ERROR_INVALID_METADATA = 2;
-    const CREATE_ERROR_DUPLICATE = 3;
+    const CREATE_ERROR_REGISTRY_OFFLINE = 1;
+    const CREATE_ERROR_DUPLICATE = 2;
 
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->get('/api/services(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
@@ -40,10 +38,12 @@ class Services extends RESTResource {
             echo json_encode($result);
         });
 
+        // Requires a reference to a successfully completed verification task.
         $app->post('/api/services', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Services($em, $services, $config);
-            $serviceData = $controller->create($_FILES['service']);
-            echo json_encode($serviceData);
+            $request = $app->request()->getBody();
+            V::json()->check($request);
+            echo json_encode($controller->create(json_decode($request)));
         });
 
         $app->put('/api/services/:id', function($id) use ($app, $em, $services, $config, $messages) {
@@ -126,97 +126,74 @@ class Services extends RESTResource {
 
     /**
      * Creates and persists a new service (or revision).
-     * Binary file data is expected as parameter, chunked uploads are supported.
+     * A successfully completed upload verification task (id) is expected as input.
      *
-     * @param string $data
+     * @param $data
      * @return array
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function create($data) {
         $this->assureAllowed('create');
         $em = $this->getEntityManager();
-        $pathresolver = new PathResolver\Simple(realpath(APPLICATION_PATH . '/../data/upload'));
-        $fs = new FileSystem\Simple();
-        $fileUpload = new FileUpload($data, $_SERVER);
-        $fileUpload->setPathResolver($pathresolver);
-        $fileUpload->setFileSystem($fs);
-        $fileUpload->addCallback('completed', function(File $file) {
-            global $em;
-            // Check registry availability
-            $registryService = $this->getServiceManager()->get(ServiceManager::SERVICE_REGISTRY);
-            // Check archive content
-            exec('/bin/tar tzf ' . escapeshellarg($file->getRealPath()), $output);
-            if(!$registryService->isAvailable() && !in_array('service.tar', $output) || !in_array('metadata.xml', $output)) {
-                $this->removeFile($file);
-                throw new BadRequestException(Services::CREATE_ERROR_INVALID_IMAGE);
-            }
-            // Check metadata
-            $output = array();
-            exec('/bin/tar xzf ' . escapeshellarg($file->getRealPath()) . ' metadata.xml -O', $output);
-            try {
-                $metadata = new \SimpleXMLElement(implode($output));
-            } catch(\Exception $e) {
-                $this->removeFile($file);
-                throw new BadRequestException(Services::CREATE_ERROR_INVALID_METADATA);
-            }
-            V::objectType()
-                ->attribute('name')
-                ->attribute('architecture')
-                ->attribute('rawNetworkAccess')
-                ->attribute('catchAll')
-                ->attribute('portAssignment')
-                ->attribute('repository')
-                ->attribute('description')
-                ->attribute('revision')
-                ->attribute('revisionDescription')
-                ->check($metadata);
-            // Check for duplicates
-            $service = $em->getRepository('HoneySens\app\models\entities\Service')
-                ->findOneBy(array(
-                    'name' => (string) $metadata->name,
-                    'repository' => (string) $metadata->repository));
-            $serviceRevision = $em->getRepository('HoneySens\app\models\entities\ServiceRevision')
-                ->findOneBy(array(
-                    'service' => $service,
-                    'architecture' => (string) $metadata->architecture,
-                    'revision' => (string) $metadata->revision));
-            if(V::objectType()->validate($service) && V::objectType()->validate($serviceRevision)) {
-                $this->removeFile($file);
-                throw new BadRequestException(Services::CREATE_ERROR_DUPLICATE);
-            }
-            // Persist revision
-            $this->getServiceManager()->get(ServiceManager::SERVICE_BEANSTALK)
-                ->putServiceRegistryJob(sprintf('%s:%s-%s',
-                    (string) $metadata->repository,
-                    (string) $metadata->architecture,
-                    (string) $metadata->revision),
-                    $file->getRealPath(), 'service.tar');
-            $serviceRevision = new ServiceRevision();
-            $serviceRevision->setRevision((string) $metadata->revision)
-                ->setArchitecture((string) $metadata->architecture)
-                ->setRawNetworkAccess(((string)$metadata->rawNetworkAccess) === 'true')
-                ->setCatchAll(((string)$metadata->catchAll) === 'true')
-                ->setPortAssignment((string) $metadata->portAssignment)
-                ->setDescription((string) $metadata->revisionDescription);
-            $em->persist($serviceRevision);
-            // Persist service if necessary
-            if(!V::objectType()->validate($service)) {
-                $service = new Service();
-                $service->setName((string) $metadata->name)
-                    ->setDescription((string) $metadata->description)
-                    ->setRepository((string) $metadata->repository)
-                    ->setDefaultRevision($serviceRevision->getRevision());
-                $em->persist($service);
-            }
-            $service->addRevision($serviceRevision);
-            $em->flush();
-            $file->service = $serviceRevision->getState();
-        });
-        list($files, $headers) = $fileUpload->processAll();
-        foreach($headers as $header => $value) {
-            header($header . ': ' . $value);
+        // Validation, we just expect a task id here
+        V::objectType()
+            ->attribute('task', V::intVal())
+            ->check($data);
+        // Validate the given task
+        $task = $em->getRepository('HoneySens\app\models\entities\Task')->find($data->task);
+        V::objectType()->check($task);
+        if($task->getUser() !== $this->getSessionUser()) throw new ForbiddenException();
+        if($task->getType() != Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() != Task::STATUS_DONE) throw new BadRequestException();
+        $taskResult = $task->getResult();
+        V::arrayType()->check($taskResult);
+        V::key('valid', V::boolType())->check($taskResult);
+        if(!$taskResult['valid']) throw new BadRequestException();
+        if($taskResult['type'] != Tasks::UPLOAD_TYPE_SERVICE_ARCHIVE) throw new BadRequestException();
+        // Check registry availability
+        $registryService = $this->getServiceManager()->get(ServiceManager::SERVICE_REGISTRY);
+        if(!$registryService->isAvailable()) throw new BadRequestException(self::CREATE_ERROR_REGISTRY_OFFLINE);
+        // Check for duplicates
+        $service = $em->getRepository('HoneySens\app\models\entities\Service')
+            ->findOneBy(array(
+                'name' => $taskResult['name'],
+                'repository' => $taskResult['repository']));
+        $serviceRevision = $em->getRepository('HoneySens\app\models\entities\ServiceRevision')
+            ->findOneBy(array(
+                'service' => $service,
+                'architecture' => $taskResult['architecture'],
+                'revision' => $taskResult['revision']));
+        if(V::objectType()->validate($service) && V::objectType()->validate($serviceRevision)) {
+            // Error: The revision for this service is already registered
+            throw new BadRequestException(Services::CREATE_ERROR_DUPLICATE);
         }
-        // The array with the 'files' key is required by the fileupload plugin used for the frontend
-        return array('files' => $files);
+        // Persist revision
+        $serviceRevision = new ServiceRevision();
+        $serviceRevision->setRevision($taskResult['revision'])
+            ->setArchitecture($taskResult['architecture'])
+            ->setRawNetworkAccess($taskResult['rawNetworkAccess'])
+            ->setCatchAll($taskResult['catchAll'])
+            ->setPortAssignment($taskResult['portAssignment'])
+            ->setDescription($taskResult['revisionDescription']);
+        $em->persist($serviceRevision);
+        // Persist service if necessary
+        if(!V::objectType()->validate($service)) {
+            $service = new Service();
+            $service->setName($taskResult['name'])
+                ->setDescription($taskResult['description'])
+                ->setRepository($taskResult['repository'])
+                ->setDefaultRevision($serviceRevision->getRevision());
+            $em->persist($service);
+        }
+        $service->addRevision($serviceRevision);
+        // Remove upload verification task, but keep the uploaded file for the next task
+        $taskResult['path'] = $task->getParams()['path'];
+        $em->remove($task);
+        $em->flush();
+        // Enqueue registry upload task
+        $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_REGISTRY_MANAGER, $taskResult);
+        return $task->getState();
     }
 
     /**

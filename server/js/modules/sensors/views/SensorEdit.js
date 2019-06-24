@@ -1,12 +1,14 @@
 define(['app/app',
+        'app/models',
         'tpl!app/modules/sensors/templates/SensorEdit.tpl',
         'app/views/common',
         'validator'],
-function(HoneySens, SensorEditTpl) {
+function(HoneySens, Models, SensorEditTpl) {
     HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.SensorEdit = Marionette.ItemView.extend({
             template: SensorEditTpl,
             className: 'container-fluid',
+            cfgTaskId: null, // The id of a sensor config creation task we're waiting for, if any
             events: {
                 'click button.cancel': function() {
                     HoneySens.request('view:content').overlay.empty();
@@ -74,19 +76,40 @@ function(HoneySens, SensorEditTpl) {
                         this.$el.find('form').trigger('submit');
                     }
                 },
+                'click button.reqConfig': function() {
+                    var view = this;
+                    // User feedback
+                    this.$el.find('div.configArchive h5').removeClass('hide');
+                    this.$el.find('div.configArchive button').addClass('hide');
+                    // Initiate config generation
+                    $.ajax({
+                        type: 'GET',
+                        url: 'api/sensors/config/' + this.model.id,
+                        dataType: 'json',
+                        success: function(resp, code, xhr) {
+                            HoneySens.Views.waitForTask(new Models.Task(xhr.responseJSON), {
+                                done: function(task) {
+                                    task.downloadResult(true);
+                                    // Display download button again
+                                    view.$el.find('div.configArchive h5').addClass('hide');
+                                    view.$el.find('div.configArchive button').removeClass('hide');
+                                },
+                                error: function(task, resp) {
+                                    view.$el.find('div.alert-danger').removeClass('hide');
+                                    view.$el.find('div.configArchive h5').addClass('hide');
+                                }
+                            });
+                        },
+                        error: function() {
+                            view.$el.find('div.alert-danger').removeClass('hide');
+                            view.$el.find('div.configArchive h5').addClass('hide');
+                        }
+                    });
+                },
                 'click label.disabled': function() {
                     // Ignore clicks on disabled labels. This fixes a bootstrap bug.
                     // See: https://github.com/twbs/bootstrap/issues/16703
                     return false;
-                }
-            },
-            modelEvents: {
-                change: function() {
-                    // Render the config archive download when it's ready
-                    if(this.model.get('config_archive_status') == '3') {
-                        this.$el.find('div.configArchive h5').addClass('hide');
-                        this.$el.find('div.configArchive a').attr('href', 'api/sensors/config/' + this.model.id).removeClass('hide');
-                    }
                 }
             },
             onRender: function() {

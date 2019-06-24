@@ -1,8 +1,8 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
-use FileUpload\File;
-use HoneySens\app\models\ServiceManager;
+use HoneySens\app\models\exceptions\NotFoundException;
+use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
 /**
  * Hardware platform abstraction.
@@ -17,6 +17,8 @@ use HoneySens\app\models\ServiceManager;
  * })
  */
 abstract class Platform {
+
+    const FIRMWARE_PATH = 'firmware';
 
     /**
      * @Id
@@ -94,28 +96,35 @@ abstract class Platform {
      * Returns a string that uniquely identifies the firmware (e.g. its location on disk).
      *
      * @param Firmware $firmware
-     * @param File $file
-     * @param ServiceManager $serviceManager
-     * @return string
+     * @param string $filePath
+     * @param ConfigParser $config
      */
-    abstract public function registerFirmware(Firmware $firmware, File $file, ServiceManager $serviceManager);
+    public function registerFirmware(Firmware $firmware, $filePath, ConfigParser $config) {
+        rename($filePath, sprintf('%s/%s', $this->getFirmwarePath($config), $firmware->getSource()));
+        $firmware->setSource(null);
+    }
 
     /**
      * Removes the firmware file (if any) from a given firmware revision.
      *
      * @param Firmware $firmware
-     * @param ServiceManager $serviceManager
+     * @param ConfigParser $config
      */
-    abstract public function unregisterFirmware(Firmware $firmware, ServiceManager $serviceManager);
+    public function unregisterFirmware(Firmware $firmware, ConfigParser $config) {
+        if($this->isFirmwarePresent($firmware, $config))
+            unlink(sprintf('%s/%s', $this->getFirmwarePath($config), $firmware->getSource()));
+    }
 
     /**
      * Checks if the firmware data (source) is registered and available.
      *
      * @param Firmware $firmware
-     * @param ServiceManager $serviceManager
+     * @param ConfigParser $config
      * @return bool
      */
-    abstract public function isFirmwarePresent(Firmware $firmware, ServiceManager $serviceManager);
+    public function isFirmwarePresent(Firmware $firmware, ConfigParser $config) {
+        return $firmware->getSource() != null && file_exists(sprintf('%s/%s', $this->getFirmwarePath($config), $firmware->getSource()));
+    }
 
     /**
      * Returns the URI that can be used to download the firmware from the server.
@@ -123,16 +132,22 @@ abstract class Platform {
      * @param Firmware $firmware
      * @return string
      */
-    abstract public function getFirmwareURI(Firmware $firmware);
+    public function getFirmwareURI(Firmware $firmware) {
+        return '/api/platforms/firmware/' . $firmware->getId() . '/raw';
+    }
 
     /**
      * Returns the full path to the raw data file that belongs to this firmware.
      *
      * @param Firmware $firmware
-     * @param ServiceManager $serviceManager
+     * @param ConfigParser $config
      * @return mixed
+     * @throws NotFoundException
      */
-    abstract public function obtainFirmware(Firmware $firmware, ServiceManager $serviceManager);
+    public function obtainFirmware(Firmware $firmware, ConfigParser $config) {
+        if(!$this->isFirmwarePresent($firmware, $config)) throw new NotFoundException();
+        return sprintf('%s/%s', $this->getFirmwarePath($config), $firmware->getSource());
+    }
 
     /**
      * Adds a firmware revision to this platform.
@@ -210,5 +225,9 @@ abstract class Platform {
             'firmware_revisions' => $firmwareRevisions,
             'default_firmware_revision' => $defaultFirmwareRevision
         );
+    }
+
+    private function getFirmwarePath($config) {
+        return sprintf('%s/%s', $config['server']['data_path'], self::FIRMWARE_PATH);
     }
 }

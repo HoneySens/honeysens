@@ -1,13 +1,16 @@
 define(['app/app',
+        'app/common/views/Menu',
         'tpl!app/templates/Navigation.tpl',
-        'progressbar',
-        'app/views/common'],
-function(HoneySens, NavigationTpl, ProgressBar) {
+        'progressbar'],
+function(HoneySens, MenuView, NavigationTpl, ProgressBar) {
     HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-        Views.Navigation = Marionette.ItemView.extend({
+        Views.Navigation = Marionette.LayoutView.extend({
             popoverVisible: false,
             template: NavigationTpl,
             className: 'container-fluid',
+            regions: {
+                menu: 'div.navbar-menu'
+            },
             events: {
                 'click li a': function() { this.$el.find('div.navbar-collapse').collapse('hide'); },
                 'mouseenter #counter': function(e) {
@@ -39,7 +42,7 @@ function(HoneySens, NavigationTpl, ProgressBar) {
             },
             onRender: function() {
                 var view = this;
-                this.$el.find('ul.navbar-nav').append(Views.createMenu(HoneySens.menuItems));
+                this.menu.show(new MenuView({model: new Backbone.Model({items: HoneySens.menuItems})}));
                 this.$el.find('#counter').popover({
                     html: true,
                     content: function() {

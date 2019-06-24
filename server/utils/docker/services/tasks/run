@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Force unbuffered stdout
+export PYTHONUNBUFFERED=1
+
+exec /sbin/setuser www-data task-processor /opt/HoneySens/data/config.cfg
