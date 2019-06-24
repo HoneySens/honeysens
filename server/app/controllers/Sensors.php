@@ -4,6 +4,7 @@ use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\SensorStatus;
 use HoneySens\app\models\entities\ServiceAssignment;
 use HoneySens\app\models\entities\SSLCert;
+use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
@@ -28,9 +29,8 @@ class Sensors extends RESTResource {
        });
 
         $app->get('/api/sensors/config/:id', function($id) use ($app, $em, $services, $config, $messages) {
-            // TODO This does need authentication via userID!
             $controller = new Sensors($em, $services, $config);
-            $controller->downloadConfig($id);
+            echo json_encode($controller->requestConfigDownload($id));
         });
 
         $app->get('/api/sensors/status/by-sensor/:id', function($id) use ($app, $em, $services, $config, $messages) {
@@ -188,9 +188,9 @@ class Sensors extends RESTResource {
      * @return array
      * @throws ForbiddenException
      */
-	public function get($criteria) {
-		$this->assureAllowed('get');
-		$qb = $this->getEntityManager()->createQueryBuilder();
+    public function get($criteria) {
+        $this->assureAllowed('get');
+        $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('s')->from('HoneySens\app\models\entities\Sensor', 's');
         if(V::key('userID', V::intType())->validate($criteria)) {
             $qb->join('s.division', 'd')
@@ -202,13 +202,13 @@ class Sensors extends RESTResource {
                 ->setParameter('id', $criteria['id']);
             return $qb->getQuery()->getSingleResult()->getState();
         } else {
-			$sensors = array();
-			foreach($qb->getQuery()->getResult() as $sensor) {
-				$sensors[] = $sensor->getState();
-			}
-			return $sensors;
-		}
-	}
+            $sensors = array();
+            foreach($qb->getQuery()->getResult() as $sensor) {
+                $sensors[] = $sensor->getState();
+            }
+            return $sensors;
+        }
+    }
 
     /**
      * Fetches sensor status data from the DB by various criteria:
@@ -295,8 +295,8 @@ class Sensors extends RESTResource {
      * @return Sensor
      * @throws ForbiddenException
      */
-	public function create($data) {
-		$this->assureAllowed('create');
+    public function create($data) {
+        $this->assureAllowed('create');
         // Validation
         V::objectType()
             ->attribute('name', V::alnum('_-.')->length(1, 50))
@@ -311,7 +311,7 @@ class Sensors extends RESTResource {
             ->attribute('firmware', V::optional(V::intVal()))
             ->check($data);
         // Persistence
-		$em = $this->getEntityManager();
+        $em = $this->getEntityManager();
         $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data->division);
         V::objectType()->check($division);
         $firmware = null;
@@ -319,9 +319,9 @@ class Sensors extends RESTResource {
             $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data->firmware);
             V::objectType()->check($firmware);
         }
-		$sensor = new Sensor();
-		$sensor->setName($data->name)
-			->setLocation($data->location)
+        $sensor = new Sensor();
+        $sensor->setName($data->name)
+            ->setLocation($data->location)
             ->setDivision($division)
             ->setServerEndpointMode($data->server_endpoint_mode)
             ->setNetworkIPMode($data->network_ip_mode)
@@ -374,12 +374,11 @@ class Sensors extends RESTResource {
         // Flush early, because we need the sensor ID for the cert common name
         $em->flush();
         $this->regenerateCert($sensor);
-		// Generate initial config
-        $this->getServiceManager()->get(ServiceManager::SERVICE_BEANSTALK)->putSensorConfigCreationJob($sensor, $em);
+        // TODO Config archive status is not necessary anymore
         $sensor->setConfigArchiveStatus(Sensor::CONFIG_ARCHIVE_STATUS_SCHEDULED);
-		$em->flush();
-		return $sensor;
-	}
+        $em->flush();
+        return $sensor;
+    }
 
     /**
      * Registers new status data from a sensor.
@@ -498,8 +497,8 @@ class Sensors extends RESTResource {
      * @return Sensor
      * @throws ForbiddenException
      */
-	public function update($id, $data) {
-		$this->assureAllowed('update');
+    public function update($id, $data) {
+        $this->assureAllowed('update');
         // Validation
         V::intVal()->check($id);
         V::objectType()
@@ -519,7 +518,7 @@ class Sensors extends RESTResource {
             ))->check($data);
         // Persistence
         $em = $this->getEntityManager();
-		$sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
+        $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
         $sensor->setName($data->name);
         $sensor->setLocation($data->location);
@@ -633,19 +632,16 @@ class Sensors extends RESTResource {
             $deletionCandidate->setRevision(null);
             $em->remove($deletionCandidate);
         }
-		$em->flush();
-        // Regenerate sensor config
-        // TODO only do that on config changes
-        $this->getServiceManager()->get(ServiceManager::SERVICE_BEANSTALK)->putSensorConfigCreationJob($sensor, $em);
+        $em->flush();
         return $sensor;
-	}
-	
-	public function delete($id) {
-		$this->assureAllowed('delete');
+    }
+
+    public function delete($id) {
+        $this->assureAllowed('delete');
         // Validation
         V::intVal()->check($id);
-		$em = $this->getEntityManager();
-		$sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
+        $em = $this->getEntityManager();
+        $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
         // Remove all events that belong to this sensor
         // TODO Consider moving those into some sort of archive
@@ -653,21 +649,37 @@ class Sensors extends RESTResource {
         foreach($events as $event) $em->remove($event);
         $em->remove($sensor);
         $em->flush();
-	}
+    }
 
     /**
-     * Offers a configuration archive as a file download to authenticated clients.
+     * Triggers the creation and file download of a new sensor configuration archive.
      *
-     * @param int $id
+     * @param int $id Sensor id of the config archive that was requested
+     * @return
      * @throws ForbiddenException
      */
-	public function downloadConfig($id) {
-		$this->assureAllowed('downloadConfig');
-		$sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
+    public function requestConfigDownload($id) {
+        // TODO Verify that requesting user is allowed to download that specific config
+        $this->assureAllowed('downloadConfig');
+        // Validation
         V::intVal()->check($id);
-		$filePath = realpath(APPLICATION_PATH . '/../data/configs/' . $sensor->getHostname() . '.tar.gz');
-		$this->offerFile($filePath, basename($filePath));
-	}
+        $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
+        V::objectType()->check($sensor);
+        // Enqueue a new task and return it, it's the client's obligation to check that task's status and download the result
+        $taskParams = $sensor->getState();
+        $taskParams['cert'] = $sensor->getCert()->getContent();
+        $taskParams['key'] = $sensor->getCert()->getKey();
+        // If this sensor doesn't have a custom service network defined, we rely on the system-wide configuration
+        $taskParams['service_network'] = $sensor->getServiceNetwork() != null ? $sensor->getServiceNetwork() : $this->getConfig()['sensors']['service_network'];
+        if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_DEFAULT) {
+            $taskParams['server_endpoint_host'] = $this->getConfig()['server']['host'];
+            $taskParams['server_endpoint_port_https'] = $this->getConfig()['server']['portHTTPS'];
+        }
+        $taskParams['server_endpoint_name'] = $this->getConfig()['server']['host'];
+        $taskParams['proxy_password'] = $sensor->getProxyPassword();
+        $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_SENSORCFG_CREATOR, $taskParams);
+        return $task->getState();
+    }
 
     /**
      * Removes the oldest status entries of a particular sensor

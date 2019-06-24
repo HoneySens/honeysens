@@ -8,7 +8,6 @@ function(HoneySens, Routing, LayoutView, Overview) {
         rootView: null,
         menuItems: [
             {title: 'System', uri: 'settings', iconClass: 'glyphicon glyphicon-cog', permission: {domain: 'settings', action: 'update'}, priority: 3}
-            /*{title: 'Protokolle', uri: 'settings/logs', iconClass: 'glyphicon glyphicon-log-in', permission: 'settings'}*/
         ],
         start: function() {
             console.log('Starting module: settings');

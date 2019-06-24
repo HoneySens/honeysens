@@ -242,6 +242,7 @@ while True:
         config.set('sensors', 'service_network', '10.10.10.0/24')
         db.cursor().execute('ALTER TABLE sensors ADD serviceNetwork VARCHAR(255) DEFAULT NULL')
         db.cursor().execute('ALTER TABLE statuslogs ADD serviceStatus VARCHAR(255) DEFAULT NULL')
+        db.commit()
         config.set('server', 'config_version', '2.0.0')
         config_version = '2.0.0'
     # 2.0.0 -> next
@@ -249,10 +250,15 @@ while True:
         print('Upgrading configuration 2.0.0 -> next')
         db_statements = [
             'ALTER TABLE users ADD legacyPassword VARCHAR(255) DEFAULT NULL, CHANGE password password VARCHAR(255) DEFAULT NULL',
-            'UPDATE users SET legacyPassword=password,password=NULL'
+            'UPDATE users SET legacyPassword=password,password=NULL',
+            'CREATE TABLE tasks (id INT AUTO_INCREMENT NOT NULL, user_id INT DEFAULT NULL, type INT NOT NULL, status INT NOT NULL, params LONGTEXT DEFAULT NULL COMMENT "(DC2Type:json_array)", result LONGTEXT DEFAULT NULL COMMENT "(DC2Type:json_array)", INDEX IDX_50586597A76ED395 (user_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB',
+            'ALTER TABLE tasks ADD CONSTRAINT FK_50586597A76ED395 FOREIGN KEY (user_id) REFERENCES users (id)',
+            'INSERT INTO last_updates(table_name, timestamp) VALUES ("tasks", NOW())',
+            'ALTER TABLE firmware CHANGE source source VARCHAR(255) DEFAULT NULL'
         ]
         execute_sql(db, db_statements)
         db.commit()
+        config.set('server', 'data_path', '/opt/HoneySens/data')
         config.set('server', 'config_version', 'next')
         config_version = 'next'
 

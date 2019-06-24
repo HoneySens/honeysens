@@ -1,19 +1,16 @@
 <?php
 namespace HoneySens\app\controllers;
-use FileUpload\PathResolver;
-use FileUpload\FileSystem;
-use FileUpload\FileUpload;
-use FileUpload\File;
 use HoneySens\app\models\entities\Firmware;
+use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
+use HoneySens\app\models\exceptions\ForbiddenException;
 use Respect\Validation\Validator as V;
 
 class Platforms extends RESTResource {
 
     const CREATE_ERROR_NONE = 0;
-    const CREATE_ERROR_INVALID_IMAGE = 1;
-    const CREATE_ERROR_INVALID_METADATA = 2;
-    const CREATE_ERROR_DUPLICATE = 3;
+    const CREATE_ERROR_UNKNOWN_PLATFORM = 1;
+    const CREATE_ERROR_DUPLICATE = 2;
 
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->get('/api/platforms(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
@@ -39,10 +36,12 @@ class Platforms extends RESTResource {
             echo json_encode($controller->getFirmware($id));
         });
 
+        // Requires a successfully completed verification task
         $app->post('/api/platforms/firmware', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Platforms($em, $services, $config);
-            $imageData = $controller->create($_FILES['image']);
-            echo json_encode($imageData);
+            $request = $app->request()->getBody();
+            V::json()->check($request);
+            echo json_encode($controller->create(json_decode($request)));
         });
 
         $app->put('/api/platforms/:id', function($id) use ($app, $em, $services, $config, $messages) {
@@ -68,6 +67,9 @@ class Platforms extends RESTResource {
      *
      * @param array $criteria
      * @return array
+     * @throws ForbiddenException
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function get($criteria) {
         $this->assureAllowed('get');
@@ -91,6 +93,7 @@ class Platforms extends RESTResource {
      *
      * @param $id
      * @return array
+     * @throws ForbiddenException
      */
     public function getFirmware($id) {
         $this->assureAllowed('get');
@@ -105,6 +108,7 @@ class Platforms extends RESTResource {
      *
      * @param $id
      * @throws BadRequestException
+     * @throws ForbiddenException
      */
     public function downloadFirmware($id) {
         // Authenticate with either a valid sensor certificate or session
@@ -115,9 +119,10 @@ class Platforms extends RESTResource {
         $firmware = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
         V::objectType()->check($firmware);
         $platform = $firmware->getPlatform();
-        $firmwarePath = $platform->obtainFirmware($firmware, $this->getServiceManager());
+        $firmwarePath = $platform->obtainFirmware($firmware, $this->getConfig());
         // session_write_close(); Necessary?
-        if($firmwarePath != null) $this->offerFile($firmwarePath, $firmware->getSource());
+        $downloadName = sprintf('%s-%s.tar.gz', preg_replace('/\s+/', '-', strtolower($firmware->getName())), preg_replace('/\s+/', '-', strtolower($firmware->getVersion())));
+        if($firmwarePath != null) $this->offerFile($firmwarePath, $downloadName);
         else throw new BadRequestException();
     }
 
@@ -125,6 +130,8 @@ class Platforms extends RESTResource {
      * Attempts to identify and download the current default firmware for a given platform.
      *
      * @param $id
+     * @throws BadRequestException
+     * @throws ForbiddenException
      */
     public function downloadCurrentFirmwareForPlatform($id) {
         $this->assureAllowed('get');
@@ -139,71 +146,59 @@ class Platforms extends RESTResource {
      * Creates and persists a new firmware revision.
      * It expects binary file data as parameter and supports chunked uploads.
      *
-     * @param string $fileData
+     * @param $data
      * @return array
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function create($fileData) {
+    public function create($data) {
         $this->assureAllowed('create');
         $em = $this->getEntityManager();
-        $pathresolver = new PathResolver\Simple(realpath(APPLICATION_PATH . '/../data/upload'));
-        $fs = new FileSystem\Simple();
-        $fileupload = new FileUpload($fileData, $_SERVER);
-        $fileupload->setPathResolver($pathresolver);
-        $fileupload->setFileSystem($fs);
-        $fileupload->addCallback('completed', function(File $file) {
-            // Validation
-            global $em;
-            // Check archive content
-            exec('/bin/tar tzf ' . escapeshellarg($file->getRealPath()), $output);
-            if(!in_array('firmware.img', $output) || !in_array('metadata.xml', $output))
-                $this->handleInvalidUpload($file,Platforms::CREATE_ERROR_INVALID_IMAGE);
-            // Check metadata
-            $output = array();
-            exec('/bin/tar xzf ' . escapeshellarg($file->getRealPath()) . ' metadata.xml -O', $output);
-            try {
-                $metadata = new \SimpleXMLElement(implode($output));
-                V::objectType()
-                    ->attribute('name')
-                    ->attribute('version')
-                    ->attribute('platform')
-                    ->attribute('description')
-                    ->check($metadata);
-            } catch(\Exception $e) {
-                $this->handleInvalidUpload($file, Platforms::CREATE_ERROR_INVALID_METADATA);
-            }
-            // Check platform existence
-            $platform = $em->getRepository('HoneySens\app\models\entities\Platform')
-                ->findOneBy(array('name' => (string) $metadata->platform));
-            if(!V::objectType()->validate($platform))
-                $this->handleInvalidUpload($file, Platforms::CREATE_ERROR_INVALID_METADATA);
-            // Duplicate test
-            $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')
-                ->findOneBy(array('name' => (string) $metadata->name, 'version' => (string) $metadata->version));
-            if(V::objectType()->validate($firmware))
-                $this->handleInvalidUpload($file, Platforms::CREATE_ERROR_DUPLICATE);
-            // Persistence
-            $firmware = new Firmware();
-            $firmware->setName((string) $metadata->name)
-                ->setVersion((string) $metadata->version)
-                ->setPlatform($platform)
-                ->setDescription((string) $metadata->description)
-                ->setChangelog('')
-                ->setPlatform($platform);
-            $platform->addFirmwareRevision($firmware);
-            $platform->registerFirmware($firmware, $file, $this->getServiceManager());
-            // Set this firmware as default if there isn't a default yet
-            if(!$platform->hasDefaultFirmwareRevision()) {
-                $platform->setDefaultFirmwareRevision($firmware);
-            }
-            $em->persist($firmware);
-            $em->flush();
-            $file->image = $firmware->getState();
-        });
-        list($files, $headers) = $fileupload->processAll();
-        foreach($headers as $header => $value) {
-            header($header . ': ' . $value);
+        // Validation, we just expect a task id here
+        V::objectType()
+            ->attribute('task', V::intVal())
+            ->check($data);
+        // Validate the given task
+        $task = $em->getRepository('HoneySens\app\models\entities\Task')->find($data->task);
+        V::objectType()->check($task);
+        if($task->getUser() !== $this->getSessionUser()) throw new ForbiddenException();
+        if($task->getType() != Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() != Task::STATUS_DONE) throw new BadRequestException();
+        $taskResult = $task->getResult();
+        V::arrayType()->check($taskResult);
+        V::key('valid', V::boolType())->check($taskResult);
+        if(!$taskResult['valid']) throw new BadRequestException();
+        if($taskResult['type'] != Tasks::UPLOAD_TYPE_PLATFORM_ARCHIVE) throw new BadRequestException();
+        // Check platform existence
+        $platform = $em->getRepository('HoneySens\app\models\entities\Platform')
+            ->findOneBy(array('name' => $taskResult['platform']));
+        if(!V::objectType()->validate($platform))
+            throw new BadRequestException(Platforms::CREATE_ERROR_UNKNOWN_PLATFORM);
+        // Duplicate test
+        $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')
+            ->findOneBy(array('name' => $taskResult['name'], 'version' => $taskResult['version']));
+        if(V::objectType()->validate($firmware))
+            throw new BadRequestException(Platforms::CREATE_ERROR_DUPLICATE);
+        // Persistence
+        $firmware = new Firmware();
+        $firmware->setName($taskResult['name'])
+            ->setVersion($taskResult['version'])
+            ->setPlatform($platform)
+            ->setDescription($taskResult['description'])
+            ->setChangelog('')
+            ->setPlatform($platform);
+        $platform->addFirmwareRevision($firmware);
+        $em->persist($firmware);
+        // Set this firmware as default if there isn't a default yet
+        if(!$platform->hasDefaultFirmwareRevision()) {
+            $platform->setDefaultFirmwareRevision($firmware);
         }
-        return array('files' => $files);
+        $em->flush();
+        $platform->registerFirmware($firmware, sprintf('%s/%s/%s', $this->getConfig()['server']['data_path'], Tasks::UPLOAD_PATH, $task->getParams()['path']), $this->getConfig());
+        // Remove upload verification task
+        $taskController = new Tasks($em, $this->getServiceManager(), $this->getConfig());
+        $taskController->delete($task->getId());
+        return $firmware->getState();
     }
 
     /**
@@ -213,6 +208,8 @@ class Platforms extends RESTResource {
      * @param int $id
      * @param \stdClass $data
      * @return Firmware
+     * @throws ForbiddenException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function update($id, $data) {
         $this->assureAllowed('update');
@@ -237,6 +234,8 @@ class Platforms extends RESTResource {
      *
      * @param $id
      * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function delete($id) {
         $this->assureAllowed('delete');
@@ -258,13 +257,8 @@ class Platforms extends RESTResource {
         foreach($qb->getQuery()->getResult() as $sensor) {
             $sensor->setFirmware(null);
         }
-        $platform->unregisterFirmware($firmware, $this->getServiceManager());
+        $platform->unregisterFirmware($firmware, $this->getConfig());
         $em->remove($firmware);
         $em->flush();
-    }
-
-    private function handleInvalidUpload(File $uploadedFile, $errorCode) {
-        if(file_exists($uploadedFile->getRealPath())) exec('rm ' . escapeshellarg($uploadedFile->getRealPath()));
-        throw new BadRequestException($errorCode);
     }
 }

@@ -6,56 +6,58 @@ namespace HoneySens\app\models\entities;
  * @Table(name="firmware")
  */
 class Firmware {
-	
-	/**
-	 * @Id
-	 * @Column(type="integer")
-	 * @GeneratedValue 
-	 */
-	protected $id;
-	
-	/**
-	 * The name of this sensor image
-	 * 
-	 * @Column(type="string")
-	 */
-	protected $name;
-	
-	/**
-	 * Version string of this image
-	 * 
-	 * @Column(type="string")
-	 */
-	protected $version;
-	
-	/**
-	 * A short description of this image
-	 * 
-	 * @Column(type="string")
-	 */
-	protected $description;
-	
-	/**
-	 * The long description of changes that occured within this version
-	 * 
-	 * @Column(type="string")
-	 */
-	protected $changelog;
-	
-	/**
-	 * Reference to this firmware image, format is platform-dependent
-	 * 
-	 * @Column(type="string")
-	 */
-	protected $source;
-	
+
+    /**
+     * @Id
+     * @Column(type="integer")
+     * @GeneratedValue
+     */
+    protected $id;
+
+    /**
+     * The name of this sensor image
+     *
+     * @Column(type="string")
+     */
+    protected $name;
+
+    /**
+     * Version string of this image
+     *
+     * @Column(type="string")
+     */
+    protected $version;
+
+    /**
+     * A short description of this image
+     *
+     * @Column(type="string")
+     */
+    protected $description;
+
+    /**
+     * The long description of changes that occured within this version
+     *
+     * @Column(type="string")
+     */
+    protected $changelog;
+
+    /**
+     * Deprecated: Denotes the file name of the firmware file.
+     * If set to null, getSource() will return a named based on the ID of this firmware.
+     * This property is still there to support older server versions that used a different naming scheme.
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $source;
+
     /**
      * The platform this firmware revision belongs to.
      *
      * @ManyToOne(targetEntity="HoneySens\app\models\entities\Platform", inversedBy="firmwareRevisions")
      */
-	protected $platform;
-	
+    protected $platform;
+
     /**
      * Get id
      *
@@ -64,7 +66,7 @@ class Firmware {
     public function getId() {
         return $this->id;
     }
-	
+
     /**
      * Set name
      *
@@ -84,7 +86,7 @@ class Firmware {
     public function getName() {
         return $this->name;
     }
-	
+
     /**
      * Set version
      *
@@ -104,7 +106,7 @@ class Firmware {
     public function getVersion() {
         return $this->version;
     }
-	
+
     /**
      * Set description
      *
@@ -124,7 +126,7 @@ class Firmware {
     public function getDescription() {
         return $this->description;
     }
-	
+
     /**
      * Set change log
      *
@@ -144,7 +146,7 @@ class Firmware {
     public function getChangelog() {
         return $this->changelog;
     }
-	
+
     /**
      * Set source reference
      *
@@ -157,21 +159,15 @@ class Firmware {
     }
 
     /**
-     * Get source reference
+     * Get the file name of this firmware archive (as found on the disk within the firmware data directory).
+     * Returns a name based on the firmware ID if none other was set.
      *
      * @return string
      */
     public function getSource() {
-        return $this->source;
+        if($this->source == null) return sprintf('%s.tar.gz', $this->getId());
+        else return $this->source;
     }
-	
-	/**
-	 * Returns the name of the converted image file that is
-	 * ready to be writen onto a SD card
-	 */
-	public function getConvertedFile() {
-		return preg_replace('/\s+/', '-', strtolower((string) $this->name)) . '-' . preg_replace('/\s+/', '-', strtolower((string) $this->version)) . '.img';
-	}
 
     /**
      * Set the platform this firmware revision belongs to.
@@ -179,9 +175,9 @@ class Firmware {
      * @param Platform|null $platform
      * @return $this
      */
-	public function setPlatform(Platform $platform = null) {
-	    $this->platform = $platform;
-	    return $this;
+    public function setPlatform(Platform $platform = null) {
+        $this->platform = $platform;
+        return $this;
     }
 
     /**
@@ -190,18 +186,18 @@ class Firmware {
      * @return Platform
      */
     public function getPlatform() {
-	    return $this->platform;
+        return $this->platform;
     }
-		
-	public function getState() {
-		return array(
-			'id' => $this->getId(),
-			'name' => $this->getName(),
-			'version' => $this->getVersion(),
-			'description' => $this->getDescription(),
-			'changelog' => $this->getChangelog(),
-			'source' => $this->getSource(),
+
+    public function getState() {
+        return array(
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'version' => $this->getVersion(),
+            'description' => $this->getDescription(),
+            'changelog' => $this->getChangelog(),
+            'source' => $this->getSource(),
             'platform' => $this->getPlatform()->getId()
-		);
-	}
+        );
+    }
 }

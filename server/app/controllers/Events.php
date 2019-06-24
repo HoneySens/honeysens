@@ -5,9 +5,11 @@ use Doctrine\DBAL\Connection;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventDetail;
 use HoneySens\app\models\entities\EventPacket;
+use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
+use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use phpseclib\File\X509;
 use Respect\Validation\Validator as V;
@@ -74,9 +76,9 @@ class Events extends RESTResource {
             echo json_encode([]);
         });
     }
-		
-	/**
-	 * Fetches events from the DB by various criteria:
+
+    /**
+     * Fetches events from the DB by various criteria:
      * - userID: return only events that belong to the user with the given id
      * - lastID: return only events that have a higher id than the given one
      * - id: return the event with the given id
@@ -86,16 +88,24 @@ class Events extends RESTResource {
      * - sensor: Sensor id to limit results
      * - classification: classification (int) to limit results (0 to 4)
      * - status: status (int) to limit results (0 to 3)
+     * - fromTS: timestamp, to specify the beginning of a date range
+     * - toTS: timestamp, to specify the end of a date range
+     * - list: list of requested event ids
      * - page: page number of result list (only together with 'per_page'), default 0
      * - per_page: number of results per page (only together with 'page'), default 15, max 60
      * - filter: search term to find events that contain the given string
+     * - format: essentially the ACCEPT header of the HTTP request, defines the intended output format
      *
      * If no criteria are given, all events are returned matching the default parameters.
-	 *
-	 * @param array $criteria
-	 * @return array
-	 */
-	public function get($criteria) {
+     *
+     * @param array $criteria
+     * @return array
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\Query\QueryException
+     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     */
+    public function get($criteria) {
         $this->assureAllowed('get');
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('e')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
@@ -149,8 +159,24 @@ class Events extends RESTResource {
             $qb->andWhere('e.status = :status')
                 ->setParameter('status', $criteria['status']);
         }
-
+        if(V::key('fromTS', V::intVal())->validate($criteria)) {
+            $timestamp = new \DateTime('@' . $criteria['fromTS']);
+            $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            $qb->andWhere('e.timestamp >= :fromTS')
+                ->setParameter('fromTS', $timestamp);
+        }
+        if(V::key('toTS', V::intVal())->validate($criteria)) {
+            $timestamp = new \DateTime('@' . $criteria['toTS']);
+            $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            $qb->andWhere('e.timestamp <= :toTS')
+                ->setParameter('toTS', $timestamp);
+        }
+        if(V::key('list', V::arrayVal()->each(V::intVal()))->validate($criteria)) {
+            $qb->andWhere('e.id IN (:list)')
+                ->setParameter('list', $criteria['list'], Connection::PARAM_INT_ARRAY);
+        }
         if(V::key('id', V::intVal())->validate($criteria)) {
+            // Single event output, ignores the format paramter
             $qb->andWhere('e.id = :id')
                 ->setParameter('id', $criteria['id']);
             return $qb->getQuery()->getSingleResult()->getState();
@@ -168,11 +194,18 @@ class Events extends RESTResource {
                 $qb->setFirstResult(0)->setMaxResults(15);
             }
 
-            $events = array();
-            foreach($qb->getQuery()->getResult() as $event) {
-                $events[] = $event->getState();
+            // Output depends on the requested format
+            if(V::key('format', V::stringType())->validate($criteria) && $criteria['format'] == 'text/csv') {
+                $taskParams = array('query' => Utils::getFullSQL($qb->getQuery()));
+                $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_EVENT_EXTRACTOR, $taskParams);
+                return $task->getState();
+            } else {
+                $events = array();
+                foreach($qb->getQuery()->getResult() as $event) {
+                    $events[] = $event->getState();
+                }
+                return array('items' => $events, 'total_count' => $totalCount);
             }
-            return array('items' => $events, 'total_count' => $totalCount);
         }
     }
 
@@ -217,7 +250,7 @@ class Events extends RESTResource {
      * @return array
      * @throws BadRequestException
      */
-	public function create($data, ConfigParser $config) {
+    public function create($data, ConfigParser $config) {
         // No $this->assureAllowed() authentication here, because sensors don't authenticate via the API,
         // but are using certificates instead.
 
@@ -232,19 +265,19 @@ class Events extends RESTResource {
         } catch(\Exception $e) {
             throw new BadRequestException();
         }
-		// Check sensor certificate validity
-		$em = $this->getEntityManager();
-		$sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($data->sensor);
+        // Check sensor certificate validity
+        $em = $this->getEntityManager();
+        $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($data->sensor);
         V::objectType()->check($sensor);
-		$cert = $sensor->getCert();
+        $cert = $sensor->getCert();
         $x509 = new X509();
-		$x509->loadCA(file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt'));
-		$x509->loadX509($cert->getContent());
-		if(!$x509->validateSignature()) throw new BadRequestException();
-		// Check signature
-		$check = openssl_verify($eventsData, base64_decode($data->signature), $cert->getContent());
-		if(!$check) throw new BadRequestException();
-		// Create events
+        $x509->loadCA(file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt'));
+        $x509->loadX509($cert->getContent());
+        if(!$x509->validateSignature()) throw new BadRequestException();
+        // Check signature
+        $check = openssl_verify($eventsData, base64_decode($data->signature), $cert->getContent());
+        if(!$check) throw new BadRequestException();
+        // Create events
         try {
             $eventsData = json_decode($eventsData);
         } catch(\Exception $e) {
@@ -271,29 +304,29 @@ class Events extends RESTResource {
                 ->attribute('summary', V::stringType()))
             ->check($eventsData);
         // Persistence
-		$events = array();
-		foreach($eventsData as $eventData) {
+        $events = array();
+        foreach($eventsData as $eventData) {
             // TODO make optional fields optional (e.g. packets and details)
-			$timestamp = new \DateTime('@' . $eventData->timestamp);
-			$timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-			$event = new Event();
-			// Save event details
-			$details = array();
-			foreach($eventData->details as $detailData) {
-				if($detailData->timestamp === null) {
-					$detailTimestamp = null; 
-				} else {
-					$detailTimestamp = new \DateTime('@' . $detailData->timestamp);
-					$detailTimestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-				}
-				$eventDetail = new EventDetail();
-				$eventDetail->setTimestamp($detailTimestamp)
-					->setType($detailData->type)
-					->setData($detailData->data);
-				$event->addDetails($eventDetail);
-				$em->persist($eventDetail);
-				$details[] = $eventDetail;
-			}
+            $timestamp = new \DateTime('@' . $eventData->timestamp);
+            $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            $event = new Event();
+            // Save event details
+            $details = array();
+            foreach($eventData->details as $detailData) {
+                if($detailData->timestamp === null) {
+                    $detailTimestamp = null;
+                } else {
+                    $detailTimestamp = new \DateTime('@' . $detailData->timestamp);
+                    $detailTimestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+                }
+                $eventDetail = new EventDetail();
+                $eventDetail->setTimestamp($detailTimestamp)
+                    ->setType($detailData->type)
+                    ->setData($detailData->data);
+                $event->addDetails($eventDetail);
+                $em->persist($eventDetail);
+                $details[] = $eventDetail;
+            }
             // Save event packets
             $packets = array();
             foreach($eventData->packets as $packetData) {
@@ -312,11 +345,11 @@ class Events extends RESTResource {
                 $packets[] = $eventPacket;
             }
             // Save remaining event data
-			$event->setTimestamp($timestamp)
-				->setService($eventData->service)
-				->setSource($eventData->source)
-				->setSummary($eventData->summary)
-				->setSensor($sensor);
+            $event->setTimestamp($timestamp)
+                ->setService($eventData->service)
+                ->setSource($eventData->source)
+                ->setSummary($eventData->summary)
+                ->setSensor($sensor);
             // Do classification
             // TODO be more sophisticated here than simply matching service and classification
             switch($event->getService()) {
@@ -331,12 +364,12 @@ class Events extends RESTResource {
                 default:
                     $event->setClassification(Event::CLASSIFICATION_UNKNOWN);
             }
-			$em->persist($event);
-			$events[] = $event;
-		}
-		// Apply filters
+            $em->persist($event);
+            $events[] = $event;
+        }
+        // Apply filters
         $filters = $sensor->getDivision()->getEventFilters();
-		foreach($events as $event) {
+        foreach($events as $event) {
             foreach($filters as $filter) {
                 if($filter->matches($event)) {
                     $em->remove($event);
@@ -344,15 +377,15 @@ class Events extends RESTResource {
                     break;
                 }
             }
-		}
-		$em->flush();
-		// Send mails for each incident
-		$mailService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
-		foreach($events as $event) {
+        }
+        $em->flush();
+        // Send mails for each incident
+        $mailService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
+        foreach($events as $event) {
             if($em->contains($event)) $mailService->sendIncident($config, $em, $event);
-		}
-		return $events;
-	}
+        }
+        return $events;
+    }
 
     /**
      * Updates one or multiple Event objects.
@@ -428,8 +461,8 @@ class Events extends RESTResource {
      *
      * @param array $criteria
      */
-	public function delete($criteria) {
-		$this->assureAllowed('delete');
+    public function delete($criteria) {
+        $this->assureAllowed('delete');
         $em = $this->getEntityManager();
         // Validation, either 'id' or 'ids' must be present
         V::oneOf(V::key('id'), V::key('ids'))->check($criteria);
@@ -454,22 +487,6 @@ class Events extends RESTResource {
         $results = $qb->getQuery()->getResult();
         foreach($results as $result) {
             $em->remove($result);
-        }
-        $em->flush();
-	}
-
-    public function test() {
-        $em = $this->getEntityManager();
-        $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find(2);
-        for($i=0;$i<10;$i++) {
-            $event = new Event();
-            $event->setTimestamp(new \DateTime())
-                ->setService('SSH')
-                ->setSource('source')
-                ->setSummary('summary')
-                ->setSensor($sensor)
-                ->setClassification(Event::CLASSIFICATION_CONN_ATTEMPT);
-            $em->persist($event);
         }
         $em->flush();
     }

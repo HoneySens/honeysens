@@ -61,7 +61,8 @@ class State extends RESTResource {
                 'platform' => array(),
                 'settings' => array(),
                 'system' => $system,
-                'stats' => array()
+                'stats' => array(),
+                'tasks' => array()
             );
         }
 
@@ -75,6 +76,7 @@ class State extends RESTResource {
         try { $platforms = (new Platforms($em, $this->getServiceManager(), $config))->get(array()); } catch(\Exception $e) { $platforms = array(); }
         try { $settings = (new Settings($em, $this->getServiceManager(), $config))->get(); } catch(\Exception $e) { $settings = array(); }
         try { $stats = (new Stats($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $stats = array(); }
+        try { $tasks = (new Tasks($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $tasks = array(); }
 
         return array(
             'user' => $_SESSION['user'],
@@ -88,7 +90,8 @@ class State extends RESTResource {
             'platforms' => $platforms,
             'settings' => $settings,
             'system' => $system,
-            'stats' => $stats
+            'stats' => $stats,
+            'tasks' => $tasks
         );
     }
 }

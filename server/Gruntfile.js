@@ -24,6 +24,7 @@ module.exports = function(grunt) {
             srcPrefix + '/css/bootstrap.css',
             srcPrefix + '/css/bootstrapValidator.css',
             srcPrefix + '/css/backgrid-paginator.css',
+            srcPrefix + '/css/bootstrap-datepicker3.css',
             srcPrefix + '/css/jquery.fileupload.css',
             srcPrefix + '/css/fonts.css',
             srcPrefix + '/css/honeysens.css'],
@@ -69,6 +70,12 @@ module.exports = function(grunt) {
                 cwd: srcPrefix + '/utils/',
                 dest: dstPrefix + '/',
                 src: 'beanstalk/**'
+            },
+            tasks: {
+                expand: true,
+                cwd: srcPrefix + '/tasks/',
+                dest: dstPrefix + '/tasks/',
+                src: '**'
             },
             requirejs: {
                 expand: true,
@@ -173,6 +180,17 @@ module.exports = function(grunt) {
             },
             composer: {
                 command: 'cd ' + srcPrefix + '/app && /bin/sh composer.sh'
+            },
+            tasks_install: {
+                command: 'python setup.py develop',
+                options: {
+                    execOptions: {
+                        cwd: dstPrefix + '/tasks/'
+                    }
+                }
+            },
+            tasks_restart: {
+                command: 'sv restart tasks'
             }
         },
         watch: {
@@ -189,6 +207,11 @@ module.exports = function(grunt) {
             css: {
                 files: '<%= stylesheets %>',
                 tasks: ['concat:dist'],
+                options: { spawn: false }
+            },
+            tasks: {
+                files: [srcPrefix + '/tasks/**'],
+                tasks: ['copy:tasks', 'shell:tasks_restart'],
                 options: { spawn: false }
             }
         }
@@ -209,20 +232,29 @@ module.exports = function(grunt) {
             grunt.config('copy.js.src', Object.keys(changedJSFiles));
             changedJSFiles = Object.create(null);
         }, 200),
+        changedTasksFiles = Object.create(null),
+        onTasksChange = grunt.util._.debounce(function(path) {
+            grunt.config('copy.tasks.src', Object.keys(changedTasksFiles));
+            changedTasksFiles = Object.create(null);
+        }, 200),
         watchEvent = grunt.cli.tasks.indexOf('chokidar') > -1 ? 'chokidar' : 'watch';
     grunt.event.on(watchEvent, function(action, filepath) {
-        // Slice the source prefix from filepath so that the resulting path lies within copy.(app|js).cwd
+        // Slice the source prefix from filepath so that the resulting path lies within copy.(app|js|tasks).cwd
         filepath = filepath.slice(filepath.indexOf(srcPrefix) + srcPrefix.length + 1);
-            if(grunt.file.isMatch('app/**', filepath)  ) {
-                if(!grunt.file.isMatch('app/index.php', filepath)) {
-                    changedAppFiles[filepath] = action;
-                }
-                onAppChange();
-            } else if(grunt.file.isMatch('js/**', filepath)) {
-                // Slice 'js/' from filepath
-                changedJSFiles[filepath.slice(3)] = action;
-                onJSChange();
+        if(grunt.file.isMatch('app/**', filepath)  ) {
+            if(!grunt.file.isMatch('app/index.php', filepath)) {
+                changedAppFiles[filepath] = action;
             }
+            onAppChange();
+        } else if(grunt.file.isMatch('js/**', filepath)) {
+            // Slice 'js/' from filepath
+            changedJSFiles[filepath.slice(3)] = action;
+            onJSChange();
+        } else if(grunt.file.isMatch('tasks/**/*.py', filepath)) {
+            // Slice 'tasks/' from filepath
+            changedTasksFiles[filepath.slice(6)] = action;
+            onTasksChange();
+        }
     });
 
     grunt.registerTask('docs', [
@@ -239,9 +271,11 @@ module.exports = function(grunt) {
         'copy:public',
         'copy:data',
         'copy:beanstalk',
+        'copy:tasks',
         'copy:requirejs',
         'copy:js',
         'concat:dist',
+        'shell:tasks_install',
         'chmod'
     ]);
     grunt.registerTask('release', [
@@ -255,6 +289,7 @@ module.exports = function(grunt) {
         'copy:public',
         'copy:data',
         'copy:beanstalk',
+        'copy:tasks',
         'copy:requirejs',
         'requirejs',
         'cssmin:dist',

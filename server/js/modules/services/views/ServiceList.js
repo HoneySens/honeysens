@@ -69,16 +69,16 @@ function(HoneySens, Backgrid, ServiceListTpl, ServiceListActionsCellTpl) {
                     type: 'GET',
                     url: 'api/services/registry',
                     success: function() {
-                        view.$el.find('div.filters span.help-block').removeClass('registryOffline').addClass('registryOnline').text('Online');
+                        view.$el.find('div.filters span.help-block').removeClass('registryOffline').addClass('statusOnline').text('Online');
                         view.enableInterface(true);
                     },
                     error: function() {
-                        view.$el.find('div.filters span.help-block').removeClass('registryOnline').addClass('registryOffline').text('Offline');
+                        view.$el.find('div.filters span.help-block').removeClass('registryOnline').addClass('statusOffline').text('Offline');
                     }
                 });
             },
             enableInterface: function (enable) {
-                // Enabled or disables all UI controls in this view
+                // Enables or disables all UI controls in this view
                 this.$el.find('button').prop('disabled', !enable);
             }
         });

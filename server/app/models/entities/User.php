@@ -1,6 +1,8 @@
 <?php
 namespace HoneySens\app\models\entities;
 
+use Doctrine\Common\Collections\ArrayCollection;
+
 /**
  * @Entity
  * @Table(name="users")
@@ -59,14 +61,22 @@ class User {
 
     /**
      * This reference is only made to ensure cascading events in case a user is removed.
-     * It's not made publicly as an attribute of the entity.
+     * It's not made public as an attribute of the entity.
      *
      * @OneToMany(targetEntity="HoneySens\app\models\entities\IncidentContact", mappedBy="user", cascade={"remove"})
      */
     protected $incidentContacts;
 
+    /**
+     * References the tasks this user has submitted.
+     *
+     * @OneToMany(targetEntity="HoneySens\app\models\entities\Task", mappedBy="user", cascade={"remove"})
+     */
+    protected $tasks;
+
     public function __construct() {
-        $this->divisions = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->divisions = new ArrayCollection();
+        $this->tasks = new ArrayCollection();
     }
 
     /**
@@ -203,6 +213,39 @@ class User {
     }
 
     /**
+     * Register a task with this user.
+     *
+     * @param Task $task
+     * @return $this
+     */
+    public function addTask(Task $task) {
+        $this->tasks[] = $task;
+        $task->setUser($this);
+        return $this;
+    }
+
+    /**
+     * Disassociates a task from this user.
+     *
+     * @param Task $task
+     * @return $this
+     */
+    public function removeTask(Task $task) {
+        $this->tasks->removeElement($task);
+        $task->setUser(null);
+        return $this;
+    }
+
+    /**
+     * Get all tasks associated with this user.
+     *
+     * @return ArrayCollection
+     */
+    public function getTasks() {
+        return $this->tasks;
+    }
+
+    /**
      * Returns an array of controller permissions for this user
      * of the form array('<CONTROLLER>' => array('<METHOD>', ...), ...)
      *
@@ -222,7 +265,8 @@ class User {
             'services' => array(),
             'settings' => array(),
             'stats' => array(),
-            'state' => array());
+            'state' => array(),
+            'tasks' => array());
         switch($this->role) {
             case $this::ROLE_ADMIN:
                 array_push($permissions['divisions'], 'create', 'update', 'delete');
@@ -230,6 +274,7 @@ class User {
                 array_push($permissions['settings'], 'create', 'update', 'delete');
                 array_push($permissions['platforms'], 'create', 'update', 'delete');
                 array_push($permissions['services'], 'create', 'update', 'delete');
+                array_push($permissions['tasks'], 'delete');
             case $this::ROLE_MANAGER:
                 array_push($permissions['certs'], 'create', 'delete');
                 array_push($permissions['events'], 'update', 'delete');
@@ -251,6 +296,7 @@ class User {
                 array_push($permissions['services'], 'get');
                 array_push($permissions['settings'], 'all', 'get');
                 array_push($permissions['stats'], 'get');
+                array_push($permissions['tasks'], 'get', 'create', 'update');
             case $this::ROLE_GUEST:
                 array_push($permissions['state'], 'get');
                 break;
