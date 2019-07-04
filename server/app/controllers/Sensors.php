@@ -333,7 +333,7 @@ class Sensors extends RESTResource {
         // Validate and persist additional attributes depending on the previous ones
         if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_CUSTOM) {
             V::attribute('server_endpoint_host', V::stringType()->ip())
-                ->attribute('server_endpoint_port_https', V::intVal()->between(0, 65535))
+                ->attribute('server_endpoint_port_https', V::intVal()->between(1, 65535))
                 ->check($data);
             $sensor->setServerEndpointHost($data->server_endpoint_host)
                 ->setServerEndpointPortHTTPS($data->server_endpoint_port_https);
@@ -529,7 +529,7 @@ class Sensors extends RESTResource {
         $sensor->setServerEndpointMode($data->server_endpoint_mode);
         if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_CUSTOM) {
             V::attribute('server_endpoint_host', V::stringType()->ip())
-                ->attribute('server_endpoint_port_https', V::intVal()->between(0, 65535))
+                ->attribute('server_endpoint_port_https', V::intVal()->between(1, 65535))
                 ->check($data);
             $sensor->setServerEndpointHost($data->server_endpoint_host)
                 ->setServerEndpointPortHTTPS($data->server_endpoint_port_https);

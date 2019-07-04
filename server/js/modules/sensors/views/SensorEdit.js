@@ -45,14 +45,33 @@ function(HoneySens, Models, SensorEditTpl) {
                     }
                     this.$el.find('form').validator('update');
                 },
+                'click button.useCustomServerEndpoint': function (e) {
+                    var $updateServerHostField = this.$el.find('input[name="serverHost"]'),
+                        $updateServerPortField = this.$el.find('input[name="serverPortHTTPS"]'),
+                        $trigger = this.$el.find('button.useCustomServerEndpoint'),
+                        customServerEndpoint = !$trigger.hasClass('active');
+
+                        $updateServerHostField.prop('disabled', !customServerEndpoint);
+                        $updateServerPortField.prop('disabled', !customServerEndpoint);
+                        $updateServerHostField.prop('required', customServerEndpoint);
+                        $updateServerPortField.prop('required', customServerEndpoint);
+
+                        if(customServerEndpoint) {
+                            $trigger.addClass('active');
+                            $updateServerHostField.val(this.model.get('server_endpoint_host'));
+                            $updateServerPortField.val(this.model.get('server_endpoint_port_https'));
+                        } else {
+                            $trigger.removeClass('active');
+                            $updateServerHostField.val(HoneySens.data.settings.get('serverHost'));
+                            $updateServerPortField.val(HoneySens.data.settings.get('serverPortHTTPS'));
+                        }
+                    this.$el.find('form').validator('update');
+                },
                 'change input[name="firmwarePreference"]': function(e) {
                     this.refreshFirmwarePreference(e.target.value);
                 },
                 'change select[name="firmwarePlatform"]': function(e) {
                     this.refreshFirmwareRevisionSelector(HoneySens.data.models.platforms.get(e.target.value));
-                },
-                'change input[name="serverEndpoint"]': function(e) {
-                    this.refreshServerEndpoint(e.target.value);
                 },
                 'change input[name="networkMode"]': function(e) {
                     this.refreshNetworkMode(e.target.value);
@@ -65,7 +84,6 @@ function(HoneySens, Models, SensorEditTpl) {
                 },
                 'click button:submit': function(e) {
                     e.preventDefault();
-
                     var valid = true;
                     this.$el.find('form').validator('validate');
                     this.$el.find('form .form-group').each(function() {
@@ -138,9 +156,9 @@ function(HoneySens, Models, SensorEditTpl) {
                                 division = view.$el.find('select[name="division"]').val(),
                                 updateInterval = view.$el.find('button.useCustomUpdateInterval').hasClass('active') ? view.$el.find('input[name="updateInterval"]').val() : null,
                                 serviceNetwork = view.$el.find('button.useCustomServiceNetwork').hasClass('active') ? view.$el.find('input[name="serviceNetwork"]').val() : null,
-                                serverEndpointMode = view.$el.find('input[name="serverEndpoint"]:checked').val(),
-                                serverHost = view.$el.find('input[name="serverHost"]').val(),
-                                serverPortHTTPS = view.$el.find('input[name="serverPortHTTPS"]').val(),
+                                serverEndpointMode = view.$el.find('button.useCustomServerEndpoint').hasClass('active') ? '1' : '0',
+                                serverHost = view.$el.find('button.useCustomServerEndpoint').hasClass('active') ? view.$el.find('input[name="serverHost"]').val() : null,
+                                serverPortHTTPS = view.$el.find('button.useCustomServerEndpoint').hasClass('active') ? view.$el.find('input[name="serverPortHTTPS"]').val() : null,
                                 firmwareRevision = view.$el.find('select[name="firmwareRevision"]').val(),
                                 networkMode = view.$el.find('input[name="networkMode"]:checked').val(),
                                 networkIP = view.$el.find('input[name="networkIP"]').val(),
@@ -217,10 +235,6 @@ function(HoneySens, Models, SensorEditTpl) {
 
                 // Set model data
                 this.$el.find('select[name="division"] option[value="' + this.model.get('division') + '"]').prop('selected', true);
-                // Preselecting bootstrap radio buttons is a bit more complicated...
-                this.$el.find('input[name="serverEndpoint"][value="' + this.model.get('server_endpoint_mode') + '"]').prop('checked', true).parent().addClass('active');
-                // Refresh again to set default value
-                this.refreshServerEndpoint(this.model.get('server_endpoint_mode'), this.model.get('server_endpoint_host'), this.model.get('server_endpoint_port_https'));
                 // Do the same for the remaining attributes
                 this.$el.find('input[name="networkMode"][value="' + this.model.get('network_ip_mode') + '"]').prop('checked', true).parent().addClass('active');
                 this.refreshNetworkMode(this.model.get('network_ip_mode'), this.model.get('network_ip_address'), this.model.get('network_ip_netmask'), this.model.get('network_ip_gateway'), this.model.get('network_ip_dns'));
@@ -249,6 +263,12 @@ function(HoneySens, Models, SensorEditTpl) {
                 hasCustomServiceNetwork: function() {
                     return this.service_network;
                 },
+                hasCustomServerHost: function() {
+                    return this.server_endpoint_host;
+                },
+                hasCustomServerPort: function() {
+                    return this.server_endpoint_port_https > 0;
+                },
                 getUpdateInterval: function() {
                     if(this.update_interval > 0) return this.update_interval;
                     else return HoneySens.data.settings.get('sensorsUpdateInterval');
@@ -256,6 +276,14 @@ function(HoneySens, Models, SensorEditTpl) {
                 getServiceNetwork: function() {
                     if(this.service_network) return this.service_network;
                     else return HoneySens.data.settings.get('sensorsServiceNetwork');
+                },
+                getServerHost: function() {
+                    if (this.server_endpoint_host) return this.server_endpoint_host;
+                    else return HoneySens.data.settings.get('serverHost');
+                },
+                getServerPortHTTPS: function() {
+                    if (this.server_endpoint_port_https) return this.server_endpoint_port_https;
+                    else return HoneySens.data.settings.get('serverPortHTTPS');
                 }
             },
             serializeData: function() {
@@ -304,36 +332,10 @@ function(HoneySens, Models, SensorEditTpl) {
                 this.$el.find('div.firmwarePreferenceEnabled select[name="firmwareRevision"]').html(result);
             },
             /**
-             * Render the server endpoint form based on the given endpoint type and fills it with default values if provided
-             */
-            refreshServerEndpoint: function(endpoint, host, portHTTPS) {
-                var networkMode = this.$el.find('input[name="networkMode"]:checked').val(),
-                    MACMode = this.$el.find('input[name="networkMACMode"]:checked').val(),
-                    proxyMode = this.$el.find('input[name="proxyType"]:checked').val();
-                endpoint = parseInt(endpoint);
-                host = host || null;
-                portHTTPS = portHTTPS || null;
-                var $host = this.$el.find('input[name="serverHost"]'),
-                    $portHTTPS = this.$el.find('input[name="serverPortHTTPS"]');
-
-                switch(endpoint) {
-                    case 0:
-                        $host.attr('disabled', 'disabled').val(HoneySens.data.settings.get('serverHost'));
-                        $portHTTPS.attr('disabled', 'disabled').val(HoneySens.data.settings.get('serverPortHTTPS'));
-                        break;
-                    case 1:
-                        $host.attr('disabled', false).val(host);
-                        $portHTTPS.attr('disabled', false).val(portHTTPS);
-                        break;
-                }
-                this.refreshValidators(endpoint, networkMode, MACMode, proxyMode);
-            },
-            /**
              * Render the IPv4 configuration form based on the given mode. Also set default values, if given.
              */
             refreshNetworkMode: function(mode, ip, netmask, gateway, dns) {
-                var serverMode = this.$el.find('input[name="serverEndpoint"]:checked').val(),
-                    MACMode = this.$el.find('input[name="networkMACMode"]:checked').val(),
+                var MACMode = this.$el.find('input[name="networkMACMode"]:checked').val(),
                     proxyMode = this.$el.find('input[name="proxyType"]:checked').val();
                 mode = parseInt(mode);
                 ip = ip || null;
@@ -361,14 +363,13 @@ function(HoneySens, Models, SensorEditTpl) {
                         this.$el.find('div.networkModeNone').removeClass('hide');
                         break;
                 }
-                this.refreshValidators(serverMode, mode, MACMode, proxyMode);
+                this.refreshValidators(mode, MACMode, proxyMode);
             },
             /**
              * Render the custom MAC form based on the given mode. Also set the mac, if given.
              */
             refreshNetworkMAC: function(mode, mac) {
-                var serverMode = this.$el.find('input[name="serverEndpoint"]:checked').val(),
-                    networkMode = this.$el.find('input[name="networkMode"]:checked').val(),
+                var networkMode = this.$el.find('input[name="networkMode"]:checked').val(),
                     proxyMode = this.$el.find('input[name="proxyType"]:checked').val();
                 mode = parseInt(mode);
                 mac = mac || null;
@@ -383,11 +384,10 @@ function(HoneySens, Models, SensorEditTpl) {
                         this.$el.find('div.networkMACCustom input[name="customMAC"]').val(mac);
                         break;
                 }
-                this.refreshValidators(serverMode, networkMode, mode, proxyMode);
+                this.refreshValidators(networkMode, mode, proxyMode);
             },
             refreshProxy: function(mode, host, port, user) {
-                var serverMode = this.$el.find('input[name="serverEndpoint"]:checked').val(),
-                    networkMode = this.$el.find('input[name="networkMode"]:checked').val(),
+                var networkMode = this.$el.find('input[name="networkMode"]:checked').val(),
                     MACMode = this.$el.find('input[name="networkMACMode"]:checked').val();
                 mode = parseInt(mode);
                 host = host || null;
@@ -407,10 +407,11 @@ function(HoneySens, Models, SensorEditTpl) {
                         this.$el.find('div.proxyTypeEnabled input[name="proxyPassword"]').val(null);
                         break;
                 }
-                this.refreshValidators(serverMode, networkMode, MACMode, mode);
+                this.refreshValidators(networkMode, MACMode, mode);
             },
-            refreshValidators: function(serverMode, networkMode, MACMode, proxyMode) {
-                var $form = this.$el.find('form');
+            refreshValidators: function(networkMode, MACMode, proxyMode) {
+                var $form = this.$el.find('form'),
+                    serverMode = this.$el.find('button.useCustomServerEndpoint').hasClass('active') ? '1' : '0';
                 // reset form, remove all volatile fields
                 $form.validator('destroy');
 
