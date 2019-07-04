@@ -44,26 +44,40 @@
                             </div>
                             <div class="help-block with-errors"></div>
                         </div>
-                        <div class="form-group">
-                            <div class="btn-group btn-group-justified" data-toggle="buttons">
-                                <label class="btn btn-default">
-                                    <input type="radio" name="serverEndpoint" value="0">Standard</input>
-                                </label>
-                                <label class="btn btn-default">
-                                    <input type="radio" name="serverEndpoint" value="1">Individuell</input>
-                                </label>
-                            </div>
-                        </div>
                         <div class="form-group has-feedback">
                             <label for="serverHost" class="control-label">Host</label>
-                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="serverHost" placeholder="IP-Adresse des Servers" required />
-                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="input-group">
+                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Zwischen systemweitem Standard und individuellem Wert umschalten">
+                                        <button type="button" class="useCustomServerEndpoint btn btn-default <% if(hasCustomServerHost()) { %>active<% } %>">
+                                            <span class="glyphicon glyphicon-cog"></span>
+                                        </button>
+                                    </span>
+                                <input type="text" name="serverHost" class="form-control" pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" placeholder="IP-Adresse des Servers" value="<%- getServerHost() %>" <% if(!hasCustomServerHost()) { %>disabled<% } %>/>
+                                <div class="input-group-addon">
+                                    <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                                </div>
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="IP-Adresse, mit welcher dieser Sensor den Server kontaktiert.">
+                                    <span class="glyphicon glyphicon-question-sign"></span>
+                                </div>
+                            </div>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group has-feedback">
                             <label for="serverPortHTTPS" class="control-label">HTTPS-Port (API)</label>
-                            <input type="number" name="serverPortHTTPS" class="form-control" placeholder="Standard: 443" required min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen"/>
-                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="input-group">
+                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Zwischen systemweitem Standard und individuellem Wert umschalten">
+                                        <button type="button" class="useCustomServerEndpoint btn btn-default <% if(hasCustomServerPort()) { %>active<% } %>">
+                                            <span class="glyphicon glyphicon-cog"></span>
+                                        </button>
+                                    </span>
+                                <input type="number" name="serverPortHTTPS" class="form-control" placeholder="Standard: 443" required min="1" max="65535" data-max-error="Der Port muss zwischen 1 und 65535 liegen" value="<%- getServerPortHTTPS() %>" <% if(!hasCustomServerPort()) { %>disabled<% } %>/>
+                                <div class="input-group-addon">
+                                    <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                                </div>
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="HTTPS-Port, mit welchem dieser Sensor den Server kontaktiert.">
+                                    <span class="glyphicon glyphicon-question-sign"></span>
+                                </div>
+                            </div>
                             <div class="help-block with-errors"></div>
                         </div>
                     </fieldset>
