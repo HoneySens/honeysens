@@ -13,11 +13,17 @@ function(HoneySens, ModalSendTestMailTpl) {
             },
             onRender: function() {
                 var view = this;
-                
+
+                // Focus input field when the dialog is shown
+                $('#modal').on('shown.bs.modal', function(){
+                    console.log('asdf');
+                    view.$el.find('input[name="recipient"]').focus();
+                });
+
                 this.$el.find('form').validator().on('submit', function (e) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
-                        
+
                         // Temporarily disable the submit button
                         view.$el.find('button.btn-primary').prop('disabled', true);
                         view.model.set('recipient', view.$el.find('input[name="recipient"]').val());
@@ -37,6 +43,9 @@ function(HoneySens, ModalSendTestMailTpl) {
                         });
                     }
                 });
+            },
+            onDestroy: function() {
+                $('#modal').off('shown.bs.modal');
             }
         });
     });
