@@ -6,13 +6,13 @@
                 <div class="col-sm-6">
                     <div class="form-group has-feedback">
                         <label for="sensorName" class="control-label">Name</label>
-                        <input pattern="^[a-zA-Z0-9._\- ]+$" data-pattern-error="Erlaubte Zeichen: a-Z, 0-9, _, -, ." data-maxlength-error="Der Sensorname muss zwischen 1 und 50 Zeichen lang sein" maxlength="50" minlength="1" type="text" class="form-control" name="sensorName" placeholder="Sensorname" value="<%- name %>" required />
+                        <input pattern="^[a-zA-Z0-9._\- ]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben, Zahlen und Sonderzeichen (_, -, .) sind erlaubt" data-maxlength-error="Der Sensorname muss zwischen 1 und 50 Zeichen lang sein" maxlength="50" minlength="1" type="text" class="form-control" name="sensorName" placeholder="Sensorname" value="<%- name %>" required />
                         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                         <div class="help-block with-errors"></div>
                     </div>
                     <div class="form-group has-feedback">
                         <label for="location" class="control-label">Standort</label>
-                        <input data-maxlength-error="Standort darf maximal 255 Zeichen lang sein" maxlength="255" minlength="1" type="text" class="form-control" name="location" placeholder="z.B. Raum 312" value="<%- location %>" required />
+                        <input data-maxlength-error="Der Standort darf maximal 255 Zeichen lang sein" maxlength="255" minlength="1" type="text" class="form-control" name="location" placeholder="z.B. Raum 312" value="<%- location %>" required />
                         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                         <div class="help-block with-errors"></div>
                     </div>

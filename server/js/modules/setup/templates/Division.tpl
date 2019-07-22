@@ -6,7 +6,7 @@
     der hier benannten Gruppe sein.</p>
     <div class="form-group has-feedback">
         <label for="divisionName">Gruppenname</label>
-        <input type="text" name="divisionName" id="divisionName" class="form-control" required pattern="^[a-zA-Z0-9]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben und Zahlen erlaubt"  minlength="1" maxlength="255" data-maxlength-error="Name muss zwischen 1 und 255 Zeichen lang sein"/>
+        <input type="text" name="divisionName" id="divisionName" class="form-control" required pattern="^[a-zA-Z0-9]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben und Zahlen erlaubt"  minlength="1" maxlength="255" data-maxlength-error="Der Name muss zwischen 1 und 255 Zeichen lang sein"/>
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>
