@@ -5,7 +5,7 @@
     <p>Bitte legen Sie zun&auml;chst ein Passwort für den Administrator-Account fest.</p>
     <div class="form-group has-feedback">
         <label for="adminPassword">Administrator-Passwort</label>
-        <input type="password" name="adminPassword" id="adminPassword" class="form-control" required minlength="6" data-minlength-error="Passwortl&auml;nge zwischen 6 und 255 Zeichen" maxlength="255"/>
+        <input type="password" name="adminPassword" id="adminPassword" class="form-control" required minlength="6" data-minlength-error="Das Passwort muss zwischen 6 und 255 Zeichen lang sein" maxlength="255"/>
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>

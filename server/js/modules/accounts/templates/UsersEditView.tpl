@@ -11,7 +11,7 @@
     <form class="form-group">
         <div class="form-group has-feedback">
             <label for="username" class="control-label">Login</label>
-            <input type="text" name="username" class="form-control" placeholder="Benutzername" value="<%- name %>" required autocomplete="off" pattern="^[a-zA-Z0-9]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben und Zahlen erlaubt" minlength="1" maxlength="255" data-maxlength-error="Maximale L&auml;nge: 255 Zeichen" />
+            <input type="text" name="username" class="form-control" placeholder="Benutzername" value="<%- name %>" required autocomplete="off" pattern="^[a-zA-Z0-9]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben und Zahlen sind erlaubt" minlength="1" maxlength="255" data-maxlength-error="Der Benutzername darf maximal 255 Zeichen lang sein" />
             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
             <div class="help-block with-errors"></div>
         </div>
@@ -24,13 +24,13 @@
         </div>
         <div class="form-group has-feedback password">
             <label for="password" class="control-label">Passwort</label>
-            <input type="password" name="password" id="password" class="form-control" placeholder="<% if(isEdit()) { %>Neues Passwort<% } else { %>Passwort<% } %>" value="<%- password %>" data-minlength="6" data-minlength-error="Passwortl&auml;nge zwischen 6 und 255 Zeichen" maxlength="255" /*data-match="#confirmPassword" data-match-error="Die Passw&ouml;rter stimmen nicht &uuml;berein"*/>
+            <input type="password" name="password" id="password" class="form-control" placeholder="<% if(isEdit()) { %>Neues Passwort<% } else { %>Passwort<% } %>" value="<%- password %>" data-minlength="6" data-minlength-error="Das Passwort muss zwischen 6 und 255 Zeichen lang sein" maxlength="255" />
             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
             <div class="help-block with-errors"></div>
         </div>
         <div class="form-group has-feedback password">
             <label for="confirmPassword" class="control-label">Passwort wiederholen</label>
-            <input type="password" class="form-control" id="confirmPassword" class="form-control" placeholder="<% if(isEdit()) { %>Passwort wiederholen<% } else { %>Passwort<% } %>" value="<%- password %>" data-match="#password" data-match-error="Die Passw&ouml;rter stimmen nicht &uuml;berein" >
+            <input type="password" class="form-control" id="confirmPassword" class="form-control" placeholder="<% if(isEdit()) { %>Passwort wiederholen<% } else { %>Passwort<% } %>" value="<%- password %>" data-match="#password" data-match-error="Die Passw&ouml;rter stimmen nicht &uuml;berein" />
             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
             <div class="help-block with-errors"></div>
         </div>
