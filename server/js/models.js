@@ -381,6 +381,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         Models.User = Backbone.Model.extend({
             defaults: {
                 'name': '',
+                'domain': 0,
+                'full_name': '',
                 'email': '',
                 'password': '',
                 'role': 1,
@@ -394,6 +396,11 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             OBSERVER: 1,
             MANAGER: 2,
             ADMIN: 3
+        };
+
+        Models.User.domain = {
+            LOCAL: 0,
+            LDAP: 1
         };
 
         Models.Users = Backbone.Collection.extend({
@@ -471,6 +478,14 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             model: Models.Task,
             url: 'api/tasks/'
         });
+
+        Models.Settings = {
+            encryption: {
+                NONE: 0,
+                STARTTLS: 1,
+                TLS: 2
+            }
+        };
 
         // Initialize runtime models
         HoneySens.addInitializer(function() {

@@ -10,7 +10,7 @@ apt-get install -y mysql-server beanstalkd screen python python-yaml python-open
 # PHP 5
 add-apt-repository -y ppa:ondrej/php
 apt-get -qq update
-apt-get install -y php5.6 php5.6-mbstring php5.6-mysql php5.6-xml libapache2-mod-php5.6
+apt-get install -y php5.6 php5.6-mbstring php5.6-mysql php5.6-xml php5.6-ldap libapache2-mod-php5.6
 
 # Beanstalk
 sed -i -e 's/#START=yes/START=yes/' -e 's/BEANSTALKD_LISTEN_ADDR=.*/BEANSTALKD_LISTEN_ADDR=127.0.0.1/' /etc/default/beanstalkd

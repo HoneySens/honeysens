@@ -9,3 +9,6 @@ npm install -g grunt-cli
 mkdir -p /opt/HoneySens/templates /opt/HoneySens/data
 touch /opt/HoneySens/data/config.cfg # Dummy to prevent the data initialization in 01_init_volumes.sh
 cp -var /var/lib/mysql /opt/HoneySens/templates/
+
+# Disable certificate verification within the dev environment
+echo -e "TLS_REQCERT\tnever" >> /etc/ldap/ldap.conf

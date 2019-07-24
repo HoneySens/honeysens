@@ -18,6 +18,15 @@
         </div>
         <div id="settings-sensors" class="panel-collapse collapse"></div>
     </div>
+    <div class="panel panel-default ldapSettings">
+        <div class="panel-heading">
+            <button type="button" class="toggle btn btn-primary btn-xs pull-right" data-inactive-text="Deaktiviert" data-active-text="Aktiviert">Deaktiviert</button>
+            <h4 class="panel-title">
+                <a class="collapsed" data-toggle="collapse" data-parent="#settings" href="#settings-ldap">LDAP-Verzeichnisdienst</a>
+            </h4>
+        </div>
+        <div id="settings-ldap" class="panel-collapse collapse"></div>
+    </div>
     <div class="panel panel-default smtpSettings">
         <div class="panel-heading">
             <button type="button" class="toggle btn btn-primary btn-xs pull-right" data-inactive-text="Deaktiviert" data-active-text="Aktiviert">Deaktiviert</button>

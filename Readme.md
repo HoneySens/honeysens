@@ -32,7 +32,8 @@ The server can be built either in development or production mode. For a deployme
 To initiate the build process, launch make from within the `server/` directory in one of the following ways:
 * `make dev`: Builds and launches a development server system that continuously watches the local codebase for changes and automatically deploys those to the running dev instance. By default, the ports 80 (HTTP) and 443 (HTTPS) are published to the host system for easier access. Modify `docker-compose-dev.yml` if you want to change that behaviour. Use `Strg+C` from the terminal to stop a running dev server.
 * `make dist` (default) will build and save a production-ready server image to `server/out/dist/`. For that, it will internally first create and launch a development image to assemble the codebase. Afterwards, the build process for the actual production server image will be launched.
-* `make clean` can be used to remove build artifacts (including the development docker image). However, this command won't clean the entire codebase, so that PHP dependencies don't have to be re-downloaded for each new build process.
+* `make reset` will shut down the development server and remove associated volumes, thus resetting that instance.
+* `make clean` can be used to shut down the development server, remove associated volumes and all build artifacts (including the development docker image). However, this command won't clean the entire codebase, so that PHP dependencies don't have to be re-downloaded for each new build process.
 
 After the build process is complete, the resulting Docker images `honeysens/server-dev` and `honeysens/server` are available on your system.
 

@@ -1,0 +1,15 @@
+version: "3"
+services:
+
+  ldap:
+    command: --copy-service
+    image: osixia/openldap:latest
+    ports:
+      - 389:389
+      - 636:636
+    networks:
+      - honeysens-dev
+    environment:
+      - LDAP_TLS_VERIFY_CLIENT=try
+    volumes:
+      - ./utils/dev_services/ldap/bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif

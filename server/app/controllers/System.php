@@ -200,7 +200,13 @@ class System extends RESTResource {
             $this->addLastUpdatesTable($em);
             // Default admin user
             $admin = new User();
-            $admin->setName('admin')->setPassword('admin')->setEmail('root@localhost.com')->setRole($admin::ROLE_ADMIN);
+            $admin
+                ->setName('admin')
+                ->setPassword('admin')
+                ->setDomain(User::DOMAIN_LOCAL)
+                ->setFullName('Administrator')
+                ->setEmail('admin@example.org')
+                ->setRole($admin::ROLE_ADMIN);
             $em->persist($admin);
             $em->flush();
             // Remove old data files
