@@ -1,0 +1,2 @@
+## Development services
+This directory contains optional docker services that can be run within the development environment to simulate real-world conditions, such as the presence of an LDAP server for user authentication.

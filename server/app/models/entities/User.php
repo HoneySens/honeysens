@@ -14,6 +14,9 @@ class User {
     const ROLE_MANAGER = 2;
     const ROLE_ADMIN = 3;
 
+    const DOMAIN_LOCAL = 0;
+    const DOMAIN_LDAP = 1;
+
     /**
      * @Id
      * @Column(type="integer")
@@ -34,6 +37,8 @@ class User {
     protected $email;
 
     /**
+     * Hashed password of this user (using bcrypt).
+     *
      * @Column(type="string", nullable=true)
      */
     protected $password;
@@ -47,6 +52,20 @@ class User {
      * @Column(type="string", nullable=true)
      */
     protected $legacyPassword;
+
+    /**
+     * The domain that this user is authenticated against
+     *
+     * @Column(type="integer")
+     */
+    protected $domain = self::DOMAIN_LOCAL;
+
+    /**
+     * Full name or description of this user
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $fullName;
 
     /**
      * @Column(type="integer")
@@ -106,6 +125,46 @@ class User {
      */
     public function getName() {
         return $this->name;
+    }
+
+    /**
+     * Set domain
+     *
+     * @param integer $domain
+     * @return User
+     */
+    public function setDomain($domain) {
+        $this->domain = $domain;
+        return $this;
+    }
+
+    /**
+     * Get domain
+     *
+     * @return integer
+     */
+    public function getDomain() {
+        return $this->domain;
+    }
+
+    /**
+     * Set the full name or description
+     *
+     * @param string $fullName
+     * @return $this
+     */
+    public function setFullName($fullName) {
+        $this->fullName = $fullName == null ? null : $fullName;
+        return $this;
+    }
+
+    /**
+     * Get full name or description
+     *
+     * @return string
+     */
+    public function getFullName() {
+        return $this->fullName;
     }
 
     /**
@@ -312,6 +371,8 @@ class User {
         return array(
             'id' => $this->getId(),
             'name' => $this->getName(),
+            'domain' => $this->getDomain(),
+            'full_name' => $this->getFullName(),
             'email' => $this->getEmail(),
             'role' => $this->getRole(),
             'permissions' => $this->getPermissions(),

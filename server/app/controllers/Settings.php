@@ -6,6 +6,11 @@ use Respect\Validation\Validator as V;
 
 class Settings extends RESTResource {
 
+    // Reusable specifications for external network connections (SMTP, LDAP etc.)
+    const ENCRYPTION_NONE = 0;
+    const ENCRYPTION_STARTTLS = 1;
+    const ENCRYPTION_TLS = 2;
+
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->get('/api/settings', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Settings($em, $services, $config);
@@ -38,31 +43,38 @@ class Settings extends RESTResource {
      * @return array
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
-	public function get() {
-		$this->assureAllowed('all');
+    public function get() {
+        $this->assureAllowed('all');
         // TODO This silently returns nothing if the config is invalid
-		$config = $this->getConfig();
-		$caCert = file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt');
-		$settings = array(
+        $config = $this->getConfig();
+        $caCert = file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt');
+        $settings = array(
             'id' => 0,
-			'serverHost' => $config['server']['host'],
-			'serverPortHTTPS' => $config['server']['portHTTPS'],
+            'serverHost' => $config['server']['host'],
+            'serverPortHTTPS' => $config['server']['portHTTPS'],
             'sensorsUpdateInterval' => $config['sensors']['update_interval'],
             'sensorsServiceNetwork' => $config['sensors']['service_network'],
             'caFP' => openssl_x509_fingerprint($caCert),
             'caExpire' => openssl_x509_parse($caCert)['validTo_time_t']
         );
-		// Supply SMTP data only to admins
+        // Settings only relevant to admins
         if($this->getSessionUserID() == null) {
+            // SMTP
             $settings['smtpEnabled'] = $config->getBoolean('smtp', 'enabled');
-			$settings['smtpServer'] = $config['smtp']['server'];
-			$settings['smtpPort'] = $config['smtp']['port'];
-			$settings['smtpFrom'] = $config['smtp']['from'];
-			$settings['smtpUser'] = $config['smtp']['user'];
-			$settings['smtpPassword'] = $config['smtp']['password'];
+            $settings['smtpServer'] = $config['smtp']['server'];
+            $settings['smtpPort'] = $config['smtp']['port'];
+            $settings['smtpFrom'] = $config['smtp']['from'];
+            $settings['smtpUser'] = $config['smtp']['user'];
+            $settings['smtpPassword'] = $config['smtp']['password'];
+            // LDAP
+            $settings['ldapEnabled'] = $config->getBoolean('ldap', 'enabled');
+            $settings['ldapServer'] = $config['ldap']['server'];
+            $settings['ldapPort'] = $config['ldap']['port'];
+            $settings['ldapEncryption'] = $config['ldap']['encryption'];
+            $settings['ldapTemplate'] = $config['ldap']['template'];
         }
         return $settings;
-	}
+    }
 
     /**
      * Updates the system-wide settings.
@@ -80,8 +92,8 @@ class Settings extends RESTResource {
      * @return array
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
-	public function update($data) {
-		$this->assureAllowed('update');
+    public function update($data) {
+        $this->assureAllowed('update');
         // Validation
         V::objectType()
             ->attribute('serverHost', V::stringType())
@@ -90,23 +102,37 @@ class Settings extends RESTResource {
             ->attribute('sensorsUpdateInterval', V::intVal()->between(1, 60))
             ->attribute('sensorsServiceNetwork', V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/'))
             ->check($data);
-       if($data->smtpEnabled) {
+        if($data->smtpEnabled) {
            V::attribute('smtpServer', V::stringType())
                ->attribute('smtpPort', V::intVal()->between(0, 65535))
                ->attribute('smtpFrom', V::email())
                ->attribute('smtpUser', V::optional(V::stringType()))
                ->attribute('smtpPassword', V::stringType())
                ->check($data);
-       } else {
+        } else {
            V::attribute('smtpServer', V::optional(V::stringType()))
                ->attribute('smtpPort', V::optional(V::intVal()->between(0, 65535)))
                ->attribute('smtpFrom', V::optional(V::email()))
                ->attribute('smtpUser', V::optional(V::stringType()))
                ->attribute('smtpPassword', V::optional(V::stringType()))
                ->check($data);
-       }
+        }
+        if($data->ldapEnabled) {
+            V::attribute('ldapServer', V::stringType())
+                ->attribute('ldapPort', V::intVal()->between(0, 65535))
+                ->attribute('ldapEncryption', V::intVal()->between(0, 2))
+                ->attribute('ldapTemplate', V::stringType())
+                ->check($data);
+        } else {
+            V::attribute('ldapServer', V::optional(V::stringType()))
+                ->attribute('ldapPort', V::optional(V::intVal()->between(0, 65535)))
+                ->attribute('ldapEncryption', V::optional(V::intVal()->between(0, 2)))
+                ->attribute('ldapTemplate', V::optional(V::stringType()))
+                ->check($data);
+        }
+
         // Persistence
-		$config = $this->getConfig();
+        $config = $this->getConfig();
         $config->set('server', 'host', $data->serverHost);
         $config->set('server', 'portHTTPS', $data->serverPortHTTPS);
         $config->set('smtp', 'enabled', $data->smtpEnabled ? 'true' : 'false');
@@ -115,10 +141,15 @@ class Settings extends RESTResource {
         $config->set('smtp', 'from', $data->smtpFrom);
         $config->set('smtp', 'user', $data->smtpUser);
         $config->set('smtp', 'password', $data->smtpPassword);
+        $config->set('ldap', 'enabled', $data->ldapEnabled ? 'true' : 'false');
+        $config->set('ldap', 'server', $data->ldapServer);
+        $config->set('ldap', 'port', $data->ldapPort);
+        $config->set('ldap', 'encryption', $data->ldapEncryption);
+        $config->set('ldap', 'template', $data->ldapTemplate);
         $config->set('sensors', 'update_interval', $data->sensorsUpdateInterval);
         $config->set('sensors', 'service_network', $data->sensorsServiceNetwork);
-		$config->save();
-		$this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
+        $config->save();
+        $this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
         return array(
             'id' => 0,
             'serverHost' => $config['server']['host'],
@@ -129,10 +160,15 @@ class Settings extends RESTResource {
             'smtpFrom' => $config['smtp']['from'],
             'smtpUser' => $config['smtp']['user'],
             'smtpPassword' => $config['smtp']['password'],
+            'ldapEnabled' => $config->getBoolean('ldap', 'enabled'),
+            'ldapServer' => $config['ldap']['server'],
+            'ldapPort' => $config['ldap']['port'],
+            'ldapEncryption' => $config['ldap']['encryption'],
+            'ldapTemplate' => $config['ldap']['template'],
             'sensorsUpdateInterval' => $config['sensors']['update_interval'],
             'sensorsServiceNetwork' => $config['sensors']['service_network']
         );
-	}
+    }
 
     public function sendTestMail($data) {
         $this->assureAllowed('update');

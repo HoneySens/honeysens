@@ -1,8 +1,9 @@
 define(['app/app',
+        'app/models',
         'tpl!app/modules/accounts/templates/UsersEditView.tpl',
         'app/views/common',
         'validator'],
-function(HoneySens, UsersEditViewTpl) {
+function(HoneySens, Models, UsersEditViewTpl) {
     HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.UsersEditView = HoneySens.Views.SlideItemView.extend({
             template: UsersEditViewTpl,
@@ -28,46 +29,32 @@ function(HoneySens, UsersEditViewTpl) {
                 },
                 'keyup input#password': function(e) {
                     e.preventDefault();
-                    
-                    var pwField = this.$el.find('input#password');
-                    var pwConfirmField = this.$el.find('input#confirmPassword');
-                    if (pwField.val().length > 0) { 
-                        if(!pwConfirmField.attr('required')){
-                            pwConfirmField.attr('required', true);
-                        }
-                    } else {
-                        pwConfirmField.attr('required', false);
-                    }
+                    var $pwField = this.$el.find('input#password');
+                    var $pwConfirmField = this.$el.find('input#confirmPassword');
+                    // In case a password was entered, also require the confirmation field
+                    $pwConfirmField.attr('required', $pwField.val().length > 0);
                 },
                 'keyup input#confirmPassword': function(e) {
                     e.preventDefault();
                     this.$el.find('form').validator('destroy');
                     this.$el.find('form').validator('update');
+                },
+                'change select[name="domain"]': function(e) {
+                    this.refreshPasswordFields(e.target.value);
                 }
             },
             onRender: function() {
                 var view = this;
-
-                if (!view.model.id) {
-                    view.$el.find('input[name="password"]').attr('required', true);
-                    view.$el.find('input[name="confirmPassword"]').attr('required', true);
-                }
-
+                this.refreshPasswordFields(this.model.get('domain'));
                 this.$el.find('form').validator().on('submit', function (e) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
 
-                        var name = view.$el.find('input[name="username"]').val(),
-                        password = view.$el.find('input[name="password"]').val(),
-                        email = view.$el.find('input[name="email"]').val(),
-                        role = view.$el.find('select[name="role"]').val(),
-                        model = view.model,
-                        modelData = { name: name, email: email, role: role };
                         view.$el.find('button').prop('disabled', true);
-
+                        var model = view.model,
+                            modelData = view.getFormData();
                         if(model.id) {
-                            // update existing user
-                            if(password.length > 0) modelData.password = password;
+                            // Update an existing user
                             $.ajax({
                                 type: 'PUT',
                                 url: 'api/users/' + model.id,
@@ -80,8 +67,7 @@ function(HoneySens, UsersEditViewTpl) {
                                 }
                             });
                         } else {
-                            // create new user
-                            modelData.password = password;
+                            // Create new user
                             $.post('api/users', JSON.stringify(modelData), function(data) {
                                 data = JSON.parse(data);
                                 model.id = data.id;
@@ -97,6 +83,35 @@ function(HoneySens, UsersEditViewTpl) {
                 isEdit: function() {
                     return typeof this.id !== 'undefined';
                 }
+            },
+            /**
+             * Render or hide password entry fields depending on the selected domain.
+             * Set validators based on whether we create a new user or edit an existing one.
+             */
+            refreshPasswordFields: function(domain) {
+                var $fields = this.$el.find('div.form-group.password');
+                if(parseInt(domain) === Models.User.domain.LOCAL) {
+                    $fields.removeClass('hide');
+                    // Require a password for new models or if the current model doesn't use local authentication
+                    $fields.find('input').attr('required', this.model.id == null || this.model.get('domain') !== Models.User.domain.LOCAL);
+                } else {
+                    $fields.find('input').val('');
+                    $fields.addClass('hide');
+                    $fields.find('input').attr('required', false);
+                }
+            },
+            getFormData: function() {
+                var $password = this.$el.find('input[name="password"]'),
+                    $fullName = this.$el.find('input[name="fullName"]'),
+                    data = {
+                    name: this.$el.find('input[name="username"]').val(),
+                    domain: parseInt(this.$el.find('select[name="domain"]').val()),
+                    email: this.$el.find('input[name="email"]').val(),
+                    role: this.$el.find('select[name="role"]').val()
+                };
+                if($password.val().length !== 0) data.password = $password.val();
+                if($fullName.val().length !== 0) data.fullName = $fullName.val();
+                return data;
             }
         });
     });

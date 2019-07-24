@@ -2,6 +2,7 @@
 namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\entities\User;
+use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use Respect\Validation\Validator as V;
 
@@ -30,8 +31,9 @@ class Sessions extends RESTResource {
      * @param stdClass $data
      * @return User
      * @throws ForbiddenException
+     * @throws BadRequestException
      */
-	public function create($data) {
+    public function create($data) {
         $config = $this->getConfig();
         // Disable login if the installer hasn't run yet
         if(System::installRequired($config)) {
@@ -44,35 +46,59 @@ class Sessions extends RESTResource {
             ->check($data);
         $em = $this->getEntityManager();
         $user = $em->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $data->username));
-        if(!V::objectType()->validate($user)) {
-            throw new ForbiddenException();
+        if(!V::objectType()->validate($user)) throw new ForbiddenException();
+        // The validation procedure heavily depends on the user's domain
+        switch($user->getDomain()) {
+            case User::DOMAIN_LOCAL:
+                // Update password in case this user still relies on the deprecated hashing scheme
+                if($user->getLegacyPassword() != null) {
+                    if($user->getLegacyPassword() == sha1($data->password)) {
+                        // Password match - update scheme
+                        $user->setPassword($data->password);
+                        $user->setLegacyPassword(null);
+                        $em->flush();
+                    } else throw new ForbiddenException();
+                }
+                // Check password
+                if($user->getPassword() != null && password_verify($data->password, $user->getPassword())) {
+                    $_SESSION['user'] = $user->getState();
+                    $_SESSION['authenticated'] = true;
+                    return $user;
+                } else throw new ForbiddenException();
+                break;
+            case User::DOMAIN_LDAP:
+                if($config['ldap']['enabled'] == 'true') {
+                    $ldapSchema = $config['ldap']['encryption'] == '2' ? 'ldaps' : 'ldap';
+                    if($ldapHandle = ldap_connect(sprintf('%s://%s:%s', $ldapSchema, $config['ldap']['server'], $config['ldap']['port']))) {
+                        ldap_set_option($ldapHandle, LDAP_OPT_PROTOCOL_VERSION, 3);
+                        ldap_set_option($ldapHandle, LDAP_OPT_REFERRALS, 0);
+                        try {
+                            if($config['ldap']['encryption'] == '1') ldap_start_tls($ldapHandle);
+                            if(ldap_bind($ldapHandle, str_replace('%s', $data->username, $config['ldap']['template']), $data->password))  {
+                                $_SESSION['user'] = $user->getState();
+                                $_SESSION['authenticated'] = true;
+                                return $user;
+                            } else throw new ForbiddenException();
+                        } catch(\Exception $e) {
+                            throw new ForbiddenException();
+                        }
+                    }
+                }
+                break;
         }
-        // Update password in case this user still relies on the deprecated hashing scheme
-        if($user->getLegacyPassword() != null) {
-            if($user->getLegacyPassword() == sha1($data->password)) {
-                // Password match - update scheme
-                $user->setPassword($data->password);
-                $user->setLegacyPassword(null);
-                $em->flush();
-            } else throw new ForbiddenException(10);
-        }
-        // Check password
-        if($user->getPassword() != null && password_verify($data->password, $user->getPassword())) {
-            $_SESSION['user'] = $user->getState();
-            $_SESSION['authenticated'] = true;
-            return $user;
-        } else throw new ForbiddenException(20);
-	}
+        // Fall-through exception
+        throw new ForbiddenException();
+    }
 
     /**
      * Destroy the session of the current user.
      *
      * @return User
      */
-	public function destroy() {
-		$guestUser = new User();
-		$guestUser->setRole(User::ROLE_GUEST);
+    public function destroy() {
+        $guestUser = new User();
+        $guestUser->setRole(User::ROLE_GUEST);
         session_destroy();
-		return $guestUser;
-	}
+        return $guestUser;
+    }
 }

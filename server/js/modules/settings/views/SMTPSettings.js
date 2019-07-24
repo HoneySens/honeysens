@@ -9,45 +9,36 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
             template: SMTPSettingsTpl,
             className: 'panel-body',
             submitTestMail: false, // Indicates whether the test mail dialog should be invoked after a form submit event
-            validateOnly: false, // Indication for the form submission handler to not do anything after validation
             events: {
-                'click button.sendTestMail': function(e) {
-                    e.preventDefault();
-                    this.submitTestMail = true;
-                    this.$el.find('form.serverConfig').trigger('submit');
-                },
                 'click button.saveSettings': function(e) {
                     e.preventDefault();
                     this.submitTestMail = false;
-                    this.$el.find('form.serverConfig').trigger('submit');
+                    this.$el.find('form').trigger('submit');
+                },
+                'click button.sendTestMail': function(e) {
+                    e.preventDefault();
+                    this.enableSection();
+                    if(this.isFormValid()) {
+                        this.submitTestMail = true;
+                        this.$el.find('form').trigger('submit');
+                    } else this.disableSection();
+                },
+                'click button.reset': function() {
+                    this.$el.find('form').trigger('reset');
                 }
             },
             onRender: function() {
                 var view = this;
-                
-                this.$el.find('form.serverConfig').validator().on('submit', function (e) {
+                this.$el.find('form').validator().on('submit', function (e) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
-                        
-                        // Stop here if nothing else but the validation result was requested
-                        if(view.validateOnly) {
-                            view.validateOnly = false;
-                            return;
-                        }
-                        var smtpServer = view.$el.find('input[name="smtpServer"]').val(),
-                            smtpPort = view.$el.find('input[name="smtpPort"]').val(),
-                            smtpFrom = view.$el.find('input[name="smtpFrom"]').val(),
-                            smtpUser = view.$el.find('input[name="smtpUser"]').val(),
-                            smtpPassword = view.$el.find('input[name="smtpPassword"]').val(),
-                            changedAttributes = {smtpServer: smtpServer, smtpPort: smtpPort, smtpFrom: smtpFrom, smtpUser: smtpUser, smtpPassword: smtpPassword};
                         if(view.submitTestMail) {
                             var smtpModel = new Backbone.Model();
                             smtpModel.url = function() {return 'api/settings/testmail'};
-                            smtpModel.set(changedAttributes);
-                            smtpModel.set('smtpPassword', smtpPassword);
+                            smtpModel.set(view.getFormData());
                             HoneySens.request('view:modal').show(new ModalSendTestMail({model: smtpModel}));
                         } else {
-                            view.model.save(changedAttributes, {
+                            view.model.save(view.getFormData(), {
                                 success: function () {
                                     HoneySens.request('view:modal').show(new ModalSettingsSaveView());
                                 }
@@ -57,9 +48,25 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
                 });
             },
             isFormValid: function() {
-                var $form = this.$el.find('form.serverConfig');
-                this.validateOnly = true;
+                var $form = this.$el.find('form');
                 return !$form.validator('validate').has('.has-error').length;
+            },
+            enableSection: function() {
+                this.$el.find('input[name="smtpServer"], input[name="smtpPort"], input[name="smtpFrom"]')
+                    .attr('required', true);
+            },
+            disableSection: function() {
+                this.$el.find('input[name="smtpServer"], input[name="smtpPort"], input[name="smtpFrom"]')
+                    .attr('required', false);
+            },
+            getFormData: function() {
+                return {
+                    smtpServer: this.$el.find('input[name="smtpServer"]').val(),
+                    smtpPort: this.$el.find('input[name="smtpPort"]').val(),
+                    smtpFrom: this.$el.find('input[name="smtpFrom"]').val(),
+                    smtpUser: this.$el.find('input[name="smtpUser"]').val(),
+                    smtpPassword: this.$el.find('input[name="smtpPassword"]').val()
+                }
             }
         });
     });

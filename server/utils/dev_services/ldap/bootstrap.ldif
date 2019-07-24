@@ -1,0 +1,10 @@
+dn: ou=users,dc=example,dc=org
+objectClass: organizationalUnit
+ou: users
+
+# User: ldapuser, Password: honeysens
+dn: cn=ldapuser,ou=users,dc=example,dc=org
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+cn: ldapuser
+userPassword:: e1NTSEF9RU9HOTVNYXVEMGJLOFlLZGJkLzkrdjVBUkJaaUxVZlQK
