@@ -137,8 +137,9 @@ class Users extends RESTResource {
         $user->setEmail($data->email);
         // The user with ID 1 is always an admin
         if($user->getId() != 1) $user->setRole($data->role);
-        if(V::attribute('password', V::stringType()->length(1, 255))->validate($data)) {
-            $user->setPassword($data->password);
+        if(V::attribute('password', V::stringType()->length(6, 255))->validate($data)) {
+            $user->setPassword($data->password)
+                ->setLegacyPassword(null);
         }
 		$this->getEntityManager()->flush();
         return $user;

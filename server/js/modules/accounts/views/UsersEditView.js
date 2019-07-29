@@ -1,9 +1,8 @@
 define(['app/app',
         'tpl!app/modules/accounts/templates/UsersEditView.tpl',
-        'sha1',
         'app/views/common',
         'validator'],
-function(HoneySens, UsersEditViewTpl, sha1) {
+function(HoneySens, UsersEditViewTpl) {
     HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.UsersEditView = HoneySens.Views.SlideItemView.extend({
             template: UsersEditViewTpl,
@@ -68,7 +67,7 @@ function(HoneySens, UsersEditViewTpl, sha1) {
 
                         if(model.id) {
                             // update existing user
-                            if(password.length > 0) modelData.password = sha1(password);
+                            if(password.length > 0) modelData.password = password;
                             $.ajax({
                                 type: 'PUT',
                                 url: 'api/users/' + model.id,
@@ -82,7 +81,7 @@ function(HoneySens, UsersEditViewTpl, sha1) {
                             });
                         } else {
                             // create new user
-                            modelData.password = sha1(password);
+                            modelData.password = password;
                             $.post('api/users', JSON.stringify(modelData), function(data) {
                                 data = JSON.parse(data);
                                 model.id = data.id;

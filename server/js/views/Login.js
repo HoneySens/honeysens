@@ -1,8 +1,7 @@
 define(['app/app',
         'app/models',
-        'tpl!app/templates/Login.tpl',
-        'sha1'],
-function(HoneySens, Models, LoginTpl, sha1) {
+        'tpl!app/templates/Login.tpl'],
+function(HoneySens, Models, LoginTpl) {
     HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.Login = Marionette.ItemView.extend({
             template: LoginTpl,
@@ -27,7 +26,7 @@ function(HoneySens, Models, LoginTpl, sha1) {
                 var username = this.$el.find('input.username').val(),
                     password = this.$el.find(':password').val();
                 this.$el.find('div.loginResult.alert').hide();
-                HoneySens.request('login', {username: username, password: sha1(password)});
+                HoneySens.request('login', {username: username, password: password});
             }
         });
     });
