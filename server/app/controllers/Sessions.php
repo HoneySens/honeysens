@@ -42,19 +42,26 @@ class Sessions extends RESTResource {
             ->attribute('username', V::stringType())
             ->attribute('password', V::stringType())
             ->check($data);
-        $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $data->username));
+        $em = $this->getEntityManager();
+        $user = $em->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $data->username));
         if(!V::objectType()->validate($user)) {
             throw new ForbiddenException();
         }
-        // Check parameters and perform login
-        // TODO Add salt
-        if($user->getPassword() == $data->password) {
+        // Update password in case this user still relies on the deprecated hashing scheme
+        if($user->getLegacyPassword() != null) {
+            if($user->getLegacyPassword() == sha1($data->password)) {
+                // Password match - update scheme
+                $user->setPassword($data->password);
+                $user->setLegacyPassword(null);
+                $em->flush();
+            } else throw new ForbiddenException(10);
+        }
+        // Check password
+        if($user->getPassword() != null && password_verify($data->password, $user->getPassword())) {
             $_SESSION['user'] = $user->getState();
             $_SESSION['authenticated'] = true;
             return $user;
-        } else {
-            throw new ForbiddenException();
-        }
+        } else throw new ForbiddenException(20);
 	}
 
     /**

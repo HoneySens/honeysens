@@ -200,7 +200,7 @@ class System extends RESTResource {
             $this->addLastUpdatesTable($em);
             // Default admin user
             $admin = new User();
-            $admin->setName('admin')->setPassword(sha1('admin'))->setEmail('root@localhost.com')->setRole($admin::ROLE_ADMIN);
+            $admin->setName('admin')->setPassword('admin')->setEmail('root@localhost.com')->setRole($admin::ROLE_ADMIN);
             $em->persist($admin);
             $em->flush();
             // Remove old data files
@@ -295,7 +295,7 @@ class System extends RESTResource {
         $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("1", "bbb", "BeagleBone Black", "BeagleBone Black is a low-cost, community-supported development platform.", "bbb")')->execute();
         $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("2", "docker_x86", "Docker (x86)", "Dockerized sensor platform to be used on generic x86 hardware.", "docker_x86")')->execute();
         $admin = $em->getRepository('HoneySens\app\models\entities\User')->find(1);
-        $admin->setPassword(sha1($data->password));
+        $admin->setPassword($data->password);
         $config->set('server', 'host', $data->serverEndpoint);
         $config->set('server', 'setup', 'false');
         try {

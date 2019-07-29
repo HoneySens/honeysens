@@ -244,6 +244,17 @@ while True:
         db.cursor().execute('ALTER TABLE statuslogs ADD serviceStatus VARCHAR(255) DEFAULT NULL')
         config.set('server', 'config_version', '2.0.0')
         config_version = '2.0.0'
+    # 2.0.0 -> next
+    if config_version == '2.0.0':
+        print('Upgrading configuration 2.0.0 -> next')
+        db_statements = [
+            'ALTER TABLE users ADD legacyPassword VARCHAR(255) DEFAULT NULL, CHANGE password password VARCHAR(255) DEFAULT NULL',
+            'UPDATE users SET legacyPassword=password,password=NULL'
+        ]
+        execute_sql(db, db_statements)
+        db.commit()
+        config.set('server', 'config_version', 'next')
+        config_version = 'next'
 
     # Write new config file
     with open(sys.argv[1], 'wb') as f:
