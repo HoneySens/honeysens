@@ -5,8 +5,8 @@ function(HoneySens, Regions, AppLayoutTpl) {
     HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.AppLayout = Marionette.LayoutView.extend({
             template: AppLayoutTpl,
+            className: 'horizontalContent',
             regions: {
-                navigation: 'nav.navbar',
                 sidebar: '#sidebar',
                 main: '#main',
                 overlay: {selector: '#overlay', regionClass: Regions.OverlayRegion}

@@ -1,3 +1,4 @@
+<nav class="navbar navbar-fixed-top"></nav>
 <div id="content">
     <div id="loading">
       <img class="img-responsive" src="images/logo.png" />

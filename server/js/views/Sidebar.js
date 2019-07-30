@@ -8,12 +8,19 @@ function(HoneySens, MenuView, SidebarTpl) {
             regions: {
                 content: 'div.sidebar-content'
             },
+            className: 'sidebar',
             events: {
                 'mouseenter': function() {
                     this.$el.addClass('expanded');
                 },
                 'mouseleave': function() {
                     this.$el.removeClass('expanded');
+                },
+                'click a.toggle': function() {
+                    localStorage.setItem('sidebarExpanded', localStorage.getItem('sidebarExpanded') === 'true' ? 'false' : 'true');
+                    this.refreshSidebarExpansion();
+                    // Bit of a hack: allow other resizable components to readjust
+                    $(window).trigger('resize');
                 }
             },
             initialize: function() {
@@ -34,11 +41,20 @@ function(HoneySens, MenuView, SidebarTpl) {
             },
             onRender: function() {
                 this.content.show(new MenuView({model: new Backbone.Model({items: HoneySens.menuItems})}));
+                this.refreshSidebarExpansion();
             },
             templateHelpers: {
                 showVersion: function() {
                     return HoneySens.data.system.get('version');
                 }
+            },
+            refreshSidebarExpansion: function() {
+                var sidebarExpanded = localStorage.getItem('sidebarExpanded') === 'true',
+                    iconName = sidebarExpanded ? 'resize-small' : 'resize-full',
+                    $sidebar = $('div#sidebar');
+                this.$el.find('a.toggle').html('<span class="glyphicon glyphicon-' + iconName + '"></span>')
+                if(sidebarExpanded) $sidebar.addClass('expanded');
+                else $sidebar.removeClass('expanded');
             }
         });
     });
