@@ -6,6 +6,7 @@ function(Marionette, Regions, RootLayoutTpl) {
             el: 'body',
             template: RootLayoutTpl,
             regions: {
+                navigation: 'nav.navbar',
                 content: '#content'
             },
             onRender: function() {

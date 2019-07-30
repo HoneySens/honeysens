@@ -74,6 +74,9 @@ function(RootLayout, Marionette, Backbone, $, JSON, _) {
         app.rootView.render();
 
         // Modules can request the root views' regions
+        app.reqres.setHandler('view:navigation', function() {
+            return app.rootView.navigation;
+        });
         app.reqres.setHandler('view:content-region', function() {
             return app.rootView.content;
         });

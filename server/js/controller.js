@@ -116,7 +116,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
 
             HoneySens.commands.setHandler('init:layout', function() {
                 HoneySens.request('view:content-region').show(new AppLayoutView());
-                HoneySens.request('view:content').navigation.show(new NavigationView({model: HoneySens.data.session.user}));
+                HoneySens.request('view:navigation').show(new NavigationView({model: HoneySens.data.session.user}));
                 HoneySens.request('view:content').sidebar.show(new SidebarView());
             });
 
