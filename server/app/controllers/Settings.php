@@ -72,6 +72,8 @@ class Settings extends RESTResource {
             $settings['ldapPort'] = $config['ldap']['port'];
             $settings['ldapEncryption'] = $config['ldap']['encryption'];
             $settings['ldapTemplate'] = $config['ldap']['template'];
+            // Misc
+            $settings['restrictManagerRole'] = $config->getBoolean('misc', 'restrict_manager_role');
         }
         return $settings;
     }
@@ -87,10 +89,12 @@ class Settings extends RESTResource {
      * - smtpPassword: SMTP Password to authenticate with
      * - sensorsUpdateInterval: The delay between status update connection attempts initiated by sensors
      * - sensorsServiceNetwork: The internal network range that sensors should use for service containers
+     * - restrictManagerRole: Enables or disable permission restrictions for managers
      *
      * @param \stdClass $data
      * @return array
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function update($data) {
         $this->assureAllowed('update');
@@ -101,6 +105,7 @@ class Settings extends RESTResource {
             ->attribute('smtpEnabled', V::boolType())
             ->attribute('sensorsUpdateInterval', V::intVal()->between(1, 60))
             ->attribute('sensorsServiceNetwork', V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/'))
+            ->attribute('restrictManagerRole', V::boolType())
             ->check($data);
         if($data->smtpEnabled) {
            V::attribute('smtpServer', V::stringType())
@@ -148,6 +153,7 @@ class Settings extends RESTResource {
         $config->set('ldap', 'template', $data->ldapTemplate);
         $config->set('sensors', 'update_interval', $data->sensorsUpdateInterval);
         $config->set('sensors', 'service_network', $data->sensorsServiceNetwork);
+        $config->set('misc', 'restrict_manager_role', $data->restrictManagerRole ? 'true' : 'false');
         $config->save();
         $this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
         return array(
@@ -166,7 +172,8 @@ class Settings extends RESTResource {
             'ldapEncryption' => $config['ldap']['encryption'],
             'ldapTemplate' => $config['ldap']['template'],
             'sensorsUpdateInterval' => $config['sensors']['update_interval'],
-            'sensorsServiceNetwork' => $config['sensors']['service_network']
+            'sensorsServiceNetwork' => $config['sensors']['service_network'],
+            'restrictManagerRole' => $config->getBoolean('misc', 'restrict_manager_role')
         );
     }
 

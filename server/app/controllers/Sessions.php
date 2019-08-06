@@ -15,7 +15,7 @@ class Sessions extends RESTResource {
             V::json()->check($request);
             $authData = json_decode($request);
             $user = $controller->create($authData);
-            echo json_encode($user->getState());
+            echo json_encode($user);
         });
 
         $app->delete('/api/sessions', function() use ($app, $em, $services, $config, $messages) {
@@ -29,12 +29,14 @@ class Sessions extends RESTResource {
      * Authenticates a user.
      *
      * @param stdClass $data
-     * @return User
+     * @return array
      * @throws ForbiddenException
      * @throws BadRequestException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function create($data) {
         $config = $this->getConfig();
+        $userController = new Users($this->getEntityManager(), $this->getServiceManager(), $config);
         // Disable login if the installer hasn't run yet
         if(System::installRequired($config)) {
             throw new ForbiddenException();
@@ -61,9 +63,10 @@ class Sessions extends RESTResource {
                 }
                 // Check password
                 if($user->getPassword() != null && password_verify($data->password, $user->getPassword())) {
-                    $_SESSION['user'] = $user->getState();
+                    $userState = $userController->getStateWithPermissionConfig($user);
+                    $_SESSION['user'] = $userState;
                     $_SESSION['authenticated'] = true;
-                    return $user;
+                    return $userState;
                 } else throw new ForbiddenException();
                 break;
             case User::DOMAIN_LDAP:
@@ -75,9 +78,10 @@ class Sessions extends RESTResource {
                         try {
                             if($config['ldap']['encryption'] == '1') ldap_start_tls($ldapHandle);
                             if(ldap_bind($ldapHandle, str_replace('%s', $data->username, $config['ldap']['template']), $data->password))  {
-                                $_SESSION['user'] = $user->getState();
+                                $userState = $userController->getStateWithPermissionConfig($user);
+                                $_SESSION['user'] = $userState;
                                 $_SESSION['authenticated'] = true;
-                                return $user;
+                                return $userState;
                             } else throw new ForbiddenException();
                         } catch(\Exception $e) {
                             throw new ForbiddenException();
