@@ -269,6 +269,8 @@ while True:
         config.set('ldap', 'port', '')
         config.set('ldap', 'encryption', '0')
         config.set('ldap', 'template', '')
+        config.add_section('misc')
+        config.set('misc', 'restrict_manager_role', 'false')
         config.set('server', 'config_version', 'next')
         config_version = 'next'
 

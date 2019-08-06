@@ -68,14 +68,28 @@ class Users extends RESTResource {
         if(V::key('id', V::intVal())->validate($criteria)) {
             $qb->andWhere('u.id = :id')
                 ->setParameter('id', $criteria['id']);
-            return $qb->getQuery()->getSingleResult()->getState();
+            return $this->getStateWithPermissionConfig($qb->getQuery()->getSingleResult());
         } else {
             $users = array();
             foreach($qb->getQuery()->getResult() as $user) {
-                $users[] = $user->getState();
+                $users[] = $this->getStateWithPermissionConfig($user);
             }
             return $users;
         }
+    }
+
+    /**
+     * Returns the state of a user as array and mixes in additional permission configuration, such as role restrictions.
+     * This is meant as an intermediate solution on the way to custom role/permission definitions.
+     *
+     * @param User $user
+     * @return array
+     */
+    public function getStateWithPermissionConfig($user) {
+        $state = $user->getState();
+        if($user->getRole() == User::ROLE_MANAGER && $this->getConfig()->getBoolean('misc', 'restrict_manager_role'))
+            $state['permissions']['events'] = array_values(array_diff($state['permissions']['events'], ['delete']));
+        return $state;
     }
 
     /**

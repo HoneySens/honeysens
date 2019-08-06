@@ -1,10 +1,11 @@
 define(['app/app',
         'app/modules/settings/views/ServerEndpoint',
         'app/modules/settings/views/Sensors',
+        'app/modules/settings/views/Permissions',
         'app/modules/settings/views/LDAP',
         'app/modules/settings/views/SMTPSettings',
         'tpl!app/modules/settings/templates/Settings.tpl'],
-function(HoneySens, ServerEndpointView, SensorsView, LDAPView, SMTPSettingsView, SettingsTpl) {
+function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LDAPView, SMTPSettingsView, SettingsTpl) {
     HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.Settings = Marionette.LayoutView.extend({
             template: SettingsTpl,
@@ -12,6 +13,7 @@ function(HoneySens, ServerEndpointView, SensorsView, LDAPView, SMTPSettingsView,
             regions: {
                 endpoint: 'div#settings-endpoint',
                 sensors: 'div#settings-sensors',
+                permissions: 'div#settings-permissions',
                 ldap: 'div#settings-ldap',
                 smtp: 'div#settings-smtp'
             },
@@ -28,6 +30,7 @@ function(HoneySens, ServerEndpointView, SensorsView, LDAPView, SMTPSettingsView,
             onRender: function() {
                 this.getRegion('endpoint').show(new ServerEndpointView({model: this.model}));
                 this.getRegion('sensors').show(new SensorsView({model: this.model}));
+                this.getRegion('permissions').show(new PermissionsView({model: this.model}));
                 this.getRegion('ldap').show(new LDAPView({model: this.model}));
                 this.getRegion('smtp').show(new SMTPSettingsView({model: this.model}));
                 // Bind SMTP button to model
