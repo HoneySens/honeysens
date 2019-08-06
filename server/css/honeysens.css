@@ -165,7 +165,7 @@ div.sidebar-content {flex-grow: 1}
 div.sidebar-footer {flex-shrink: 0}
 div.sidebar li.active > a {background-color: #d9230f; color: #fff}
 div.sidebar p.buildNumber {color: #d9230f; font-size: 0.9em; padding: 10px 0; text-align: center; margin: 0}
-div.sidebar a.toggle {color: #d9230f; text-align: center; display: block; cursor: pointer}
+div.sidebar a.toggle {text-align: center; display: block; cursor: pointer}
 div.sidebar a.toggle:hover {background-color: #ddd; text-decoration: none}
 div.sidebar ul.nav-sidebar li {overflow: hidden; width: 45px; transition: width 0.3s}
 div.sidebar ul.nav-sidebar li a {width: 14em; transition: padding-left 0.5s}
@@ -206,27 +206,14 @@ div.dashboard form.filters {margin-bottom: 1em}
 
 div.certData textarea {height: 15em; font-size: 80%}
 
-/* FIXME remove? */
-a.dlConfig, a.dlImage {margin-bottom: 1em}
-
 div.loading {position: relative; width: 25px; height: 3em}
 div.loadingInline {position: relative; width: 25px; height: 1.3em}
 
-span.counting {line-height: 3.7em}
-
 div.main table tr td {-moz-transition: 1s; -webkit-transition: 1s; -ms-transition: 1s; transition: 1s}
-
-div.emailSettings div.checkbox {margin-right: 2em}
 
 /* Status indicators */
 span.statusOnline {color: #468847; font-weight: bold}
 span.statusOffline {color: #b94a48; font-weight: bold}
-
-/* Firmware upload dialog */
-#modal-firmware-upload div.progress, #modal-addimage div.progress-text {margin-top: 7px}
-#modal-firmware-upload div.imageVerify span.glyphicon-ok {color: #5cb85c}
-#modal-firmware-upload div.imageVerify span.glyphicon-remove {color: #d9534f}
-#modal-firmware-upload div.alert {text-align: center}
 
 /* Supports transitions within the add sensor overlay */
 div.addForm, div.addBusy, div.addResult {top: 0; transition: top 400ms linear 0s; position: relative}
@@ -260,4 +247,3 @@ div.selectionOptions button.btn {vertical-align: baseline}
     div#main {padding: 10px 20px 0 20px}
     div#sidebar {width: 45px}
 }
-
