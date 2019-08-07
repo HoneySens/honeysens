@@ -171,7 +171,7 @@ class Tasks extends RESTResource {
      */
     public function delete($id) {
         $this->assureAllowed('delete');
-        // TODO Ensure that a user can only download his own task's results
+        // TODO Ensure that a user can only delete his own task's results
         // Validation
         V::intVal()->check($id);
         $em = $this->getEntityManager();
