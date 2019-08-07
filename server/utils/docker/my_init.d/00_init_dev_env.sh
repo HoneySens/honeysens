@@ -36,8 +36,7 @@ a2ensite apache.http apache.ssl
 if [[ ! -f /srv/data/config.cfg ]]; then
     echo "Adjusting HoneySens configuration"
     cp -v /srv/data/config.clean.cfg /srv/data/config.cfg
-    sed -i -e 's/password.*/password = honeysens/' -e 's#certfile.*#certfile = /srv/data/https.chain.crt#' -e 's#app_path.*#app_path = /srv#' -e 's/debug.*/debug = true/' /srv/data/config.cfg
-    sed -i -e 's/password.*/password = honeysens/' -e 's#/opt/HoneySens#/srv#' -e 's/debug.*/debug = true/' /srv/data/config.cfg
+    sed -i -e 's/password.*/password = honeysens/' -e 's#certfile.*#certfile = /srv/data/https.chain.crt#' -e 's/debug.*/debug = true/' -e 's#/opt/HoneySens#/srv#' /srv/data/config.cfg
     chown www-data:www-data /srv/data/config.cfg
     chmod a+w /srv/data/config.cfg
 fi
@@ -47,6 +46,7 @@ cp -vr /srv/utils/docker/services/apache2 /etc/service
 cp -vr /srv/utils/docker/services/mysql /etc/service
 cp -vr /srv/utils/docker/services/beanstalkd /etc/service
 cp -vr /srv/utils/docker/services/tasks /etc/service
+sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/service/tasks/run
 mkdir /etc/service/grunt-watch
 cat > /etc/service/grunt-watch/run << DELIMITER
 #!/bin/bash
