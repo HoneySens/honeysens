@@ -88,17 +88,12 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                                 HoneySens.data.settings.set(data.settings);
                                 HoneySens.data.system.set(data.system);
                                 HoneySens.data.lastUpdateTimestamp = data.timestamp;
-                                // Redirect to setup if an update is imminent
-                                if(HoneySens.data.system.get('update')) {
-                                    HoneySens.router.navigate('setup', {trigger: true});
-                                } else {
-                                    // Update Layout
-                                    HoneySens.commands.execute('init:layout');
-                                    // Navigate to dashboard
-                                    HoneySens.router.navigate('login');
-                                    HoneySens.router.navigate('', {trigger: true});
-                                    HoneySens.commands.execute('counter:start');
-                                }
+                                // Update Layout
+                                HoneySens.commands.execute('init:layout');
+                                // Navigate to dashboard
+                                HoneySens.router.navigate('login');
+                                HoneySens.router.navigate('', {trigger: true});
+                                HoneySens.commands.execute('counter:start');
                             }
                         });
                     },

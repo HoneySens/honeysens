@@ -13,7 +13,7 @@ use Respect\Validation\Validator as V;
 
 class System extends RESTResource {
 
-    const VERSION = '2.0.0';
+    const VERSION = '2.1.0';
     const ERR_UNKNOWN = 0;
     const ERR_CONFIG_WRITE = 1;
 
@@ -75,19 +75,6 @@ class System extends RESTResource {
             $systemData = $controller->install($installData);
             echo json_encode($systemData);
         });
-
-        $app->get('/api/system/update', function() use ($app, $em, $services, $config, $messages) {
-            // Returns HTTP Status 403 if an update is running and 200 otherwise (e.g., if it was completed).
-            // This can be used by clients to check when an update they started is finished.
-            if(file_exists(realpath(APPLICATION_PATH . '/../data/UPDATE'))) throw new ForbiddenException();
-            else json_encode([]);
-        });
-
-        $app->post('/api/system/update', function() use ($app, $em, $services, $config, $messages) {
-            $controller = new System($em, $services, $config);
-            $controller->update();
-            echo json_encode([]);
-        });
     }
 
     /**
@@ -106,22 +93,7 @@ class System extends RESTResource {
     }
 
     /**
-     * Figures out if execution of the updater is required.
-     *
-     * @param $config
-     * @return bool
-     */
-    static function updateRequired($config) {
-        try {
-            $version = $config->get('server', 'config_version', null);
-        } catch(NoOptionException $e) {
-            return true;
-        }
-        return System::VERSION != $version;
-    }
-
-    /**
-     * Returns data that is relevant for the setup and update processes
+     * Returns data that is relevant for the setup process
      */
     public function get() {
         $config = $this->getConfig();
@@ -149,8 +121,7 @@ class System extends RESTResource {
         return array(
             'version' => $this::VERSION,
             'cert_cn' => $commonName,
-            'setup' => $this::installRequired($config),
-            'update' => $this::updateRequired($config));
+            'setup' => $this::installRequired($config));
     }
 
     /**
@@ -220,6 +191,7 @@ class System extends RESTResource {
      * That's identical to using the doctrine CLI and issuing a schema update there.
      * Left here for potential debugging purposes.
      *
+     * @deprecated
      * @param $messages
      * @param $em
      * @throws ForbiddenException
@@ -315,16 +287,7 @@ class System extends RESTResource {
         $em->persist($division);
         $em->flush();
         return array('cert_cn' => $data->serverEndpoint,
-            'setup' => false,
-            'update' => false);
-    }
-
-    function update() {
-        // This can only be invoked from an admin session and if an update is actually necessary
-        if($_SESSION['user']['role'] != User::ROLE_ADMIN || !$this::updateRequired($this->getConfig())) {
-            throw new ForbiddenException();
-        }
-        $this->getServiceManager()->get(ServiceManager::SERVICE_BEANSTALK)->putUpdateJob();
+            'setup' => false);
     }
 
     private function addLastUpdatesTable($em) {

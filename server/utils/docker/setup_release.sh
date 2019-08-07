@@ -23,6 +23,7 @@ cp -v /opt/HoneySens/utils/docker/my_init.d/03_regen_https_cert.sh /etc/my_init.
 cp -v /opt/HoneySens/utils/docker/my_init.d/04_fix_permissions.sh /etc/my_init.d/
 cp -v /opt/HoneySens/utils/docker/my_init.d/05_update_mysql.sh /etc/my_init.d/
 cp -v /opt/HoneySens/utils/docker/my_init.d/06_init_apache.sh /etc/my_init.d/
+cp -v /opt/HoneySens/utils/docker/my_init.d/07_update_deployment.py /etc/my_init.d/
 cp -v /opt/HoneySens/utils/docker/my_init.pre_shutdown.d/01_stop_mysql.sh /etc/my_init.pre_shutdown.d/
 
 # Create templates from both data and database dirs to allow reinitialization of empty volumes
@@ -34,4 +35,3 @@ cp -vr /opt/HoneySens/utils/docker/services/apache2 /etc/service
 cp -vr /opt/HoneySens/utils/docker/services/mysql /etc/service
 cp -vr /opt/HoneySens/utils/docker/services/beanstalkd /etc/service
 cp -vr /opt/HoneySens/utils/docker/services/tasks /etc/service
-cp -vr /opt/HoneySens/utils/docker/services/update-worker /etc/service

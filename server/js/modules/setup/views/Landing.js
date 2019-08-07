@@ -7,9 +7,6 @@ function(HoneySens, LandingTpl) {
             events: {
                 'click button.install': function() {
                     HoneySens.request('setup:install:show', {step: 1, model: new Backbone.Model()});
-                },
-                'click button.update': function() {
-                    HoneySens.request('setup:update:show', {step: 1, model: new Backbone.Model()});
                 }
             }
         });

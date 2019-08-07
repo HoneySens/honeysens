@@ -5,7 +5,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get -qq update
 
 # Basic dependencies
-apt-get install -y mysql-server beanstalkd screen python python-yaml python-openssl python-pip curl openssl apache2 sudo
+apt-get install -y mysql-server beanstalkd screen python python-yaml python-openssl python-pymysql python-pip curl openssl apache2 sudo
 
 # PHP 5
 add-apt-repository -y ppa:ondrej/php
