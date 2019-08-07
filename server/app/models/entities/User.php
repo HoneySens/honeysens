@@ -333,7 +333,6 @@ class User {
                 array_push($permissions['settings'], 'create', 'update', 'delete');
                 array_push($permissions['platforms'], 'create', 'update', 'delete');
                 array_push($permissions['services'], 'create', 'update', 'delete');
-                array_push($permissions['tasks'], 'delete');
             case $this::ROLE_MANAGER:
                 array_push($permissions['certs'], 'create', 'delete');
                 array_push($permissions['events'], 'update', 'delete');
@@ -355,7 +354,7 @@ class User {
                 array_push($permissions['services'], 'get');
                 array_push($permissions['settings'], 'all', 'get');
                 array_push($permissions['stats'], 'get');
-                array_push($permissions['tasks'], 'get', 'create', 'update');
+                array_push($permissions['tasks'], 'get', 'create', 'update', 'delete');
             case $this::ROLE_GUEST:
                 array_push($permissions['state'], 'get');
                 break;
