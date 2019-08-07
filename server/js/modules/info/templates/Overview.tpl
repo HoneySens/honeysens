@@ -46,6 +46,20 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.1.0</strong><br/>
+                    <p>
+                        <ul>
+                            <li>Ereignisse k&ouml;nnen im CSV-Format exportiert werden</li>
+                            <li>Nutzerauthentifikation &uuml;ber einen externen LDAP-Verzeichnisdienst ist nun m&ouml;glich</li>
+                            <li>Prozessverwaltung zur Visualisierung von Hintergrundprozessen f&uuml; Benutzer integriert</li>
+                            <li>Hashverfahren f&uuml;r Nutzerpassw&ouml;rter aktualisiert</li>
+                            <li>Manuelles Aktualisieren der Konfiguration nach Updates ist nicht mehr notwendig</li>
+                            <li>Sidebar kann nun auf Wunsch dauerhaft ausgeklappt werden</li>
+                            <li>Option zur Restriktion von Benutzerrollen hinzugef&uuml;gt</li>
+                            <li>Verhalten zahlreicher Formulare im Web-Frontend vereinheitlich</li>
+                        </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
                     <p>
                         <ul>
@@ -72,12 +86,12 @@
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong><br/>
                     <p>
-                    <ul>
-                        <li>Verfahren zur Verl&auml;ngerung der Zertifikatinfrastruktur hinzugef&uuml;gt</li>
-                        <li>Mail-Konfiguration erlaubt nun die freie Bestimmung des zu nutzenden SMTP-Ports</li>
-                        <li>Impressum und Datenschutzerklärung eingebunden</li>
-                        <li>Dokumentation aktualisiert</li>
-                    </ul>
+                        <ul>
+                            <li>Verfahren zur Verl&auml;ngerung der Zertifikatinfrastruktur hinzugef&uuml;gt</li>
+                            <li>Mail-Konfiguration erlaubt nun die freie Bestimmung des zu nutzenden SMTP-Ports</li>
+                            <li>Impressum und Datenschutzerkl&auml;rung eingebunden</li>
+                            <li>Dokumentation aktualisiert</li>
+                        </ul>
                     </p>
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.1</strong><br/>
