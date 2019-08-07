@@ -6,10 +6,9 @@ define(['app/app',
         'app/modules/setup/views/AdminPassword',
         'app/modules/setup/views/Endpoint',
         'app/modules/setup/views/Division',
-        'app/modules/setup/views/FinalizeInstall',
-        'app/modules/setup/views/UpdateProgress',],
+        'app/modules/setup/views/FinalizeInstall'],
 function(HoneySens, Routing, LayoutView, ErrorView, LandingView, AdminPasswordView, EndpointView, DivisionView,
-         FinalizeInstallView, UpdateProgressView) {
+         FinalizeInstallView) {
     var SetupModule = Routing.extend({
         name: 'setup',
         startWithParent: false,
@@ -54,27 +53,6 @@ function(HoneySens, Routing, LayoutView, ErrorView, LandingView, AdminPasswordVi
                                 catch(e) {code = 0}
                                 contentRegion.show(new ErrorView({model: new Backbone.Model({code: code})}));
                             }
-                        });
-                        break;
-                    default:
-                        contentRegion.show(new ErrorView());
-                        break;
-                }
-            });
-            HoneySens.reqres.setHandler('setup:update:show', function(data) {
-                switch(parseInt(data.step)) {
-                    case 1:
-                        // Launch update on server, show progress view
-                        $.ajax({
-                            type: 'POST',
-                            url: 'api/system/update',
-                            success: function() {
-                                contentRegion.show(new UpdateProgressView());
-                            },
-                            error: function() {
-                                contentRegion.show(new ErrorView());
-                            }
-
                         });
                         break;
                     default:

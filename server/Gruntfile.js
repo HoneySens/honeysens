@@ -65,12 +65,6 @@ module.exports = function(grunt) {
                    { expand: true, cwd: srcPrefix + '/conf/', dest: dstPrefix + '/data/', src: 'config.clean.cfg' }
                ]
             },
-            beanstalk: {
-                expand: true,
-                cwd: srcPrefix + '/utils/',
-                dest: dstPrefix + '/',
-                src: 'beanstalk/**'
-            },
             tasks: {
                 expand: true,
                 cwd: srcPrefix + '/tasks/',
@@ -144,7 +138,7 @@ module.exports = function(grunt) {
                 options: {
                     mode: '755'
                 },
-                src: [dstPrefix + '/app/scripts/**', dstPrefix + '/utils/docker/my_init.d/*.sh', dstPrefix + '/utils/docker/my_init.pre_shutdown.d/*.sh', dstPrefix + '/utils/docker/services/*/run']
+                src: [dstPrefix + '/app/scripts/**', dstPrefix + '/utils/docker/my_init.d/*', dstPrefix + '/utils/docker/my_init.pre_shutdown.d/*', dstPrefix + '/utils/docker/services/*/run']
             },
             data: {
                 options: {
@@ -270,7 +264,6 @@ module.exports = function(grunt) {
         'copy:app',
         'copy:public',
         'copy:data',
-        'copy:beanstalk',
         'copy:tasks',
         'copy:requirejs',
         'copy:js',
@@ -288,7 +281,6 @@ module.exports = function(grunt) {
         'copy:app',
         'copy:public',
         'copy:data',
-        'copy:beanstalk',
         'copy:tasks',
         'copy:requirejs',
         'requirejs',

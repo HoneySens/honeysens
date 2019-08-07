@@ -47,8 +47,6 @@ cp -vr /srv/utils/docker/services/apache2 /etc/service
 cp -vr /srv/utils/docker/services/mysql /etc/service
 cp -vr /srv/utils/docker/services/beanstalkd /etc/service
 cp -vr /srv/utils/docker/services/tasks /etc/service
-cp -vr /srv/utils/docker/services/update-worker /etc/service
-sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/service/update-worker/run /etc/service/tasks/run
 mkdir /etc/service/grunt-watch
 cat > /etc/service/grunt-watch/run << DELIMITER
 #!/bin/bash

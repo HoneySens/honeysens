@@ -46,26 +46,6 @@ class State extends RESTResource {
         $em = $this->getEntityManager();
         $config = $this->getConfig();
 
-        // If an update is required, prioritize that. We can't guarantee that getting all the other data will be successful otherwise.
-        try { $system = (new System($em, $this->getServiceManager(), $config))->get(); } catch(\Exception $e) { $system = array(); }
-        if($system['update']) {
-            return array(
-                'user' => $_SESSION['user'],
-                'sensors' => array(),
-                'events' => array(),
-                'event_filters' => array(),
-                'users' => array(),
-                'divisions' => array(),
-                'contacts' => array(),
-                'services' => array(),
-                'platform' => array(),
-                'settings' => array(),
-                'system' => $system,
-                'stats' => array(),
-                'tasks' => array()
-            );
-        }
-
         try { $sensors = (new Sensors($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $sensors = array(); }
         try { $events = (new Events($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $events = array(); }
         try { $event_filters = (new Eventfilters($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $event_filters = array(); }
@@ -77,6 +57,7 @@ class State extends RESTResource {
         try { $settings = (new Settings($em, $this->getServiceManager(), $config))->get(); } catch(\Exception $e) { $settings = array(); }
         try { $stats = (new Stats($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $stats = array(); }
         try { $tasks = (new Tasks($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $tasks = array(); }
+        try { $system = (new System($em, $this->getServiceManager(), $config))->get(); } catch(\Exception $e) { $system = array(); }
 
         return array(
             'user' => $_SESSION['user'],
