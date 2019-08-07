@@ -196,6 +196,7 @@ class Events extends RESTResource {
 
             // Output depends on the requested format
             if(V::key('format', V::stringType())->validate($criteria) && $criteria['format'] == 'text/csv') {
+                $qb->setFirstResult(0)->setMaxResults($totalCount);
                 $taskParams = array('query' => Utils::getFullSQL($qb->getQuery()));
                 $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_EVENT_EXTRACTOR, $taskParams);
                 return $task->getState();
