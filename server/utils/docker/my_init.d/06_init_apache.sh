@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 # Always enable the HTTP default site
@@ -14,4 +14,15 @@ else
     echo "Enabling auth proxy vhost configuration for $TLS_AUTH_PROXY"
     sed -i -e "s/SetEnvIf Remote_Addr \".*\" X-SSL-PROXY-AUTH=true/SetEnvIf Remote_Addr \"$TLS_AUTH_PROXY\" X-SSL-PROXY-AUTH=true/" /etc/apache2/sites-available/honeysens_ssl_proxy_auth.conf
     a2ensite honeysens_ssl_proxy_auth
+fi
+
+# Enable or disable access logging to stdout depending on the environment variable ACCESS_LOG
+if [[ "$ACCESS_LOG" = "true" ]]; then
+    echo "Apache access log: enabled"
+    sed -i -e "s|#*CustomLog.*|CustomLog /dev/stdout combined|" /etc/apache2/sites-available/*.conf
+    a2enconf other-vhosts-access-log
+else
+    echo "Apache access log: disabled"
+    sed -i -e "s|#*CustomLog.*|#CustomLog /dev/stdout combined|" /etc/apache2/sites-available/*.conf
+    a2disconf other-vhosts-access-log
 fi

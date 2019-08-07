@@ -28,11 +28,6 @@ if [[ ! -z "$BUILD_ONLY" ]]; then
     exit
 fi
 
-echo "Configuring Apache web server"
-cp -v /srv/utils/docker/apache.* /etc/apache2/sites-available/
-sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/apache2/sites-available/apache.ssl.conf /etc/apache2/sites-available/apache.http.conf
-a2ensite apache.http apache.ssl
-
 if [[ ! -f /srv/data/config.cfg ]]; then
     echo "Adjusting HoneySens configuration"
     cp -v /srv/data/config.clean.cfg /srv/data/config.cfg
@@ -92,3 +87,10 @@ chmod -R 777 /srv/data
 
 echo "Adjusting sudo configuration"
 cp -v /srv/utils/docker/sudoers.conf /etc/sudoers.d/honeysens
+
+echo "Configuring Apache web server"
+cp -v /srv/utils/docker/apache.http.conf /etc/apache2/sites-available/honeysens_http.conf
+cp -v /srv/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
+sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/apache2/sites-available/*.conf
+cp -v /srv/utils/docker/my_init.d/06_init_apache.sh /etc/my_init.d/
+/etc/my_init.d/06_init_apache.sh

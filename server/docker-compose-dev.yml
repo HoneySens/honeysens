@@ -10,6 +10,7 @@ services:
     networks:
       - honeysens-dev
     environment:
+      - ACCESS_LOG=false
       - BRANDING_ENABLED
       - DEV_WATCH_TASK
     volumes:

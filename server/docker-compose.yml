@@ -10,7 +10,8 @@ services:
       - 443:443
     networks:
       - honeysens
-    #environment:
+    environment:
+      - ACCESS_LOG=false
       #- TLS_AUTH_PROXY=172.0.0.1
     volumes:
       - honeysens_data:/opt/HoneySens/data
