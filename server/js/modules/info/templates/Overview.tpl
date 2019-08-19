@@ -30,7 +30,7 @@
                 <div class="panel-body">
                     <div class="panelIcon pull-left"><span class="glyphicon glyphicon-book"></span></div>
                     <p><a href="docs/user_manual.pdf" target="_blank">Benutzerhandbuch</a>
-                        <br />f&uuml;r HoneySens in Version 2.0.x</p>
+                        <br />f&uuml;r die HoneySens Version 2.x</p>
                     <hr />
                     <div class="panelIcon pull-left"><span class="glyphicon glyphicon-book"></span></div>
                     <p><a href="docs/admin_manual.pdf" target="_blank">Administrationshandbuch</a>
