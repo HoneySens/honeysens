@@ -26,8 +26,8 @@ class Eventdetails extends RESTResource {
      * @param array $criteria
      * @return array
      */
-	public function get($criteria) {
-		$this->assureAllowed('get');
+    public function get($criteria) {
+        $this->assureAllowed('get');
         $qb = $this->getEntityManager()->createQueryBuilder();
         V::key('type', V::intType()->between(0, 1))->check($criteria);
         $entity = 'HoneySens\app\models\entities\EventDetail';
@@ -56,5 +56,5 @@ class Eventdetails extends RESTResource {
             }
             return $details;
         }
-	}
+    }
 }

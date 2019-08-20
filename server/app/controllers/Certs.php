@@ -37,10 +37,10 @@ class Certs extends RESTResource {
      * @return array
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
-	public function get($criteria) {
-		$this->assureAllowed('get');
-		$qb = $this->getEntityManager()->createQueryBuilder();
-		$qb->select('c')->from('HoneySens\app\models\entities\SSLCert', 'c');
+    public function get($criteria) {
+        $this->assureAllowed('get');
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('c')->from('HoneySens\app\models\entities\SSLCert', 'c');
         if(V::key('userID', V::intType())->validate($criteria)) {
             $qb->join('c.sensor', 's')
                 ->join('s.division', 'd')
@@ -58,19 +58,19 @@ class Certs extends RESTResource {
             }
             return $certs;
         }
-	}
+    }
 
     // TODO Evaluate use case for DELETE
-	public function delete($id) {
-		$this->assureAllowed('delete');
+    public function delete($id) {
+        $this->assureAllowed('delete');
         // Validation
         V::intVal()->check($id);
         // Persistence
-		$em = $this->getEntityManager();
-		$cert = $em->getRepository('HoneySens\app\models\entities\SSLCert')->find($id);
+        $em = $this->getEntityManager();
+        $cert = $em->getRepository('HoneySens\app\models\entities\SSLCert')->find($id);
         V::objectType()->check($cert);
         if($cert->getSensor()) $cert->getSensor()->setCert(null);
         $em->remove($cert);
         $em->flush();
-	}
+    }
 }

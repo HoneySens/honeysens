@@ -10,7 +10,7 @@ $classLoader = new \Doctrine\Common\ClassLoader('Symfony', APPLICATION_PATH . '/
 $classLoader->register();
 
 $helperSet = new \Symfony\Component\Console\Helper\HelperSet(array(
-	'em' => new \Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper($em)
+    'em' => new \Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper($em)
 ));
 
 \Doctrine\ORM\Tools\Console\ConsoleRunner::run($helperSet);

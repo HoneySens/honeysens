@@ -12,35 +12,35 @@ class Event {
     const SERVICE_KIPPO = 1;
     const SERVICE_DIONAEA = 2;
 
-	const CLASSIFICATION_UNKNOWN = 0;
-	const CLASSIFICATION_ICMP = 1;
-	const CLASSIFICATION_CONN_ATTEMPT = 2;
-	const CLASSIFICATION_LOW_HP = 3;
-	const CLASSIFICATION_PORTSCAN = 4;
+    const CLASSIFICATION_UNKNOWN = 0;
+    const CLASSIFICATION_ICMP = 1;
+    const CLASSIFICATION_CONN_ATTEMPT = 2;
+    const CLASSIFICATION_LOW_HP = 3;
+    const CLASSIFICATION_PORTSCAN = 4;
 
     const STATUS_UNEDITED = 0;
     const STATUS_BUSY = 1;
     const STATUS_RESOLVED = 2;
     const STATUS_IGNORED = 3;
 
-	/**
-	 * @Id
-	 * @Column(type="integer")
-	 * @GeneratedValue 
-	 */
-	protected $id;
-	
-	/**
-	 * @Column(type="datetime")
-	 */
-	protected $timestamp;
+    /**
+     * @Id
+     * @Column(type="integer")
+     * @GeneratedValue
+     */
+    protected $id;
 
-	/**
+    /**
+     * @Column(type="datetime")
+     */
+    protected $timestamp;
+
+    /**
      * The sensor this event was collected by
      *
-	 * @ManyToOne(targetEntity="HoneySens\app\models\entities\Sensor")
-	 */
-	protected $sensor;
+     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Sensor")
+     */
+    protected $sensor;
 
     /**
      * The sensor service that generated this event
@@ -49,26 +49,26 @@ class Event {
      */
     protected $service;
 
-	/**
+    /**
      * Classification is done on the server side
      *
-	 * @Column(type="integer")
-	 */
-	protected $classification;
-	
-	/**
+     * @Column(type="integer")
+     */
+    protected $classification;
+
+    /**
      * Source IP address
      *
-	 * @Column(type="string")
-	 */
-	protected $source;
-	
-	/**
-	 * Most of the time a one-liner to summary the event
-	 * 
-	 * @Column(type="string")
-	 */
-	protected $summary;
+     * @Column(type="string")
+     */
+    protected $source;
+
+    /**
+     * Most of the time a one-liner to summary the event
+     *
+     * @Column(type="string")
+     */
+    protected $summary;
 
     /**
      * Configurable display-only status
@@ -83,11 +83,11 @@ class Event {
      * @Column(type="string", nullable=true)
      */
     protected $comment;
-	
-	/**
-	 * @OneToMany(targetEntity="HoneySens\app\models\entities\EventDetail", mappedBy="event", cascade={"remove"})
-	 */
-	protected $details;
+
+    /**
+     * @OneToMany(targetEntity="HoneySens\app\models\entities\EventDetail", mappedBy="event", cascade={"remove"})
+     */
+    protected $details;
 
     /**
      * List of IP packets that belong to this event.
@@ -100,13 +100,13 @@ class Event {
         $this->details = new ArrayCollection();
         $this->packets = new ArrayCollection();
     }
-	
-	/**
+
+    /**
      * Get id
      *
      * @return integer
      */
-	public function getId() {
+    public function getId() {
         return $this->id;
     }
 
@@ -130,7 +130,7 @@ class Event {
         return $this->timestamp;
     }
 
-	/**
+    /**
      * Set sensor
      *
      * @param Sensor $sensor
@@ -270,38 +270,38 @@ class Event {
         return $this->comment;
     }
 
-	/**
-	 * Add event details
-	 * 
-	 * @param EventDetail $details
-	 * @return Event
-	 */
-	public function addDetails(EventDetail $details) {
-		$this->details[] = $details;
-		$details->setEvent($this);
-		return $this;
-	}
-	
-	/**
-	 * Remove event details
-	 * 
-	 * @param EventDetail $details
-	 * @return Event
-	 */
-	public function removeDetails(EventDetail $details) {
-		$this->details->removeElement($details);
-		$details->setEvent(null);
-		return $this;
-	}
+    /**
+     * Add event details
+     *
+     * @param EventDetail $details
+     * @return Event
+     */
+    public function addDetails(EventDetail $details) {
+        $this->details[] = $details;
+        $details->setEvent($this);
+        return $this;
+    }
 
-	/**
-	 * Returns all details related to this event
-	 * 
-	 * @return ArrayCollection
-	 */
-	public function getDetails() {
-		return $this->details;
-	}
+    /**
+     * Remove event details
+     *
+     * @param EventDetail $details
+     * @return Event
+     */
+    public function removeDetails(EventDetail $details) {
+        $this->details->removeElement($details);
+        $details->setEvent(null);
+        return $this;
+    }
+
+    /**
+     * Returns all details related to this event
+     *
+     * @return ArrayCollection
+     */
+    public function getDetails() {
+        return $this->details;
+    }
 
     /**
      * Add related packet information
@@ -336,20 +336,20 @@ class Event {
         return $this->packets;
     }
 
-	public function getState() {
-		$sensor = $this->getSensor() == null ? '' : $this->getSensor()->getId();
-		return array(
-			'id' => $this->getId(),
-			'timestamp' => $this->getTimestamp()->format('U'),
-			'sensor' => $sensor,
+    public function getState() {
+        $sensor = $this->getSensor() == null ? '' : $this->getSensor()->getId();
+        return array(
+            'id' => $this->getId(),
+            'timestamp' => $this->getTimestamp()->format('U'),
+            'sensor' => $sensor,
             'service' => $this->getService(),
-			'classification' => $this->getClassification(),
-			'source' => $this->getSource(),
-			'summary' => $this->getSummary(),
+            'classification' => $this->getClassification(),
+            'source' => $this->getSource(),
+            'summary' => $this->getSummary(),
             'status' => $this->getStatus(),
             'comment' => $this->getComment(),
             'numberOfPackets' => sizeof($this->getPackets()),
             'numberOfDetails' => sizeof($this->getDetails())
-		);
-	}
+        );
+    }
 }

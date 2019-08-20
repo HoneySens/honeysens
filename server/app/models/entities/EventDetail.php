@@ -6,50 +6,50 @@ namespace HoneySens\app\models\entities;
  * @Table(name="event_details")
  */
 class EventDetail {
-	
-	const TYPE_GENERIC = 0;
-	const TYPE_INTERACTION = 1;
-	
-	/**
-	 * @Id
-	 * @Column(type="integer")
-	 * @GeneratedValue 
-	 */
-	protected $id;
-	
-	/**
-	 * @ManyToOne(targetEntity="HoneySens\app\models\entities\Event", inversedBy="details")
-	 */
-	protected $event;
-	
-	/**
-	 * An optional timestamp to track the attacker-sensor interaction
-	 * 
-	 * @Column(type="datetime", nullable=true)
-	 */
-	protected $timestamp;
-	
-	/**
-	 * The type of data of these event details
-	 * 
-	 * @Column(type="integer")
-	 */
-	protected $type;
-	
-	/**
-	 * @Column(type="string")
-	 */
-	protected $data;
-	
-	/**
+
+    const TYPE_GENERIC = 0;
+    const TYPE_INTERACTION = 1;
+
+    /**
+     * @Id
+     * @Column(type="integer")
+     * @GeneratedValue
+     */
+    protected $id;
+
+    /**
+     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Event", inversedBy="details")
+     */
+    protected $event;
+
+    /**
+     * An optional timestamp to track the attacker-sensor interaction
+     *
+     * @Column(type="datetime", nullable=true)
+     */
+    protected $timestamp;
+
+    /**
+     * The type of data of these event details
+     *
+     * @Column(type="integer")
+     */
+    protected $type;
+
+    /**
+     * @Column(type="string")
+     */
+    protected $data;
+
+    /**
      * Get id
      *
      * @return integer 
      */
-	public function getId() {
+    public function getId() {
         return $this->id;
     }
-	
+
     /**
      * Set event
      *
@@ -69,7 +69,7 @@ class EventDetail {
     public function getEvent() {
         return $this->event;
     }
-	
+
     /**
      * Set timestamp
      *
@@ -89,7 +89,7 @@ class EventDetail {
     public function getTimestamp() {
         return $this->timestamp;
     }
-	
+
     /**
      * Set type
      *
@@ -109,7 +109,7 @@ class EventDetail {
     public function getType() {
         return $this->type;
     }
-	
+
     /**
      * Set data
      *
@@ -129,14 +129,14 @@ class EventDetail {
     public function getData() {
         return $this->data;
     }
-	
-	public function getState() {
-		$timestamp = $this->getTimestamp() === null ? null : $this->getTimestamp()->format('U');
-		return array(
-			'id' => $this->getId(),
-			'timestamp' => $timestamp,
-			'type' => $this->getType(),
-			'data' => $this->getData()
-		);
-	}
+
+    public function getState() {
+        $timestamp = $this->getTimestamp() === null ? null : $this->getTimestamp()->format('U');
+        return array(
+            'id' => $this->getId(),
+            'timestamp' => $timestamp,
+            'type' => $this->getType(),
+            'data' => $this->getData()
+        );
+    }
 }
