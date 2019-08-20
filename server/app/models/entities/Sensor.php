@@ -26,37 +26,37 @@ class Sensor {
     const CONFIG_ARCHIVE_STATUS_CREATING = 2;
     const CONFIG_ARCHIVE_STATUS_AVAILABLE = 3;
 
-	/**
-	 * @Id
-	 * @Column(type="integer")
-	 * @GeneratedValue 
-	 */
-	protected $id;
-	
-	/**
-	 * @Column(type="string")
-	 */
-	protected $name;
+    /**
+     * @Id
+     * @Column(type="integer")
+     * @GeneratedValue
+     */
+    protected $id;
 
-	/**
-	 * @Column(type="string")
-	 */
-	protected $location;
-	
-	/**
-	 * @OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", inversedBy="sensor", cascade={"remove"})
-	 */
-	protected $cert;
-	
-	/**
-	 * @OneToMany(targetEntity="HoneySens\app\models\entities\SensorStatus", mappedBy="sensor", cascade={"remove"})
-	 */
-	protected $status;
+    /**
+     * @Column(type="string")
+     */
+    protected $name;
 
-	/**
-	 * @ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="sensors")
-	 */
-	protected $division;
+    /**
+     * @Column(type="string")
+     */
+    protected $location;
+
+    /**
+     * @OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", inversedBy="sensor", cascade={"remove"})
+     */
+    protected $cert;
+
+    /**
+     * @OneToMany(targetEntity="HoneySens\app\models\entities\SensorStatus", mappedBy="sensor", cascade={"remove"})
+     */
+    protected $status;
+
+    /**
+     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="sensors")
+     */
+    protected $division;
 
     /**
      * @Column(type="integer")
@@ -168,7 +168,7 @@ class Sensor {
         $this->status = new ArrayCollection();
         $this->services = new ArrayCollection();
     }
-	
+
     /**
      * Get id
      *
@@ -227,49 +227,49 @@ class Sensor {
         return $this->location;
     }
 
-	/**
-	 * Set cert
-	 * 
-	 * @param \HoneySens\app\models\entities\SSLCert $cert
-	 * @return Sensor
-	 */
-	public function setCert(\HoneySens\app\models\entities\SSLCert $cert = null) {
-		$this->cert = $cert;
-		return $this;
-	}
-	
-	/**
-	 * Get cert
-	 * 
-	 * @return \HoneySens\app\models\entities\SSLCert
-	 */
-	public function getCert() {
-		return $this->cert;
-	}
-	
-	/**
-	 * Add status info
-	 * 
-	 * @param \HoneySens\app\models\entities\SensorStatus $status
-	 * @return Sensor
-	 */
-	public function addStatus(\HoneySens\app\models\entities\SensorStatus $status) {
-		$this->status[] = $status;
-		$status->setSensor($this);
-		return $this;
-	}
-	
-	/**
-	 * Remove status info
-	 * 
-	 * @param \HoneySens\app\models\entities\SensorStatus $status
-	 * @return Sensor
-	 */
-	public function removeStatus(\HoneySens\app\models\entities\SensorStatus $status) {
-		$this->status->removeElement($status);
-		$status->setSensor(null);
-		return $this;
-	}
+    /**
+     * Set cert
+     *
+     * @param \HoneySens\app\models\entities\SSLCert $cert
+     * @return Sensor
+     */
+    public function setCert(\HoneySens\app\models\entities\SSLCert $cert = null) {
+        $this->cert = $cert;
+        return $this;
+    }
+
+    /**
+     * Get cert
+     *
+     * @return \HoneySens\app\models\entities\SSLCert
+     */
+    public function getCert() {
+        return $this->cert;
+    }
+
+    /**
+     * Add status info
+     *
+     * @param \HoneySens\app\models\entities\SensorStatus $status
+     * @return Sensor
+     */
+    public function addStatus(\HoneySens\app\models\entities\SensorStatus $status) {
+        $this->status[] = $status;
+        $status->setSensor($this);
+        return $this;
+    }
+
+    /**
+     * Remove status info
+     *
+     * @param \HoneySens\app\models\entities\SensorStatus $status
+     * @return Sensor
+     */
+    public function removeStatus(\HoneySens\app\models\entities\SensorStatus $status) {
+        $this->status->removeElement($status);
+        $status->setSensor(null);
+        return $this;
+    }
 
     /**
      * Get all status info
@@ -292,25 +292,25 @@ class Sensor {
         } else return null;
     }
 
-	/**
-	 * Set division
-	 *
-	 * @param Division $division
-	 * @return $this
-	 */
-	public function setDivision(Division $division = null) {
-		$this->division = $division;
-		return $this;
-	}
+    /**
+     * Set division
+     *
+     * @param Division $division
+     * @return $this
+     */
+    public function setDivision(Division $division = null) {
+        $this->division = $division;
+        return $this;
+    }
 
-	/**
-	 * Get division
-	 *
-	 * @return mixed
-	 */
-	public function getDivision() {
-		return $this->division;
-	}
+    /**
+     * Get division
+     *
+     * @return mixed
+     */
+    public function getDivision() {
+        return $this->division;
+    }
 
     public function setServerEndpointMode($mode) {
         $this->serverEndpointMode = $mode;
@@ -557,33 +557,33 @@ class Sensor {
         return $this->serviceNetwork;
     }
 
-	public function getState() {
-		$cert = $this->getCert() ? $this->getCert()->getId() : '';
-		$crt_fp = $this->getCert() ? $this->getCert()->getFingerprint() : '';
-		$last_status = $this->getLastStatus();
-		$last_status_ts = $last_status ? $last_status->getTimestamp()->format('U') : '';
+    public function getState() {
+        $cert = $this->getCert() ? $this->getCert()->getId() : '';
+        $crt_fp = $this->getCert() ? $this->getCert()->getFingerprint() : '';
+        $last_status = $this->getLastStatus();
+        $last_status_ts = $last_status ? $last_status->getTimestamp()->format('U') : '';
         $last_status_code = $last_status ? $last_status->getStatus() : null;
         $last_service_status = $last_status ? $last_status->getServiceStatus() : null;
-		$sw_version = $last_status ? $last_status->getSWVersion() : '';
-		$last_ip = $last_status ? $last_status->getIP() : null;
-		$firmware = $this->firmware ? $this->firmware->getId() : null;
+        $sw_version = $last_status ? $last_status->getSWVersion() : '';
+        $last_ip = $last_status ? $last_status->getIP() : null;
+        $firmware = $this->firmware ? $this->firmware->getId() : null;
         $services = array();
         foreach($this->services as $service) {
             $services[] = $service->getState();
         }
-		return array(
-			'id' => $this->getId(),
+        return array(
+            'id' => $this->getId(),
             'hostname' => $this->getHostname(),
-			'name' => $this->getName(),
-			'location' => $this->getLocation(),
-			'division' => $this->getDivision()->getId(),
-			'cert' => $cert,
-			'crt_fp' => $crt_fp,
-			'last_status' => $last_status_code,
-			'last_status_ts' => $last_status_ts,
-			'last_service_status' => $last_service_status,
-			'sw_version' => $sw_version,
-			'last_ip' => $last_ip,
+            'name' => $this->getName(),
+            'location' => $this->getLocation(),
+            'division' => $this->getDivision()->getId(),
+            'cert' => $cert,
+            'crt_fp' => $crt_fp,
+            'last_status' => $last_status_code,
+            'last_status_ts' => $last_status_ts,
+            'last_service_status' => $last_service_status,
+            'sw_version' => $sw_version,
+            'last_ip' => $last_ip,
             'server_endpoint_mode' => $this->getServerEndpointMode(),
             'server_endpoint_host' => $this->getServerEndpointHost(),
             'server_endpoint_port_https' => $this->getServerEndpointPortHTTPS(),
@@ -603,6 +603,6 @@ class Sensor {
             'firmware' => $firmware,
             'services' => $services,
             'service_network' => $this->getServiceNetwork()
-		);
-	}
+        );
+    }
 }

@@ -1,62 +1,62 @@
 define(['app/app',
         'app/models',
-		'app/views/AppLayout',
+        'app/views/AppLayout',
         'app/views/Login',
         'app/views/Navigation',
         'app/views/Sidebar',
         'json',
         'app/modules/setup/module'],
 function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarView, JSON) {
-	HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marionette, $, _) {
-		// @deprecated
-		function assureAllowed(domain, action) {
-			// TODO maybe don't rely on template helpers within a controller function
-			if(!_.templateHelpers.isAllowed(domain, action)) {
-				//Controller.doLogout();
-				return false;
-			} else return true;
-		}
+    HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marionette, $, _) {
+        // @deprecated
+        function assureAllowed(domain, action) {
+            // TODO maybe don't rely on template helpers within a controller function
+            if(!_.templateHelpers.isAllowed(domain, action)) {
+                //Controller.doLogout();
+                return false;
+            } else return true;
+        }
 
-		Controller.doLogout = function() {
-			HoneySens.execute('logout');
-		};
+        Controller.doLogout = function() {
+            HoneySens.execute('logout');
+        };
 
-		Controller.Router = Backbone.Marionette.AppRouter.extend({
-			appRoutes: {
-				'logout': 'doLogout'
-			},
-			onRoute: function() {
-				HoneySens.startModule(Controller);
-			}
-		});
+        Controller.Router = Backbone.Marionette.AppRouter.extend({
+            appRoutes: {
+                'logout': 'doLogout'
+            },
+            onRoute: function() {
+                HoneySens.startModule(Controller);
+            }
+        });
 
-		HoneySens.addInitializer(function() {
-			// Session management commands
-			HoneySens.commands.setHandler('logout', function() {
-				if(HoneySens.data.session.user.get('role') > Models.User.role.GUEST) {
-					$.ajax({
-						type: 'DELETE',
-						url: 'api/sessions',
-						success: function(data) {
-							data = JSON.parse(data);
-							HoneySens.data.session.user = new Models.User(data.user);
-							// clear models
-							HoneySens.data.models.certs.reset();
-							HoneySens.data.models.events.reset();
+        HoneySens.addInitializer(function() {
+            // Session management commands
+            HoneySens.commands.setHandler('logout', function() {
+                if(HoneySens.data.session.user.get('role') > Models.User.role.GUEST) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: 'api/sessions',
+                        success: function(data) {
+                            data = JSON.parse(data);
+                            HoneySens.data.session.user = new Models.User(data.user);
+                            // clear models
+                            HoneySens.data.models.certs.reset();
+                            HoneySens.data.models.events.reset();
                             HoneySens.data.models.eventfilters.fullCollection.reset();
-							HoneySens.data.models.sensors.fullCollection.reset();
-							HoneySens.data.models.users.reset();
-							HoneySens.data.models.divisions.reset();
-							HoneySens.data.models.contacts.reset();
-							HoneySens.data.models.services.reset();
-							HoneySens.data.models.platforms.reset();
-							HoneySens.data.models.tasks.reset();
-							HoneySens.data.settings.clear();
+                            HoneySens.data.models.sensors.fullCollection.reset();
+                            HoneySens.data.models.users.reset();
+                            HoneySens.data.models.divisions.reset();
+                            HoneySens.data.models.contacts.reset();
+                            HoneySens.data.models.services.reset();
+                            HoneySens.data.models.platforms.reset();
+                            HoneySens.data.models.tasks.reset();
+                            HoneySens.data.settings.clear();
                             HoneySens.vent.trigger('logout:success');
-						}
-					});
-				}
-			});
+                        }
+                    });
+                }
+            });
             HoneySens.reqres.setHandler('login', function(credentials) {
                 $.ajax({
                     type: 'POST',
@@ -103,11 +103,11 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                 });
             });
 
-			// Initialize events
-			HoneySens.vent.on('logout:success', function(user) {
+            // Initialize events
+            HoneySens.vent.on('logout:success', function(user) {
                 HoneySens.request('view:content-region').show(new LoginView());
                 if(HoneySens.router) HoneySens.router.navigate(''); // only clear URL if router is initialized already
-			});
+            });
 
             HoneySens.commands.setHandler('init:layout', function() {
                 HoneySens.request('view:content-region').show(new AppLayoutView());
@@ -161,8 +161,8 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                     HoneySens.commands.execute('init:finalize');
                 }
             });
-		});
-	});
+        });
+    });
 
-	return HoneySens.Controller;
+    return HoneySens.Controller;
 });

@@ -28,7 +28,7 @@ function(HoneySens, Models, DivisionsUserListView, DivisionsContactListView, Div
                     });
 
                     if(valid) {
-                    	this.$el.find('form').trigger('submit');
+                        this.$el.find('form').trigger('submit');
                         this.$el.find('button').prop('disabled', true);
                         
                         var model = this.model,
