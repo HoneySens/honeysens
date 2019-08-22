@@ -1,8 +1,8 @@
 version: "3"
 services:
 
-  honeysens:
-    image: honeysens/server:$REVISION
+  server:
+    image: honeysens/server:2.1.0
     container_name: honeysens-server
     restart: always
     ports:
@@ -12,12 +12,29 @@ services:
       - honeysens
     environment:
       - ACCESS_LOG=false
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=honeysens
+      - DB_PASSWORD=honeysens
+      - DB_NAME=honeysens
       #- TLS_AUTH_PROXY=172.0.0.1
     volumes:
       - honeysens_data:/opt/HoneySens/data
-      - honeysens_db:/var/lib/mysql
       #- <path to https.chain.crt>:/opt/HoneySens/data/https.chain.crt
       #- <path to https.key>:/opt/HoneySens/data/https.key
+
+  database:
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=honeysens
+      - MYSQL_USER=honeysens
+      - MYSQL_PASSWORD=honeysens
+    image: mysql:8.0
+    networks:
+      - honeysens
+    volumes:
+      - honeysens_db:/var/lib/mysql
 
   honeysens-registry:
     image: registry:2
@@ -29,6 +46,21 @@ services:
       - REGISTRY_STORAGE_DELETE_ENABLED=true
     volumes:
       - honeysens_registry:/var/lib/registry
+
+  backup:
+    image: honeysens/backup:2.1.0
+    environment:
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=honeysens
+      - DB_PASSWORD=honeysens
+      - DB_NAME=honeysens
+    networks:
+      - honeysens
+    restart: "no"
+    volumes:
+      - honeysens_registry:/srv/registry
+      - honeysens_data:/srv/data
 
 volumes:
   honeysens_data:

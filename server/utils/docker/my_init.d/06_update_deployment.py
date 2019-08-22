@@ -5,7 +5,6 @@ import glob
 import os
 import pymysql
 import re
-import subprocess
 import sys
 import time
 from OpenSSL import crypto
@@ -53,6 +52,7 @@ with open('{}/app/controllers/System.php'.format(config.get('server', 'app_path'
             server_version = re.sub("';", '', re.sub("const VERSION = '", '', line.strip()))
 if server_version is None:
     print('Updater: Error: Could not identify server version')
+    exit(1)
 else:
     print('Updater: Server version: {}'.format(server_version))
 
@@ -72,15 +72,19 @@ if config_version == server_version:
 else:
     print('Updater: Performing update from {} to {}'.format(config_version, server_version))
 
-# Launch database and initiate connection
+# Check existence of required environment variables to connect to the database
+if not all(v in os.environ for v in ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME']):
+    print('Updater: Error: Database connection environment variables are not set')
+    exit(1)
+
+# Initiate database connection
 print('Updater: Connecting to database...')
-mysqld = subprocess.Popen(['/usr/bin/mysqld_safe'])
 while True:
     time.sleep(1)
     try:
-        db = pymysql.connect(host=config.get('database', 'host'), port=int(config.get('database', 'port')),
-                             user=config.get('database', 'user'), passwd=config.get('database', 'password'),
-                             db=config.get('database', 'dbname'))
+        db = pymysql.connect(host=os.environ['DB_HOST'], port=int(os.environ['DB_PORT']),
+                             user=os.environ['DB_USER'], passwd=os.environ['DB_PASSWORD'],
+                             db=os.environ['DB_NAME'])
         c = db.cursor()
         if c.connection:
             break
@@ -275,6 +279,12 @@ if config_version == '2.0.0':
     config.set('misc', 'restrict_manager_role', 'false')
     config.set('server', 'config_version', '2.1.0')
     config_version = '2.1.0'
+# 2.1.0 -> next
+if config_version == '2.1.0':
+    print('Upgrading configuration 2.1.0 -> next')
+    config.remove_section('database')
+    config.set('server', 'config_version', 'next')
+    config_version = 'next'
 
 # Write new config file
 with open(config_file, 'wb') as f:
@@ -282,9 +292,4 @@ with open(config_file, 'wb') as f:
 
 # Close db connection
 db.close()
-
-# Shutdown db
-subprocess.call(['/usr/bin/mysqladmin', '-u', 'root', 'shutdown'])
-mysqld.communicate()
-
 print('Updater: Done')

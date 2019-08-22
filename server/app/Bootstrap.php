@@ -72,7 +72,7 @@ function initConfig() {
     return $config;
 }
 
-function initDoctrine($appConfig) {
+function initDoctrine() {
     $config = new Configuration();
     $cache = new ArrayCache();
     $config->setMetadataCacheImpl($cache);
@@ -84,7 +84,15 @@ function initDoctrine($appConfig) {
     $config->addCustomDatetimeFunction('DAY', '\DoctrineExtensions\Query\Mysql\Day');
     $config->addCustomDatetimeFunction('MONTH', '\DoctrineExtensions\Query\Mysql\Month');
     $config->addCustomDatetimeFunction('YEAR', '\DoctrineExtensions\Query\Mysql\Year');
-    return EntityManager::create($appConfig['database'], $config);
+    $connectionParams = array(
+        'driver' => 'pdo_mysql',
+        'host' => getenv('DB_HOST'),
+        'port' => getenv('DB_PORT'),
+        'user' => getenv('DB_USER'),
+        'password' => getenv('DB_PASSWORD'),
+        'dbname' => getenv('DB_NAME')
+    );
+    return EntityManager::create($connectionParams, $config);
 }
 
 function initDBSchema(&$messages, $em) {

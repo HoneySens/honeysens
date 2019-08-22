@@ -11,12 +11,29 @@ services:
       - honeysens-dev
     environment:
       - ACCESS_LOG=false
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=honeysens
+      - DB_PASSWORD=honeysens
+      - DB_NAME=honeysens
       - BRANDING_ENABLED
       - DEV_WATCH_TASK
     volumes:
       - honeysens_dev_data:/srv/data
-      - honeysens_dev_db:/var/lib/mysql
       - .:/mnt
+
+  database:
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=honeysens
+      - MYSQL_USER=honeysens
+      - MYSQL_PASSWORD=honeysens
+    image: mysql:8.0
+    networks:
+      - honeysens-dev
+    volumes:
+      - honeysens_dev_db:/var/lib/mysql
 
   honeysens-registry:
     image: registry:2
@@ -26,6 +43,21 @@ services:
       - REGISTRY_STORAGE_DELETE_ENABLED=true
     volumes:
       - honeysens_dev_registry:/var/lib/registry
+
+  backup:
+    build: services/backup
+    environment:
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=honeysens
+      - DB_PASSWORD=honeysens
+      - DB_NAME=honeysens
+    networks:
+      - honeysens-dev
+    restart: "no"
+    volumes:
+      - honeysens_dev_registry:/srv/registry
+      - honeysens_dev_data:/srv/data
 
 volumes:
   honeysens_dev_data:

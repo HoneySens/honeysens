@@ -5,7 +5,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get -qq update
 
 # Basic dependencies
-apt-get install -y mysql-server beanstalkd screen python python-yaml python-openssl python-pymysql python-pip curl openssl apache2 sudo
+apt-get install -y beanstalkd screen python python-yaml python-openssl python-pymysql python-pip curl openssl apache2 sudo
 
 # PHP 5
 add-apt-repository -y ppa:ondrej/php
@@ -14,13 +14,6 @@ apt-get install -y php5.6 php5.6-mbstring php5.6-mysql php5.6-xml php5.6-ldap li
 
 # Beanstalk
 sed -i -e 's/#START=yes/START=yes/' -e 's/BEANSTALKD_LISTEN_ADDR=.*/BEANSTALKD_LISTEN_ADDR=127.0.0.1/' /etc/default/beanstalkd
-
-# MySQL
-ln -fs /dev/stdout /var/log/mysql/error.log
-/etc/init.d/mysql start
-mysql -u root -e "CREATE DATABASE honeysens"
-mysql -u root honeysens -e "GRANT ALL PRIVILEGES ON honeysens.* TO honeysens@localhost IDENTIFIED BY 'honeysens'"
-/etc/init.d/mysql stop
 
 # Apache
 sed -i -e 's/upload_max_filesize.*/upload_max_filesize = 100M/' -e 's/post_max_size.*/post_max_size = 100M/' /etc/php/5.6/apache2/php.ini
