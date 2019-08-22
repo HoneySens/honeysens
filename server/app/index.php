@@ -6,7 +6,7 @@ initClassLoading();
 $config = initConfig();
 $app = initSlim($config);
 $messages = array();
-$em = initDoctrine($config);
+$em = initDoctrine();
 initDBSchema($messages, $em);
 initDBEventManager($em);
 $services = initServiceManager($config, $em);

@@ -117,10 +117,11 @@ class TaskProcessor:
                 job.delete()
                 continue
             self.logger.info('New job received ({})'.format(job_id))
+            # TODO Wait for database connection
             try:
-                db = pymysql.connect(host=self.config.get('database', 'host'), port=int(self.config.get('database', 'port')),
-                                     user=self.config.get('database', 'user'), passwd=self.config.get('database', 'password'),
-                                     db=self.config.get('database', 'dbname'))
+                db = pymysql.connect(host=os.environ['DB_HOST'], port=int(os.environ['DB_PORT']),
+                                     user=os.environ['DB_USER'], passwd=os.environ['DB_PASSWORD'],
+                                     db=os.environ['DB_NAME'])
                 job_data = self.fetch_job_data(job_id, db)
             except pymysql.err.OperationalError:
                 self.logger.warning('Database access error, removing job')

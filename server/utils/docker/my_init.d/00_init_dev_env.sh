@@ -38,18 +38,17 @@ fi
 
 echo "Adding services"
 cp -vr /srv/utils/docker/services/apache2 /etc/service
-cp -vr /srv/utils/docker/services/mysql /etc/service
 cp -vr /srv/utils/docker/services/beanstalkd /etc/service
 cp -vr /srv/utils/docker/services/tasks /etc/service
 sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/service/tasks/run
-mkdir /etc/service/grunt-watch
+mkdir -p /etc/service/grunt-watch
 cat > /etc/service/grunt-watch/run << DELIMITER
 #!/bin/bash
 echo "Grunt watch task: \$DEV_WATCH_TASK"
 exec /usr/local/bin/grunt \$DEV_WATCH_TASK --base /srv --gruntfile /srv/Gruntfile.js --src="/mnt" --dst="/srv" --force
 DELIMITER
 chmod +x /etc/service/grunt-watch/run
-mkdir /etc/service/motd
+mkdir -p /etc/service/motd
 cat > /etc/service/motd/run << DELIMITER
 #!/bin/bash
 until curl -q -k https://127.0.0.1/api/system/identify
@@ -69,17 +68,17 @@ sleep infinity
 DELIMITER
 chmod +x /etc/service/motd/run
 
-echo "Initializing database volume if necessary"
-cp -v /srv/utils/docker/my_init.d/01_init_volumes.sh /etc/my_init.d/
-/etc/my_init.d/01_init_volumes.sh
+mkdir -p /srv/my_init.d
+echo "Initializing volumes if necessary"
+cp -v /srv/utils/docker/my_init.d/01_init_volumes.sh /srv/my_init.d/
+/srv/my_init.d/01_init_volumes.sh
 
 echo "Creating certificates if necessary"
-cp -v /srv/utils/docker/my_init.d/02_regen_honeysens_ca.sh /etc/my_init.d/
-cp -v /srv/utils/docker/my_init.d/03_regen_https_cert.sh /etc/my_init.d/
-cp -v /srv/utils/docker/my_init.pre_shutdown.d/01_stop_mysql.sh /etc/my_init.pre_shutdown.d/
-sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/my_init.d/02_regen_honeysens_ca.sh /etc/my_init.d/03_regen_https_cert.sh
-/etc/my_init.d/02_regen_honeysens_ca.sh
-/etc/my_init.d/03_regen_https_cert.sh
+cp -v /srv/utils/docker/my_init.d/02_regen_honeysens_ca.sh /srv/my_init.d/
+cp -v /srv/utils/docker/my_init.d/03_regen_https_cert.sh /srv/my_init.d/
+sed -i -e 's#/opt/HoneySens/#/srv/#g' /srv/my_init.d/02_regen_honeysens_ca.sh /srv/my_init.d/03_regen_https_cert.sh
+/srv/my_init.d/02_regen_honeysens_ca.sh
+/srv/my_init.d/03_regen_https_cert.sh
 
 echo "Adjusting permissions so that /srv/data is writeable for the web server"
 chown -R www-data:www-data /srv/data
@@ -92,5 +91,5 @@ echo "Configuring Apache web server"
 cp -v /srv/utils/docker/apache.http.conf /etc/apache2/sites-available/honeysens_http.conf
 cp -v /srv/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
 sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/apache2/sites-available/*.conf
-cp -v /srv/utils/docker/my_init.d/06_init_apache.sh /etc/my_init.d/
-/etc/my_init.d/06_init_apache.sh
+cp -v /srv/utils/docker/my_init.d/05_init_apache.sh /srv/my_init.d/
+/srv/my_init.d/05_init_apache.sh

@@ -15,9 +15,10 @@ Die üblichen Schritte zur Inbetriebnahme einer neuen Serverinstallation:
 
 1. Server-Image laden:
 docker load -i server-<version>.tar
+docker load -i backup-<version>.tar
 
 2. Compose-File anpassen
-Alle für die beiden Container benötigten Parameter lassen sich aus dem Compose-File ableiten.
+Alle für die Container benötigten Parameter lassen sich aus dem Compose-File ableiten.
 Falls ein individuelles TLS-Schlüsselpaar für den Server genutzt werden soll, kann dies hier ebenfalls als
 Volume/Bind-mount an den angegebenen Pfad spezifiziert werden. Alternativ generiert der Server beim Start
 ein selbstsigniertes TLS-Zertifikat.
@@ -34,3 +35,17 @@ Bei einer Erstinstallation führt ein Assistent durch vier Einrichtungsschritte,
 sichtbar und es kann die Anmeldung am System erfolgen. Hier ist zu überprüfen, ob links in der Sidebar unter dem
 Menüpunkt "Dienste" die "Service-Registry" als "Online" (grün) angezeigt wird. Ist dies der Fall,
 kommunizieren beide Container erfolgreich.
+
+--------------------
+-      Update      -
+--------------------
+Im Allgemeinen gelten für die Aktualisierung einer bestehenden Installation die selben Schritte wie zuvor unter
+'Installation' beschrieben: Neue Image-Versionen werden zunächst mit 'docker load' importiert, laufende Container mittels
+'docker-compose down' heruntergefahren, die Projektdatei docker-compose.yml angepasst (nach dem Vorbild im Archiv der neuen Version)
+und im Anschluss direkt über 'docker-compose up -d' neu gestartet.
+
+ACHTUNG: Beim Update von Server-Versionen 2.1.0 oder früher ist VOR DEM UPDATE unbedingt nachfolgender Befehl im Server-Container
+auszuführen:
+echo "GRANT ALL PRIVILEGES ON honeysens.* TO 'honeysens'@'%' IDENTIFIED BY 'honeysens';" | docker-compose exec -T honeysens mysql
+Nur so ist sichergestellt, dass nach dem Update die Kommunikation mit der nun in einen separaten Container ausgelagerten Datenbank
+weiterhin möglich ist.
