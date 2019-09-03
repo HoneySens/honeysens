@@ -17,6 +17,6 @@
     "grunt-mkdir": "^0.1.2",
     "grunt-shell": "^2.1.0",
     "grunt-simple-watch": "^0.1.3",
-    "grunt-chokidar": "^1.0.1"
+    "grunt-chokidar": "1.0.1"
   }
 }
