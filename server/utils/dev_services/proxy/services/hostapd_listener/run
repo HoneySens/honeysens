@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec /usr/sbin/hostapd_cli -a /srv/hostapd_handler.sh

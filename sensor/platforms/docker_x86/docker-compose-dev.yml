@@ -9,7 +9,11 @@ services:
       - IFACE=eth0
       - LOG_LVL=debug
       - DEV_WATCH_TASK
-    network_mode: host
+    #network_mode: host
+    networks:
+      - ext_sensors
+      #- proxy
+      - server
     privileged: true
     tty: true
     volumes:
@@ -20,3 +24,8 @@ services:
 
 volumes:
   docker_overlay: null
+
+networks:
+  ext_sensors:
+  #proxy:
+  server:

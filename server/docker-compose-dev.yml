@@ -8,7 +8,7 @@ services:
     ports:
       - 443:443
     networks:
-      - honeysens-dev
+      - server
     environment:
       - ACCESS_LOG=false
       - DB_HOST=database
@@ -31,14 +31,14 @@ services:
       - MYSQL_PASSWORD=honeysens
     image: mysql:8.0
     networks:
-      - honeysens-dev
+      - server
     volumes:
       - honeysens_dev_db:/var/lib/mysql
 
   honeysens-registry:
     image: registry:2
     networks:
-      - honeysens-dev
+      - server
     environment:
       - REGISTRY_STORAGE_DELETE_ENABLED=true
     volumes:
@@ -53,7 +53,7 @@ services:
       - DB_PASSWORD=honeysens
       - DB_NAME=honeysens
     networks:
-      - honeysens-dev
+      - server
     restart: "no"
     volumes:
       - honeysens_dev_registry:/srv/registry
@@ -65,4 +65,6 @@ volumes:
   honeysens_dev_registry:
 
 networks:
-  honeysens-dev:
+  server:
+  proxy:
+    driver: macvlan
