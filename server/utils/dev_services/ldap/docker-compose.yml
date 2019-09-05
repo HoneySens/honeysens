@@ -8,7 +8,7 @@ services:
       - 389:389
       - 636:636
     networks:
-      - honeysens-dev
+      - server
     environment:
       - LDAP_TLS_VERIFY_CLIENT=try
     volumes:

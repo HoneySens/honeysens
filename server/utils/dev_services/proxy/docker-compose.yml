@@ -1,0 +1,12 @@
+version: "3"
+services:
+
+  proxy:
+    build: utils/dev_services/proxy
+    environment:
+      - EAPOL_ENABLED=true
+    networks:
+      - server
+      - proxy
+    volumes:
+      - ./utils/dev_services/proxy/ca:/srv/ca

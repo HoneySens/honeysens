@@ -1,0 +1,2 @@
+# We need to fetch a newer version of tinyproxy for logging to stdout and basic auth support
+deb http://archive.ubuntu.com/ubuntu/ disco universe

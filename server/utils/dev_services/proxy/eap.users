@@ -1,0 +1,3 @@
+"user1" MD5 "password"
+* PEAP,TTLS,TLS
+"user2" TTLS-MSCHAPV2,MSCHAPV2,MD5,TTLS-PAP,TTLS-CHAP,TTLS-MSCHAP "password" [2]

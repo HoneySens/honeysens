@@ -6,18 +6,20 @@ export DEV_WATCH_TASK := chokidar
 
 # Additional dev environment features
 DEV_ENV_LDAP := no
+DEV_ENV_PROXY := no
 
 dist: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 
 clean: ${OUTDIR}/dev/docker-compose reset
 	docker rmi honeysens_dev_server:latest honeysens_dev_backup:latest
+	rm -rf utils/dev_services/proxy/ca/ca* utils/dev_services/proxy/ca/client* utils/dev_services/proxy/ca/server*
 	rm -rf ${OUTDIR}
 
 dev: ${OUTDIR}/dev/docker-compose
-	${OUTDIR}/dev/docker-compose -f docker-compose-dev.yml $(if $(DEV_ENV_LDAP:no=),-f utils/dev_services/ldap/docker-compose.yml,) -p honeysens_dev up || true
+	${OUTDIR}/dev/docker-compose -f docker-compose-dev.yml $(if $(DEV_ENV_LDAP:no=),-f utils/dev_services/ldap/docker-compose.yml,) $(if $(DEV_ENV_PROXY:no=),-f utils/dev_services/proxy/docker-compose.yml,) -p honeysens_dev up || true
 
 reset: ${OUTDIR}/dev/docker-compose
-	${OUTDIR}/dev/docker-compose -f docker-compose-dev.yml $(if $(DEV_ENV_LDAP:no=),-f utils/dev_services/ldap/docker-compose.yml,) -p honeysens_dev down -v
+	${OUTDIR}/dev/docker-compose -f docker-compose-dev.yml $(if $(DEV_ENV_LDAP:no=),-f utils/dev_services/ldap/docker-compose.yml,) $(if $(DEV_ENV_PROXY:no=),-f utils/dev_services/proxy/docker-compose.yml,) -p honeysens_dev down -v
 
 ${OUTDIR}/dev/docker-compose: | DIR.${OUTDIR}/dev
 	curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$$(uname -s)-$$(uname -m)" -o $@

@@ -8,12 +8,12 @@ export DEV_WATCH_TASK := chokidar
 dist: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 
 clean: ${OUTDIR}/utils/docker-compose
-	${OUTDIR}/utils/docker-compose -f docker-compose-dev.yml -p sensor_dev down -v
-	docker rmi sensor_dev_sensor:latest || true
+	${OUTDIR}/utils/docker-compose -f docker-compose-dev.yml -p honeysens_dev down -v
+	docker rmi honeysens_dev_sensor:latest || true
 	rm -rf ${OUTDIR}
 
 dev: ${OUTDIR}/utils/docker-compose
-	${OUTDIR}/utils/docker-compose -f docker-compose-dev.yml -p sensor_dev up || true
+	${OUTDIR}/utils/docker-compose -f docker-compose-dev.yml -p honeysens_dev up || true
 
 ${OUTDIR}/utils/docker-compose: | DIR.${OUTDIR}/utils
 	curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$$(uname -s)-$$(uname -m)" -o $@
