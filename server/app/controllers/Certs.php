@@ -19,12 +19,6 @@ class Certs extends RESTResource {
             }
             echo json_encode($result);
         });
-
-        $app->delete('/api/certs/:id', function($id) use ($app, $em, $services, $config, $messages) {
-            $controller = new Certs($em, $services, $config);
-            $controller->delete($id);
-            echo json_encode([]);
-        });
     }
 
     /**
@@ -58,19 +52,5 @@ class Certs extends RESTResource {
             }
             return $certs;
         }
-    }
-
-    // TODO Evaluate use case for DELETE
-    public function delete($id) {
-        $this->assureAllowed('delete');
-        // Validation
-        V::intVal()->check($id);
-        // Persistence
-        $em = $this->getEntityManager();
-        $cert = $em->getRepository('HoneySens\app\models\entities\SSLCert')->find($id);
-        V::objectType()->check($cert);
-        if($cert->getSensor()) $cert->getSensor()->setCert(null);
-        $em->remove($cert);
-        $em->flush();
     }
 }

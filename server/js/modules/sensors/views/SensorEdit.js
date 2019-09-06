@@ -79,19 +79,65 @@ function(HoneySens, Models, SensorEditTpl) {
                 'change input[name="networkMode"]': function(e) {
                     this.refreshNetworkMode(e.target.value);
                 },
+                'change select[name="networkEAPOLMode"]': function(e) {
+                    this.refreshNetworkEAPOL(e.target.value);
+                },
                 'change input[name="networkMACMode"]': function(e) {
                     this.refreshNetworkMAC(e.target.value);
                 },
                 'change input[name="proxyType"]': function(e) {
                     this.refreshProxy(e.target.value);
                 },
+                'click button.upload': function(e) {
+                    // Trigger a click on the closest file upload input field
+                    $(e.target).closest('div.form-group').find('input[type="file"]').trigger('click');
+                },
+                'click button.removeUpload': function(e) {
+                    var $uploadMetadata = $(e.target).closest('div.form-group').find('input.uploadMetadata');
+                    $uploadMetadata.val(null);
+                    this[$uploadMetadata.attr('name')] = null;
+                    // Force revalidation
+                    $uploadMetadata.prop('disabled', false);
+                    $uploadMetadata.trigger('input');
+                    $uploadMetadata.prop('disabled', true);
+                },
+                'change input[type="file"]': function(e) {
+                    var $fileInput = $(e.target),
+                        $uploadMetadata = $fileInput.closest('div.form-group').find('input.uploadMetadata'),
+                        view = this;
+                    // Restrict file size
+                    var file = e.target.files[0];
+                    if(file.size >= 64*1024) {
+                        $fileInput.prop('value', null);
+                        $uploadMetadata.val('Max. Dateigröße: 64 kB');
+                        // Force revalidation (disabled inputs are otherwise always considered valid and marked green)
+                        $uploadMetadata.prop('disabled', false);
+                        $uploadMetadata.trigger('input');
+                        $uploadMetadata.prop('disabled', true);
+                        return;
+                    }
+                    $uploadMetadata.val(file.name + ' (' + file.size + ' Bytes)');
+                    // Force revalidation
+                    $uploadMetadata.prop('disabled', false);
+                    $uploadMetadata.trigger('input');
+                    $uploadMetadata.prop('disabled', true);
+                    var reader = new FileReader();
+                    reader.onload = function(src) {
+                        // Attach the base64 encoded result to the view for later access, keyed by the field name
+                        view[$uploadMetadata.attr('name')] = src.target.result.split(',')[1];
+                    };
+                    reader.readAsDataURL(file);
+                },
                 'click button:submit': function(e) {
                     e.preventDefault();
                     var valid = true;
+                    // Temporarily enable file upload fields for verification
+                    this.$el.find('input.uploadMetadata').prop('disabled', false);
                     this.$el.find('form').validator('validate');
                     this.$el.find('form .form-group').each(function() {
                         valid = !$(this).hasClass('has-error') && valid;
                     });
+                    this.$el.find('input.uploadMetadata').prop('disabled', true);
 
                     if(valid) {
                         this.$el.find('form').trigger('submit');
@@ -139,7 +185,6 @@ function(HoneySens, Models, SensorEditTpl) {
                 this.$el.find('[data-toggle="popover"]').popover();
                 // Busy view spinner
                 this.$el.find('div.loading').html(HoneySens.Views.spinner.spin().el);
-
                 this.$el.find('form').validator().on('submit', function (e) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
@@ -153,7 +198,6 @@ function(HoneySens, Models, SensorEditTpl) {
                             $form.addClass('hide');
                             $busy.css('position', 'static');
                             // Send model to server
-                            HoneySens.data.models.sensors.add(view.model);
                             var name = view.$el.find('input[name="sensorName"]').val(),
                                 location = view.$el.find('input[name="location"]').val(),
                                 division = view.$el.find('select[name="division"]').val(),
@@ -168,6 +212,11 @@ function(HoneySens, Models, SensorEditTpl) {
                                 networkNetmask = view.$el.find('input[name="networkNetmask"]').val(),
                                 networkGateway = view.$el.find('input[name="networkGateway"]').val(),
                                 networkDNS = view.$el.find('input[name="networkDNS"]').val(),
+                                EAPOLMode = view.$el.find('select[name="networkEAPOLMode"]').val(),
+                                EAPOLIdentity = view.$el.find('input[name="networkEAPOLIdentity"]').val(),
+                                EAPOLPassword = view.$el.find('input[name="networkEAPOLPassword"]').val().length > 0 ? view.$el.find('input[name="networkEAPOLPassword"]').val() : null,
+                                EAPOLAnonIdentity = view.$el.find('input[name="networkEAPOLAnonIdentity"]').val().length > 0 ? view.$el.find('input[name="networkEAPOLAnonIdentity"]').val() : null,
+                                EAPOLClientPassphrase = view.$el.find('input[name="networkEAPOLClientPassphrase"]').val().length > 0 ? view.$el.find('input[name="networkEAPOLClientPassphrase"]').val() : null,
                                 MACMode = view.$el.find('input[name="networkMACMode"]:checked').val(),
                                 MACAddress = view.$el.find('input[name="customMAC"]').val(),
                                 proxyMode = view.$el.find('input[name="proxyType"]:checked').val(),
@@ -190,6 +239,9 @@ function(HoneySens, Models, SensorEditTpl) {
                                 network_ip_netmask: networkNetmask,
                                 network_ip_gateway: networkGateway,
                                 network_ip_dns: networkDNS,
+                                eapol_mode: EAPOLMode,
+                                eapol_identity: EAPOLIdentity,
+                                eapol_anon_identity: EAPOLAnonIdentity,
                                 network_mac_mode: MACMode,
                                 network_mac_address: MACAddress,
                                 proxy_mode: proxyMode,
@@ -201,7 +253,19 @@ function(HoneySens, Models, SensorEditTpl) {
                             if(proxyPassword.length > 0) modelData.proxy_password = proxyPassword;
                             // Reset password if no user was provided ('cause the server does the same)
                             if(proxyUser.length === 0) modelData.proxy_password = null;
+                            // In case specific fields weren't changed, remove them from the model so they aren't sent to the server
+                            if(EAPOLPassword === '******') view.model.unset('eapol_password');
+                            else modelData.eapol_password = EAPOLPassword;
+                            if(EAPOLClientPassphrase === '******') view.model.unset('eapol_client_key_password');
+                            else modelData.eapol_client_key_password = EAPOLClientPassphrase;
+                            if(view.hasOwnProperty('networkEAPOLCA')) modelData.eapol_ca_cert = view.networkEAPOLCA;
+                            else view.model.unset('eapol_ca_cert');
+                            if(view.hasOwnProperty('networkEAPOLClientCert')) modelData.eapol_client_cert = view.networkEAPOLClientCert;
+                            else view.model.unset('eapol_client_cert');
+                            if(view.hasOwnProperty('networkEAPOLClientKey')) modelData.eapol_client_key = view.networkEAPOLClientKey;
+                            else view.model.unset('eapol_client_key');
                             view.model.save(modelData, {
+                                wait: true,
                                 success: function() {
                                     // Render summary and firmware + config download view
                                     $result.removeClass('hide');
@@ -226,6 +290,8 @@ function(HoneySens, Models, SensorEditTpl) {
                                         contentHeight = $('#overlay div.container-fluid div.addBusy').outerHeight();
                                     $busy.css('position', 'relative');
                                     $busy.add($result).css('top', -Math.min(overlayHeight, contentHeight));
+                                    // Fetch model again to add fields that were unset previously
+                                    view.model.fetch();
                                 }
                             });
                         });
@@ -241,6 +307,8 @@ function(HoneySens, Models, SensorEditTpl) {
                 // Do the same for the remaining attributes
                 this.$el.find('input[name="networkMode"][value="' + this.model.get('network_ip_mode') + '"]').prop('checked', true).parent().addClass('active');
                 this.refreshNetworkMode(this.model.get('network_ip_mode'), this.model.get('network_ip_address'), this.model.get('network_ip_netmask'), this.model.get('network_ip_gateway'), this.model.get('network_ip_dns'));
+                this.$el.find('select[name="networkEAPOLMode"] option[value="' + this.model.get('eapol_mode') + '"]').prop('selected', true);
+                this.refreshNetworkEAPOL(this.model.get('eapol_mode'), this.model.get('eapol_identity'), this.model.get('eapol_password'), this.model.get('eapol_anon_identity'), this.model.get('eapol_ca_cert'), this.model.get('eapol_client_cert'), this.model.get('eapol_client_key_password'));
                 this.$el.find('input[name="networkMACMode"][value="' + this.model.get('network_mac_mode') + '"]').prop('checked', true).parent().addClass('active');
                 this.refreshNetworkMAC(this.model.get('network_mac_mode'), this.model.get('network_mac_address'));
                 this.$el.find('input[name="proxyType"][value="' + this.model.get('proxy_mode') + '"]').prop('checked', true).parent().addClass('active');
@@ -338,7 +406,8 @@ function(HoneySens, Models, SensorEditTpl) {
              * Render the IPv4 configuration form based on the given mode. Also set default values, if given.
              */
             refreshNetworkMode: function(mode, ip, netmask, gateway, dns) {
-                var MACMode = this.$el.find('input[name="networkMACMode"]:checked').val(),
+                var EAPOLMode = this.$el.find('select[name="networkEAPOLMode"]').val(),
+                    MACMode = this.$el.find('input[name="networkMACMode"]:checked').val(),
                     proxyMode = this.$el.find('input[name="proxyType"]:checked').val();
                 mode = parseInt(mode);
                 ip = ip || null;
@@ -366,13 +435,77 @@ function(HoneySens, Models, SensorEditTpl) {
                         this.$el.find('div.networkModeNone').removeClass('hide');
                         break;
                 }
-                this.refreshValidators(mode, MACMode, proxyMode);
+                this.refreshValidators(mode, EAPOLMode, MACMode, proxyMode);
+            },
+            refreshNetworkEAPOL: function(mode, identity, password, anon_identity, ca_cert, client_cert, client_cert_password) {
+                var networkMode = this.$el.find('input[name="networkMode"]:checked').val(),
+                    MACMode = this.$el.find('input[name="networkMACMode"]:checked').val(),
+                    proxyMode = this.$el.find('input[name="proxyType"]:checked').val();
+                mode = parseInt(mode);
+                identity = identity || null;
+                password = password || null;
+                anon_identity = anon_identity || null;
+                ca_cert = ca_cert || null;
+                client_cert = client_cert || null;
+                client_cert_password = client_cert_password || null;
+                switch(mode) {
+                    case 0:
+                        this.$el.find('div.networkEAPOLIdentity').addClass('hide');
+                        this.$el.find('div.networkEAPOLPassword').addClass('hide');
+                        this.$el.find('div.networkEAPOLAnonIdentity').addClass('hide');
+                        this.$el.find('div.networkEAPOLCA').addClass('hide');
+                        this.$el.find('div.networkEAPOLClientCert').addClass('hide');
+                        this.$el.find('div.networkEAPOLClientKey').addClass('hide');
+                        this.$el.find('div.networkEAPOLClientPassphrase').addClass('hide');
+                        break;
+                    case 1:
+                        this.$el.find('div.networkEAPOLIdentity').removeClass('hide');
+                        this.$el.find('div.networkEAPOLPassword').removeClass('hide');
+                        this.$el.find('div.networkEAPOLAnonIdentity').addClass('hide');
+                        this.$el.find('div.networkEAPOLCA').addClass('hide');
+                        this.$el.find('div.networkEAPOLClientCert').addClass('hide');
+                        this.$el.find('div.networkEAPOLClientKey').addClass('hide');
+                        this.$el.find('div.networkEAPOLClientPassphrase').addClass('hide');
+                        this.$el.find('div.networkEAPOLIdentity input').val(identity);
+                        this.$el.find('div.networkEAPOLPassword input').val(password);
+                        break;
+                    case 2:
+                        this.$el.find('div.networkEAPOLIdentity').removeClass('hide');
+                        this.$el.find('div.networkEAPOLPassword').addClass('hide');
+                        this.$el.find('div.networkEAPOLAnonIdentity').addClass('hide');
+                        this.$el.find('div.networkEAPOLCA').removeClass('hide');
+                        this.$el.find('div.networkEAPOLClientCert').removeClass('hide');
+                        this.$el.find('div.networkEAPOLClientKey').removeClass('hide');
+                        this.$el.find('div.networkEAPOLClientPassphrase').removeClass('hide');
+                        this.$el.find('div.networkEAPOLIdentity input').val(identity);
+                        this.$el.find('div.networkEAPOLCA input[type="text"]').val(ca_cert);
+                        this.$el.find('div.networkEAPOLClientCert input[type="text"]').val(client_cert);
+                        this.$el.find('div.networkEAPOLClientKey input[type="text"]').val(client_cert);
+                        this.$el.find('div.networkEAPOLClientPassphrase input').val(client_cert_password);
+                        break;
+                    case 3:
+                    case 4:
+                        this.$el.find('div.networkEAPOLIdentity').removeClass('hide');
+                        this.$el.find('div.networkEAPOLPassword').removeClass('hide');
+                        this.$el.find('div.networkEAPOLAnonIdentity').removeClass('hide');
+                        this.$el.find('div.networkEAPOLCA').removeClass('hide');
+                        this.$el.find('div.networkEAPOLClientCert').addClass('hide');
+                        this.$el.find('div.networkEAPOLClientKey').addClass('hide');
+                        this.$el.find('div.networkEAPOLClientPassphrase').addClass('hide');
+                        this.$el.find('div.networkEAPOLIdentity input').val(identity);
+                        this.$el.find('div.networkEAPOLPassword input').val(password);
+                        this.$el.find('div.networkEAPOLAnonIdentity input').val(anon_identity);
+                        this.$el.find('div.networkEAPOLCA input[type="text"]').val(ca_cert);
+                        break;
+                }
+                this.refreshValidators(networkMode, mode, MACMode, proxyMode);
             },
             /**
              * Render the custom MAC form based on the given mode. Also set the mac, if given.
              */
             refreshNetworkMAC: function(mode, mac) {
                 var networkMode = this.$el.find('input[name="networkMode"]:checked').val(),
+                    EAPOLMode = this.$el.find('select[name="networkEAPOLMode"]').val(),
                     proxyMode = this.$el.find('input[name="proxyType"]:checked').val();
                 mode = parseInt(mode);
                 mac = mac || null;
@@ -387,10 +520,11 @@ function(HoneySens, Models, SensorEditTpl) {
                         this.$el.find('div.networkMACCustom input[name="customMAC"]').val(mac);
                         break;
                 }
-                this.refreshValidators(networkMode, mode, proxyMode);
+                this.refreshValidators(networkMode, EAPOLMode, mode, proxyMode);
             },
             refreshProxy: function(mode, host, port, user) {
                 var networkMode = this.$el.find('input[name="networkMode"]:checked').val(),
+                    EAPOLMode = this.$el.find('select[name="networkEAPOLMode"]').val(),
                     MACMode = this.$el.find('input[name="networkMACMode"]:checked').val();
                 mode = parseInt(mode);
                 host = host || null;
@@ -410,21 +544,19 @@ function(HoneySens, Models, SensorEditTpl) {
                         this.$el.find('div.proxyTypeEnabled input[name="proxyPassword"]').val(null);
                         break;
                 }
-                this.refreshValidators(networkMode, MACMode, mode);
+                this.refreshValidators(networkMode, EAPOLMode, MACMode, mode);
             },
-            refreshValidators: function(networkMode, MACMode, proxyMode) {
+            refreshValidators: function(networkMode, EAPOLMode, MACMode, proxyMode) {
                 var $form = this.$el.find('form'),
                     serverMode = this.$el.find('button.useCustomServerEndpoint').hasClass('active') ? '1' : '0';
                 // reset form, remove all volatile fields
                 $form.validator('destroy');
 
-                $form.find('input[name="serverHost"]').attr('required', false);
-                $form.find('input[name="serverPortHTTPS"]').attr('required', false);
-                $form.find('input[name="networkIP"]').attr('required', false);
-                $form.find('input[name="networkNetmask"]').attr('required', false);
-                $form.find('input[name="customMAC"]').attr('required', false);
-                $form.find('input[name="proxyHost"]').attr('required', false);
-                $form.find('input[name="proxyPort"]').attr('required', false);
+                _.each(['serverHost', 'serverPortHTTPS', 'networkIP', 'networkNetmask', 'networkEAPOLIdentity',
+                    'networkEAPOLPassword', 'networkEAPOLClientCert', 'networkEAPOLClientKey',
+                    'customMAC', 'proxyHost', 'proxyPort'], function(i) {
+                    $form.find('input[name="' + i + '"]').attr('required', false);
+                });
 
                 switch(parseInt(serverMode)) {
                     case 0:
@@ -440,6 +572,20 @@ function(HoneySens, Models, SensorEditTpl) {
                     case 1:
                         this.$el.find('input[name="networkIP"]').attr('required', true);
                         this.$el.find('input[name="networkNetmask"]').attr('required', true);
+                        break;
+                }
+                switch(parseInt(EAPOLMode)) {
+                    case 0:
+                        break;
+                    case 1:
+                        this.$el.find('input[name="networkEAPOLIdentity"]').attr('required', true);
+                        break;
+                    case 2:
+                        this.$el.find('input[name="networkEAPOLIdentity"], input[name="networkEAPOLClientCert"], input[name="networkEAPOLClientKey"]').attr('required', true);
+                        break;
+                    case 3:
+                    case 4:
+                        this.$el.find('input[name="networkEAPOLIdentity"]').attr('required', true);
                         break;
                 }
                 switch(parseInt(MACMode)) {

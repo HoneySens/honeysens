@@ -15,6 +15,7 @@ echo "Adding services"
 cp -vr /mnt/platforms/docker_x86/services/cntlm /etc/services.d
 cp -vr /mnt/platforms/docker_x86/services/docker /etc/services.d
 cp -vr /mnt/platforms/docker_x86/services/manager /etc/services.d
+cp -vr /mnt/platforms/docker_x86/services/wpa_supplicant /etc/services.d
 
 echo "Adding shutdown scripts"
 cp -vr /mnt/platforms/docker_x86/shutdown/* /etc/cont-finish.d/

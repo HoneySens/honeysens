@@ -15,17 +15,12 @@ class SSLCert{
     protected $id;
 
     /**
-     * @OneToOne(targetEntity="HoneySens\app\models\entities\Sensor", mappedBy="cert")
-     */
-    protected $sensor;
-
-    /**
      * @Column(type="text")
      */
     protected $content;
 
     /**
-     * @Column(type="text")
+     * @Column(type="text", nullable=true)
      */
     protected $privateKey;
 
@@ -36,26 +31,6 @@ class SSLCert{
      */
     public function getId() {
         return $this->id;
-    }
-
-    /**
-     * Set sensor
-     *
-     * @param \HoneySens\app\models\entities\Sensor $sensor
-     * @return SSLCert
-     */
-    public function setSensor(\HoneySens\app\models\entities\Sensor $sensor = null) {
-        $this->sensor = $sensor;
-        return $this;
-    }
-
-    /**
-     * Get sensor
-     *
-     * @return \HoneySens\app\models\entities\Sensor
-     */
-    public function getSensor() {
-        return $this->sensor;
     }
 
     /**
@@ -106,10 +81,8 @@ class SSLCert{
     }
 
     public function getState() {
-        $sensor = $this->getSensor() == null ? '' : $this->getSensor()->getId();
         return array(
             'id' => $this->getId(),
-            'sensor' => $sensor,
             'content' => $this->getContent(),
             'fingerprint' => $this->getFingerprint()
         );

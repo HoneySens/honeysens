@@ -26,6 +26,12 @@ class Sensor {
     const CONFIG_ARCHIVE_STATUS_CREATING = 2;
     const CONFIG_ARCHIVE_STATUS_AVAILABLE = 3;
 
+    const EAPOL_MODE_DISABLED = 0;
+    const EAPOL_MODE_MD5 = 1;
+    const EAPOL_MODE_TLS = 2;
+    const EAPOL_MODE_PEAP = 3;
+    const EAPOL_MODE_TTLS = 4;
+
     /**
      * @Id
      * @Column(type="integer")
@@ -44,7 +50,7 @@ class Sensor {
     protected $location;
 
     /**
-     * @OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", inversedBy="sensor", cascade={"remove"})
+     * @OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", cascade={"remove"})
      */
     protected $cert;
 
@@ -163,6 +169,57 @@ class Sensor {
      * @Column(type="string", nullable=true)
      */
     protected $serviceNetwork = null;
+
+    /**
+     * Sensor authentication status/mode.
+     *
+     * @Column(type="integer")
+     */
+    protected $EAPOLMode = 0;
+
+    /**
+     * Identity used for EAPOL authentication.
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $EAPOLIdentity = null;
+
+    /**
+     * Password used for EAPOL authentication.
+     * Only required for certain EAPOL modes.
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $EAPOLPassword = null;
+
+    /**
+     * Anonymous identity used during EAPOL authentication.
+     * Optional.
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $EAPOLAnonymousIdentity = null;
+
+    /**
+     * CA certificate used for EAPOL TLS authentication.
+     *
+     * @OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", cascade={"remove"})
+     */
+    protected $EAPOLCACert;
+
+    /**
+     * Client certificate used for EAPOL TLS authentication.
+     *
+     * @OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", cascade={"remove"})
+     */
+    protected $EAPOLClientCert;
+
+    /**
+     * Passphrase for the client key, if any.
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $EAPOLClientCertPassphrase;
 
     public function __construct() {
         $this->status = new ArrayCollection();
@@ -557,9 +614,153 @@ class Sensor {
         return $this->serviceNetwork;
     }
 
+    /**
+     * Set the EAPOL mode
+     *
+     * @param integer $mode
+     * @return $this
+     */
+    public function setEAPOLMode($mode) {
+        $this->EAPOLMode = $mode;
+        return $this;
+    }
+
+    /**
+     * Get the current EAPOL mode
+     *
+     * @return integer
+     */
+    public function getEAPOLMode() {
+        return $this->EAPOLMode;
+    }
+
+    /**
+     * Set the identity string used with EAPOL
+     *
+     * @param string $identity
+     * @return $this
+     */
+    public function setEAPOLIdentity($identity) {
+        $this->EAPOLIdentity = $identity;
+        return $this;
+    }
+
+    /**
+     * Get the identity used for EAPOL
+     *
+     * @return string|null
+     */
+    public function getEAPOLIdentity() {
+        return $this->EAPOLIdentity;
+    }
+
+    /**
+     * Set the password string used with EAPOL
+     *
+     * @param string $password
+     * @return $this
+     */
+    public function setEAPOLPassword($password) {
+        $this->EAPOLPassword = $password;
+        return $this;
+    }
+
+    /**
+     * Get the password used for EAPOL
+     *
+     * @return string|null
+     */
+    public function getEAPOLPassword() {
+        return $this->EAPOLPassword;
+    }
+
+    /**
+     * Set the anonymous identity string used with EAPOL
+     *
+     * @param string $identity
+     * @return $this
+     */
+    public function setEAPOLAnonymousIdentity($identity) {
+        $this->EAPOLAnonymousIdentity = $identity;
+        return $this;
+    }
+
+    /**
+     * Get the anonymous identity used for EAPOL
+     *
+     * @return string|null
+     */
+    public function getEAPOLAnonymousIdentity() {
+        return $this->EAPOLAnonymousIdentity;
+    }
+
+    /**
+     * Set the CA certificate used for EAPOL
+     *
+     * @param SSLCert|null $cert
+     * @return $this
+     */
+    public function setEAPOLCACert(SSLCert $cert = null) {
+        $this->EAPOLCACert = $cert;
+        return $this;
+    }
+
+    /**
+     * Get the CA certificate used for EAPOL
+     *
+     * @return SSLCert|null
+     */
+    public function getEAPOLCACert() {
+        return $this->EAPOLCACert;
+    }
+
+    /**
+     * Set the client certificate used for EAPOL
+     *
+     * @param SSLCert|null $cert
+     * @return $this
+     */
+    public function setEAPOLClientCert(SSLCert $cert = null) {
+        $this->EAPOLClientCert = $cert;
+        return $this;
+    }
+
+    /**
+     * Get the client certificate used for EAPOL
+     *
+     * @return SSLCert|null
+     */
+    public function getEAPOLClientCert() {
+        return $this->EAPOLClientCert;
+    }
+
+    /**
+     * Set the passphrase for the client key
+     *
+     * @param string|null $passphrase
+     * @return $this
+     */
+    public function setEAPOLClientCertPassphrase($passphrase) {
+        $this->EAPOLClientCertPassphrase = $passphrase;
+        return $this;
+    }
+
+    /**
+     * Get the passphrase for the client key
+     *
+     * @return string|null
+     */
+    public function getEAPOLClientCertPassphrase() {
+        return $this->EAPOLClientCertPassphrase;
+    }
+
     public function getState() {
         $cert = $this->getCert() ? $this->getCert()->getId() : '';
         $crt_fp = $this->getCert() ? $this->getCert()->getFingerprint() : '';
+        $eapol_password = $this->getEAPOLPassword() ? '******' : null;
+        $eapol_ca_cert = $this->getEAPOLCACert() ? $this->getEAPOLCACert()->getFingerprint() : null;
+        $eapol_client_cert = $this->getEAPOLClientCert() ? $this->getEAPOLClientCert()->getFingerprint() : null;
+        $eapol_client_key_password = $this->getEAPOLClientCertPassphrase() ? '******' : null;
         $last_status = $this->getLastStatus();
         $last_status_ts = $last_status ? $last_status->getTimestamp()->format('U') : '';
         $last_status_code = $last_status ? $last_status->getStatus() : null;
@@ -579,6 +780,13 @@ class Sensor {
             'division' => $this->getDivision()->getId(),
             'cert' => $cert,
             'crt_fp' => $crt_fp,
+            'eapol_mode' => $this->getEAPOLMode(),
+            'eapol_identity' => $this->getEAPOLIdentity(),
+            'eapol_password' => $eapol_password,
+            'eapol_anon_identity' => $this->getEAPOLAnonymousIdentity(),
+            'eapol_ca_cert' => $eapol_ca_cert,
+            'eapol_client_cert' => $eapol_client_cert,
+            'eapol_client_key_password' => $eapol_client_key_password,
             'last_status' => $last_status_code,
             'last_status_ts' => $last_status_ts,
             'last_service_status' => $last_service_status,

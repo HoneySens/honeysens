@@ -120,8 +120,10 @@ class Sensors extends RESTResource {
             }
             // Clients expect an associative array here.
             $sensorData['services'] = count($services) > 0 ? $services : new \StdClass;
-            // Send proxy passwords exclusively to the sensors (they aren't shown inside of the web interface)
+            // Send passwords exclusively to the sensors (they aren't shown inside of the web interface)
             $sensorData['proxy_password'] = $status->getSensor()->getProxyPassword();
+            $sensorData['eapol_password'] = $status->getSensor()->getEAPOLPassword();
+            $sensorData['eapol_client_key_password'] = $status->getSensor()->getEAPOLClientCertPassphrase();
             // Attach firmware versioning information for all platforms
             $platformRepository = $em->getRepository('HoneySens\app\models\entities\Platform');
             $firmware = array();
@@ -151,14 +153,23 @@ class Sensors extends RESTResource {
                 ->getQuery()->getSingleScalarResult();
             $sensorData['unhandledEvents'] = $unhandledEventCount != 0;
             // If the sensor cert fingerprint was sent and differs from the current cert, include updated cert data
-            if(V::attribute('crt_fp', V::stringType())->validate($statusData) && $sensorData['crt_fp'] != $statusData->crt_fp) {
+            if(V::attribute('crt_fp', V::stringType())->validate($statusData) && $sensorData['crt_fp'] != $statusData->crt_fp)
                 $sensorData['sensor_crt'] = $sensor->getCert()->getContent();
-            }
             // If the server cert fingerprint was sent and differs from the current (or soon-to-be) TLS cert, include updated cert data
             $srvCert = $controller->getServerCert();
-            if(V::attribute('srv_crt_fp', V::stringType())->validate($statusData) && openssl_x509_fingerprint($srvCert, 'sha256') != $statusData->srv_crt_fp) {
+            if(V::attribute('srv_crt_fp', V::stringType())->validate($statusData) && openssl_x509_fingerprint($srvCert, 'sha256') != $statusData->srv_crt_fp)
                 $sensorData['server_crt'] = $srvCert;
-            }
+            // If the EAPOL CA cert fingerprint was sent and differs, include updated cert
+            $caCertFP = $sensor->getEAPOLCACert() == null ? null : $sensor->getEAPOLCACert()->getFingerprint();
+            if(V::attribute('eapol_ca_crt_fp', V::optional(V::stringType()))->validate($statusData) && $caCertFP != $statusData->eapol_ca_crt_fp)
+                $sensorData['eapol_ca_cert'] = $sensor->getEAPOLCACert() == null ? null : $sensor->getEAPOLCACert()->getContent();
+            else unset($sensorData['eapol_ca_cert']);
+            // If the EAPOL TLS cert fingerprint was sent and differs, include updated cert and key
+            $clientCertFP = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getFingerprint();
+            if(V::attribute('eapol_client_crt_fp', V::optional(V::stringType()))->validate($statusData) && $clientCertFP != $statusData->eapol_client_crt_fp) {
+                $sensorData['eapol_client_cert'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getContent();
+                $sensorData['eapol_client_key'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getKey();
+            } else unset($sensorData['eapol_client_cert']);
             echo json_encode($sensorData);
         });
 
@@ -270,6 +281,7 @@ class Sensors extends RESTResource {
      * - name: Sensor name
      * - location: Informal sensor location description
      * - division: ID of the Division this sensor belongs to
+     * - eapol_mode: 0 to 4, EAP over LAN authentication mode (or disabled)
      * - server_endpoint_mode: 0 or 1, how to contact the server
      * - network_ip_mode: 0 to 2, how an IP address is set on the sensor
      * - network_mac_mode: 0 or 1, use the default or a custom MAC address
@@ -290,6 +302,13 @@ class Sensors extends RESTResource {
      * - proxy_port: The TCP port the proxy server listens on
      * - proxy_user: Required for proxy authentication
      * - proxy_password: Required for proxy authentication
+     * - eapol_identity: Required for all EAPOL modes except when it's disabled
+     * - eapol_password: Required for all EAPOL modes except TLS
+     * - eapol_anon_identity: Required for some EAPOL configurations
+     * - eapol_ca_cert: Server certificate for EAPOL, required for some configurations
+     * - eapol_client_cert: Client certificate for EAPOL in TLS mode
+     * - eapol_client_key: Client key for EAPOL in TLS mode
+     * - eapol_client_key_password: Client key passphrase for EAPOL in TLS mode
      *
      * @param \stdClass $data
      * @return Sensor
@@ -302,6 +321,7 @@ class Sensors extends RESTResource {
             ->attribute('name', V::alnum('_-.')->length(1, 50))
             ->attribute('location', V::stringType()->length(0, 255))
             ->attribute('division', V::intVal())
+            ->attribute('eapol_mode', V::intVal()->between(0, 4))
             ->attribute('server_endpoint_mode', V::intVal()->between(0, 1))
             ->attribute('network_ip_mode', V::intVal()->between(0, 2))
             ->attribute('network_mac_mode', V::intVal()->between(0, 1))
@@ -310,7 +330,6 @@ class Sensors extends RESTResource {
             ->attribute('service_network', V::optional(V::stringType()->length(9, 18)))
             ->attribute('firmware', V::optional(V::intVal()))
             ->check($data);
-        // Persistence
         $em = $this->getEntityManager();
         $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data->division);
         V::objectType()->check($division);
@@ -319,10 +338,12 @@ class Sensors extends RESTResource {
             $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data->firmware);
             V::objectType()->check($firmware);
         }
+        // Persistence
         $sensor = new Sensor();
         $sensor->setName($data->name)
             ->setLocation($data->location)
             ->setDivision($division)
+            ->setEAPOLMode($data->eapol_mode)
             ->setServerEndpointMode($data->server_endpoint_mode)
             ->setNetworkIPMode($data->network_ip_mode)
             ->setNetworkMACMode($data->network_mac_mode)
@@ -369,6 +390,44 @@ class Sensors extends RESTResource {
                 }
             }
             else $sensor->setProxyUser(null);
+        }
+        if($sensor->getEAPOLMode() != Sensor::EAPOL_MODE_DISABLED) {
+            V::attribute('eapol_identity', V::stringType()->length(1, 512))->check($data);
+            $sensor->setEAPOLIdentity($data->eapol_identity);
+            if($sensor->getEAPOLMode() == Sensor::EAPOL_MODE_MD5) {
+                V::attribute('eapol_password', V::optional(V::stringType()->length(1, 512)))->check($data);
+                $sensor->setEAPOLPassword($data->eapol_password);
+            } else {
+                // For the other modes, a CA cert can be specified
+                V::attribute('eapol_ca_cert', V::optional(V::stringType()))->check($data);
+                if($data->eapol_ca_cert != null) {
+                    $cert = $this->verifyCertificate($data->eapol_ca_cert);
+                    $caCert = new SSLCert();
+                    $caCert->setContent($cert);
+                    $em->persist($caCert);
+                    $sensor->setEAPOLCACert($caCert);
+                };
+                if($sensor->getEAPOLMode() == Sensor::EAPOL_MODE_TLS) {
+                    V::attribute('eapol_client_cert', V::stringType())
+                        ->attribute('eapol_client_key', V::stringType())
+                        ->attribute('eapol_client_key_password', V::optional(V::stringType()->length(1, 512)))
+                        ->check($data);
+                    $cert = $this->verifyCertificate($data->eapol_client_cert);
+                    $key = $this->verifyKey($data->eapol_client_key, $data->eapol_client_key_password == null ? '' : $data->eapol_client_key_password);
+                    $clientCert = new SSLCert();
+                    $clientCert->setContent($cert)->setKey($key);
+                    $em->persist($clientCert);
+                    $sensor->setEAPOLClientCert($clientCert);
+                    $sensor->setEAPOLClientCertPassphrase($data->eapol_client_key_password);
+                } else {
+                    // PEAP or TTLS
+                    V::attribute('eapol_password', V::optional(V::stringType()->length(1, 512)))
+                        ->attribute('eapol_anon_identity', V::optional(V::stringType()->length(1, 512)))
+                        ->check($data);
+                    $sensor->setEAPOLPassword($data->eapol_password);
+                    $sensor->setEAPOLAnonymousIdentity($data->eapol_anon_identity);
+                }
+            }
         }
         $em->persist($sensor);
         // Flush early, because we need the sensor ID for the cert common name
@@ -470,6 +529,7 @@ class Sensors extends RESTResource {
      * - name: Sensor name
      * - location: Informal sensor location description
      * - division: ID of the Division this sensor belongs to
+     * - eapol_mode: 0 to 4, EAP over LAN authentication mode (or disabled)
      * - server_endpoint_mode: 0 or 1, how to contact the server
      * - network_ip_mode: 0 to 2, how an IP address is set on the sensor
      * - network_mac_mode: 0 or 1, use the default or a custom MAC address
@@ -491,11 +551,19 @@ class Sensors extends RESTResource {
      * - proxy_port: The TCP port the proxy server listens on
      * - proxy_user: Required for proxy authentication
      * - proxy_password: Required for proxy authentication
+     * - eapol_identity: Required for all EAPOL modes except when it's disabled
+     * - eapol_password: Required for all EAPOL modes except TLS
+     * - eapol_anon_identity: Required for some EAPOL configurations
+     * - eapol_ca_cert: Server certificate for EAPOL, required for some configurations
+     * - eapol_client_cert: Client certificate for EAPOL in TLS mode
+     * - eapol_client_key: Client key for EAPOL in TLS mode
+     * - eapol_client_key_password: Client key passphrase for EAPOL in TLS mode
      *
      * @param int $id
      * @param \stdClass $data
      * @return Sensor
      * @throws ForbiddenException
+     * @throws BadRequestException
      */
     public function update($id, $data) {
         $this->assureAllowed('update');
@@ -505,6 +573,7 @@ class Sensors extends RESTResource {
             ->attribute('name', V::alnum('_-.')->length(1, 50))
             ->attribute('location', V::stringType()->length(0, 255))
             ->attribute('division', V::intVal())
+            ->attribute('eapol_mode', V::intVal()->between(0, 4))
             ->attribute('server_endpoint_mode', V::intVal()->between(0, 1))
             ->attribute('network_ip_mode', V::intVal()->between(0, 2))
             ->attribute('network_mac_mode', V::intVal()->between(0, 1))
@@ -516,10 +585,10 @@ class Sensors extends RESTResource {
                 ->attribute('service', V::intVal())
                 ->attribute('revision')
             ))->check($data);
-        // Persistence
         $em = $this->getEntityManager();
         $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
+        // Persistence
         $sensor->setName($data->name);
         $sensor->setLocation($data->location);
         // TODO Move this sensor's events to the new Division, too
@@ -585,6 +654,103 @@ class Sensors extends RESTResource {
                 ->setProxyPort(null)
                 ->setProxyUser(null)
                 ->setProxyPassword(null);
+        }
+        $sensor->setEAPOLMode($data->eapol_mode);
+        if($sensor->getEAPOLMode() != Sensor::EAPOL_MODE_DISABLED) {
+            V::attribute('eapol_identity', V::stringType()->length(1, 512))->check($data);
+            $sensor->setEAPOLIdentity($data->eapol_identity);
+            if($sensor->getEAPOLMode() == Sensor::EAPOL_MODE_MD5) {
+                V::attribute('eapol_password', V::optional(V::stringType()->length(1, 512)), false)->check($data);
+                // Only update the password if it was specified, otherwise keep the existing one
+                if(V::attribute('eapol_password')->validate($data)) $sensor->setEAPOLPassword($data->eapol_password);
+                // Reset remaining parameters
+                $sensor->setEAPOLClientCertPassphrase(null)
+                    ->setEAPOLAnonymousIdentity(null);
+                if($sensor->getEAPOLCACert() != null) {
+                    $em->remove($sensor->getEAPOLCACert());
+                    $sensor->setEAPOLCACert(null);
+                }
+                if($sensor->getEAPOLClientCert() != null) {
+                    $em->remove($sensor->getEAPOLClientCert());
+                    $sensor->setEAPOLClientCert(null);
+                }
+            } else {
+                // For the other modes, a CA cert can be specified
+                V::attribute('eapol_ca_cert', V::optional(V::stringType()), false)->check($data);
+                // If a CA cert wasn't specified, just keep the existing one and do nothing
+                if(V::attribute('eapol_ca_cert')->validate($data)) {
+                    if($data->eapol_ca_cert == null) {
+                        // Remove CA cert (if there was one set previously)
+                        if($sensor->getEAPOLCACert() != null) {
+                            $em->remove($sensor->getEAPOLCACert());
+                            $sensor->setEAPOLCACert(null);
+                        }
+                    } else {
+                        // Attribute was specified with a value: overwrite existing CA cert or create new one
+                        $cert = $this->verifyCertificate($data->eapol_ca_cert);
+                        $caCert = $sensor->getEAPOLCACert();
+                        if($caCert == null) {
+                            $caCert = new SSLCert();
+                            $em->persist($caCert);
+                            $sensor->setEAPOLCACert($caCert);
+                        }
+                        $caCert->setContent($cert);
+                    }
+                }
+                if($sensor->getEAPOLMode() == Sensor::EAPOL_MODE_TLS) {
+                    V::attribute('eapol_client_cert', V::stringType(), false)
+                        ->attribute('eapol_client_key', V::stringType(), false)
+                        ->attribute('eapol_client_key_password', V::optional(V::stringType()->length(1, 512)), false)
+                        ->check($data);
+                    if(V::attribute('eapol_client_key_password')->validate($data)) $sensor->setEAPOLClientCertPassphrase($data->eapol_client_key_password);
+                    if(V::attribute('eapol_client_cert')->validate($data) && V::attribute('eapol_client_key')->validate($data)) {
+                        // Attribute was specified with a value: overwrite existing client cert or create new one
+                        $cert = $this->verifyCertificate($data->eapol_client_cert);
+                        $key = $this->verifyKey($data->eapol_client_key, $sensor->getEAPOLClientCertPassphrase() == null ? '' : $sensor->getEAPOLClientCertPassphrase());
+                        $clientCert = $sensor->getEAPOLClientCert();
+                        if($clientCert == null) {
+                            $clientCert = new SSLCert();
+                            $em->persist($clientCert);
+                            $sensor->setEAPOLClientCert($clientCert);
+                        }
+                        $clientCert->setContent($cert)->setKey($key);
+                    } else {
+                        // Check for existing cert
+                        if($sensor->getEAPOLClientCert() == null) throw new BadRequestException();
+                    }
+                    // Reset unused parameters
+                    $sensor->setEAPOLPassword(null)
+                        ->setEAPOLAnonymousIdentity(null);
+                } else {
+                    // PEAP or TTLS
+                    V::attribute('eapol_password', V::optional(V::stringType()->length(1, 512)), false)
+                        ->attribute('eapol_anon_identity', V::optional(V::stringType()->length(1, 512)))
+                        ->check($data);
+                    // Keep the existing password if none was given
+                    if(V::attribute('eapol_password')->validate($data)) $sensor->setEAPOLPassword($data->eapol_password);
+                    $sensor->setEAPOLAnonymousIdentity($data->eapol_anon_identity);
+                    // Reset unused parameters
+                    if($sensor->getEAPOLClientCert() != null) {
+                        $em->remove($sensor->getEAPOLClientCert());
+                        $sensor->setEAPOLClientCert(null);
+                    }
+                    $sensor->setEAPOLClientCertPassphrase(null);
+                }
+            }
+        } else {
+            // EAPOL disabled, reset all other parameters
+            $sensor->setEAPOLIdentity(null)
+                ->setEAPOLPassword(null)
+                ->setEAPOLClientCertPassphrase(null)
+                ->setEAPOLAnonymousIdentity(null);
+            if($sensor->getEAPOLCACert() != null) {
+                $em->remove($sensor->getEAPOLCACert());
+                $sensor->setEAPOLCACert(null);
+            }
+            if($sensor->getEAPOLClientCert() != null) {
+                $em->remove($sensor->getEAPOLClientCert());
+                $sensor->setEAPOLClientCert(null);
+            }
         }
         $firmware = null;
         if($data->firmware != null) {
@@ -677,6 +843,13 @@ class Sensors extends RESTResource {
         }
         $taskParams['server_endpoint_name'] = $this->getConfig()['server']['host'];
         $taskParams['proxy_password'] = $sensor->getProxyPassword();
+        $taskParams['eapol_password'] = $sensor->getEAPOLPassword();
+        $taskParams['eapol_client_key_password'] = $sensor->getEAPOLClientCertPassphrase();
+        if($sensor->getEAPOLCACert() != null) $taskParams['eapol_ca_cert'] = $sensor->getEAPOLCACert()->getContent();
+        if($sensor->getEAPOLClientCert() != null) {
+            $taskParams['eapol_client_cert'] = $sensor->getEAPOLClientCert()->getContent();
+            $taskParams['eapol_client_key'] = $sensor->getEAPOLClientCert()->getKey();
+        } else $taskParams['eapol_client_key'] = null;
         $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_SENSORCFG_CREATOR, $taskParams);
         return $task->getState();
     }
@@ -739,10 +912,50 @@ class Sensors extends RESTResource {
         $cert->setKey($pkeyout);
         $oldCert = $sensor->getCert();
         $sensor->setCert($cert);
-        $cert->setSensor($sensor);
         // Remove an existing cert, in case there is one
         if($oldCert != null) $em->remove($oldCert);
         $em->persist($cert);
         $em->flush();
+    }
+
+    /**
+     * Verifies and returns an X.509 certificate.
+     *
+     * @param string $data
+     * @return string
+     * @throws BadRequestException
+     */
+    private function verifyCertificate($data) {
+        try {
+            $decoded = base64_decode($data);
+            if ($decoded) {
+                $cert = openssl_x509_read($decoded);
+                if ($cert) return $decoded;
+            }
+        } catch(\Exception $e) {
+            throw new BadRequestException();
+        }
+        throw new BadRequestException();
+    }
+
+    /**
+     * Verifies and returns an X.509 private key.
+     *
+     * @param $data
+     * @param $passphrase
+     * @return bool|string
+     * @throws BadRequestException
+     */
+    private function verifyKey($data, $passphrase) {
+        try {
+            $decoded = base64_decode($data);
+            if ($decoded) {
+                $key = openssl_pkey_get_private($decoded, $passphrase);
+                if ($key) return $decoded;
+            }
+        } catch(\Exception $e) {
+            throw new BadRequestException();
+        }
+        throw new BadRequestException();
     }
 }

@@ -39,13 +39,31 @@ class SensorConfigCreator(Handler):
             f.write(job_params['key'])
         self.logger.debug('Copying server certificate bundle: {} -> {}/server-cert.pem'.format(self.config.get('server', 'certfile'), working_dir))
         shutil.copy(self.config.get('server', 'certfile'), '{}/server-cert.pem'.format(working_dir))
+        if job_params['eapol_ca_cert'] is not None:
+            eapol_ca_crt_path = 'eapol_ca.rt'
+            self.logger.debug('Writing EAPOL CA certificate to {}/{}'.format(working_dir, eapol_ca_crt_path))
+            with open('{}/{}'.format(working_dir, eapol_ca_crt_path), 'w') as f:
+                f.write(job_params['eapol_ca_cert'])
+            job_params['eapol_ca_cert'] = eapol_ca_crt_path
+        if job_params['eapol_client_cert'] is not None:
+            eapol_client_crt_path = 'eapol_client.crt'
+            eapol_client_key_path = 'eapol_client.key'
+            self.logger.debug('Writing EAPOL Client certificate to {}/{}'.format(working_dir, eapol_client_crt_path))
+            with open('{}/{}'.format(working_dir, eapol_client_crt_path), 'w') as f:
+                f.write(job_params['eapol_client_cert'])
+            self.logger.debug('Writing EAPOL Client key to {}/{}'.format(working_dir, eapol_client_key_path))
+            with open('{}/{}'.format(working_dir, eapol_client_key_path), 'w') as f:
+                f.write(job_params['eapol_client_key'])
+            job_params['eapol_client_cert'] = eapol_client_crt_path
+            job_params['eapol_client_key'] = eapol_client_key_path
         self.logger.debug('Writing honeysens.cfg')
-        sensor_config = ConfigParser.ConfigParser()
+        sensor_config = ConfigParser.ConfigParser(allow_no_value=True)
         sensor_config.add_section('server')
         sensor_config.add_section('general')
         sensor_config.add_section('network')
         sensor_config.add_section('mac')
         sensor_config.add_section('proxy')
+        sensor_config.add_section('eapol')
         sensor_config.set('server', 'host', job_params['server_endpoint_host'])
         sensor_config.set('server', 'name', job_params['server_endpoint_name'])
         sensor_config.set('server', 'port_https', job_params['server_endpoint_port_https'])
@@ -68,6 +86,14 @@ class SensorConfigCreator(Handler):
         sensor_config.set('proxy', 'port', job_params['proxy_port'])
         sensor_config.set('proxy', 'user', job_params['proxy_user'])
         sensor_config.set('proxy', 'password', job_params['proxy_password'])
+        sensor_config.set('eapol', 'mode', job_params['eapol_mode'])
+        sensor_config.set('eapol', 'identity', job_params['eapol_identity'])
+        sensor_config.set('eapol', 'password', job_params['eapol_password'])
+        sensor_config.set('eapol', 'anon_identity', job_params['eapol_anon_identity'])
+        sensor_config.set('eapol', 'ca_cert', job_params['eapol_ca_cert'])
+        sensor_config.set('eapol', 'client_cert', job_params['eapol_client_cert'])
+        sensor_config.set('eapol', 'client_key', job_params['eapol_client_key'])
+        sensor_config.set('eapol', 'client_key_password', job_params['eapol_client_key_password'])
         with open('{}/honeysens.cfg'.format(working_dir), 'wb') as sensor_config_file:
             sensor_config.write(sensor_config_file)
         result_dir = '{}/{}'.format(self.storage_path, job_data['id'])
@@ -77,8 +103,14 @@ class SensorConfigCreator(Handler):
         self.logger.debug('Creating result directory {}'.format(result_dir))
         os.makedirs(result_dir)
         self.logger.debug('Packaging configuration archive into {}/{}.tar.gz'.format(result_dir, job_params['hostname']))
+        files = ['cert.pem', 'key.pem', 'server-cert.pem', 'honeysens.cfg']
+        if job_params['eapol_ca_cert'] is not None:
+            files.append(job_params['eapol_ca_cert'])
+        if job_params['eapol_client_cert'] is not None:
+            files.append(job_params['eapol_client_cert'])
+            files.append(job_params['eapol_client_key'])
         with tarfile.open('{}/{}.tar.gz'.format(result_dir, job_params['hostname']), 'w:gz') as config_archive:
-            for name in ['cert.pem', 'key.pem', 'server-cert.pem', 'honeysens.cfg']:
+            for name in files:
                 config_archive.add('{}/{}'.format(working_dir, name), name)
         self.logger.debug('Cleaning up working directory {}'.format(working_dir))
         result_filename = '{}.tar.gz'.format(job_params['hostname'])

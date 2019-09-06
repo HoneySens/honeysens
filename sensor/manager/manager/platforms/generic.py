@@ -1,8 +1,10 @@
 from __future__ import absolute_import
 
 from debinterface import interfaces
+import glob
 import logging
 import os
+import shutil
 import subprocess
 
 from manager.utils import constants
@@ -11,6 +13,7 @@ from manager.utils import constants
 class GenericPlatform(object):
 
     cntlm_cfg_path = '/etc/cntlm.conf'
+    config_dir = None
     logger = None
     services_network_name = None
     firmware_update_in_progress = False
@@ -18,6 +21,7 @@ class GenericPlatform(object):
 
     def __init__(self, hook_mgr, interface, config_dir, config_archive):
         self.logger = logging.getLogger(__name__)
+        self.config_dir = config_dir
 
     def get_architecture(self):
         return None
@@ -48,7 +52,7 @@ class GenericPlatform(object):
     def is_service_update_in_progress(self):
         return self.service_update_in_progress
 
-    def update_iface_configuration(self, iface, mode, address=None, netmask=None, gateway=None, dns=None):
+    def update_iface_configuration(self, iface, mode, address=None, netmask=None, gateway=None, dns=None, eapol=False):
         ifaces = interfaces.Interfaces()
         # Verify network interface presence
         if ifaces.getAdapter(iface) is None:
@@ -56,15 +60,19 @@ class GenericPlatform(object):
         adapter = ifaces.getAdapter(iface)
         adapter.setAddrFam('inet')
         # Configure interface details
-        if mode == '0':
+        if mode == '0': # DHCP
             adapter.setAddressSource('dhcp')
             adapter.setAddress(None)
             adapter.setNetmask(None)
             adapter.setGateway(None)
+            if eapol is True:
+                adapter.setWpaConf('/tmp/eapol.conf')
+            else:
+                adapter.setWpaConf(None)
             # Debinterfaces is missing the option to remove 'unknown' attributes, therefore we need to improvise
             if 'unknown' in adapter._ifAttributes:
                 del (adapter._ifAttributes['unknown'])
-        elif mode == '1':
+        elif mode == '1': # Static configuration
             adapter.setAddressSource('static')
             adapter.setAddress(address)
             adapter.setNetmask(netmask)
@@ -78,6 +86,10 @@ class GenericPlatform(object):
                 # Debinterfaces is missing the option to remove 'unknown' attributes, therefore we need to improvise
                 if 'unknown' in adapter._ifAttributes:
                     del (adapter._ifAttributes['unknown'])
+            if eapol is True:
+                adapter.setWpaConf('/tmp/eapol.conf')
+            else: # Unconfigured interface
+                adapter.setWpaConf(None)
         elif mode == '2':
             ifaces.removeAdapterByName(iface)
         ifaces.writeInterfaces()
@@ -93,14 +105,55 @@ class GenericPlatform(object):
                 revision = f.read().strip()
         return revision
 
+    def configure_eapol(self, conf_dir, conf_name, eap_mode, identity, password, ca_cert, anon_identity, client_cert, client_key, key_passphrase):
+        # Translate eap_mode into a wpa_supplicant-compatible string
+        eap_modes = {'1': 'MD5', '2': 'TLS', '3': 'PEAP', '4': 'TTLS'}
+        # Remove potentially deprecated former keys and certificates, since those will be overwritten anyways
+        old_certs = glob.glob('{}/*.crt'.format(conf_dir))
+        old_keys = glob.glob('{}/*.key'.format(conf_dir))
+        for old_file in old_certs + old_keys:
+            self.logger.debug('Removing {}'.format(old_file))
+            os.remove(old_file)
+        # Creates a wpa_supplicant configuration with the supplied parameters and writes it to the given path
+        config = ['ctrl_interface=/run/wpa_supplicant\n\n',
+                  'network={\n',
+                  ' key_mgmt=IEEE8021X\n',
+                  ' eap={}\n'.format(eap_modes[eap_mode]),
+                  ' identity="{}"\n'.format(identity)]
+        # Evaluate supplied EAP mode
+        if (eap_mode == '1' or eap_mode == '3' or eap_mode == '4') and password is not None:
+            # MD5/PEAP/TTLS
+            config.append(' password="{}"\n'.format(password))
+        elif eap_mode == '2':
+            # TLS
+            self.logger.debug('Writing {} and {} to {}'.format(client_cert, client_key, conf_dir))
+            shutil.copy('{}/{}'.format(self.config_dir, client_cert), conf_dir)
+            shutil.copy('{}/{}'.format(self.config_dir, client_key), conf_dir)
+            config.append(' client_cert="{}/{}"\n'.format(conf_dir, client_cert))
+            config.append(' private_key="{}/{}"\n'.format(conf_dir, client_key))
+        else:
+            raise Exception('Invalid EAP mode supplied')
+        # Optional settings
+        if ca_cert is not None:
+            self.logger.debug('Writing {} to {}'.format(ca_cert, conf_dir))
+            shutil.copy('{}/{}'.format(self.config_dir, ca_cert), conf_dir)
+            config.append(' ca_cert="{}/{}"\n'.format(conf_dir, ca_cert))
+        if anon_identity is not None:
+            config.append(' anonymous_identity="{}"\n'.format(anon_identity))
+        if key_passphrase is not None:
+            config.append(' private_key_passwd="{}"\n'.format(key_passphrase))
+        # Add footer
+        config.append('}\n')
+        # Write configuration
+        with open('{}/{}'.format(conf_dir, conf_name), 'w') as f:
+            f.writelines(config)
+
     def configure_cntlm(self, proxy, user, password):
         # Reconfigures the running cntlm daemon for the given proxy settings by performing the following steps:
         # - Extracts the domain portion from the given user, if available
         # - Runs "cntlm -H" to determine password hashes for the given credentials
         # - Updates the configuration file with the result
-        # TODO Don't hardcore a string like 'None', use real empty values
-        # (requires to rewrite the way polling.py writes config values)
-        if user != 'None':
+        if user is not None:
             userdomain = user.split('\\')
             if len(userdomain) == 1:
                 # No domain was given, assume default

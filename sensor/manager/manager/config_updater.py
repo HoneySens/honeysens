@@ -26,6 +26,23 @@ def update(config_archive, config_dir, config):
         # Support for custom service network ranges starting with server 2.0
         config.set('general', 'service_network', '10.10.10.0/24')
         update_applied = True
+    if not config.has_section('eapol'):
+        # Support for EAPOL authentication starting with server 2.2
+        config.add_section('eapol')
+        config.set('eapol', 'mode', '0')
+        config.set('eapol', 'identity')
+        config.set('eapol', 'password')
+        config.set('eapol', 'anon_identity')
+        config.set('eapol', 'ca_cert')
+        config.set('eapol', 'client_cert')
+        config.set('eapol', 'client_key')
+        config.set('eapol', 'client_key_password')
+        # In that same versions "None" strings were replaced by pythonic None values
+        for section in config.sections():
+            for (key, val) in config.items(section):
+                if val == 'None':
+                    config.set(section, key, None)
+        update_applied = True
 
     # Rewrite the config if an update did happen
     if update_applied:
