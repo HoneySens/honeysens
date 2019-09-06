@@ -162,6 +162,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         });
 
         Models.Sensor = Backbone.Model.extend({
+            urlRoot: 'api/sensors',
             status: null,
             defaults: {
                 'hostname': '',
@@ -170,6 +171,14 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'division': null,
                 'cert': null,
                 'cert_fp': '',
+                'eapol_mode': 0,
+                'eapol_identity': null,
+                'eapol_password': null,
+                'eapol_anon_identity': null,
+                'eapol_ca_cert': null,
+                'eapol_client_cert': null,
+                'eapol_client_key': null,
+                'eapol_client_key_password': null,
                 'update_interval': null,
                 'last_status': '',
                 'last_status_ts': '',

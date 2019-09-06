@@ -1,0 +1,12 @@
+#!/usr/bin/with-contenv sh
+
+if [ "$IFACE" ]; then
+  IFACE="-i$IFACE"
+fi
+
+# $EAPOL_IFACE can be used to overwrite the interface EAPOL is performed on (for testing purposes)
+if [ "$EAPOL_IFACE" ]; then
+  IFACE="-i$EAPOL_IFACE"
+fi
+
+exec wpa_supplicant -c /etc/wpa_supplicant/eapol.conf $IFACE -Dwired

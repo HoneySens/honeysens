@@ -16,6 +16,7 @@ services:
       - DB_USER=honeysens
       - DB_PASSWORD=honeysens
       - DB_NAME=honeysens
+      - DOMAIN=server
       - BRANDING_ENABLED
       - DEV_WATCH_TASK
     volumes:

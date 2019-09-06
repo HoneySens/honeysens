@@ -19,6 +19,9 @@ HOST_DOCKER_SOCKET = 'unix:///var/run/docker.host.sock'
 # Project directory that contains the files docker-compose.yml and .env that belong to this sensor deployment,
 # usually mounted as volume from the host fs
 COMPOSEFILE_DIR = '/mnt'
+# Location of the wpa_supplication configuration file that defines EAPOL settings
+EAPOL_CONFIG_DIR = '/etc/wpa_supplicant'
+EAPOL_CONFIG_FILE = 'eapol.conf'
 
 
 class Platform(GenericPlatform):
@@ -53,7 +56,7 @@ class Platform(GenericPlatform):
             subprocess.call(['s6-svc', '-wu', '-u', '/var/run/s6/services/docker/'])
 
     def set_services_network_iface(self, name):
-        # Only proceed on changed to avoid unnecessary writes to disk
+        # Only proceed on changes to avoid unnecessary writes to disk
         old_name = self.get_services_network_iface()
         if old_name != name:
             super(Platform, self).set_services_network_iface(name)
@@ -112,12 +115,30 @@ class Platform(GenericPlatform):
 
     def apply_config(self, config, server_response, reset_network):
         if reset_network:
+            eapol_config = '{}/{}'.format(EAPOL_CONFIG_DIR, EAPOL_CONFIG_FILE)
             # Update interface definition (/etc/network/interfaces)
             GenericPlatform.update_iface_configuration(self, self.interface, config.get('network', 'mode'),
                                                        address=config.get('network', 'address'),
                                                        netmask=config.get('network', 'netmask'),
                                                        gateway=config.get('network', 'gateway'),
-                                                       dns=config.get('network', 'dns'))
+                                                       dns=config.get('network', 'dns'),
+                                                       eapol=config.get('eapol', 'mode') != '0')
+            # EAPOL configuration via wpa_supplicant
+            if config.get('eapol', 'mode') == '0':
+                self.logger.info('EAPOL is disabled, stopping wpa_supplicant (in case it\'s running)')
+                subprocess.call(['s6-svc', '-wd', '-t', '-d', '/var/run/s6/services/wpa_supplicant/'])
+                # Remove existing EAPOL config, if available
+                if os.path.isfile(eapol_config):
+                    os.remove(eapol_config)
+            else:
+                self.logger.info('EAPOL is enabled, configuring and (re)launching wpa_supplicant')
+                GenericPlatform.configure_eapol(self, EAPOL_CONFIG_DIR, EAPOL_CONFIG_FILE, config.get('eapol', 'mode'),
+                                                config.get('eapol', 'identity'), config.get('eapol', 'password'),
+                                                config.get('eapol', 'ca_cert'), config.get('eapol', 'anon_identity'),
+                                                config.get('eapol', 'client_cert'), config.get('eapol', 'client_key'),
+                                                config.get('eapol', 'client_key_password'))
+                subprocess.call(['s6-svc', '-wr', '-t', '-u', '/var/run/s6/services/wpa_supplicant/'])
+
             # Change MAC address if required
             if config.get('mac', 'mode') == '1':
                 GenericPlatform.update_mac_address(self, self.interface, config.get('mac', 'address'))

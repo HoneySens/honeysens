@@ -17,6 +17,7 @@ services:
       - DB_USER=honeysens
       - DB_PASSWORD=honeysens
       - DB_NAME=honeysens
+      - DOMAIN=server
       #- TLS_AUTH_PROXY=172.0.0.1
     volumes:
       - honeysens_data:/opt/HoneySens/data

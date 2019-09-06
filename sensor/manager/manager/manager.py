@@ -36,7 +36,7 @@ class Manager:
     collector = None
     commands = None
     config_archive = None
-    config = ConfigParser.ConfigParser()
+    config = ConfigParser.ConfigParser(allow_no_value=True)
     config_dir = None
     dev_mode = False
     event_processor = None

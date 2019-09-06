@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TARGET="https"
-SUBJECT="/CN=$(hostname)"
+SUBJECT="/CN=$DOMAIN"
 
 # If "force" is given as additional parameter, certificate generation is forced
 FORCE=${1:-no}

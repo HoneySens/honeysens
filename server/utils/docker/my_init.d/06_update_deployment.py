@@ -282,6 +282,16 @@ if config_version == '2.0.0':
 # 2.1.0 -> next
 if config_version == '2.1.0':
     print('Upgrading configuration 2.1.0 -> next')
+    db_statements = [
+        'ALTER TABLE certs CHANGE privateKey privateKey LONGTEXT DEFAULT NULL',
+        'ALTER TABLE sensors ADD EAPOLMode INT NOT NULL, ADD EAPOLIdentity VARCHAR(255) DEFAULT NULL, ADD EAPOLPassword VARCHAR(255) DEFAULT NULL, ADD EAPOLAnonymousIdentity VARCHAR(255) DEFAULT NULL, ADD EAPOLClientCertPassphrase VARCHAR(255) DEFAULT NULL, ADD EAPOLCACert_id INT DEFAULT NULL, ADD EAPOLClientCert_id INT DEFAULT NULL',
+        'ALTER TABLE sensors ADD CONSTRAINT FK_D0D3FA90584A6C84 FOREIGN KEY (EAPOLCACert_id) REFERENCES certs (id)',
+        'ALTER TABLE sensors ADD CONSTRAINT FK_D0D3FA90808C7157 FOREIGN KEY (EAPOLClientCert_id) REFERENCES certs (id)',
+        'CREATE UNIQUE INDEX UNIQ_D0D3FA90584A6C84 ON sensors (EAPOLCACert_id)',
+        'CREATE UNIQUE INDEX UNIQ_D0D3FA90808C7157 ON sensors (EAPOLClientCert_id)'
+    ]
+    execute_sql(db, db_statements)
+    db.commit()
     config.remove_section('database')
     config.set('server', 'config_version', 'next')
     config_version = 'next'

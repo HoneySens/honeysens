@@ -162,6 +162,88 @@
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group">
+                            <label for="networkEAPOLMode" class="control-label">EAPOL/IEEE802.1X-Authentifizierung</label>
+                            <select class="form-control" name="networkEAPOLMode">
+                                <option value="0">Deaktiviert</option>
+                                <option value="1">MD5</option>
+                                <option value="2">TLS</option>
+                                <option value="3">PEAP</option>
+                                <option value="4">TTLS</option>
+                            </select>
+                        </div>
+                        <div class="form-group networkEAPOLIdentity has-feedback">
+                            <label for="networkEAPOLIdentity" class="control-label">Identit&auml;t</label>
+                            <input type="text" class="form-control" name="networkEAPOLIdentity" minlength="1" maxlength="512" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
+                        </div>
+                        <div class="form-group networkEAPOLPassword has-feedback">
+                            <label for="networkEAPOLPassword" class="control-label">Passwort</label>
+                            <input type="password" class="form-control" name="networkEAPOLPassword" minlength="1" maxlength="512" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
+                        </div>
+                        <div class="form-group networkEAPOLAnonIdentity has-feedback">
+                            <label for="networkEAPOLAnonIdentity" class="control-label">Anonyme Identit&auml;t</label>
+                            <input type="text" class="form-control" name="networkEAPOLAnonIdentity" minlength="1" maxlength="512" placeholder="optional" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
+                        </div>
+                        <div class="form-group networkEAPOLCA has-feedback">
+                            <label for="networkEAPOLCA" class="control-label">CA-Zertifikat (optional)</label>
+                            <input type="file" class="hide" />
+                            <div class="input-group">
+                                <span class="input-group-btn">
+                                    <button class="removeUpload btn btn-default" type="button">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                    </button>
+                                </span>
+                                <input type="text" class="form-control uploadMetadata" name="networkEAPOLCA" pattern="^.+ \(\d+ Bytes\)$|^[0-9A-Fa-f]+$" disabled />
+                                <span class="input-group-btn">
+                                    <button type="button" class="upload btn btn-default">Upload...</button>
+                                </span>
+                            </div>
+                            <div class="help-block with-errors"></div>
+                        </div>
+                        <div class="form-group networkEAPOLClientCert has-feedback">
+                            <label for="networkEAPOLClientCert" class="control-label">Client-Zertifikat</label>
+                            <input type="file" class="hide" />
+                            <div class="input-group">
+                                <span class="input-group-btn">
+                                    <button class="removeUpload btn btn-default" type="button">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                    </button>
+                                </span>
+                                <input type="text" class="form-control uploadMetadata" name="networkEAPOLClientCert" pattern="^.+ \(\d+ Bytes\)$|^[0-9A-Fa-f]+$" disabled />
+                                <span class="input-group-btn">
+                                    <button type="button" class="upload btn btn-default">Upload...</button>
+                                </span>
+                            </div>
+                            <div class="help-block with-errors"></div>
+                        </div>
+                        <div class="form-group networkEAPOLClientKey has-feedback">
+                            <label for="networkEAPOLClientKey" class="control-label">Client-Schl&uuml;ssel</label>
+                            <input type="file" class="hidden" />
+                            <div class="input-group">
+                                <span class="input-group-btn">
+                                    <button class="removeUpload btn btn-default" type="button">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                    </button>
+                                </span>
+                                <input type="text" class="form-control uploadMetadata" name="networkEAPOLClientKey" pattern="^.+ \(\d+ Bytes\)$|^[0-9A-Fa-f]+$" disabled />
+                                <span class="input-group-btn">
+                                    <button type="button" class="upload btn btn-default">Upload...</button>
+                                </span>
+                            </div>
+                            <div class="help-block with-errors"></div>
+                        </div>
+                        <div class="form-group networkEAPOLClientPassphrase has-feedback">
+                            <label for="networkEAPOLClientPassphrase" class="control-label">Passphrase des privaten Schl&uuml;sels</label>
+                            <input type="text" class="form-control" name="networkEAPOLClientPassphrase" minlength="1" maxlength="512" placeholder="optional" />
+                            <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                            <div class="help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
                             <label for="networkMACMode" class="control-label">MAC-Adresse</label>
                             <div class="btn-group btn-group-justified" data-toggle="buttons">
                                 <label class="btn btn-default">
