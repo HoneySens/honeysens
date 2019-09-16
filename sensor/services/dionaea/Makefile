@@ -19,12 +19,12 @@ ${OUTDIR}/dist/${PREFIX}-armhf-${REVISION}.tar.gz: ${OUTDIR}/images/armhf/servic
 	tar -czf $@ -C ${OUTDIR}/images/armhf/ service.tar metadata.xml
 	
 ${OUTDIR}/images/amd64/service.tar: | ${OUTDIR}/images/amd64
-	docker build -t honeysens/dionaea:amd64-${REVISION} -f Dockerfile .
+	docker build --no-cache -t honeysens/dionaea:amd64-${REVISION} -f Dockerfile .
 	docker save -o $@ honeysens/dionaea:amd64-${REVISION}
 
 ${OUTDIR}/images/armhf/service.tar: | ${OUTDIR}/images/armhf
 	docker run --rm --privileged multiarch/qemu-user-static:register || true
-	docker build -t honeysens/dionaea:armhf-${REVISION} -f Dockerfile.armhf .
+	docker build --no-cache -t honeysens/dionaea:armhf-${REVISION} -f Dockerfile.armhf .
 	docker run --rm --privileged multiarch/qemu-user-static:register --reset
 	docker save -o $@ honeysens/dionaea:armhf-${REVISION}
 

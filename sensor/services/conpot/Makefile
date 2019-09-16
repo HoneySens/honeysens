@@ -19,12 +19,12 @@ ${OUTDIR}/dist/${PREFIX}-armhf-${REVISION}.tar.gz: ${OUTDIR}/images/armhf/servic
 	tar -czf $@ -C ${OUTDIR}/images/armhf/ service.tar metadata.xml
 
 ${OUTDIR}/images/amd64/service.tar: config.patch honeysens_log.py log_worker.patch prepare.sh | ${OUTDIR}/images/amd64
-	docker build -t honeysens/conpot:amd64-${REVISION} .
+	docker build --no-cache -t honeysens/conpot:amd64-${REVISION} .
 	docker save -o $@ honeysens/conpot:amd64-${REVISION}
 
 ${OUTDIR}/images/armhf/service.tar: config.patch honeysens_log.py log_worker.patch prepare.sh | ${OUTDIR}/images/armhf
 	docker run --rm --privileged multiarch/qemu-user-static:register || true
-	docker build -t honeysens/conpot:armhf-${REVISION} --build-arg ARCH=armhf .
+	docker build --no-cache -t honeysens/conpot:armhf-${REVISION} --build-arg ARCH=armhf .
 	docker run --rm --privileged multiarch/qemu-user-static:register --reset
 	docker save -o $@ honeysens/conpot:armhf-${REVISION}
 

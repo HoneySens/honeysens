@@ -31,15 +31,15 @@ ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/${PREFIX}-${REVISIO
 	tar -czf $@ -C ${OUTDIR}/build/ ${PREFIX}-${REVISION}/
 
 ${OUTDIR}/build/${PREFIX}-${REVISION}/backup-${REVISION}.tar: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
-	docker build -t honeysens/backup:${REVISION} services/backup/
+	docker build --no-cache -t honeysens/backup:${REVISION} services/backup/
 	docker save -o $@ honeysens/backup:${REVISION}
 
 ${OUTDIR}/build/${PREFIX}-${REVISION}/server-${REVISION}.tar: ${OUTDIR}/web/data/config.cfg | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
-	docker build -t honeysens/server:${REVISION} .
+	docker build --no-cache -t honeysens/server:${REVISION} .
 	docker save -o $@ honeysens/server:${REVISION}
 
 ${OUTDIR}/web/data/config.cfg: | DIR.$(OUTDIR)/web
-	docker build -t honeysens/server-dev:${REVISION} -f Dockerfile.dev .
+	docker build --no-cache -t honeysens/server-dev:${REVISION} -f Dockerfile.dev .
 	docker run -v $(shell pwd):/mnt -v $(shell pwd)/${OUTDIR}/web:/srv -e BUILD_ONLY=1 --rm honeysens/server-dev:${REVISION} || true
 	cp ${OUTDIR}/web/data/config.clean.cfg ${OUTDIR}/web/data/config.cfg
 
