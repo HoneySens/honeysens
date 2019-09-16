@@ -28,7 +28,7 @@ ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/firmware.img ${OUTD
 	tar -czf $@ -C ${OUTDIR}/build/ firmware.img metadata.xml docker-compose.yml conf/ .env Readme.md
 
 ${OUTDIR}/build/firmware.img: | DIR.${OUTDIR}/build
-	docker build --build-arg REVISION=${REVISION} -t honeysens/sensorx86:${REVISION} -f Dockerfile ../../
+	docker build --no-cache --build-arg REVISION=${REVISION} -t honeysens/sensorx86:${REVISION} -f Dockerfile ../../
 	docker save -o $@ honeysens/sensorx86:${REVISION}
 
 ${OUTDIR}/build/metadata.xml: | DIR.${OUTDIR}/build
