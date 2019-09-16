@@ -2,7 +2,7 @@ FROM phusion/baseimage:0.9.22
 
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
-ADD out/web /opt/HoneySens/
+COPY out/web /opt/HoneySens/
 RUN /bin/bash /opt/HoneySens/utils/docker/setup_prepare.sh
 RUN /bin/bash /opt/HoneySens/utils/docker/setup_release.sh
 
