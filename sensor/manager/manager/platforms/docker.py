@@ -117,26 +117,27 @@ class Platform(GenericPlatform):
         if reset_network:
             eapol_config = '{}/{}'.format(EAPOL_CONFIG_DIR, EAPOL_CONFIG_FILE)
             # Update interface definition (/etc/network/interfaces)
+            if config.get('eapol', 'mode') != '0':
+                eapol_conf = eapol_config
+            else:
+                eapol_conf = None
             GenericPlatform.update_iface_configuration(self, self.interface, config.get('network', 'mode'),
                                                        address=config.get('network', 'address'),
                                                        netmask=config.get('network', 'netmask'),
                                                        gateway=config.get('network', 'gateway'),
                                                        dns=config.get('network', 'dns'),
-                                                       eapol=config.get('eapol', 'mode') != '0')
+                                                       eapol=eapol_conf)
             # EAPOL configuration via wpa_supplicant
+            GenericPlatform.configure_eapol(self, EAPOL_CONFIG_DIR, EAPOL_CONFIG_FILE, config.get('eapol', 'mode'),
+                                            config.get('eapol', 'identity'), config.get('eapol', 'password'),
+                                            config.get('eapol', 'ca_cert'), config.get('eapol', 'anon_identity'),
+                                            config.get('eapol', 'client_cert'), config.get('eapol', 'client_key'),
+                                            config.get('eapol', 'client_key_password'))
             if config.get('eapol', 'mode') == '0':
                 self.logger.info('EAPOL is disabled, stopping wpa_supplicant (in case it\'s running)')
                 subprocess.call(['s6-svc', '-wd', '-t', '-d', '/var/run/s6/services/wpa_supplicant/'])
-                # Remove existing EAPOL config, if available
-                if os.path.isfile(eapol_config):
-                    os.remove(eapol_config)
             else:
                 self.logger.info('EAPOL is enabled, configuring and (re)launching wpa_supplicant')
-                GenericPlatform.configure_eapol(self, EAPOL_CONFIG_DIR, EAPOL_CONFIG_FILE, config.get('eapol', 'mode'),
-                                                config.get('eapol', 'identity'), config.get('eapol', 'password'),
-                                                config.get('eapol', 'ca_cert'), config.get('eapol', 'anon_identity'),
-                                                config.get('eapol', 'client_cert'), config.get('eapol', 'client_key'),
-                                                config.get('eapol', 'client_key_password'))
                 subprocess.call(['s6-svc', '-wr', '-t', '-u', '/var/run/s6/services/wpa_supplicant/'])
 
             # Change MAC address if required

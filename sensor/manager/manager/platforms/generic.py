@@ -52,7 +52,7 @@ class GenericPlatform(object):
     def is_service_update_in_progress(self):
         return self.service_update_in_progress
 
-    def update_iface_configuration(self, iface, mode, address=None, netmask=None, gateway=None, dns=None, eapol=False):
+    def update_iface_configuration(self, iface, mode, address=None, netmask=None, gateway=None, dns=None, eapol=None):
         ifaces = interfaces.Interfaces()
         # Verify network interface presence
         if ifaces.getAdapter(iface) is None:
@@ -65,13 +65,17 @@ class GenericPlatform(object):
             adapter.setAddress(None)
             adapter.setNetmask(None)
             adapter.setGateway(None)
-            if eapol is True:
-                adapter.setWpaConf('/tmp/eapol.conf')
+            if eapol is not None:
+                adapter.setUnknown('wpa-driver', 'wired')
+                adapter.setWpaConf(eapol)
             else:
-                adapter.setWpaConf(None)
-            # Debinterfaces is missing the option to remove 'unknown' attributes, therefore we need to improvise
-            if 'unknown' in adapter._ifAttributes:
-                del (adapter._ifAttributes['unknown'])
+                adapter.setUnknown('wpa-driver', None)
+                # Workaround, because 'wpa-conf' can't be unset via the API
+                if 'wpa-conf' in adapter._ifAttributes:
+                    del adapter._ifAttributes['wpa-conf']
+            # Workaround, because 'dns-nameservers' can't be unset via the API
+            if 'dns-nameservers' in adapter._ifAttributes:
+                del adapter._ifAttributes['dns-nameservers']
         elif mode == '1': # Static configuration
             adapter.setAddressSource('static')
             adapter.setAddress(address)
@@ -83,13 +87,17 @@ class GenericPlatform(object):
             if dns:
                 adapter.setUnknown('dns-nameservers', dns)
             else:
-                # Debinterfaces is missing the option to remove 'unknown' attributes, therefore we need to improvise
-                if 'unknown' in adapter._ifAttributes:
-                    del (adapter._ifAttributes['unknown'])
-            if eapol is True:
-                adapter.setWpaConf('/tmp/eapol.conf')
+                # Workaround, because 'dns-nameservers' can't be unset via the API
+                if 'dns-nameservers' in adapter._ifAttributes:
+                    del adapter._ifAttributes['dns-nameservers']
+            if eapol is not None:
+                adapter.setUnknown('wpa-driver', 'wired')
+                adapter.setWpaConf(eapol)
             else: # Unconfigured interface
-                adapter.setWpaConf(None)
+                adapter.setUnknown('wpa-driver', None)
+                # Workaround, because 'wpa-conf' can't be unset via the API
+                if 'wpa-conf' in adapter._ifAttributes:
+                    del adapter._ifAttributes['wpa-conf']
         elif mode == '2':
             ifaces.removeAdapterByName(iface)
         ifaces.writeInterfaces()
@@ -108,12 +116,16 @@ class GenericPlatform(object):
     def configure_eapol(self, conf_dir, conf_name, eap_mode, identity, password, ca_cert, anon_identity, client_cert, client_key, key_passphrase):
         # Translate eap_mode into a wpa_supplicant-compatible string
         eap_modes = {'1': 'MD5', '2': 'TLS', '3': 'PEAP', '4': 'TTLS'}
-        # Remove potentially deprecated former keys and certificates, since those will be overwritten anyways
+        # Remove potentially deprecated former config files, since those will be overwritten anyways
         old_certs = glob.glob('{}/*.crt'.format(conf_dir))
         old_keys = glob.glob('{}/*.key'.format(conf_dir))
-        for old_file in old_certs + old_keys:
-            self.logger.debug('Removing {}'.format(old_file))
-            os.remove(old_file)
+        for old_file in old_certs + old_keys + ['{}/{}'.format(conf_dir, conf_name)]:
+            if os.path.isfile(old_file):
+                self.logger.debug('Removing {}'.format(old_file))
+                os.remove(old_file)
+        if eap_mode == '0':
+            # EAP is disabled, we can quit here
+            return
         # Creates a wpa_supplicant configuration with the supplied parameters and writes it to the given path
         config = ['ctrl_interface=/run/wpa_supplicant\n\n',
                   'network={\n',
@@ -131,8 +143,6 @@ class GenericPlatform(object):
             shutil.copy('{}/{}'.format(self.config_dir, client_key), conf_dir)
             config.append(' client_cert="{}/{}"\n'.format(conf_dir, client_cert))
             config.append(' private_key="{}/{}"\n'.format(conf_dir, client_key))
-        else:
-            raise Exception('Invalid EAP mode supplied')
         # Optional settings
         if ca_cert is not None:
             self.logger.debug('Writing {} to {}'.format(ca_cert, conf_dir))
