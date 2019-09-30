@@ -30,6 +30,8 @@ LED_GPIO_LOW = 'low'
 LED_CONTROLLER_INTERVAL = 1.0  # LED worker timing (in seconds)
 LED_TRANSIENT_DURATION = 6 # Number of cycles (of length LED_CONTROLLER_INTERVAL) the transient mode should last
 
+EAPOL_CONFIG_DIR = '/etc/wpa_supplicant'
+EAPOL_CONFIG_FILE = 'eapol.conf'
 
 class Platform(GenericPlatform):
 
@@ -78,15 +80,28 @@ class Platform(GenericPlatform):
         if reset_network:
             # Disable all network interfaces
             self.stop_systemd_unit('networking')
+            eapol_config = '{}/{}'.format(EAPOL_CONFIG_DIR, EAPOL_CONFIG_FILE)
             # Update interface definition (/etc/network/interfaces)
+            if config.get('eapol', 'mode') != '0':
+                eapol_conf = eapol_config
+            else:
+                eapol_conf = None
             GenericPlatform.update_iface_configuration(self, self.interface, config.get('network', 'mode'),
                                                        address=config.get('network', 'address'),
                                                        netmask=config.get('network', 'netmask'),
                                                        gateway=config.get('network', 'gateway'),
-                                                       dns=config.get('network', 'dns'))
+                                                       dns=config.get('network', 'dns'),
+                                                       eapol=eapol_conf)
+            # EAPOL configuraion via wpa_supplicant
+            GenericPlatform.configure_eapol(self, EAPOL_CONFIG_DIR, EAPOL_CONFIG_FILE, config.get('eapol', 'mode'),
+                                            config.get('eapol', 'identity'), config.get('eapol', 'password'),
+                                            config.get('eapol', 'ca_cert'), config.get('eapol', 'anon_identity'),
+                                            config.get('eapol', 'client_cert'), config.get('eapol', 'client_key'),
+                                            config.get('eapol', 'client_key_password'))
             # Change MAC address if required
             if config.get('mac', 'mode') == '1':
                 GenericPlatform.update_mac_address(self, self.interface, config.get('mac', 'address'))
+            # Proxy configuration
             if config.get('proxy', 'mode') == '1':
                 credentials = ''
                 if config.get('proxy', 'user') != '':

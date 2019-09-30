@@ -7,7 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 
 # Basic dependencies
-apt-get -y install macchanger resolvconf
+apt-get -y install macchanger resolvconf wpasupplicant
 
 # Install Docker CE (follows https://docs.docker.com/engine/installation/linux/docker-ce/debian)
 # TODO Infer the linux-header version from the currently installed linux-image packet (NOT the running kernel)

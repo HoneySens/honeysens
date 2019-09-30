@@ -1,33 +1,37 @@
 <?xml version='1.0' standalone='yes'?>
 <firmware>
-    <name>HoneySens Docker Firmware</name>
-    <platform>docker_x86</platform>
-    <version>$REVISION</version>
-    <description>Dockerized sensor platform to be used on generic x86 systems</description>
-    <changelog>
-      <entry>
-        <version>2.0.0</version>
-        <desc>Fully reworked networking and logging as well as support for event caching, an adjustable service network range and deployment/update with Docker Compose</desc>
-      </entry>
-      <entry>
-        <version>1.0.4</version>
-        <desc>Fixed a bug that prevented service download through proxies</desc>
-      </entry>
-      <entry>
-        <version>1.0.3</version>
-        <desc>Support for remote server certificate updates</desc>
-      </entry>
-      <entry>
-        <version>1.0.2</version>
-        <desc>Support for remote certificate updates</desc>
-      </entry>
-      <entry>
-        <version>1.0.1</version>
-        <desc>TLM proxy support via cntlm and disk usage reporting added. Requires server 1.0.0.</desc>
-      </entry>
-      <entry>
-        <version>1.0.0</version>
-        <desc>Initial release compatible with HoneySens server 1.0.x</desc>
-      </entry>
-    </changelog>
+  <name>HoneySens Docker Firmware</name>
+  <platform>docker_x86</platform>
+  <version>$REVISION</version>
+  <description>Dockerized sensor platform to be used on generic x86 systems</description>
+  <changelog>
+    <entry>
+      <version>2.2.0</version>
+      <desc>EAPOL support</desc>
+    </entry>
+    <entry>
+      <version>2.0.0</version>
+      <desc>Fully reworked networking and logging as well as support for event caching, an adjustable service network range and deployment/update with Docker Compose</desc>
+    </entry>
+    <entry>
+      <version>1.0.4</version>
+      <desc>Fixed a bug that prevented service download through proxies</desc>
+    </entry>
+    <entry>
+      <version>1.0.3</version>
+      <desc>Support for remote server certificate updates</desc>
+    </entry>
+    <entry>
+      <version>1.0.2</version>
+      <desc>Support for remote certificate updates</desc>
+    </entry>
+    <entry>
+      <version>1.0.1</version>
+      <desc>TLM proxy support via cntlm and disk usage reporting added. Requires server 1.0.0.</desc>
+    </entry>
+    <entry>
+      <version>1.0.0</version>
+      <desc>Initial release compatible with HoneySens server 1.0.x</desc>
+    </entry>
+  </changelog>
 </firmware>
