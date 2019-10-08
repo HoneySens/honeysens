@@ -153,19 +153,12 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                             },
                             'mouseleave': function(e) {
                                 e.preventDefault();
-                                if(e.target.tagName.toLowerCase() != 'select') {
-                                    this.$el.find('button.editStatus').popover('hide');
-                                }
+                                this.$el.find('button.editStatus').popover('hide');
                             },
-                            'click button.btn-primary': function(e) {
+                            'click button.editStatus': function(e) {
                                 e.preventDefault();
-                                var statusCode = this.$el.find('div.popover.fade select.statusCode').val(),
-                                    comment = this.$el.find('div.popover.fade textarea').val(),
-                                    view = this;
-                                this.model.save({status: statusCode, comment: comment}, {wait: true, success: function() {
-                                    view.$el.find('button.editStatus').popover('hide');
-                                }});
-                                this.$el.find('div.popover.fade button.btn-primary').prop('disabled', true);
+                                HoneySens.request('events:edit', new Models.Events(this.model));
+                                this.$el.find('button.editStatus').popover('hide');
                             }
                         },
                         render: function() {
