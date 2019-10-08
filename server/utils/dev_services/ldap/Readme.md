@@ -1,8 +1,8 @@
 ## LDAP server
-When this template is enabled in the server Makefile, an OpenLDAP server will be created within the honeysens development network. It's reachable on TCP ports 389 as well as 636 and supports unencrypted as well as encrypted traffic (via TLS or StartTLS). 
+When this service is enabled in the server Makefile, an OpenLDAP server will be created within the HoneySens development network. It's reachable on TCP ports 389 as well as 636 and supports unencrypted as well as encrypted traffic (via TLS or StartTLS). 
 
 ### Usage
-To register this LDAP in the HoneySens UI, enter the following values in system settings and activate LDAP usage:
+To register this LDAP server in the HoneySens UI, enter the following values in system settings and activate LDAP usage:
 * **Server**: `ldap`
 * **Port**: `389` or `636`
 * **Encryption**: None or StartTLS for port 389, TLS for 636

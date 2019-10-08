@@ -17,3 +17,4 @@ Several variables within the provided Makefile can be utilized to modify aspects
 * `BRANDING_ENABLED` should be set to `yes` to enable MMS stylesheets, and to `no` to build with the default styles
 * `DEV_WATCH_TASK` selects a 'grunt watch' backend for the development server. This defaults to the resource efficient [chokidar](https://www.npmjs.com/package/grunt-chokidar), but the official default implementation [watch](https://gruntjs.com/plugins/watch) as well as [simple-watch](https://www.npmjs.com/package/grunt-simple-watch) are available as fallbacks.
 * `DEV_ENV_LDAP` launches an OpenLDAP container within the development environment to test LDAP authentication. The files in `utils/dev_services/ldap/` contain further usage instructions.
+* `DEV_ENV_PROXY` launches a web proxy container within a separate proxy network that can be utilized both proxy and EAPOL functionality. The files in `utils/dev_services/proxy/` contain further usage instructions.
