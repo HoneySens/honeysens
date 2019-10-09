@@ -28,6 +28,7 @@ function(HoneySens, Models, SensorEditTpl) {
                         $updateIntervalField.val(HoneySens.data.settings.get('sensorsUpdateInterval'));
                     }
                     this.$el.find('form').validator('update');
+                    this.$el.find('form').validator('validate');
                 },
                 'click button.useCustomServiceNetwork': function(e) {
                     var $updateServiceNetworkField = this.$el.find('input[name="serviceNetwork"]'),
@@ -44,6 +45,7 @@ function(HoneySens, Models, SensorEditTpl) {
                         $updateServiceNetworkField.val(HoneySens.data.settings.get('sensorsServiceNetwork'));
                     }
                     this.$el.find('form').validator('update');
+                    this.$el.find('form').validator('validate');
                 },
                 'click button.useCustomServerEndpoint': function (e) {
                     var $updateServerHostField = this.$el.find('input[name="serverHost"]'),
@@ -66,6 +68,7 @@ function(HoneySens, Models, SensorEditTpl) {
                             $updateServerPortField.val(HoneySens.data.settings.get('serverPortHTTPS'));
                         }
                     this.$el.find('form').validator('update');
+                    this.$el.find('form').validator('validate');
                 },
                 'change input[name="firmwarePreference"]': function(e) {
                     this.refreshFirmwarePreference(e.target.value);
