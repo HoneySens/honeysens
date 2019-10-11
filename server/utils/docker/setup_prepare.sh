@@ -17,6 +17,7 @@ sed -i -e 's/#START=yes/START=yes/' -e 's/BEANSTALKD_LISTEN_ADDR=.*/BEANSTALKD_L
 
 # Apache
 sed -i -e 's/upload_max_filesize.*/upload_max_filesize = 100M/' -e 's/post_max_size.*/post_max_size = 100M/' /etc/php/5.6/apache2/php.ini
+sed -i -e 's/ServerTokens OS/ServerTokens Prod/' /etc/apache2/conf-enabled/security.conf
 echo www-data > /etc/container_environment/APACHE_RUN_USER
 echo www-data > /etc/container_environment/APACHE_RUN_GROUP
 echo /var/log/apache2 > /etc/container_environment/APACHE_LOG_DIR
