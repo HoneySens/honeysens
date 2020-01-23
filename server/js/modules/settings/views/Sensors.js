@@ -14,8 +14,9 @@ function(HoneySens, ModalSettingsSaveView, SensorsTpl) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
 
-                        var updateInterval = view.$el.find('input[name="updateInterval"]').val();
-                        view.model.save({sensorsUpdateInterval: updateInterval}, {
+                        var updateInterval = view.$el.find('input[name="updateInterval"]').val(),
+                            serviceNetwork = view.$el.find('input[name="serviceNetwork"]').val();
+                        view.model.save({sensorsUpdateInterval: updateInterval, sensorsServiceNetwork: serviceNetwork}, {
                             success: function() {
                                 HoneySens.request('view:modal').show(new ModalSettingsSaveView());
                             }
