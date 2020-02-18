@@ -2,7 +2,7 @@ FROM debian:buster
 
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
-RUN apt-get -qq update && apt-get install -y mariadb-client netcat bzip2 && apt-get clean
+RUN apt-get -qq update && apt-get install -y cron bzip2 mariadb-client netcat && apt-get clean
 
 COPY run.sh /opt/
 COPY backup.sh /usr/local/bin/backup

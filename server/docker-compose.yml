@@ -51,6 +51,9 @@ services:
   backup:
     image: honeysens/backup:2.1.0
     environment:
+      - CRON_ENABLED=false
+      - CRON_CONDITION=0 3 * * *
+      - CRON_TEMPLATE=backup-%s
       - DB_HOST=database
       - DB_PORT=3306
       - DB_USER=honeysens
@@ -60,10 +63,12 @@ services:
       - honeysens
     restart: "no"
     volumes:
-      - honeysens_registry:/srv/registry
+      - honeysens_backup:/srv/backup
       - honeysens_data:/srv/data
+      - honeysens_registry:/srv/registry
 
 volumes:
+  honeysens_backup:
   honeysens_data:
   honeysens_db:
   honeysens_registry:
