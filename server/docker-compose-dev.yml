@@ -50,6 +50,7 @@ services:
     environment:
       - CRON_ENABLED=false
       - CRON_CONDITION=0 3 * * *
+      - CRON_KEEP=0
       - CRON_TEMPLATE=backup-%s
       - DB_HOST=database
       - DB_PORT=3306
