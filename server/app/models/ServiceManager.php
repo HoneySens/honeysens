@@ -11,11 +11,10 @@ use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
  */
 class ServiceManager {
 
-    const SERVICE_BEANSTALK = 0;
-    const SERVICE_CONTACT = 1;
-    const SERVICE_ENTITY_UPDATE = 2;
-    const SERVICE_REGISTRY = 3;
-    const SERVICE_TASK = 4;
+    const SERVICE_CONTACT = 0;
+    const SERVICE_ENTITY_UPDATE = 1;
+    const SERVICE_REGISTRY = 2;
+    const SERVICE_TASK = 3;
 
     private $config = null;
     private $em = null;
@@ -36,11 +35,10 @@ class ServiceManager {
 
     private function instantiate($serviceID) {
         switch($serviceID) {
-            case 0: return new BeanstalkService($this->config);
-            case 1: return new ContactService();
-            case 2: return new EntityUpdateService();
-            case 3: return new RegistryService($this->config);
-            case 4: return new TaskService($this->config, $this->em);
+            case 0: return new ContactService();
+            case 1: return new EntityUpdateService();
+            case 2: return new RegistryService($this->config);
+            case 3: return new TaskService($this->config, $this->em);
             default: return null;
         }
     }

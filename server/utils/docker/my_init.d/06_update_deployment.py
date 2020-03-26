@@ -292,12 +292,13 @@ if config_version == '2.1.0':
     ]
     execute_sql(db, db_statements)
     db.commit()
+    config.remove_section('beanstalkd')
     config.remove_section('database')
     config.set('server', 'config_version', 'next')
     config_version = 'next'
 
 # Write new config file
-with open(config_file, 'wb') as f:
+with open(config_file, 'w') as f:
     config.write(f)
 
 # Close db connection

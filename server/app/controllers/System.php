@@ -19,7 +19,7 @@ class System extends RESTResource {
 
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->get('/triggerWeeklySummary', function() use ($app, $em, $services, $config, $messages) {
-            // TODO Consider moving this to a beanstalk worker, add authentication
+            // TODO Move this to a task worker, add authentication
             $contactService = $services->get(ServiceManager::SERVICE_CONTACT);
             echo json_encode($contactService->sendWeeklySummary($config, $em));
         });

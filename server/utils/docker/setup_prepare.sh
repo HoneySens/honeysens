@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
 # Basic container initialization for both productive and development environments
+set -e
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get -qq update
 
 # Basic dependencies
-apt-get install -y beanstalkd screen python python-yaml python-openssl python-pymysql python-pip curl openssl apache2 sudo
+apt-get install -y screen python python-yaml python-openssl python-pymysql python-pip python-celery-common python3-redis curl openssl apache2 sudo
 
 # PHP 5
 add-apt-repository -y ppa:ondrej/php
 apt-get -qq update
 apt-get install -y php5.6 php5.6-mbstring php5.6-mysql php5.6-xml php5.6-ldap libapache2-mod-php5.6
-
-# Beanstalk
-sed -i -e 's/#START=yes/START=yes/' -e 's/BEANSTALKD_LISTEN_ADDR=.*/BEANSTALKD_LISTEN_ADDR=127.0.0.1/' /etc/default/beanstalkd
 
 # Apache
 sed -i -e 's/upload_max_filesize.*/upload_max_filesize = 100M/' -e 's/post_max_size.*/post_max_size = 100M/' /etc/php/5.6/apache2/php.ini
@@ -27,16 +25,3 @@ echo /var/run/apache2 > /etc/container_environment/APACHE_RUN_DIR
 a2enmod rewrite ssl headers proxy_http
 a2dissite 000-default
 chmod 755 /var/run/screen # see https://github.com/stucki/docker-cyanogenmod/issues/2
-
-# Install skopeo
-add-apt-repository -y ppa:longsleep/golang-backports # see https://github.com/golang/go/wiki/Ubuntu
-add-apt-repository -y ppa:alexlarsson/flatpak # required for libostree, which is missing in Ubuntu Xenial
-apt-get -qq update
-apt-get install -y --allow-unauthenticated git-core golang-go btrfs-tools libdevmapper-dev libgpgme11-dev go-md2man libglib2.0-dev libostree-dev
-curl -Ls https://github.com/projectatomic/skopeo/archive/v0.1.28.tar.gz --output /opt/skopeo.tar.gz
-tar -xzf /opt/skopeo.tar.gz -C /opt/
-mkdir -p /opt/go/src/github.com/projectatomic
-mv /opt/skopeo-0.1.28 /opt/go/src/github.com/projectatomic/skopeo
-export GOPATH=/opt/go
-make -C /opt/go/src/github.com/projectatomic/skopeo binary-local
-make -C /opt/go/src/github.com/projectatomic/skopeo install

@@ -33,8 +33,8 @@ After the server has been started, access its web interface through a web browse
 * `docs/`: Server documentation and related documents
 * `js/`: Frontend web application logic
 * `out/`: Build directory used by make and grunt
+* `services/`: Services interfacing with the API
 * `static/`: Static web data
-* `tasks/`: Task processor that interfaces with an beanstalk instance
 * `utils/docker/`: Scripts used during the container build process
 * `utils/`: Doctrine CLI and all the stuff that didn't fit elsewhere
 

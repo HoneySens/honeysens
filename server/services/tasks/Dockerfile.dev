@@ -1,0 +1,18 @@
+FROM alpine:3.11
+
+# Defaults
+ENV BROKER_HOST=broker \
+    BROKER_PORT=6379 \
+    DB_HOST=database \
+    DB_PORT=3306 \
+    DB_USER=honeysens \
+    DB_NAME=honeysens \
+    DB_PASSWORD=secret
+
+RUN set -ex; \
+        apk --no-cache add py3-watchdog py3-pip skopeo
+
+COPY run-dev.sh /opt/run.sh
+
+WORKDIR /mnt
+CMD ["/opt/run.sh"]

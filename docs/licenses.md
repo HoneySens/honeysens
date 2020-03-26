@@ -6,11 +6,11 @@
 
 | Dependency | Licence | URL |
 | --- | --- | --- |
+| celery-php | BSD | https://github.com/gjedeer/celery-php/blob/master/LICENSE |
 | Doctrine ORM | MIT | https://github.com/doctrine/orm/blob/master/LICENSE |
 | DoctrineExtensions | MIT | https://github.com/beberlei/DoctrineExtensions/blob/master/LICENSE |
 | FileUpload | MIT | https://github.com/Gargron/fileupload/blob/master/LICENSE |
 | ConfigParser | LGPLv3 | https://github.com/noiselabs/configparser.php/blob/master/LICENSE |
-| Pheanstalk | MIT | https://github.com/pda/pheanstalk/blob/master/LICENSE |
 | PHPMailer | LGPLv2.1 | https://github.com/PHPMailer/PHPMailer/blob/master/LICENSE |
 | phpseclib | MIT | https://github.com/phpseclib/phpseclib/blob/master/LICENSE |
 | Requests | ISC | https://github.com/rmccue/Requests/blob/master/LICENSE |
@@ -21,7 +21,7 @@
 
 | Dependency | Licence | URL |
 | --- | --- | --- |
-| beanstalkc | Apache 2.0 | https://github.com/earl/beanstalkc |
+| celery | BSD | https://github.com/celery/celery/blob/master/LICENSE |
 | coloredlogs | MIT | https://github.com/xolox/python-coloredlogs/blob/master/LICENSE.txt |
 | defusedxml | PSF License 2.0 | https://github.com/tiran/defusedxml/blob/master/LICENSE |
 | PyMySQL | MIT | https://github.com/PyMySQL/PyMySQL/blob/master/LICENSE |

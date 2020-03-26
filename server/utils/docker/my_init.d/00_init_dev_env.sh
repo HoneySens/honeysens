@@ -38,9 +38,6 @@ fi
 
 echo "Adding services"
 cp -vr /srv/utils/docker/services/apache2 /etc/service
-cp -vr /srv/utils/docker/services/beanstalkd /etc/service
-cp -vr /srv/utils/docker/services/tasks /etc/service
-sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/service/tasks/run
 mkdir -p /etc/service/grunt-watch
 cat > /etc/service/grunt-watch/run << DELIMITER
 #!/bin/bash

@@ -1,12 +1,13 @@
 {
   "require": {
     "doctrine/orm": "2.3.0",
-    "beberlei/DoctrineExtensions": "v1.0.21",
+    "beberlei/doctrineextensions": "v1.0.21",
     "gargron/fileupload": "v1.4.5",
+    "massivescale/celery-php": "2.1.2",
     "noiselabs/configparser": "dev-master",
-    "pda/pheanstalk": "v3.1.0",
     "phpmailer/phpmailer": "v5.2.8",
     "phpseclib/phpseclib": "2.0.10",
+    "predis/predis": "v1.1.1",
     "rmccue/requests": "v1.7.0",
     "respect/validation": "1.1.15",
     "slim/slim": "2.6.3"
