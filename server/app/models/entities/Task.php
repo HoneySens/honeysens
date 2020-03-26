@@ -4,7 +4,7 @@ namespace HoneySens\app\models\entities;
 /**
  * Class Task
  *
- * This class represents a specific task that is performed by an external task queue, such as beanstalkd.
+ * This class represents a specific task that is performed by an external task queue, such as celery.
  * Tasks are owned and fully controlled by a user, although administrators can request and modify all tasks.
  *
  * @Entity

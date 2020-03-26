@@ -163,10 +163,3 @@ function initSession() {
         $_SESSION['user'] = $guestUser->getState();
     }
 }
-
-function getResourceInstance($resource, $em, $beanstalk, $config) {
-    $class = 'HoneySens\app\controllers\\' . ucfirst($resource);
-    if(!class_exists($class)) throw new Exception('Resource ' . $class . ' does not exist.');
-    if(!is_subclass_of($class, 'HoneySens\app\controllers\RESTResource')) throw new Exception('Class ' . $class . ' is not a valid resource.');
-    return new $class($em, $beanstalk, $config);
-}

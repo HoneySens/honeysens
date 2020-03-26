@@ -11,7 +11,7 @@ DEV_ENV_PROXY := no
 dist: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 
 clean: ${OUTDIR}/dev/docker-compose reset
-	docker rmi honeysens_dev_server:latest honeysens_dev_backup:latest
+	docker rmi honeysens_dev_server:latest honeysens_dev_backup:latest honeysens_dev_tasks:latest
 	rm -rf utils/dev_services/proxy/ca/ca* utils/dev_services/proxy/ca/client* utils/dev_services/proxy/ca/server*
 	rm -rf ${OUTDIR}
 
@@ -26,9 +26,13 @@ ${OUTDIR}/dev/docker-compose: | DIR.${OUTDIR}/dev
 	chmod +x $@
 	$@ --version
 
-${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/${PREFIX}-${REVISION}/backup-${REVISION}.tar ${OUTDIR}/build/${PREFIX}-${REVISION}/server-${REVISION}.tar ${OUTDIR}/build/${PREFIX}-${REVISION}/docker-compose.yml | DIR.${OUTDIR}/dist
+${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/${PREFIX}-${REVISION}/backup-${REVISION}.tar ${OUTDIR}/build/${PREFIX}-${REVISION}/tasks-${REVISION}.tar ${OUTDIR}/build/${PREFIX}-${REVISION}/server-${REVISION}.tar ${OUTDIR}/build/${PREFIX}-${REVISION}/docker-compose.yml | DIR.${OUTDIR}/dist
 	cp -vr docs/INSTALL ${OUTDIR}/build/${PREFIX}-${REVISION}/
 	tar -czf $@ -C ${OUTDIR}/build/ ${PREFIX}-${REVISION}/
+
+${OUTDIR}/build/${PREFIX}-${REVISION}/tasks-${REVISION}.tar: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
+	docker build --no-cache -t honeysens/tasks:${REVISION} services/tasks/
+	docker save -o $@ honeysens/tasks:${REVISION}
 
 ${OUTDIR}/build/${PREFIX}-${REVISION}/backup-${REVISION}.tar: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
 	docker build --no-cache -t honeysens/backup:${REVISION} services/backup/

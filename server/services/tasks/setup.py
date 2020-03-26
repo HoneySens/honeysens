@@ -1,5 +1,4 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 from setuptools import setup, find_packages
 
@@ -8,18 +7,13 @@ setup(
     version='1.0.0',
     description='HoneySens task processor',
     author='Pascal Brueckner',
-    author_email='pascal.brueckner@sylence.cc',
+    author_mail='pascal.brueckner@sylence.cc',
     license='Apache 2.0',
     packages=find_packages(),
     install_requires=[
-        'beanstalkc',
-        'coloredlogs',
+        'celery',
         'defusedxml',
-        'pymysql'
-    ],
-    entry_points={
-        'console_scripts': [
-            'task-processor=tasks.tasks:main'
-        ]
-    }
+        'pymysql',
+        'redis'
+    ]
 )

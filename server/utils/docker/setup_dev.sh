@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+set -e
 export DEBIAN_FRONTEND=noninteractive
 
 # Additional dev requirements
-apt-get install -y npm nodejs-legacy wget unzip texlive-base texlive-latex-extra texlive-extra-utils figlet boxes
+apt-get install -y npm nodejs wget unzip texlive-base texlive-latex-extra texlive-extra-utils figlet boxes
 npm install -g grunt-cli
 
 # Create dummy template config to prevent the data initialization in 01_init_volumes.sh

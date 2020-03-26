@@ -1,6 +1,18 @@
-FROM phusion/baseimage:0.9.22
-
+FROM phusion/baseimage:0.11
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
+
+# Defaults
+ENV ACCESS_LOG=false \
+    BRANDING_ENABLED=no \
+    BROKER_HOST=broker \
+    BROKER_PORT=6379 \
+    DEV_WATCH_TASK=chokidar \
+    DB_HOST=database \
+    DB_PORT=3306 \
+    DB_USER=honeysens \
+    DB_NAME=honeysens \
+    DB_PASSWORD=secret \
+    DOMAIN=server
 
 COPY utils/docker/setup_prepare.sh utils/docker/setup_dev.sh /opt/
 RUN /bin/bash /opt/setup_prepare.sh

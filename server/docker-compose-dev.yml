@@ -11,14 +11,8 @@ services:
       - server
     environment:
       - ACCESS_LOG=false
-      - DB_HOST=database
-      - DB_PORT=3306
-      - DB_USER=honeysens
       - DB_PASSWORD=honeysens
-      - DB_NAME=honeysens
       - DOMAIN=server
-      - BRANDING_ENABLED
-      - DEV_WATCH_TASK
     volumes:
       - honeysens_dev_data:/srv/data
       - .:/mnt
@@ -36,6 +30,23 @@ services:
     volumes:
       - honeysens_dev_db:/var/lib/mysql
 
+  broker:
+    image: redis:5
+    networks:
+      - server
+
+  tasks:
+    build:
+      context: services/tasks
+      dockerfile: Dockerfile.dev
+    environment:
+      - DB_PASSWORD=honeysens
+    networks:
+      - server
+    volumes:
+      - honeysens_dev_data:/srv/data
+      - ./services/tasks:/mnt
+
   honeysens-registry:
     image: registry:2
     networks:
@@ -52,11 +63,7 @@ services:
       - CRON_CONDITION=0 3 * * *
       - CRON_KEEP=0
       - CRON_TEMPLATE=backup-%s
-      - DB_HOST=database
-      - DB_PORT=3306
-      - DB_USER=honeysens
       - DB_PASSWORD=honeysens
-      - DB_NAME=honeysens
     networks:
       - server
     privileged: true

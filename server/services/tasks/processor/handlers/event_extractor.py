@@ -1,26 +1,15 @@
-#!/usr/bin/env python2
-
 import csv
 import json
-import logging
 import os
 import pymysql
 import shutil
 
-from tasks.handlers.handler import Handler
+from .handler import HandlerInterface
 
 
-class EventExtractor(Handler):
+class EventExtractor(HandlerInterface):
 
-    logger = None
-
-    def __init__(self, config, storage_path):
-        super(EventExtractor, self).__init__(config, storage_path)
-        self.logger = logging.getLogger(__name__)
-        self.logger.info('Event extractor initialized')
-
-    def perform(self, db, working_dir, job_data):
-        self.logger.debug('Performing job {}'.format(job_data['id']))
+    def perform(self, logger, db, config_path, storage_path, working_dir, job_data):
         job_params = json.loads(job_data['params'])
         cursor = db.cursor(pymysql.cursors.DictCursor)
         cursor.execute(job_params['query'])
@@ -44,14 +33,14 @@ class EventExtractor(Handler):
                 event_serial.append(event[h])
             result.append(event_serial)
         # Store result
-        result_dir = '{}/{}'.format(self.storage_path, job_data['id'])
+        result_dir = '{}/{}'.format(storage_path, job_data['id'])
         if os.path.isdir(result_dir):
-            self.logger.debug('Result directory exists, removing it')
+            logger.debug('Result directory exists, removing it')
             shutil.rmtree(result_dir)
-        self.logger.debug('Creating result directory {}'.format(result_dir))
+        logger.debug('Creating result directory {}'.format(result_dir))
         os.makedirs(result_dir)
         result_filename = 'result.csv'
-        with open('{}/{}'.format(result_dir, result_filename), 'wb') as f:
+        with open('{}/{}'.format(result_dir, result_filename), 'w') as f:
             writer = csv.writer(f)
             writer.writerow(headers)
             writer.writerows(result)

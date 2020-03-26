@@ -181,8 +181,8 @@ class Tasks extends RESTResource {
         if($task->getStatus() == Task::STATUS_RUNNING) throw new BadRequestException();
         // Recursively remove temporary task files
         $result = $task->getResult();
-        if($task->getStatus() == Task::STATUS_DONE && array_key_exists('path', $result)) {
-            $dir = sprintf("%s/tasks/%s", $this->getConfig()['server']['data_path'], $id);
+        $dir = sprintf("%s/tasks/%s", $this->getConfig()['server']['data_path'], $id);
+        if(($task->getStatus() == Task::STATUS_DONE || $task->getStatus() == Task::STATUS_ERROR) && file_exists($dir)) {
             $files = array_diff(scandir($dir), array('.','..'));
             foreach ($files as $file) (is_dir("$dir/$file")) ? delTree("$dir/$file") : unlink("$dir/$file");
             rmdir($dir);

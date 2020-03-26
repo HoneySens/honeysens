@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-
-# Build task processor
-(cd /opt/HoneySens/tasks && python setup.py install)
+set -e
 
 # Apache
 chown -R www-data:www-data /opt/HoneySens/cache/ /opt/HoneySens/data/
@@ -27,5 +25,3 @@ cp -var /opt/HoneySens/data /opt/HoneySens/templates/
 
 # Services
 cp -vr /opt/HoneySens/utils/docker/services/apache2 /etc/service
-cp -vr /opt/HoneySens/utils/docker/services/beanstalkd /etc/service
-cp -vr /opt/HoneySens/utils/docker/services/tasks /etc/service

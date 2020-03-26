@@ -1,14 +1,12 @@
-#!/usr/bin/env python2
-
+import configparser
 from defusedxml import ElementTree
 import distutils.util
 import json
-import logging
 import os
 import tarfile
 
-from tasks import constants
-from tasks.handlers.handler import Handler
+from .. import constants
+from .handler import HandlerInterface
 
 
 class FileType:
@@ -16,37 +14,34 @@ class FileType:
     PLATFORM_ARCHIVE = 1
 
 
-class UploadVerifier(Handler):
+class UploadVerifier(HandlerInterface):
 
     logger = None
-    upload_path = None
 
-    def __init__(self, config, storage_path):
-        super(UploadVerifier, self).__init__(config, storage_path)
-        self.logger = logging.getLogger(__name__)
-        self.upload_path = '{}/{}'.format(config.get('server', 'data_path'), constants.UPLOAD_PATH)
-        self.logger.info('Upload verifier initialized, expecting uploads in {}'.format(self.upload_path))
-
-    def perform(self, db, working_dir, job_data):
-        self.logger.debug('Performing job {}'.format(job_data['id']))
+    def perform(self, logger, db, config_path, storage_path, working_dir, job_data):
+        self.logger = logger
         job_params = json.loads(job_data['params'])
-        uploaded_file = '{}/{}'.format(self.upload_path, job_params['path'])
+        config = configparser.ConfigParser()
+        config.read_file(open(config_path))
+        upload_path = '{}/{}'.format(config.get('server', 'data_path'), constants.UPLOAD_PATH)
+        logger.debug('Performing job {}'.format(job_data['id']))
+        uploaded_file = '{}/{}'.format(upload_path, job_params['path'])
         if not os.path.isfile(uploaded_file):
             raise Exception('Path {} does not exist or is not a file'.format(uploaded_file))
-        self.logger.debug('Working directory: {}'.format(working_dir))
+        logger.debug('Working directory: {}'.format(working_dir))
         result = {}
         try:
             with tarfile.open(uploaded_file) as archive:
                 # Check archive content
-                self.logger.debug('Checking that the archive contains service.tar and metadata.xml')
+                logger.debug('Checking that the archive contains service.tar and metadata.xml')
                 content = archive.getnames()
                 if not 'metadata.xml' in content:
                     raise Exception('Incomplete archive content')
                 # Extraction
-                self.logger.debug('Extracting metadata.xml to {}'.format(working_dir))
+                logger.debug('Extracting metadata.xml to {}'.format(working_dir))
                 archive.extract('metadata.xml', working_dir)
                 # Parse metadata
-                self.logger.debug('Parsing metadata.xml')
+                logger.debug('Parsing metadata.xml')
                 xml = ElementTree.parse('{}/metadata.xml'.format(working_dir))
                 # Identify the archive type and do delegate further inspection
                 xml_root = xml.getroot().tag

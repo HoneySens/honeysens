@@ -12,11 +12,7 @@ services:
       - honeysens
     environment:
       - ACCESS_LOG=false
-      - DB_HOST=database
-      - DB_PORT=3306
-      - DB_USER=honeysens
       - DB_PASSWORD=honeysens
-      - DB_NAME=honeysens
       - DOMAIN=server
       #- TLS_AUTH_PROXY=172.0.0.1
     volumes:
@@ -37,6 +33,20 @@ services:
     volumes:
       - honeysens_db:/var/lib/mysql
 
+  broker:
+    image: redis:5
+    networks:
+      - honeysens
+
+  tasks:
+    image: honeysens/tasks:2.1.0
+    environment:
+      - DB_PASSWORD=honeysens
+    networks:
+      - server
+    volumes:
+      - honeysens_data:/srv/data
+
   honeysens-registry:
     image: registry:2
     container_name: honeysens-registry
@@ -55,11 +65,7 @@ services:
       - CRON_CONDITION=0 3 * * *
       - CRON_KEEP=0
       - CRON_TEMPLATE=backup-%s
-      - DB_HOST=database
-      - DB_PORT=3306
-      - DB_USER=honeysens
       - DB_PASSWORD=honeysens
-      - DB_NAME=honeysens
     networks:
       - honeysens
     restart: "no"
