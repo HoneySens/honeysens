@@ -22,6 +22,7 @@ class Task {
     const TYPE_UPLOAD_VERIFIER = 1;
     const TYPE_REGISTRY_MANAGER = 2;
     const TYPE_EVENT_EXTRACTOR = 3;
+    const TYPE_EVENT_FORWARDER = 4;
 
     /**
      * @Id

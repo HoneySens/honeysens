@@ -82,6 +82,8 @@ class Tasks extends RESTResource {
                 ->setParameter('id', $criteria['id']);
             return $qb->getQuery()->getSingleResult()->getState();
         } else {
+            // Hide system tasks (that don't belong to any particular user)
+            $qb->andWhere('t.user IS NOT NULL');
             $tasks = array();
             foreach($qb->getQuery()->getResult() as $task) {
                 $tasks[] = $task->getState();
