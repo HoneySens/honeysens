@@ -380,6 +380,14 @@ class Events extends RESTResource {
             }
         }
         $em->flush();
+        // Event forwarding
+        if($config->getBoolean('syslog', 'enabled')) {
+            $taskService = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK);
+            foreach($events as $event) {
+                if($em->contains($event))
+                    $taskService->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('id' => $event->getId()));
+            }
+        }
         // Send mails for each incident
         $mailService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
         foreach($events as $event) {

@@ -6,4 +6,6 @@
     <span class="glyphicon glyphicon-transfer"></span>&nbsp;&nbsp;Service-Upload in die Registry
 <% } else if(type == _.templateHelpers.getModels().Task.type.EVENT_EXTRACTOR) { %>
     <span class="glyphicon glyphicon-export"></span>&nbsp;&nbsp;Ereignisexport
+<% } else if(type == _.templateHelpers.getModels().Task.type.EVENT_FORWARDER) { %>
+    <span class="glyphicon glyphicon-send"></span>&nbsp;&nbsp;Ereignisweiterleitung
 <% } %>

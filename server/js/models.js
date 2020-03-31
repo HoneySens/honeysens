@@ -473,7 +473,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             SENSORCFG_CREATOR: 0,
             UPLOAD_VERIFIER: 1,
             REGISTRY_MANAGER: 2,
-            EVENT_EXTRACTOR: 3
+            EVENT_EXTRACTOR: 3,
+            EVENT_FORWARDER: 4
         };
 
         Models.Task.status = {
@@ -493,6 +494,10 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 NONE: 0,
                 STARTTLS: 1,
                 TLS: 2
+            },
+            transport: {
+                UDP: 0,
+                TCP: 1
             }
         };
 

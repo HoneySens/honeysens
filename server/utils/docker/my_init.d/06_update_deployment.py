@@ -294,6 +294,13 @@ if config_version == '2.1.0':
     db.commit()
     config.remove_section('beanstalkd')
     config.remove_section('database')
+    config.add_section('syslog')
+    config.set('syslog', 'enabled', 'false')
+    config.set('syslog', 'server', '')
+    config.set('syslog', 'port', '')
+    config.set('syslog', 'transport', '0')
+    config.set('syslog', 'facility', '1')
+    config.set('syslog', 'priority', '6')
     config.set('server', 'config_version', 'next')
     config_version = 'next'
 

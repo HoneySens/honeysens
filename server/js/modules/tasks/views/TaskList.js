@@ -39,7 +39,9 @@ function(HoneySens, Models, Backgrid, TaskListTpl, TaskListTypeCellTpl, TaskList
                     editable: false,
                     cell: Backgrid.Cell.extend({
                         render: function() {
-                            this.$el.html(HoneySens.data.models.users.get(this.model.get('user')).get('name'));
+                            // Tasks are not necessarily associated with a user
+                            var user = this.model.get('user');
+                            this.$el.html(user ? HoneySens.data.models.users.get(user).get('name') : '(system)');
                             return this;
                         }
                     })

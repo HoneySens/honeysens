@@ -47,17 +47,20 @@ class TaskService {
      * @throws CeleryPublishException
      * @throws Exception
      */
-    public function enqueue(User $user, $type, $params) {
+    public function enqueue($user, $type, $params) {
         // Persist
         $task = new Task();
         $task->setType($type)->setParams($params);
-        $user->addTask($task);
+        if($user) $user->addTask($task); // Unassociated tasks are allowed
         $this->em->persist($task);
         $this->em->flush();
         // Send to job queue
         switch ($task->getType()) {
             case Task::TYPE_EVENT_EXTRACTOR:
                 $this->queue_low->PostTask('processor.tasks.extract_events', array($task->getId()));
+                break;
+            case Task::TYPE_EVENT_FORWARDER:
+                $this->queue_high->PostTask('processor.tasks.forward_events', array($task->getId()));
                 break;
             case Task::TYPE_REGISTRY_MANAGER:
                 $this->queue_low->PostTask('processor.tasks.upload_to_registry', array($task->getId()));
