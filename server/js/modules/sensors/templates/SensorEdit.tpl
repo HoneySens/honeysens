@@ -162,6 +162,7 @@
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group">
+                            <span class="label label-info">BETA</span>
                             <label for="networkEAPOLMode" class="control-label">EAPOL/IEEE802.1X-Authentifizierung</label>
                             <select class="form-control" name="networkEAPOLMode">
                                 <option value="0">Deaktiviert</option>
