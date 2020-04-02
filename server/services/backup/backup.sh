@@ -3,7 +3,7 @@ set -e
 
 mysqldump -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" >/srv/db.sql
 if [[ "${1}" == "-l" ]]; then
-  TARGET=$(printf "/srv/backup/${CRON_TEMPLATE}.tar.bz2" "$(date +%Y%m%e-%H%M)")
+  TARGET=$(printf "/srv/backup/${CRON_TEMPLATE}.tar.bz2" "$(date +%Y%m%d-%H%M)")
   # Remove old backups
   if [[ -n "${CRON_KEEP}" && "${CRON_KEEP}" -gt 0 && $(find /srv/backup -name '*.tar.bz2' | wc -l) -gt 0 ]]; then
     echo "Cleaning up old backups"
@@ -18,5 +18,10 @@ if [[ "${1}" == "-l" ]]; then
 else
   TARGET="-"
 fi
-tar -cjf ${TARGET} -C /srv registry data db.sql
+# Full backup or DB backup depending on params
+if [[ "${1}" == "-d" || ("${1}" == "-l" && "${CRON_DBONLY}" == "true") ]]; then
+  tar -cjf ${TARGET} -C /srv db.sql
+else
+  tar -cjf ${TARGET} -C /srv registry data db.sql
+fi
 rm /srv/db.sql
