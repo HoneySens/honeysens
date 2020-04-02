@@ -4,6 +4,7 @@ MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 # Defaults
 ENV CRON_ENABLED=false \
     CRON_CONDITION="0 3 * * *" \
+    CRON_DBONLY=false \
     CRON_KEEP=0 \
     CRON_TEMPLATE="backup-%s" \
     DB_HOST=database \

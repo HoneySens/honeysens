@@ -30,15 +30,17 @@ mkdir -p /tmp/restore
 tar -xjpf - -C /tmp/restore
 
 echo "  Verifying archive contents"
-if [[ ! -d /tmp/restore/data || ! -d /tmp/restore/registry || ! -f /tmp/restore/db.sql ]]; then
+if [[ ! -f /tmp/restore/db.sql ]]; then
     echo "  Can't perform restoration: The backup archive is incomplete"
     exit 1
 fi
 
-echo "  Importing volumes"
-rm -rf /srv/data/* /srv/registry/*
-mv -f /tmp/restore/data/* /srv/data/ >/dev/null 2>&1 || true
-mv -f /tmp/restore/registry/* /srv/registry/ >/dev/null 2>&1 || true
+if [[ -d /tmp/restore/data && -d /tmp/restore/registry ]]; then
+  echo "  Importing volumes"
+  rm -rf /srv/data/* /srv/registry/*
+  mv -f /tmp/restore/data/* /srv/data/ >/dev/null 2>&1 || true
+  mv -f /tmp/restore/registry/* /srv/registry/ >/dev/null 2>&1 || true
+fi
 
 echo "  Importing database"
 echo "DROP DATABASE ${DB_NAME}; CREATE DATABASE ${DB_NAME}" | mysql -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}"
