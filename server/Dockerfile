@@ -10,7 +10,9 @@ ENV ACCESS_LOG=false \
     DB_USER=honeysens \
     DB_NAME=honeysens \
     DB_PASSWORD=secret \
-    DOMAIN=server
+    DOMAIN=server \
+    REGISTRY_HOST=registry \
+    REGISTRY_PORT=5000
 
 COPY out/web /opt/HoneySens/
 RUN /bin/bash /opt/HoneySens/utils/docker/setup_prepare.sh

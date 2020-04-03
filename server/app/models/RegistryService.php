@@ -49,7 +49,6 @@ class RegistryService {
     }
 
     private function getRegistryURL() {
-        $registryConfig = $this->appConfig['registry'];
-        return sprintf('http://%s:%u/v2', $registryConfig['host'], $registryConfig['port']);
+        return sprintf('http://%s:%u/v2', getenv('REGISTRY_HOST'), getenv('REGISTRY_PORT'));
     }
 }

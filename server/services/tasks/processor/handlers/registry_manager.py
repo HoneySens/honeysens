@@ -13,7 +13,7 @@ class RegistryManager(HandlerInterface):
     def perform(self, logger, db, config_path, storage_path, working_dir, job_data):
         config = configparser.ConfigParser()
         config.read_file(open(config_path))
-        registry = '{}:{}'.format(config.get('registry', 'host'), config.get('registry', 'port'))
+        registry = '{}:{}'.format(os.environ['REGISTRY_HOST'], os.environ['REGISTRY_PORT'])
         upload_path = '{}/{}'.format(config.get('server', 'data_path'), constants.UPLOAD_PATH)
         logger.info('Registry endpoint: {}'.format(registry))
         logger.info('Registry manager initialized, expecting uploads in {}'.format(upload_path))

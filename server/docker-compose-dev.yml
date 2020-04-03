@@ -47,7 +47,7 @@ services:
       - honeysens_dev_data:/srv/data
       - ./services/tasks:/mnt
 
-  honeysens-registry:
+  registry:
     image: registry:2
     networks:
       - server

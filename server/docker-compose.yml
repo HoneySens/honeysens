@@ -3,7 +3,6 @@ services:
 
   server:
     image: honeysens/server:2.1.0
-    container_name: honeysens-server
     restart: always
     ports:
       # For security reasons, bind these ports to a specific IP (such as "- 192.168.1.1:443:443")
@@ -48,9 +47,8 @@ services:
     volumes:
       - honeysens_data:/srv/data
 
-  honeysens-registry:
+  registry:
     image: registry:2
-    container_name: honeysens-registry
     restart: always
     networks:
       - honeysens

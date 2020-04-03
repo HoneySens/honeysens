@@ -11,7 +11,9 @@ ENV CRON_ENABLED=false \
     DB_PORT=3306 \
     DB_USER=honeysens \
     DB_NAME=honeysens \
-    DB_PASSWORD=secret
+    DB_PASSWORD=secret \
+    REGISTRY_HOST=registry \
+    REGISTRY_PORT=5000
 
 RUN apt-get -qq update && apt-get install -y cron bzip2 mariadb-client netcat && apt-get clean
 
