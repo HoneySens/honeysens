@@ -32,7 +32,7 @@ The `-T` switch is strictly required so that no interactive terminal session is 
 
 To restore a snapshot, first shut down all services besides the backup and database containers:
 
-`docker-compose stop server honeysens-registry`
+`docker-compose stop server registry`
 
 then simply pipe a backup archive into the restoration script:
 
@@ -40,7 +40,7 @@ then simply pipe a backup archive into the restoration script:
 
 That script will first make sure that all services besides the databases are offline, verify the archive contents and finally restore the given snapshot. Afterwards the remaining services have to be started again:
 
-`docker-compose start server honeysens-registry`
+`docker-compose start server registry`
 
 The procedure for doing a factory reset are similar to the restoration case, the only difference being the restoration command:
 

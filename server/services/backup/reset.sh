@@ -11,7 +11,7 @@ else
     echo "  API: down (OK)"
 fi
 
-if nc -z honeysens-registry 5000 2>/dev/null; then
+if nc -z "${REGISTRY_HOST}" "${REGISTRY_PORT}" 2>/dev/null; then
     echo "  Can't perform reset: Registry service is reachable, please shut it down first"
     exit 1
 else

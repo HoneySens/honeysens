@@ -23,8 +23,8 @@ Falls ein individuelles TLS-Schlüsselpaar für den Server genutzt werden soll, 
 Volume/Bind-mount an den angegebenen Pfad spezifiziert werden. Alternativ generiert der Server beim Start
 ein selbstsigniertes TLS-Zertifikat.
 
-Hinweis: Wichtig ist, dass für die Container die im Compose-File angegebenen Namen "honeysens" und "honeysens-registry"
-beibehalten werden, da sich beide im User-defined-network "honeysens" über diese Namen zu erreichen versuchen.
+Hinweis: Wichtig ist, dass für die Container die im Compose-File angegebenen Namen der einzelnen Container
+beibehalten werden, da sich diese im User-defined-network "honeysens" über ihre Namen zu kontaktieren versuchen.
 
 3. Starten:
 docker-compose up -d
