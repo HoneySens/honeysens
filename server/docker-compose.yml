@@ -2,7 +2,7 @@ version: "3"
 services:
 
   server:
-    image: honeysens/server:2.1.0
+    image: honeysens/server:2.2.0
     restart: always
     ports:
       # For security reasons, bind these ports to a specific IP (such as "- 192.168.1.1:443:443")
@@ -22,6 +22,7 @@ services:
 
   database:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
+    restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_DATABASE=honeysens
@@ -35,15 +36,17 @@ services:
 
   broker:
     image: redis:5
+    restart: always
     networks:
       - honeysens
 
   tasks:
-    image: honeysens/tasks:2.1.0
+    image: honeysens/tasks:2.2.0
+    restart: always
     environment:
       - DB_PASSWORD=honeysens
     networks:
-      - server
+      - honeysens
     volumes:
       - honeysens_data:/srv/data
 
@@ -58,7 +61,8 @@ services:
       - honeysens_registry:/var/lib/registry
 
   backup:
-    image: honeysens/backup:2.1.0
+    image: honeysens/backup:2.2.0
+    restart: always
     environment:
       - CRON_ENABLED=false
       - CRON_CONDITION=0 3 * * *
@@ -68,7 +72,6 @@ services:
       - DB_PASSWORD=honeysens
     networks:
       - honeysens
-    restart: "no"
     volumes:
       - honeysens_backup:/srv/backup
       - honeysens_data:/srv/data

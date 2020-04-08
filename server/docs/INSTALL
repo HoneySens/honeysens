@@ -46,6 +46,7 @@ und im Anschluss direkt über 'docker-compose up -d' neu gestartet.
 
 ACHTUNG: Beim Update von Server-Versionen 2.1.0 oder früher ist VOR DEM UPDATE unbedingt nachfolgender Befehl im Server-Container
 auszuführen:
-echo "GRANT ALL PRIVILEGES ON honeysens.* TO 'honeysens'@'%' IDENTIFIED BY 'honeysens';" | docker-compose exec -T honeysens mysql
+echo "GRANT ALL PRIVILEGES ON honeysens.* TO 'honeysens'@'%' IDENTIFIED BY '<passwort>';" | docker-compose exec -T honeysens mysql
+Das hier gesetzte Passwort muss identisch sein zum in docker-compose.yml gesetzten Datenbank-Passwort (DB_PASSWORD und MYSQL_PASSWORD).
 Nur so ist sichergestellt, dass nach dem Update die Kommunikation mit der nun in einen separaten Container ausgelagerten Datenbank
 weiterhin möglich ist.
