@@ -4,6 +4,7 @@ import os
 import shutil
 import tarfile
 
+from .. import constants
 from .handler import HandlerInterface
 
 
@@ -27,8 +28,9 @@ class SensorConfigCreator(HandlerInterface):
         logger.debug('Writing sensor key to {}/key.pem'.format(working_dir))
         with open('{}/key.pem'.format(working_dir), 'w') as f:
             f.write(job_params['key'])
-        logger.debug('Copying server certificate bundle: {} -> {}/server-cert.pem'.format(config.get('server', 'certfile'), working_dir))
-        shutil.copy(config.get('server', 'certfile'), '{}/server-cert.pem'.format(working_dir))
+        certfile = '{}/https.chain.crt'.format(constants.STORAGE_PATH)
+        logger.debug('Copying server certificate bundle: {} -> {}/server-cert.pem'.format(certfile, working_dir))
+        shutil.copy(certfile, '{}/server-cert.pem'.format(working_dir))
         if job_params['eapol_ca_cert'] is not None:
             eapol_ca_crt_path = 'eapol_ca.rt'
             logger.debug('Writing EAPOL CA certificate to {}/{}'.format(working_dir, eapol_ca_crt_path))

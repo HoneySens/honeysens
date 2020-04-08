@@ -113,7 +113,7 @@ class Tasks extends RESTResource {
             $controller->delete($id);
         };
         if($task->getStatus() == Task::STATUS_DONE && array_key_exists('path', $result)) {
-            $filepath = sprintf("%s/tasks/%s/%s", $this->getConfig()['server']['data_path'], $id, $result['path']);
+            $filepath = sprintf("%s/tasks/%s/%s", DATA_PATH, $id, $result['path']);
             if($delete) $this->offerFile($filepath, $result['path'], $deleteFunc);
             else $this->offerFile($filepath, $result['path']);
         } else throw new BadRequestException();
@@ -140,7 +140,7 @@ class Tasks extends RESTResource {
     public function upload($data) {
         // Only users that are logged in can upload stuff
         V::objectType()->check($this->getSessionUser());
-        $pathResolver = new \FileUpload\PathResolver\Simple(realpath(sprintf('%s/%s', $this->getConfig()['server']['data_path'], self::UPLOAD_PATH)));
+        $pathResolver = new \FileUpload\PathResolver\Simple(realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH)));
         $fs = new Simple();
         $fileUpload = new FileUpload($data, $_SERVER);
         $fileUpload->setPathResolver($pathResolver);
@@ -183,7 +183,7 @@ class Tasks extends RESTResource {
         if($task->getStatus() == Task::STATUS_RUNNING) throw new BadRequestException();
         // Recursively remove temporary task files
         $result = $task->getResult();
-        $dir = sprintf("%s/tasks/%s", $this->getConfig()['server']['data_path'], $id);
+        $dir = sprintf("%s/tasks/%s", DATA_PATH, $id);
         if(($task->getStatus() == Task::STATUS_DONE || $task->getStatus() == Task::STATUS_ERROR) && file_exists($dir)) {
             $files = array_diff(scandir($dir), array('.','..'));
             foreach ($files as $file) (is_dir("$dir/$file")) ? delTree("$dir/$file") : unlink("$dir/$file");
@@ -192,7 +192,7 @@ class Tasks extends RESTResource {
         // Attempt to remove artifacts from the upload directory
         $params = $task->getParams();
         if(array_key_exists('path', $params)) {
-            $uploadArtifact = sprintf('%s/%s/%s', $this->getConfig()['server']['data_path'], self::UPLOAD_PATH, $params['path']);
+            $uploadArtifact = sprintf('%s/%s/%s', DATA_PATH, self::UPLOAD_PATH, $params['path']);
             if(file_exists($uploadArtifact)) unlink($uploadArtifact);
         }
         $em->remove($task);

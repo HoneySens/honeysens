@@ -23,7 +23,7 @@ class UploadVerifier(HandlerInterface):
         job_params = json.loads(job_data['params'])
         config = configparser.ConfigParser()
         config.read_file(open(config_path))
-        upload_path = '{}/{}'.format(config.get('server', 'data_path'), constants.UPLOAD_PATH)
+        upload_path = '{}/{}'.format(constants.STORAGE_PATH, constants.UPLOAD_PATH)
         logger.debug('Performing job {}'.format(job_data['id']))
         uploaded_file = '{}/{}'.format(upload_path, job_params['path'])
         if not os.path.isfile(uploaded_file):

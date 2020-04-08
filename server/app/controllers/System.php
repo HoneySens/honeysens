@@ -98,7 +98,7 @@ class System extends RESTResource {
     public function get() {
         $config = $this->getConfig();
         // Fetch TLS cert common name
-        $certfile = $config['server']['certfile'];
+        $certfile = sprintf('%s/https.chain.crt', DATA_PATH);
         $commonName = null;
         $x509 = new X509();
         try {

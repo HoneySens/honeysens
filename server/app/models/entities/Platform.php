@@ -228,6 +228,6 @@ abstract class Platform {
     }
 
     private function getFirmwarePath($config) {
-        return sprintf('%s/%s', $config['server']['data_path'], self::FIRMWARE_PATH);
+        return sprintf('%s/%s', DATA_PATH, self::FIRMWARE_PATH);
     }
 }
