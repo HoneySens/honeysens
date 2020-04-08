@@ -194,7 +194,7 @@ class Platforms extends RESTResource {
             $platform->setDefaultFirmwareRevision($firmware);
         }
         $em->flush();
-        $platform->registerFirmware($firmware, sprintf('%s/%s/%s', $this->getConfig()['server']['data_path'], Tasks::UPLOAD_PATH, $task->getParams()['path']), $this->getConfig());
+        $platform->registerFirmware($firmware, sprintf('%s/%s/%s', DATA_PATH, Tasks::UPLOAD_PATH, $task->getParams()['path']), $this->getConfig());
         // Remove upload verification task
         $taskController = new Tasks($em, $this->getServiceManager(), $this->getConfig());
         $taskController->delete($task->getId());

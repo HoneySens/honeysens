@@ -26,8 +26,13 @@ def execute_sql(db, statements):
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+# Global paths
+BASE_PATH = '/opt/HoneySens'
+APPLICATION_PATH = '{}/app'.format(BASE_PATH)
+DATA_PATH = '{}/data'.format(BASE_PATH)
+
 # Parse configuration
-config_file = '/opt/HoneySens/data/config.cfg'
+config_file = '{}/config.cfg'.format(DATA_PATH)
 if not os.path.isfile(config_file):
     print('Updater: Config {} file not found'.format(config_file))
     exit(1)
@@ -37,16 +42,15 @@ config = ConfigParser.ConfigParser()
 # Preserve the case of config keys instead of forcing them lower-case
 config.optionxform = str
 config.readfp(open(config_file))
-data_path = '{}/data'.format(config.get('server', 'app_path'))
 
 # Quit in case the data directory is not accessible
-if not os.path.isdir(data_path):
+if not os.path.isdir(DATA_PATH):
     print('Updater: Error: Data directory not found')
     exit(1)
 
 # Figure out server version
 server_version = None
-with open('{}/app/controllers/System.php'.format(config.get('server', 'app_path'))) as f:
+with open('{}/controllers/System.php'.format(APPLICATION_PATH)) as f:
     for line in f:
         if 'const VERSION' in line:
             server_version = re.sub("';", '', re.sub("const VERSION = '", '', line.strip()))
@@ -154,7 +158,7 @@ if config_version == '0.2.4':
 # 0.2.5 -> 0.9.0
 if config_version == '0.2.5':
     print('Upgrading configuration 0.2.5 -> 0.9.0')
-    fw_path = '{}/data/firmware'.format(config.get('server', 'app_path'))
+    fw_path = '{}/firmware'.format(DATA_PATH)
     print('Cleaning old firmware files in {}'.format(fw_path))
     for f in glob.glob('{}/*'.format(fw_path)):
         print('  Removing {}'.format(f))
@@ -202,8 +206,8 @@ if config_version == '0.9.0':
 if config_version == '1.0.0':
     print('Upgrading configuration 1.0.0 -> 1.0.1')
     # Reissue certificates with sha256 digest
-    ca_crt = crypto.load_certificate(crypto.FILETYPE_PEM, open('{}/CA/ca.crt'.format(data_path), 'rt').read())
-    ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, open('{}/CA/ca.key'.format(data_path), 'rt').read())
+    ca_crt = crypto.load_certificate(crypto.FILETYPE_PEM, open('{}/CA/ca.crt'.format(DATA_PATH), 'rt').read())
+    ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, open('{}/CA/ca.key'.format(DATA_PATH), 'rt').read())
     update_statements = []
     cursor = pymysql.cursors.DictCursor(db)
     cursor.execute('SELECT s.id, c.id, c.privateKey FROM sensors s INNER JOIN certs c ON s.cert_id = c.id')
@@ -295,6 +299,9 @@ if config_version == '2.1.0':
     config.remove_section('beanstalkd')
     config.remove_section('database')
     config.remove_section('registry')
+    config.remove_option('server', 'app_path')
+    config.remove_option('server', 'data_path')
+    config.remove_option('server', 'certfile')
     config.add_section('syslog')
     config.set('syslog', 'enabled', 'false')
     config.set('syslog', 'server', '')

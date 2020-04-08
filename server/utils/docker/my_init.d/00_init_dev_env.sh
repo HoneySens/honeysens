@@ -31,7 +31,7 @@ fi
 if [[ ! -f /srv/data/config.cfg ]]; then
     echo "Adjusting HoneySens configuration"
     cp -v /srv/data/config.clean.cfg /srv/data/config.cfg
-    sed -i -e 's/password.*/password = honeysens/' -e 's#certfile.*#certfile = /srv/data/https.chain.crt#' -e 's/debug.*/debug = true/' -e 's#/opt/HoneySens#/srv#' /srv/data/config.cfg
+    sed -i -e 's/debug.*/debug = true/' /srv/data/config.cfg
     chown www-data:www-data /srv/data/config.cfg
     chmod a+w /srv/data/config.cfg
 fi

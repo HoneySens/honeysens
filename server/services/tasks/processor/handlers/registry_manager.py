@@ -14,7 +14,7 @@ class RegistryManager(HandlerInterface):
         config = configparser.ConfigParser()
         config.read_file(open(config_path))
         registry = '{}:{}'.format(os.environ['REGISTRY_HOST'], os.environ['REGISTRY_PORT'])
-        upload_path = '{}/{}'.format(config.get('server', 'data_path'), constants.UPLOAD_PATH)
+        upload_path = '{}/{}'.format(constants.STORAGE_PATH, constants.UPLOAD_PATH)
         logger.info('Registry endpoint: {}'.format(registry))
         logger.info('Registry manager initialized, expecting uploads in {}'.format(upload_path))
         job_params = json.loads(job_data['params'])

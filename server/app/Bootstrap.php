@@ -28,7 +28,10 @@ use \Respect\Validation\Exceptions\ValidationException;
 use Slim\Route;
 use Slim\Slim;
 
-defined('APPLICATION_PATH') || define('APPLICATION_PATH', realpath(dirname(__FILE__)));
+// Global paths
+define('BASE_PATH', realpath(sprintf('%s/../', dirname(__FILE__))));
+define('APPLICATION_PATH', sprintf('%s/app', BASE_PATH));
+define('DATA_PATH', sprintf('%s/data', BASE_PATH));
 set_include_path(implode(PATH_SEPARATOR, array(realpath(APPLICATION_PATH . '/vendor'), get_include_path())));
 
 function initSlim($appConfig) {
