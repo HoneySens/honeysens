@@ -283,9 +283,9 @@ if config_version == '2.0.0':
     config.set('misc', 'restrict_manager_role', 'false')
     config.set('server', 'config_version', '2.1.0')
     config_version = '2.1.0'
-# 2.1.0 -> next
+# 2.1.0 -> 2.2.0
 if config_version == '2.1.0':
-    print('Upgrading configuration 2.1.0 -> next')
+    print('Upgrading configuration 2.1.0 -> 2.2.0')
     db_statements = [
         'ALTER TABLE certs CHANGE privateKey privateKey LONGTEXT DEFAULT NULL',
         'ALTER TABLE sensors ADD EAPOLMode INT NOT NULL, ADD EAPOLIdentity VARCHAR(255) DEFAULT NULL, ADD EAPOLPassword VARCHAR(255) DEFAULT NULL, ADD EAPOLAnonymousIdentity VARCHAR(255) DEFAULT NULL, ADD EAPOLClientCertPassphrase VARCHAR(255) DEFAULT NULL, ADD EAPOLCACert_id INT DEFAULT NULL, ADD EAPOLClientCert_id INT DEFAULT NULL',
@@ -309,8 +309,8 @@ if config_version == '2.1.0':
     config.set('syslog', 'transport', '0')
     config.set('syslog', 'facility', '1')
     config.set('syslog', 'priority', '6')
-    config.set('server', 'config_version', 'next')
-    config_version = 'next'
+    config.set('server', 'config_version', '2.2.0')
+    config_version = '2.2.0'
 
 # Write new config file
 with open(config_file, 'w') as f:

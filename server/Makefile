@@ -1,5 +1,5 @@
 PREFIX := HoneySens-Server
-REVISION := 2.1.0
+REVISION := 2.2.0
 OUTDIR := out
 # (watch|simple-watch|chokidar)
 export DEV_WATCH_TASK := chokidar
@@ -7,7 +7,7 @@ export DEV_WATCH_TASK := chokidar
 # Additional dev environment features
 DEV_ENV_LDAP := no
 DEV_ENV_PROXY := no
-DEV_ENV_SYSLOG := yes
+DEV_ENV_SYSLOG := no
 
 dist: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 

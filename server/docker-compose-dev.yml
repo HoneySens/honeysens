@@ -68,7 +68,6 @@ services:
     networks:
       - server
     privileged: true
-    restart: "no"
     volumes:
       - honeysens_dev_backup:/srv/backup
       - honeysens_dev_data:/srv/data

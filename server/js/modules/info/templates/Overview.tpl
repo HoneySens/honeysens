@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>2.1.0</dd>
+        <dd>2.2.0</dd>
         <dt>Lizenz</dt>
         <dd><a href="https://www.apache.org/licenses/LICENSE-2.0.html" target="_blank">Apache 2.0 Software License</a></dd>
         <dt>Entwicklung</dt>
@@ -46,6 +46,18 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
+                    <p>
+                        <ul>
+                            <li>Umfassendes und bei Bedarf vollautomatisches Backupkonzept integriert</li>
+                            <li>Unterstützung von EAPOL/IEEE802.1X-Authentifizierung für Sensoren (Beta-Status)</li>
+                            <li>Unterstützung der automatischen Ereignisweiterleitung an externe Syslog-Server implementiert</li>
+                            <li>Ereignisbearbeitung in separaten Dialog ausgelagert</li>
+                            <li>Komponentenaufteilung überarbeitet: Datenbank, Hintergrundprozesse und Backups separiert</li>
+                            <li>Zahlreiche Härtungsmaßnahmen innerhalb der Webanwendung umgesetzt</li>
+                        </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.1.0</strong><br/>
                     <p>
                         <ul>
@@ -126,6 +138,9 @@
             </div>
             <div id="releasenotesBBB" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
+                    <p>EAPOL support</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
                     <p>Support for event caching, an adjustable service network range, new LED notification modes and USB auditing</p>
                     <hr />
@@ -157,6 +172,9 @@
             </div>
             <div id="releasenotesDocker" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
+                    <p>EAPOL support</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
                     <p>Fully reworked networking and logging as well as support for event caching, an adjustable service network range and deployment/update with Docker Compose</p>
                     <hr />
