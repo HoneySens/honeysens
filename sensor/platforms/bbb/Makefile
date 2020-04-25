@@ -11,18 +11,18 @@ default: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 clean:
 	rm -rf ${OUTDIR}
 
-${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/firmware-${IMG_SIZE}.img ${OUTDIR}/build/metadata.xml | DIR.${OUTDIR}/dist
-	tar -czf $@ --transform 's|firmware-${IMG_SIZE}.img|firmware.img|' -C ${OUTDIR}/build/ metadata.xml -C omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/ firmware-${IMG_SIZE}.img
+${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/firmware-${IMG_SIZE}.img ${OUTDIR}/build/metadata.xml | DIR.${OUTDIR}/dist
+	tar -czf $@ --transform 's|firmware-${IMG_SIZE}.img|firmware.img|' -C ${OUTDIR}/build/ metadata.xml -C omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/ firmware-${IMG_SIZE}.img
 
-${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/firmware-${IMG_SIZE}.img: ${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/armhf-rootfs-debian-stretch.tar
-	cd ${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/ && ./setup_sdcard.sh --img-${IMG_SIZE} firmware --dtb beaglebone --hostname sensor --enable-cape-universal --enable-fat-partition --emmc-flasher
+${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/firmware-${IMG_SIZE}.img: ${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/armhf-rootfs-debian-buster.tar
+	cd ${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/ && ./setup_sdcard.sh --img-${IMG_SIZE} firmware --dtb beaglebone --hostname sensor --enable-cape-universal --enable-fat-partition --emmc-flasher
 
-${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/armhf-rootfs-debian-stretch.tar: ${OUTDIR}/build/omap-image-builder | DIR.${OUTDIR}/build/image-root
-	cd ${OUTDIR}/build/omap-image-builder && ./RootStock-NG.sh -c bb.org-debian-stretch-console-v4.9
-	patch -d ${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME} -p1 < setup_sdcard.patch
+${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/armhf-rootfs-debian-buster.tar: ${OUTDIR}/build/omap-image-builder | DIR.${OUTDIR}/build/image-root
+	cd ${OUTDIR}/build/omap-image-builder && ./RootStock-NG.sh -c bb.org-debian-buster-console-v4.19
+	patch -d ${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME} -p1 < setup_sdcard.patch
 	tar -xf $@ -C ${OUTDIR}/build/image-root
 	patch -d ${OUTDIR}/build/image-root -p1 < ssh-over-usb-fix.patch
-	cp -v bbb-flasher.patch ${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/
+	cp -v bbb-flasher.patch ${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/
 	cp -vr ../../manager usb_audit/usb_audit.sh ${OUTDIR}/build/image-root/opt/
 	cp -v prepare.sh ${OUTDIR}/build/image-root/root/
 	cp -v manager.service usb_audit/usb-audit@.service ${OUTDIR}/build/image-root/etc/systemd/system/
@@ -37,7 +37,7 @@ ${OUTDIR}/build/omap-image-builder/deploy/debian-9.3-console-armhf-${TIME}/armhf
 
 ${OUTDIR}/build/omap-image-builder: | DIR.${OUTDIR}/build
 	test ${ARCH} = "armv7l" || { echo "Error: This firmware can only be built on ARMv7 architectures"; exit 1; }
-	git clone --branch v2018.01 https://github.com/RobertCNelson/omap-image-builder ${OUTDIR}/build/omap-image-builder
+	git clone --branch v2020.03 https://github.com/RobertCNelson/omap-image-builder $@
 
 ${OUTDIR}/build/metadata.xml: | DIR.${OUTDIR}/build
 	sed 's/$$REVISION/${REVISION}/' metadata.xml > $@
