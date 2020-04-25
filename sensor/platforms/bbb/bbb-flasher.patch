@@ -1,7 +1,7 @@
 diff -ru a/opt/scripts/tools/eMMC/functions.sh b/opt/scripts/tools/eMMC/functions.sh
---- a/opt/scripts/tools/eMMC/functions.sh	2018-01-31 15:49:11.948805600 +0100
-+++ b/opt/scripts/tools/eMMC/functions.sh	2018-01-31 13:43:15.000000000 +0100
-@@ -316,7 +316,7 @@
+--- a/opt/scripts/tools/eMMC/functions.sh	2020-04-24 15:47:41.342340412 +0200
++++ b/opt/scripts/tools/eMMC/functions.sh	2020-04-24 15:54:17.083329525 +0200
+@@ -318,7 +318,7 @@
      if [ ! "x${are_we_flasher}" = "x" ] ; then
        echo_broadcast "We are init"
        #When run as init
@@ -11,8 +11,8 @@ diff -ru a/opt/scripts/tools/eMMC/functions.sh b/opt/scripts/tools/eMMC/function
      fi
      echo_broadcast "Calling shutdown"
 diff -ru a/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh b/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
---- a/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh	2018-01-31 15:48:11.536572967 +0100
-+++ b/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh	2018-01-31 15:50:26.645092222 +0100
+--- a/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh	2020-04-24 15:47:41.343340412 +0200
++++ b/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh	2020-04-24 15:55:09.449328085 +0200
 @@ -46,5 +46,18 @@
  check_eeprom
  check_running_system
