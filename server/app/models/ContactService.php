@@ -156,7 +156,7 @@ class ContactService {
         $mail->FromName = 'HoneySens';
         $mail->WordWrap = 120;
         $mail->addAddress($to);
-        $mail->Subject = 'HoneySens Testnachricht"';
+        $mail->Subject = 'HoneySens Testnachricht';
         $mail->Body = 'Dies ist eine Testnachricht des HoneySens-Servers.';
         if(!$mail->send()) throw new \Exception($mail->ErrorInfo);
     }
