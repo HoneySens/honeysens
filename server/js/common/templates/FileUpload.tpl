@@ -19,8 +19,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group uploadVerify">
-                    <div class="uploadInvalid alert alert-danger hide"><span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;<span class="errorMsg"></span></div>
+                <div class="uploadInvalid alert alert-danger hide">
+                    <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;<span class="errorMsg"></span>
                 </div>
             </form>
         <% } else { %>

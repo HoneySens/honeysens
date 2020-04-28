@@ -7,7 +7,8 @@ requirejs.config({
         'datatables-bootstrap': 'dtables/dataTables.bootstrap',
         chart: 'Chart.bundle',
         tpl: 'underscore-tpl',
-        app: '..'
+        app: '..',
+        'jquery-ui/ui/widget': 'jquery.ui.widget'
     },
     shim: {
         marionette: {exports: 'Backbone.Marionette', deps: ['backbone']},

@@ -107,14 +107,11 @@ function(HoneySens, Models, FileUploadTpl) {
                         view.$el.find('div.progress-bar').css('width', progress).text(progress);
                         view.$el.find('span.progress-loaded').text((data.loaded / (1000 * 1000)).toFixed(1));
                         view.$el.find('span.progress-total').text(+(data.total / (1000 * 1000)).toFixed(1));
-                        //if(parseInt(data.loaded / data.total * 100) >= 97) {
-                            //view.$el.find('span.uploadValidating').show();
-                        //}
                     },
                     fail: function(e, data) {
-                        var errorMsg ='Es ist ein Fehler aufgetreten';
-                        view.$el.find('div.uploadInvalid span.errorMsg').text(errorMsg);
-                        view.$el.find('div.uploadInvalid').show().siblings().hide();
+                        var errorMsg = data.jqXHR.hasOwnProperty('responseJSON') ? ' (' + data.jqXHR.responseJSON.error + ')' : '';
+                        view.$el.find('div.uploadInvalid span.errorMsg').text('Auf dem Server ist ein Fehler aufgetreten' + errorMsg);
+                        view.$el.find('div.uploadInvalid').removeClass('hide').siblings().addClass('hide');
                     },
                     done: function(e, data) {
                         // Update local model, refresh view
