@@ -13,9 +13,10 @@ Compose-File, docker-compose.yml.
 
 Die üblichen Schritte zur Inbetriebnahme einer neuen Serverinstallation:
 
-1. Server-Image laden:
+1. Server-Images laden:
 docker load -i server-<version>.tar
 docker load -i backup-<version>.tar
+docker load -i tasks-<version>.tar
 
 2. Compose-File anpassen
 Alle für die Container benötigten Parameter lassen sich aus dem Compose-File ableiten.
@@ -24,10 +25,16 @@ Volume/Bind-mount an den angegebenen Pfad spezifiziert werden. Alternativ generi
 ein selbstsigniertes TLS-Zertifikat.
 
 Hinweis: Wichtig ist, dass für die Container die im Compose-File angegebenen Namen der einzelnen Container
-beibehalten werden, da sich diese im User-defined-network "honeysens" über ihre Namen zu kontaktieren versuchen.
+beibehalten werden, da sich diese im nutzerdefinierten Docker-Netzwerk über ihre Namen zu kontaktieren versuchen.
 
 3. Starten:
 docker-compose up -d
+Hier ist zu beachten, dass bei Docker Compose für die Arbeit mit einer laufenden Instanz der "Projektname" von zentraler
+Bedeutung ist. Standardmäßig nutzt Docker Compose den Namen des aktuellen Arbeitsverzeichnisses als Projektname, es kann
+aber auch mittels "docker-compose -p <projektname>" für alle Operationen ein individueller Name spezifiziert werden.
+Bei allen späteren Arbeiten mit der Instanz ist es wichtig, immer denselben Projektnamen zu verwenden - also entweder
+alle Befehle aus dem gleichen Arbeitsverzeichnis heraus auszuführen oder bei allen Operationen den individuellen Projektnamen
+mittels "docker-compose -p <projektname>" mit anzugeben.
 
 4. Installation prüfen:
 Auf Port 443 kann über HTTPS das Webinterface angesprochen werden.
@@ -39,14 +46,19 @@ kommunizieren beide Container erfolgreich.
 --------------------
 -      Update      -
 --------------------
-Im Allgemeinen gelten für die Aktualisierung einer bestehenden Installation die selben Schritte wie zuvor unter
-'Installation' beschrieben: Neue Image-Versionen werden zunächst mit 'docker load' importiert, laufende Container mittels
-'docker-compose down' heruntergefahren, die Projektdatei docker-compose.yml angepasst (nach dem Vorbild im Archiv der neuen Version)
-und im Anschluss direkt über 'docker-compose up -d' neu gestartet.
+Die nötigen Schritte für die Aktualisierung einer bestehenden Instanz orienten sich stark an den unter 'Installation' beschriebenen Schritten.
+Auch hier ist darauf zu achten, alle Operationen mit demselben Projektnamen auszuführen (siehe Installation, Punkt 3):
+* Laufende Instanz mittels 'docker-compose down' herunterfahren
+* Neue Revisionen der Images mit 'docker load -i <service>.tar' importieren
+* Die Projektdatei docker-compose.yml anpassen (nach dem Vorbild im Archiv der neueren Version)
+* Instanz im Anschluss mittels 'docker-compose up -d' neu starten
+* Für die Nutzung des Webinterfaces empfiehlt es sich, nach Updates den Browser-Cache zu leeren
 
-ACHTUNG: Beim Update von Server-Versionen 2.1.0 oder früher ist VOR DEM UPDATE unbedingt nachfolgender Befehl im Server-Container
-auszuführen:
+ACHTUNG: Beim Update von Server-Versionen 2.1.0 oder früher ist VOR DEM UPDATE unbedingt in der laufenden alten Instanz
+folgender Befehl im Server-Container auszuführen (darauf achten, den korrekten Projektnamen zu verwenden - siehe Installation, Punkt 3):
+
 echo "GRANT ALL PRIVILEGES ON honeysens.* TO 'honeysens'@'%' IDENTIFIED BY '<passwort>';" | docker-compose exec -T honeysens mysql
+
 Das hier gesetzte Passwort muss identisch sein zum in docker-compose.yml gesetzten Datenbank-Passwort (DB_PASSWORD und MYSQL_PASSWORD).
 Nur so ist sichergestellt, dass nach dem Update die Kommunikation mit der nun in einen separaten Container ausgelagerten Datenbank
 weiterhin möglich ist.
