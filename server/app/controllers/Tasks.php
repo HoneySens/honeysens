@@ -140,6 +140,7 @@ class Tasks extends RESTResource {
     public function upload($data) {
         // Only users that are logged in can upload stuff
         V::objectType()->check($this->getSessionUser());
+        $uploadPath = realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH));
         $pathResolver = new \FileUpload\PathResolver\Simple(realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH)));
         $fs = new Simple();
         $fileUpload = new FileUpload($data, $_SERVER);
@@ -148,11 +149,20 @@ class Tasks extends RESTResource {
         list($files, $headers) = $fileUpload->processAll();
         $result = array('files' => $files);
         foreach($files as $file) {
+            // Check remaining disk space for target directory
+            if($file->size >= disk_free_space($uploadPath)) {
+                $filePath = sprintf('%s/%s', $uploadPath, $file->getBasename());
+                if(file_exists($filePath)) unlink($filePath);
+                throw new Exception('Disk capacity exceeded');
+            }
             if($file->completed) {
                 // Verify archive content
                 $taskParams = array('path' => $file->getBasename());
                 $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_UPLOAD_VERIFIER, $taskParams);
                 $result['task'] = $task->getState();
+            } elseif($file->errorCode != 0) {
+                // Upload failed during preprocessing (e.g. could not write to PHP upload_tmp_dir)
+                throw new Exception($file->error);
             }
         }
         foreach($headers as $header => $value) {
