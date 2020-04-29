@@ -1,21 +1,23 @@
 #!/usr/bin/env sh
+set -e
 
-apk --update --no-cache add --virtual build-dependencies build-base
-apk --update --no-cache add curl zeromq py-pip gcc py-virtualenv python2-dev musl-dev openssl-dev libffi-dev
+apk --update --no-cache add --virtual build-dependencies build-base git libffi-dev musl-dev openssl-dev python2-dev py-pip zeromq-dev
+apk --update --no-cache add py-virtualenv python2 openssl libffi zeromq
 
 adduser -D -s /bin/sh rdpy rdpy
 
-su - rdpy -c "curl -L https://github.com/citronneur/rdpy/archive/v1.3.2.tar.gz -o /home/rdpy/rdpy.tar.gz"
-su - rdpy -c "tar -xzf /home/rdpy/rdpy.tar.gz -C /home/rdpy/"
-cd /home/rdpy/rdpy-1.3.2
+git clone https://github.com/citronneur/rdpy /opt/rdpy
+cd /opt/rdpy
+git checkout cef16a9f64d836a3221a344ca7d571644280d829
 
-patch -p1 < /home/rdpy/rdpy-rdphoneypot.patch
-mv /home/rdpy/honeysens_log.py ./rdpy/core
+patch -p1 < /root/rdpy-rdphoneypot.patch
+mv -v /root/honeysens_log.py /opt/rdpy/rdpy/core
+mv -v /root/out.rss /opt
 
 pip install --upgrade pip
-pip install --no-cache-dir twisted pyopenssl qt4reactor service_identity rsa pyasn1
-pip install --no-cache-dir utils pyzmq pycrypto
+pip install --no-cache-dir twisted pyopenssl qt4reactor service_identity rsa pyasn1 utils pyzmq pycrypto
 python setup.py install
 
+apk del build-dependencies
 rm -f /var/cache/apk/*
-rm -rf .cache/pip
+rm -rf .cache/pip /opt/rdpy

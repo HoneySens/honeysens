@@ -1,5 +1,5 @@
 PREFIX := HoneySens-glastopf
-REVISION := 1.0.1
+REVISION := 2.2.0
 OUTDIR := out
 METADATA := metadata.xml
 

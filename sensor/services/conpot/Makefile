@@ -1,5 +1,5 @@
 PREFIX := HoneySens-conpot
-REVISION := 2.0.0
+REVISION := 2.2.0
 OUTDIR := out
 METADATA := metadata.xml
 

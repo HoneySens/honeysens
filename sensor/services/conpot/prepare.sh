@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+set -e
 
 apk --update --no-cache add --virtual build-dependencies build-base mariadb-dev
 apk --update --no-cache add curl zeromq py-pip py-virtualenv python2-dev libxml2-dev libxslt-dev mariadb-client git libffi-dev tcpdump zeromq-dev mariadb-connector-c

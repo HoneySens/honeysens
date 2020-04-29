@@ -8,5 +8,5 @@
     <catchAll>false</catchAll>
     <portAssignment>{"3389/tcp":3389}</portAssignment>
     <revision>$REVISION</revision>
-    <revisionDescription>Based on RDPy version 1.3.2</revisionDescription>
+    <revisionDescription>Based on git revision cef16a9f64d836a3221a344ca7d571644280d829</revisionDescription>
 </service>

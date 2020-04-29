@@ -1,5 +1,5 @@
 PREFIX := HoneySens-RDPy
-REVISION := 1.0.0
+REVISION := 2.2.0
 OUTDIR := out
 METADATA := metadata.xml
 

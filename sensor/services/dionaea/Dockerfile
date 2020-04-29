@@ -1,4 +1,4 @@
-FROM multiarch/ubuntu-core:x86_64-xenial
+FROM multiarch/ubuntu-core:x86_64-bionic
 
 COPY cmake.patch config.patch log_honeysens.py log_honeysens.yaml.in prepare.sh /root/
 RUN /bin/sh /root/prepare.sh
