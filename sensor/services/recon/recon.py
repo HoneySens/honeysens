@@ -109,7 +109,7 @@ def packet_handler(p):
     if TCP in p:
       incident_detected = True
       incident_data = get_event(src_ip)
-      packet = {'headers': [{'flags': p[TCP].flags}], 'protocol': 1, 'port': p[TCP].dport, 'timestamp': int(time.time()), 'payload': None}
+      packet = {'headers': [{'flags': p[TCP].flags.value}], 'protocol': 1, 'port': p[TCP].dport, 'timestamp': int(time.time()), 'payload': None}
       if p[TCP].flags == 0x02: # SYN
         send(IP(src=p[IP].dst, dst=p[IP].src)/TCP(flags="SA", sport=p[TCP].dport, dport=p[TCP].sport, ack=p[TCP].seq+1, seq=seq))
         seq = seq + 1

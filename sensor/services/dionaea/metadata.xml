@@ -8,6 +8,6 @@
 		<catchAll>false</catchAll>
 		<portAssignment>{"445/tcp":445}</portAssignment>
     <revision>$REVISION</revision>
-    <revisionDescription>Based on git revision 93d5bf93d03143c489069bf93216854b44a7d703</revisionDescription>
+    <revisionDescription>Based on git revision 1426750b9fd09c5bfeae74d506237333cd8505e2</revisionDescription>
 </service>
 

@@ -1,16 +1,16 @@
---- a/etc/dionaea/dionaea.cfg
-+++ b/etc/dionaea/dionaea.cfg
-@@ -1,7 +1,7 @@
- [dionaea]
+diff -ru a/etc/dionaea/dionaea.cfg b/etc/dionaea/dionaea.cfg
+--- a/etc/dionaea/dionaea.cfg	2020-04-27 09:58:26.000000000 +0200
++++ b/etc/dionaea/dionaea.cfg	2020-04-27 10:38:15.627283735 +0200
+@@ -2,7 +2,7 @@
  download.dir=var/lib/dionaea/binaries/
--modules=curl,python,nfq,emu,pcap
+ #modules=curl,python,nfq,emu,pcap
+ modules=curl,python,emu
 -processors=filter_streamdumper,filter_emu
-+modules=curl,python,emu,pcap
 +processors=filter_emu
  
  listen.mode=getifaddrs
  # listen.addresses=127.0.0.1
-@@ -22,11 +22,11 @@
+@@ -23,11 +23,11 @@
  # ssl.default.ou=
  
  [logging]

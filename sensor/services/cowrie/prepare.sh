@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+set -e
 
 # Install requirements
 apk --update add git gcc g++ bash curl openssh-keygen openssh-client zeromq-dev py-pip py-virtualenv musl-dev python2-dev mpfr-dev openssl-dev mpc1-dev libffi-dev gmp-dev

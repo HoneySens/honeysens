@@ -1,5 +1,5 @@
 ARG ARCH=amd64
-FROM multiarch/alpine:${ARCH}-v3.9
+FROM multiarch/alpine:${ARCH}-v3.10
 
 COPY prepare.sh honeysens_log.py config.patch log_worker.patch /root/
 COPY http /root/http/

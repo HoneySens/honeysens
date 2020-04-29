@@ -1,5 +1,4 @@
-FROM multiarch/alpine:amd64-v3.7
-MAINTAINER Pascal Brueckner pascal.brueckner@tu-dresden.de
+FROM multiarch/alpine:amd64-v3.10
 
 COPY prepare.sh recon.py /opt/
 RUN /bin/sh /opt/prepare.sh

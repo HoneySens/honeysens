@@ -1,6 +1,7 @@
-FROM multiarch/alpine:amd64-v3.7
+FROM multiarch/alpine:amd64-v3.10
 
-COPY prepare.sh honeysens_log.py rdpy-rdphoneypot.patch out.rss /home/rdpy/
-RUN /bin/sh /home/rdpy/prepare.sh
+COPY prepare.sh honeysens_log.py rdpy-rdphoneypot.patch out.rss /root/
+RUN /bin/sh /root/prepare.sh
 
-CMD ["/usr/bin/rdpy-rdphoneypot.py", "/home/rdpy/out.rss"]
+USER rdpy
+CMD ["/usr/bin/rdpy-rdphoneypot.py", "/opt/out.rss"]

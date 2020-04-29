@@ -6,7 +6,7 @@
     <architecture>$ARCH</architecture>
     <rawNetworkAccess>false</rawNetworkAccess>
     <catchAll>false</catchAll>
-    <portAssignment>{"80/tcp":80, "443/tcp":443}</portAssignment>
+    <portAssignment>{"80/tcp":80}</portAssignment>
     <revision>$REVISION</revision>
-    <revisionDescription>Based on git revision 508729202428a35bcc6bb27dd97b831f7e5009b5</revisionDescription>
+    <revisionDescription>Based on git revision f9ac53e685991ffe2402f9cb3eb5ccdc2d0b198c</revisionDescription>
 </service>
