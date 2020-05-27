@@ -267,6 +267,8 @@ function(HoneySens, Models, SensorEditTpl) {
                             view.model.save(modelData, {
                                 wait: true,
                                 success: function() {
+                                    // Update firmware URI links
+                                    view.updateFirmwareURIs(firmwareRevision);
                                     // Render summary and firmware + config download view
                                     $result.removeClass('hide');
                                     $busy.one('transitionend', function() {
@@ -372,7 +374,7 @@ function(HoneySens, Models, SensorEditTpl) {
              * Render the firmware form based on the given mode and revision
              */
             refreshFirmwarePreference: function(mode, firmware) {
-                var platform = null;
+                var platform;
                 if(firmware) platform = HoneySens.data.models.platforms.get(firmware.get('platform'));
                 else platform = HoneySens.data.models.platforms.get(this.$el.find('div.firmwarePreferenceEnabled select[name="firmwarePlatform"]').val());
                 switch(parseInt(mode)) {
@@ -605,6 +607,19 @@ function(HoneySens, Models, SensorEditTpl) {
                 }
 
                 $form.validator('update');
+            },
+            updateFirmwareURIs: function(firmwareId) {
+                var bbbURI = 'api/platforms/1/firmware/current',
+                    dockerURI = 'api/platforms/2/firmware/current';
+                if(firmwareId != null) {
+                    var platformId = parseInt(this.$el.find('div.firmwarePreferenceEnabled select[name="firmwarePlatform"]').val());
+                    switch(platformId) {
+                        case 1: bbbURI = 'api/platforms/firmware/' + firmwareId + '/raw'; break;
+                        case 2: dockerURI = 'api/platforms/firmware/' + firmwareId + '/raw'; break;
+                    }
+                }
+                this.$el.find('div#instBBB a').prop('href', bbbURI);
+                this.$el.find('div#instDocker a').prop('href', dockerURI);
             }
         });
     });
