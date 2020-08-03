@@ -11,6 +11,7 @@ ENV ACCESS_LOG=false \
     DB_NAME=honeysens \
     DB_PASSWORD=secret \
     DOMAIN=server \
+    TLS_FORCE_12=false \
     REGISTRY_HOST=registry \
     REGISTRY_PORT=5000
 
