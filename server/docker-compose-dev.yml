@@ -13,6 +13,7 @@ services:
       - ACCESS_LOG=false
       - DB_PASSWORD=honeysens
       - DOMAIN=server
+      - TLS_FORCE_12=false
     volumes:
       - honeysens_dev_data:/srv/data
       - .:/mnt
