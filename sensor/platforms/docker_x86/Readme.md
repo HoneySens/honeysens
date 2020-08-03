@@ -20,7 +20,7 @@ Dockerized sensor images are distributed as `.tar.gz` archives (as result of the
 * `Readme.md`: The document you're currently reading
 
 To deploy a dockerized sensor, follow these steps:
-* Decide on a networking mode (see below).
+* Decide on a networking mode (see below). *Note*: Sensor don't support `nftables` yet, please ensure that `iptables` is enabled (for Debian Buster and later, consult the [Wiki](https://wiki.debian.org/iptables)).
 * Unpack the archive, `cd` into the new directory and adjust `docker-compose.yml` to your needs, especially the network configuration. The variable `LOG_LVL` specifies the granularity of logging output received from the sensor manager and can be set to either `debug`, `info` or `warn`. You may also adjust the restart policy by adjusting the `restart` setting. In the `volumes` section, also make sure that the local host's docker socket is correctly mounted into the container. This is required for unattended container updates. The default `/var/run/docker.sock` should work for most distributions.
 * Load the firmware docker image: `docker load -i firmware.img`
 * Copy a proper sensor configuration archive obtained from the server into the `conf/` directory. That directory will be mounted into the sensor container on startup. Make sure that the directory doesn't contain any other files or directories except the configuration archive.
