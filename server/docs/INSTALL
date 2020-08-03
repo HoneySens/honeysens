@@ -21,8 +21,9 @@ docker load -i tasks-<version>.tar
 2. Compose-File anpassen
 Alle für die Container benötigten Parameter lassen sich aus dem Compose-File ableiten.
 Falls ein individuelles TLS-Schlüsselpaar für den Server genutzt werden soll, kann dies hier ebenfalls als
-Volume/Bind-mount an den angegebenen Pfad spezifiziert werden. Alternativ generiert der Server beim Start
-ein selbstsigniertes TLS-Zertifikat.
+Volume/Bind-mount für den angegebenen Pfad spezifiziert werden. Ein solches indivuelles Schlüsselpaar muss sowohl an den
+server- als auch den tasks-Container angehangen werden (siehe auskommentierte Volume-Mounts).
+Alternativ generiert der Server beim Start ein selbstsigniertes TLS-Zertifikat.
 
 Hinweis: Wichtig ist, dass für die Container die im Compose-File angegebenen Namen der einzelnen Container
 beibehalten werden, da sich diese im nutzerdefinierten Docker-Netzwerk über ihre Namen zu kontaktieren versuchen.
