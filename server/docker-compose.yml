@@ -49,6 +49,8 @@ services:
       - honeysens
     volumes:
       - honeysens_data:/srv/data
+      #- <path to https.chain.crt>:/srv/data/https.chain.crt
+      #- <path to https.key>:/srv/data/https.key
 
   registry:
     image: registry:2
