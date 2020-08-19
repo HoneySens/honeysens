@@ -1,0 +1,12 @@
+<?xml version='1.0' standalone='yes'?>
+<service>
+    <name>miniprint Printer Honeypot</name>
+    <repository>honeysens/miniprint</repository>
+    <description>miniprint acts like a standard networked printer that has been accidentally exposed to the public internet. It speaks the Printer Job Language (PJL) over the raw network "protocol".</description>
+    <architecture>$ARCH</architecture>
+    <rawNetworkAccess>false</rawNetworkAccess>
+    <catchAll>false</catchAll>
+    <portAssignment>{"9100/tcp":9100}</portAssignment>
+    <revision>$REVISION</revision>
+    <revisionDescription>Based on git revision b5c8aa4f990869d22a00a054f1a08edf12502a1f</revisionDescription>
+</service>
