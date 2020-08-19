@@ -1,0 +1,86 @@
+diff --git a/server.py b/server.py
+index f176abc..2595a14 100644
+--- a/server.py
++++ b/server.py
+@@ -19,14 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+ import socketserver
+ from os.path import isfile, join
+-import logging
++#import logging
+ import select
+ import sys
+ import traceback
+ from printer import Printer
+ import argparse
+ import re
+-
++from honeysens import HoneySensLogger
+ 
+ parser = argparse.ArgumentParser(description='''miniprint - a medium interaction printer honeypot
+        by Dan Salmon: @BLTjetpack, github.com/sa7mon ''',
+@@ -50,21 +50,22 @@ args = parser.parse_args()
+ conn_timeout = args.timeout
+ log_location = args.log_file
+ 
+-logger = logging.getLogger('miniprint')
+-logger.setLevel(logging.DEBUG)
++#logger = logging.getLogger('miniprint')
++logger = HoneySensLogger()
++#logger.setLevel(logging.DEBUG)
+ # create file handler which logs even debug messages
+-fh = logging.FileHandler(log_location)
+-fh.setLevel(logging.DEBUG)
++#fh = logging.FileHandler(log_location)
++#fh.setLevel(logging.DEBUG)
+ # create console handler with a higher log level
+-ch = logging.StreamHandler()
+-ch.setLevel(logging.DEBUG)
++#ch = logging.StreamHandler()
++#ch.setLevel(logging.DEBUG)
+ # create formatter and add it to the handlers
+-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+-fh.setFormatter(formatter)
+-ch.setFormatter(formatter)
++#formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
++#fh.setFormatter(formatter)
++#ch.setFormatter(formatter)
+ # add the handlers to the logger
+-logger.addHandler(fh)
+-logger.addHandler(ch)
++#logger.addHandler(fh)
++#logger.addHandler(ch)
+ 
+ 
+ class MyTCPHandler(socketserver.BaseRequestHandler):
+@@ -138,7 +139,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
+                 printer.postscript_data += request
+ 
+                 if '%%EOF' in request:
+-                    printer.save_postscript()
++                    #printer.save_postscript()
+                     printer.receiving_postscript = False
+ 
+                 continue
+@@ -159,8 +160,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
+                     
+                     if command.startswith("@PJL "):
+                         command = command[5:]
+-                        if printer.printing_raw_job:
+-                            printer.save_raw_print_job()
++                        #if printer.printing_raw_job:
++                        #    printer.save_raw_print_job()
+ 
+                         if command.startswith("ECHO"):
+                             response += printer.command_echo(command)
+@@ -195,8 +196,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
+                 traceback.print_tb(tb)
+                 logger.error("handle - error_caught - " + str(e))
+ 
+-        if printer.printing_raw_job:
+-            printer.save_raw_print_job()
++        #if printer.printing_raw_job:
++        #    printer.save_raw_print_job()
+         logger.info("handle - close_conn - " + self.client_address[0])
+ 
+ if __name__ == "__main__":
