@@ -6,6 +6,10 @@
   <description>Dockerized sensor platform to be used on generic x86 systems</description>
   <changelog>
     <entry>
+      <version>2.2.1</version>
+      <desc>Enforcement of HTTP/1.1 communication</desc>
+    </entry>
+    <entry>
       <version>2.2.0</version>
       <desc>EAPOL support</desc>
     </entry>
