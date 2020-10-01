@@ -17,6 +17,8 @@ def perform_https_request(config, config_dir, path, request_type, verify=True, p
     content = BytesIO()
     headers = {}
     c = pycurl.Curl()
+    # Force HTTP/1.1
+    c.setopt(pycurl.HTTP_VERSION, pycurl.CURL_HTTP_VERSION_1_1)
 
     def parse_headers(header_line):
         if ':' not in header_line:
