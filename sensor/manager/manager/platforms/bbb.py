@@ -79,7 +79,7 @@ class Platform(GenericPlatform):
     def apply_config(self, config, server_response, reset_network):
         if reset_network:
             # Disable all network interfaces
-            self.stop_systemd_unit('networking')
+            subprocess.call(['ifdown', self.interface])
             eapol_config = '{}/{}'.format(EAPOL_CONFIG_DIR, EAPOL_CONFIG_FILE)
             # Update interface definition (/etc/network/interfaces)
             if config.get('eapol', 'mode') != '0':
@@ -132,7 +132,7 @@ class Platform(GenericPlatform):
                     subprocess.call(['systemctl', 'daemon-reload'])
                     self.restart_systemd_unit('docker')
             # Restart network interfaces
-            self.start_systemd_unit('networking')
+            subprocess.call(['ifup', self.interface])
 
     def refresh_led_status(self):
         last_server_response = polling.get_last_server_response()
