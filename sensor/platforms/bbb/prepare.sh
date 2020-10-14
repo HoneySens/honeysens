@@ -35,6 +35,9 @@ rm /etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service
 # Disable the dnsmasq daemon that usually launches as part of the USB ethernet gadget, but listens on 0.0.0.0 and blocks port 53
 mv /etc/dnsmasq.d /etc/dnsmasq.d.disabled
 
+# Disable ConnMan, a network manager that conflicts with our sensor manager
+systemctl disable connman
+
 # Disable background APT activity
 apt-get --purge remove -y unattended-upgrades
 

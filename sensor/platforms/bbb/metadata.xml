@@ -6,6 +6,10 @@
   <description>Debian-based firmware that runs dockerized services</description>
   <changelog>
     <entry>
+      <version>2.2.2</version>
+      <desc>Networking fixes</desc>
+    </entry>
+    <entry>
       <version>2.2.1</version>
       <desc>Enforcement of HTTP/1.1 communication</desc>
     </entry>
