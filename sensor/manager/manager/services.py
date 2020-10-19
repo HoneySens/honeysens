@@ -288,15 +288,15 @@ def enable_docker(config, server_response, reset_network):
     global _docker, _services
     # dockerd has to be restarted to apply new proxy settings
     _platform.enable_docker(reset_network)
-    _docker = docker.from_env()
-    attempts = 0
     # Wait until dockerd is online
-    while check_docker() is False:
-        attempts += 1
-        if attempts >= 10:
-            _logger.error('Warning: Docker subsystem not usable')
-            return
-        time.sleep(1)
+    while not check_docker():
+        try:
+            _docker = docker.from_env()
+            _logger.info('Waiting for docker...')
+            time.sleep(1)
+        except docker.errors.DockerException as e:
+            _logger.info('Waiting for docker... (last error was: {})'.format(e))
+            time.sleep(1)
     # Prepare service list with containers already registered on this system
     if _services is None:
         with _services_lock:

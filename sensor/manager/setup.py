@@ -17,7 +17,7 @@ setup(
         'docker',
         'netifaces',
         'pycrypto',
-        'pycurl==7.43.0.3',
+        'pycurl<=7.43.0.3',
         'pyyaml',
         'pyzmq'
     ],
