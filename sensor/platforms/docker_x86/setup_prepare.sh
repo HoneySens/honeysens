@@ -2,13 +2,14 @@
 # Basic container initialization for both productive and development environments
 
 # Basic requirements
-apk --no-cache add py-pip py-curl ca-certificates alpine-sdk python-dev linux-headers docker dhcpcd py-cryptography docker docker-py macchanger cntlm zeromq-dev libffi-dev yaml-dev wpa_supplicant
+apk --update --no-cache add --virtual build-dependencies alpine-sdk python-dev python3-dev linux-headers zeromq-dev libffi-dev libressl-dev yaml-dev
+apk --update --no-cache add ca-certificates cntlm curl dhcpcd docker docker-py libffi libressl libpcap macchanger py-pip py-curl py-cryptography tar yaml wpa_supplicant zeromq
 
 # Install arpd and honeyd dependencies
 # apk --no-cache add libevent-dev libdnet-dev libpcap-dev pcre-dev libedit-dev automake autoconf zlib-dev libtool
 
 # Install Docker Compose
-pip install docker-compose
+pip3 install docker-compose
 
 # Ensure the existence of /etc/network/interfaces
 touch /etc/network/interfaces
