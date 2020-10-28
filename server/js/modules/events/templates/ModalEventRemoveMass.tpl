@@ -4,7 +4,7 @@
             <h4>Ereignis(se) entfernen</h4>
         </div>
         <div class="modal-body">
-            <p>Sollen die markierten <strong><%- items.length %></strong> Ereignis(se) wirklich entfernt werden?</p>
+            <p>Sollen die ausgew&auml;hlten <strong><%- total %> Ereignisse</strong> wirklich entfernt werden?</p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>

@@ -40,24 +40,25 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
             },
             events: {
                 'click button.massExport': function(e) {
-                    e.preventDefault();
                     HoneySens.request('events:export:list', this.collection, new Models.Events(this.grid.getSelectedModels()));
                 },
                 'click button.massEdit': function(e) {
-                    e.preventDefault();
                     HoneySens.request('events:edit', new Models.Events(this.grid.getSelectedModels()));
                 },
                 'click button.massDelete': function(e) {
-                    e.preventDefault();
-                    var models = new Models.Events(this.grid.getSelectedModels());
-                    var dialog = new ModalEventRemoveView({collection: models});
-                    HoneySens.request('view:modal').show(dialog);
+                    HoneySens.request('events:remove:some', new Models.Events(this.grid.getSelectedModels()), this.collection);
                 },
                 'click a.exportPage': function() {
                     HoneySens.request('events:export:page', this.collection);
                 },
                 'click a.exportAll': function() {
                     HoneySens.request('events:export:all', this.collection);
+                },
+                'click a.removePage': function() {
+                    HoneySens.request('events:remove:some', this.collection, this.collection);
+                },
+                'click a.removeAll': function() {
+                    HoneySens.request('events:remove:all', this.collection);
                 }
             },
             onRender: function() {
@@ -194,6 +195,14 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                             'click button.removeEvent': function(e) {
                                 e.preventDefault();
                                 var dialog = new ModalEventRemoveView({model: this.model});
+                                this.listenTo(dialog, 'confirm', function() {
+                                    this.model.destroy({
+                                        wait: true, success: function () {
+                                            HoneySens.data.models.events.fetch();
+                                            HoneySens.request('view:modal').empty();
+                                        }
+                                    });
+                                });
                                 HoneySens.request('view:modal').show(dialog);
                             }
                         },

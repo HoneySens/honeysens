@@ -9,30 +9,14 @@ function(HoneySens, ModalEventRemoveSingleTpl, ModalEventRemoveMassTpl) {
             events: {
                 'click button.btn-primary': function(e) {
                     e.preventDefault();
-                    if(this.hasOwnProperty('model')) {
-                        this.model.destroy({
-                            wait: true, success: function () {
-                                HoneySens.data.models.events.fetch();
-                                HoneySens.request('view:modal').empty();
-                            }
-                        });
-                    } else if(this.hasOwnProperty('collection')) {
-                        $.ajax({
-                            type: 'DELETE',
-                            url: 'api/events',
-                            data: JSON.stringify(this.collection.pluck('id')),
-                            success: function() {
-                                HoneySens.data.models.events.fetch();
-                                HoneySens.request('view:modal').empty();
-                            }
-                        });
-                    }
+                    this.trigger('confirm');
                 }
             },
             initialize: function() {
-                // Template selection based on single/mass event removal
-                if(this.hasOwnProperty('model')) this.template = ModalEventRemoveSingleTpl;
-                else if(this.hasOwnProperty('collection')) this.template = ModalEventRemoveMassTpl;
+                // Template selection based on single/mass event removal: in case of multiple events just their 'total'
+                // count is submitted, otherwise we receive an Event object
+                if(this.model.has('total')) this.template = ModalEventRemoveMassTpl;
+                else this.template = ModalEventRemoveSingleTpl;
             }
         });
     });
