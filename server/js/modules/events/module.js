@@ -1,12 +1,34 @@
 define(['app/app', 'app/routing', 'app/models',
+        'backbone', 'json',
         'app/modules/events/views/Layout',
         'app/modules/events/views/EventList',
         'app/modules/events/views/EventEdit',
         'app/modules/events/views/FilterList',
         'app/modules/events/views/FilterEdit',
         'app/modules/events/views/ModalFilterRemove',
+        'app/modules/events/views/ModalEventRemove',
         'app/modules/tasks/views/ModalAwaitTask'],
-function(HoneySens, Routing, Models, LayoutView, EventListView, EventEditView, FilterListView, FilterEditView, ModalFilterRemoveView, ModalAwaitTaskView) {
+function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, EventEditView, FilterListView, FilterEditView,
+         ModalFilterRemoveView, ModalEventRemoveView, ModalAwaitTaskView) {
+
+    function calculateEventQueryParams(params) {
+        // Takes an params object as provided in collection.queryParams, calculates and returns its actual values
+        var result = _.clone(params);
+        // Clean up and assemble parameters
+        delete result.currentPage;
+        delete result.pageSize;
+        delete result.totalPages;
+        delete result.totalRecords;
+        delete result.sortKey;
+        delete result.order;
+        delete result.directions;
+        // Assign the return values of function params
+        _.each(_.clone(result), function(param, key) {
+            if(_.isFunction(param)) result[key] = param();
+        });
+        return result;
+    }
+
     var EventsModule = Routing.extend({
         name: 'events',
         startWithParent: false,
@@ -52,19 +74,50 @@ function(HoneySens, Routing, Models, LayoutView, EventListView, EventEditView, F
                 HoneySens.request('view:modal').show(new ModalFilterRemoveView({model: filter}));
             });
             HoneySens.reqres.setHandler('events:export:all', function(collection) {
-                module.exportEvents(collection, _.clone(collection.queryParams));
+                module.exportEvents(collection, collection.queryParams);
             });
             HoneySens.reqres.setHandler('events:export:page', function(collection) {
                 // Export currently displayed page, that is all events currently within the collection
                 var params = _.clone(collection.queryParams);
                 params.list = collection.pluck('id');
-                module.exportEvents(collection, _.clone(params));
+                module.exportEvents(collection, params);
             });
             HoneySens.reqres.setHandler('events:export:list', function(collection, events) {
                 // Pluck query params from the collection, but use the event collection as actual event list
                 var params = _.clone(collection.queryParams);
                 params.list = events.pluck('id');
-                module.exportEvents(collection, _.clone(params));
+                module.exportEvents(collection, params);
+            });
+            HoneySens.reqres.setHandler('events:remove:all', function(collection) {
+                var dialog = new ModalEventRemoveView({model: new Backbone.Model({total: collection.state.totalRecords})});
+                dialog.listenTo(dialog, 'confirm', function() {
+                    module.removeEvents(collection, collection.queryParams, function() {
+                        HoneySens.data.models.events.fetch();
+                        HoneySens.request('view:modal').empty();
+                    });
+                });
+                HoneySens.request('view:modal').show(dialog);
+            });
+            HoneySens.reqres.setHandler('events:remove:some', function(selection, fullCollection) {
+                var dialog = new ModalEventRemoveView({model: new Backbone.Model({total: selection.length})});
+                dialog.listenTo(dialog, 'confirm', function() {
+                    // Avoid RangeError when deleting all events of the last page (if currently displayed)
+                    if(fullCollection.state.currentPage + 1 === fullCollection.state.totalPages &&
+                        _.difference(fullCollection.pluck('id'), selection.pluck('id')).length === 0) {
+                        fullCollection.getPreviousPage();
+                    }
+                    // Send request
+                    $.ajax({
+                        type: 'DELETE',
+                        url: 'api/events',
+                        data: JSON.stringify({ids: selection.pluck('id')}),
+                        success: function() {
+                            HoneySens.data.models.events.fetch();
+                            HoneySens.request('view:modal').empty();
+                        }
+                    });
+                });
+                HoneySens.request('view:modal').show(dialog);
             });
         },
         stop: function() {
@@ -82,28 +135,17 @@ function(HoneySens, Routing, Models, LayoutView, EventListView, EventEditView, F
         showEvents: function() {HoneySens.request('events:show');},
         showFilters: function() {HoneySens.request('events:filters:show');},
         exportEvents: function(collection, params) {
-            // Clean up and assemble parameters
-            delete params.currentPage;
-            delete params.pageSize;
-            delete params.totalPages;
-            delete params.totalRecords;
-            delete params.sortKey;
-            delete params.order;
-            delete params.directions;
-            // Assign the return values of function params
-            _.each(_.clone(params), function(param, key) {
-                if(_.isFunction(param)) params[key] = param();
-            });
+            var calcParams = calculateEventQueryParams(params);
             // Sorting
             if(collection.state.sortKey != null) {
-                params[collection.queryParams.sortKey] = collection.state.sortKey;
-                params[collection.queryParams.order] = collection.queryParams.directions[collection.state.order];
+                calcParams[collection.queryParams.sortKey] = collection.state.sortKey;
+                calcParams[collection.queryParams.order] = collection.queryParams.directions[collection.state.order];
             }
-            params.format = 'text/csv';
+            calcParams.format = 'text/csv';
             $.ajax({
                 type: 'GET',
                 url: 'api/events',
-                data: params,
+                data: calcParams,
                 dataType: 'json',
                 success: function(res) {
                     var task = HoneySens.data.models.tasks.add(new Models.Task(res)),
@@ -125,6 +167,15 @@ function(HoneySens, Routing, Models, LayoutView, EventListView, EventEditView, F
                         }
                     });
                 }
+            });
+        },
+        removeEvents: function(collection, params, success) {
+            $.ajax({
+                type: 'DELETE',
+                url: 'api/events',
+                data: JSON.stringify(calculateEventQueryParams(params)),
+                dataType: 'json',
+                success: success
             });
         }
     });

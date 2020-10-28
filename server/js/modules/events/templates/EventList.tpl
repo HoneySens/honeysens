@@ -21,11 +21,16 @@
     <div class="form-group pull-right">
         <div class="dropdown">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-                <span class="glyphicon glyphicon-export"></span>&nbsp;<span class="caret"></span>
+                <span class="glyphicon glyphicon-option-vertical"></span>&nbsp;<span class="caret"></span>
             </button>
             <ul class="dropdown-menu dropdown-menu-right">
-                <li><a class="exportPage">Seite exportieren</a></li>
-                <li><a class="exportAll">Alle exportieren</a></li>
+                <li class="dropdown-header"><span class="glyphicon glyphicon-export"></span>&nbsp;Export</li>
+                <li><a class="exportPage">Aktuelle Seite</a></li>
+                <li><a class="exportAll">Alle Seiten</a></li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header"><span class="glyphicon glyphicon-remove"></span>&nbsp;Entfernen</li>
+                <li><a class="removePage">Aktuelle Seite</a></li>
+                <li><a class="removeAll">Alle Seiten</a></li>
             </ul>
         </div>
     </div>

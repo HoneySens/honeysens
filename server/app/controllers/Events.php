@@ -70,31 +70,20 @@ class Events extends RESTResource {
             $controller = new Events($em, $services, $config);
             $request = $app->request()->getBody();
             V::json()->check($request);
-            $ids = json_decode($request);
-            $criteria = array('ids' => $ids, 'userID' => $controller->getSessionUserID());
+            $criteria = json_decode($request, true);
+            $criteria['userID'] = $controller->getSessionUserID();
             $controller->delete($criteria);
             echo json_encode([]);
         });
     }
 
     /**
-     * Fetches events from the DB by various criteria:
-     * - userID: return only events that belong to the user with the given id
-     * - lastID: return only events that have a higher id than the given one
-     * - id: return the event with the given id
-     * - sort_by: event attribute name to sort after (only together with 'order')
-     * - order: sort order ('asc' or 'desc'), only together with 'sort_by'
-     * - division: Division id to limit results
-     * - sensor: Sensor id to limit results
-     * - classification: classification (int) to limit results (0 to 4)
-     * - status: status (int) to limit results (0 to 3)
-     * - fromTS: timestamp, to specify the beginning of a date range
-     * - toTS: timestamp, to specify the end of a date range
-     * - list: list of requested event ids
+     * Fetches events from the DB by various criteria (see documentation for fetchEvents()).
+     * In addition to those, the final output format is determined by the following criteria keys:
+     * - id: return just the event with the given id
+     * - format: essentially the ACCEPT header of the HTTP request, defines the intended output format
      * - page: page number of result list (only together with 'per_page'), default 0
      * - per_page: number of results per page (only together with 'page'), default 15, max 60
-     * - filter: search term to find events that contain the given string
-     * - format: essentially the ACCEPT header of the HTTP request, defines the intended output format
      *
      * If no criteria are given, all events are returned matching the default parameters.
      *
@@ -104,79 +93,13 @@ class Events extends RESTResource {
      * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\Query\QueryException
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     * @throws \Exception
      */
     public function get($criteria) {
         $this->assureAllowed('get');
-        $qb = $this->getEntityManager()->createQueryBuilder();
-        $qb->select('e')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
-        if(V::key('userID', V::intType())->validate($criteria)) {
-            $qb->andWhere(':userid MEMBER OF d.users')
-                ->setParameter('userid', $criteria['userID']);
-        }
-        // TODO lastID is only part of the criteria submitted by the state controller, regular requests use last_id and are ignored
-        if(V::key('lastID', V::intVal())->validate($criteria)) {
-            $qb->andWhere('e.id > :lastid')
-                ->setParameter('lastid', $criteria['lastID']);
-        }
-        if(V::key('filter', V::stringType())->validate($criteria)) {
-            // Parse both source and comment fields against the filter string
-            $qb->orWhere('e.source LIKE :source')
-                ->setParameter('source', '%'. $criteria['filter'] . '%');
-            $qb->orWhere('e.comment LIKE :comment')
-                ->setParameter('comment', '%'. $criteria['filter'] . '%');
-            // Also try to parse the filter string into a date
-            $date = false;
-            try {
-                $date = new \DateTime($criteria['filter']);
-            } catch (\Exception $e) {}
-            if ($date) {
-                $timestamp = $date->format('Y-m-d');
-                $qb->orWhere('e.timestamp LIKE :timestamp')
-                    ->setParameter('timestamp', $timestamp . '%');
-            }
-        }
-        if(V::key('sort_by', V::in(['id', 'sensor', 'timestamp', 'classification', 'source', 'summary', 'status', 'comment']))
-            ->key('order', V::in(['asc', 'desc']))
-            ->validate($criteria)) {
-            $qb->orderBy('e.' . $criteria['sort_by'], $criteria['order']);
-        } else {
-            // Default behaviour: return timestamp-sorted events
-            $qb->orderBy('e.timestamp', 'desc');
-        }
-        if(V::key('division', V::intVal())->validate($criteria)) {
-            $qb->andWhere('d.id = :division')
-                ->setParameter('division', $criteria['division']);
-        }
-        if(V::key('sensor', V::intVal())->validate($criteria)) {
-            $qb->andWhere('s.id = :sensor')
-                ->setParameter('sensor', $criteria['sensor']);
-        }
-        if(V::key('classification', V::intVal()->between(0, 4))->validate($criteria)) {
-            $qb->andWhere('e.classification = :classification')
-                ->setParameter('classification', $criteria['classification']);
-        }
-        if(V::key('status', V::intVal()->between(0, 3))->validate($criteria)) {
-            $qb->andWhere('e.status = :status')
-                ->setParameter('status', $criteria['status']);
-        }
-        if(V::key('fromTS', V::intVal())->validate($criteria)) {
-            $timestamp = new \DateTime('@' . $criteria['fromTS']);
-            $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            $qb->andWhere('e.timestamp >= :fromTS')
-                ->setParameter('fromTS', $timestamp);
-        }
-        if(V::key('toTS', V::intVal())->validate($criteria)) {
-            $timestamp = new \DateTime('@' . $criteria['toTS']);
-            $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            $qb->andWhere('e.timestamp <= :toTS')
-                ->setParameter('toTS', $timestamp);
-        }
-        if(V::key('list', V::arrayVal()->each(V::intVal()))->validate($criteria)) {
-            $qb->andWhere('e.id IN (:list)')
-                ->setParameter('list', $criteria['list'], Connection::PARAM_INT_ARRAY);
-        }
+        $qb = $this->fetchEvents($criteria);
         if(V::key('id', V::intVal())->validate($criteria)) {
-            // Single event output, ignores the format paramter
+            // Single event output, ignores the format parameter
             $qb->andWhere('e.id = :id')
                 ->setParameter('id', $criteria['id']);
             return $qb->getQuery()->getSingleResult()->getState();
@@ -473,30 +396,160 @@ class Events extends RESTResource {
     public function delete($criteria) {
         $this->assureAllowed('delete');
         $em = $this->getEntityManager();
-        // Validation, either 'id' or 'ids' must be present
-        V::oneOf(V::key('id'), V::key('ids'))->check($criteria);
-        // DQL doesn't support joins in DELETE, so we collect the candidates first
-        $qb = $em->createQueryBuilder();
-        $qb->select('e')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
-        if(V::key('id', V::intVal())->validate($criteria)) {
-            $qb->andWhere('e.id = :id')
-               ->setParameter('id', $criteria['id']);
-        } else if(V::key('ids', V::arrayType())->validate($criteria)) {
-            // We need at least one valid id
-            V::notEmpty()->check($criteria['ids']);
-            foreach($criteria['ids'] as $id) V::intVal()->check($id);
-            $qb->andWhere('e.id IN (:ids)')
-               ->setParameter('ids', $criteria['ids'], Connection::PARAM_STR_ARRAY);
+        // If the key 'id' or 'ids' is present, just delete those individual IDs
+        if(V::oneOf(V::key('id'), V::key('ids'))->validate($criteria)) {
+            // DQL doesn't support joins in DELETE, so we collect the candidates first
+            $qb = $em->createQueryBuilder();
+            $qb->select('e')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
+            if (V::key('id', V::intVal())->validate($criteria)) {
+                $qb->andWhere('e.id = :id')
+                    ->setParameter('id', $criteria['id']);
+            } else if (V::key('ids', V::arrayType())->validate($criteria)) {
+                // We need at least one valid id
+                V::notEmpty()->check($criteria['ids']);
+                foreach ($criteria['ids'] as $id) V::intVal()->check($id);
+                $qb->andWhere('e.id IN (:ids)')
+                    ->setParameter('ids', $criteria['ids'], Connection::PARAM_STR_ARRAY);
+            }
+            if (V::key('userID', V::intType())->validate($criteria)) {
+                $qb->andWhere(':userid MEMBER OF d.users')
+                    ->setParameter('userid', $criteria['userID']);
+            }
+            // Persistence
+            $results = $qb->getQuery()->getResult();
+            foreach ($results as $result) {
+                $em->remove($result);
+            }
+            $em->flush();
+        } else {
+            // Batch delete events according to the remaining query parameters
+            $qb = $this->fetchEvents($criteria);
+            $qb->select('e.id');
+            $eventIDs = $qb->getQuery()->getResult();
+            if(sizeof($eventIDs) == 0) return;
+            // Fetch EventDetail and EventPacket IDs associated with those events
+            $eventDetailIDs = $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('ed.id')->from('HoneySens\app\models\entities\EventDetail', 'ed') ->join('ed.event', 'e')
+                ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
+                ->getQuery()->getResult();
+            $eventPacketIDs = $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('ep.id')->from('HoneySens\app\models\entities\EventPacket', 'ep') ->join('ep.event', 'e')
+                ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
+                ->getQuery()->getResult();
+            // Manual delete cascade
+            if(sizeof($eventDetailIDs) > 0)
+                $this->getEntityManager()
+                    ->createQueryBuilder()
+                    ->delete('HoneySens\app\models\entities\EventDetail', 'ed')
+                    ->where('ed.id in (:ids)')->setParameter('ids', $eventDetailIDs)
+                    ->getQuery()->execute();
+            if(sizeof($eventPacketIDs))
+                $this->getEntityManager()
+                    ->createQueryBuilder()
+                    ->delete('HoneySens\app\models\entities\EventPacket', 'ep')
+                    ->where('ep.id in (:ids)')->setParameter('ids', $eventPacketIDs)
+                    ->getQuery()->execute();
+            $this->getEntityManager()
+                ->createQueryBuilder()
+                ->delete('HoneySens\app\models\entities\Event', 'e')
+                ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
+                ->getQuery()
+                ->execute();
         }
+    }
+
+    /**
+     * Returns a QueryBuilder that selects events from the DB according to various criteria:
+     * - userID: include only events that belong to the user with the given id
+     * - lastID: include only events that have a higher id than the given one
+     * - sort_by: event attribute name to sort after (only together with 'order')
+     * - order: sort order ('asc' or 'desc'), only together with 'sort_by'
+     * - division: Division id to limit results
+     * - sensor: Sensor id to limit results
+     * - classification: classification (int) to limit results (0 to 4)
+     * - status: status (int) to limit results (0 to 3)
+     * - fromTS: timestamp, to specify the beginning of a date range
+     * - toTS: timestamp, to specify the end of a date range
+     * - list: list of requested event ids
+     * - filter: search term to find events that contain the given string
+     *
+     * If no criteria are given, all events will be selected matching the default parameters.
+     *
+     * @param array $criteria
+     * @return array
+     * @throws \Exception
+     */
+    private function fetchEvents($criteria) {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('e')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
         if(V::key('userID', V::intType())->validate($criteria)) {
             $qb->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $criteria['userID']);
         }
-        // Persistence
-        $results = $qb->getQuery()->getResult();
-        foreach($results as $result) {
-            $em->remove($result);
+        // TODO lastID is only part of the criteria submitted by the state controller, regular requests use last_id and are ignored
+        if(V::key('lastID', V::intVal())->validate($criteria)) {
+            $qb->andWhere('e.id > :lastid')
+                ->setParameter('lastid', $criteria['lastID']);
         }
-        $em->flush();
+        if(V::key('filter', V::stringType())->validate($criteria)) {
+            // Parse both source and comment fields against the filter string
+            $qb->orWhere('e.source LIKE :source')
+                ->setParameter('source', '%'. $criteria['filter'] . '%');
+            $qb->orWhere('e.comment LIKE :comment')
+                ->setParameter('comment', '%'. $criteria['filter'] . '%');
+            // Also try to parse the filter string into a date
+            $date = false;
+            try {
+                $date = new \DateTime($criteria['filter']);
+            } catch (\Exception $e) {}
+            if ($date) {
+                $timestamp = $date->format('Y-m-d');
+                $qb->orWhere('e.timestamp LIKE :timestamp')
+                    ->setParameter('timestamp', $timestamp . '%');
+            }
+        }
+        if(V::key('sort_by', V::in(['id', 'sensor', 'timestamp', 'classification', 'source', 'summary', 'status', 'comment']))
+            ->key('order', V::in(['asc', 'desc']))
+            ->validate($criteria)) {
+            $qb->orderBy('e.' . $criteria['sort_by'], $criteria['order']);
+        } else {
+            // Default behaviour: return timestamp-sorted events
+            $qb->orderBy('e.timestamp', 'desc');
+        }
+        if(V::key('division', V::intVal())->validate($criteria)) {
+            $qb->andWhere('d.id = :division')
+                ->setParameter('division', $criteria['division']);
+        }
+        if(V::key('sensor', V::intVal())->validate($criteria)) {
+            $qb->andWhere('s.id = :sensor')
+                ->setParameter('sensor', $criteria['sensor']);
+        }
+        if(V::key('classification', V::intVal()->between(0, 4))->validate($criteria)) {
+            $qb->andWhere('e.classification = :classification')
+                ->setParameter('classification', $criteria['classification']);
+        }
+        if(V::key('status', V::intVal()->between(0, 3))->validate($criteria)) {
+            $qb->andWhere('e.status = :status')
+                ->setParameter('status', $criteria['status']);
+        }
+        if(V::key('fromTS', V::intVal())->validate($criteria)) {
+            $timestamp = new \DateTime('@' . $criteria['fromTS']);
+            $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            $qb->andWhere('e.timestamp >= :fromTS')
+                ->setParameter('fromTS', $timestamp);
+        }
+        if(V::key('toTS', V::intVal())->validate($criteria)) {
+            $timestamp = new \DateTime('@' . $criteria['toTS']);
+            $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            $qb->andWhere('e.timestamp <= :toTS')
+                ->setParameter('toTS', $timestamp);
+        }
+        if(V::key('list', V::arrayVal()->each(V::intVal()))->validate($criteria)) {
+            $qb->andWhere('e.id IN (:list)')
+                ->setParameter('list', $criteria['list'], Connection::PARAM_INT_ARRAY);
+        }
+        return $qb;
     }
 }
