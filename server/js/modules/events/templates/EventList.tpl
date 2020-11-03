@@ -27,14 +27,18 @@
                 <li class="dropdown-header"><span class="glyphicon glyphicon-export"></span>&nbsp;Export</li>
                 <li><a class="exportPage">Aktuelle Seite</a></li>
                 <li><a class="exportAll">Alle Seiten</a></li>
-                <li role="separator" class="divider"></li>
-                <li class="dropdown-header"><span class="glyphicon glyphicon-pencil"></span>&nbsp;Bearbeiten</li>
-                <li><a class="editPage">Aktuelle Seite</a></li>
-                <li><a class="editAll">Alle Seiten</a></li>
-                <li role="separator" class="divider"></li>
-                <li class="dropdown-header"><span class="glyphicon glyphicon-remove"></span>&nbsp;Entfernen</li>
-                <li><a class="removePage">Aktuelle Seite</a></li>
-                <li><a class="removeAll">Alle Seiten</a></li>
+                <% if(_.templateHelpers.isAllowed('events', 'update')) { %>
+                    <li role="separator" class="divider"></li>
+                    <li class="dropdown-header"><span class="glyphicon glyphicon-pencil"></span>&nbsp;Bearbeiten</li>
+                    <li><a class="editPage">Aktuelle Seite</a></li>
+                    <li><a class="editAll">Alle Seiten</a></li>
+                <% } %>
+                <% if(_.templateHelpers.isAllowed('events', 'delete')) { %>
+                    <li role="separator" class="divider"></li>
+                    <li class="dropdown-header"><span class="glyphicon glyphicon-remove"></span>&nbsp;Entfernen</li>
+                    <li><a class="removePage">Aktuelle Seite</a></li>
+                    <li><a class="removeAll">Alle Seiten</a></li>
+                <% } %>
             </ul>
         </div>
     </div>
