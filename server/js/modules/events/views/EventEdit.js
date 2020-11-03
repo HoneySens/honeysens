@@ -12,45 +12,24 @@ function(HoneySens, EventEditTpl) {
                 },
                 'click button:submit': function(e) {
                     e.preventDefault();
-                    var data = {ids: this.collection.pluck('id')},
-                        status = this.$el.find('select[name="statusCode"]').val(),
-                        comment = this.$el.find('textarea[name="comment"]').val();
-                    if(this.collection.length === 1) {
-                        // Single model update
-                        this.model.save({status: status, comment: comment}, {wait:true,
-                            success: function() {
-                                HoneySens.request('view:content').overlay.empty();
-                            }
-                        });
-                    } else {
-                        // Batch update
-                        if (parseInt(status) >= 0) data.status = status;
-                        if (comment.length > 0) data.comment = comment;
-                        $.ajax({
-                            type: 'PUT',
-                            url: 'api/events',
-                            data: JSON.stringify(data),
-                            success: function () {
-                                HoneySens.data.models.events.fetch();
-                                HoneySens.request('view:content').overlay.empty();
-                            }
-                        });
-                    }
+                    var status = this.$el.find('select[name="statusCode"]').val(),
+                        comment = this.$el.find('textarea[name="comment"]').val(),
+                        data = {};
+                    // Set status/comment if editing a single model or if something was entered when editing multiple
+                    if (parseInt(status) >= 0 || !this.model.has('total')) data.new_status = status;
+                    if (comment.length > 0 || !this.model.has('total')) data.new_comment = comment;
+                    this.trigger('confirm', data);
                 }
             },
-            initialize: function() {
-                // Set a model in case we were given a list with just one item
-                if(this.collection.length === 1) this.model = this.collection.first();
-            },
             onRender: function() {
-                if(this.collection.length === 1) {
+                if(!this.model.has('total')) {
                     this.$el.find('select[name="statusCode"] option[value="' + this.model.get('status') + '"]').prop('selected', true);
                     this.$el.find('textarea').val(this.model.get('comment'));
                 }
             },
             templateHelpers: {
-                getEventCount: function() {
-                    return typeof this.items === 'undefined' ? 1 : this.items.length;
+                isMultiEdit: function() {
+                    return typeof this.total !== 'undefined';
                 }
             }
         });

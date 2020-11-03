@@ -53,10 +53,6 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 HoneySens.vent.trigger('events:shown');
                 router.navigate('events');
             });
-            HoneySens.reqres.setHandler('events:edit', function(models) {
-                if(!HoneySens.assureAllowed('events', 'update')) return false;
-                HoneySens.request('view:content').overlay.show(new EventEditView({collection: models}));
-            });
             HoneySens.reqres.setHandler('events:filters:show', function() {
                 contentRegion.show(new FilterListView({collection: HoneySens.data.models.eventfilters}));
                 HoneySens.vent.trigger('events:filters:shown');
@@ -88,10 +84,55 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 params.list = events.pluck('id');
                 module.exportEvents(collection, params);
             });
+            HoneySens.reqres.setHandler('events:edit:single', function(model) {
+                if(!HoneySens.assureAllowed('events', 'update')) return false;
+                var dialog = new EventEditView({model: model});
+                dialog.listenTo(dialog, 'confirm', function(data) {
+                    model.save(data, {
+                        wait: true, success: function () {
+                            HoneySens.data.models.events.fetch();
+                            HoneySens.request('view:content').overlay.empty();
+                        }
+                    });
+                });
+                HoneySens.request('view:content').overlay.show(dialog);
+            });
+            HoneySens.reqres.setHandler('events:edit:all', function(collection) {
+                if(!HoneySens.assureAllowed('events', 'update')) return false;
+                var dialog = new EventEditView({model: new Backbone.Model({total: collection.state.totalRecords})});
+                dialog.listenTo(dialog, 'confirm', function(data) {
+                    module.updateEvents(collection.queryParams, data, function() {
+                        HoneySens.data.models.events.fetch();
+                        HoneySens.request('view:content').overlay.empty();
+                    });
+                });
+                HoneySens.request('view:content').overlay.show(dialog);
+            });
+            HoneySens.reqres.setHandler('events:edit:some', function(selection) {
+                if(!HoneySens.assureAllowed('events', 'update') || selection.length === 0) return false;
+                var dialog = new EventEditView({model: new Backbone.Model({total: selection.length})});
+                dialog.listenTo(dialog, 'confirm', function(data) {
+                    // Only send a request in case something was modified in the dialog
+                    if(Object.keys(data).length > 0) {
+                        data.ids = selection.pluck('id');
+                        $.ajax({
+                            type: 'PUT',
+                            url: 'api/events',
+                            data: JSON.stringify(data),
+                            success: function() {
+                                HoneySens.data.models.events.fetch();
+                                HoneySens.request('view:content').overlay.empty();
+                            }
+                        });
+                    } else HoneySens.request('view:content').overlay.empty();
+                });
+                HoneySens.request('view:content').overlay.show(dialog);
+            });
             HoneySens.reqres.setHandler('events:remove:all', function(collection) {
+                if(!HoneySens.assureAllowed('events', 'delete')) return false;
                 var dialog = new ModalEventRemoveView({model: new Backbone.Model({total: collection.state.totalRecords})});
                 dialog.listenTo(dialog, 'confirm', function() {
-                    module.removeEvents(collection, collection.queryParams, function() {
+                    module.removeEvents(collection.queryParams, function() {
                         HoneySens.data.models.events.fetch();
                         HoneySens.request('view:modal').empty();
                     });
@@ -99,10 +140,12 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 HoneySens.request('view:modal').show(dialog);
             });
             HoneySens.reqres.setHandler('events:remove:some', function(selection, fullCollection) {
+                if(!HoneySens.assureAllowed('events', 'delete') || selection.length === 0) return false;
                 var dialog = new ModalEventRemoveView({model: new Backbone.Model({total: selection.length})});
                 dialog.listenTo(dialog, 'confirm', function() {
                     // Avoid RangeError when deleting all events of the last page (if currently displayed)
-                    if(fullCollection.state.currentPage + 1 === fullCollection.state.totalPages &&
+                    if(fullCollection.state.currentPage > 0 &&
+                        fullCollection.state.currentPage + 1 === fullCollection.state.totalPages &&
                         _.difference(fullCollection.pluck('id'), selection.pluck('id')).length === 0) {
                         fullCollection.getPreviousPage();
                     }
@@ -169,11 +212,23 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 }
             });
         },
-        removeEvents: function(collection, params, success) {
+        updateEvents: function(queryParams, eventData, success) {
+            // Only fire a request in case event data was submitted
+            if(Object.keys(eventData).length > 0)
+                $.ajax({
+                    type: 'PUT',
+                    url: 'api/events',
+                    data: JSON.stringify({...calculateEventQueryParams(queryParams), ...eventData}),
+                    dataType: 'json',
+                    success: success
+                });
+            else success();
+        },
+        removeEvents: function(queryParams, success) {
             $.ajax({
                 type: 'DELETE',
                 url: 'api/events',
-                data: JSON.stringify(calculateEventQueryParams(params)),
+                data: JSON.stringify(calculateEventQueryParams(queryParams)),
                 dataType: 'json',
                 success: success
             });

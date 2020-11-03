@@ -320,16 +320,14 @@ class Events extends RESTResource {
     }
 
     /**
-     * Updates one or multiple Event objects.
+     * Updates one or multiple Event objects according to various criteria (see documentation for fetchEvents()).
+     * Alternatively, a single id or multiple ids can be provided as deletion criteria.
      * To simplify the refresh process on the client side, only status and comment fields can be updated.
-     * The following parameters have to be provided:
-     * - id: updates the event with the given ID
-     * OR
-     * - ids: array of multiple IDs to update
      *
-     * - status: Status value, 0 to 3
+     * At least one of the following parameters have to be set to update the event model:
+     * - new_status: Status value, 0 to 3
      * AND/OR
-     * - comment: Comment string
+     * - new_comment: Comment string
      *
      * Optional criteria:
      * - userID: Updates only events that belong to the user with the given id
@@ -338,56 +336,56 @@ class Events extends RESTResource {
      */
     public function update($criteria) {
         $this->assureAllowed('update');
-        // Validation, either 'id' or 'ids' must be present
-        V::oneOf(V::key('id'), V::key('ids'))->check($criteria);
-        V::oneOf(V::key('status'), V::key('comment'))->check($criteria);
         $em = $this->getEntityManager();
-
-        // Doctrine doesn't support JOINs in UPDATE queries, therefore we first manually
-        // preselect affected events with a separate query.
-        // (see https://stackoverflow.com/questions/15293502/doctrine-query-builder-not-working-with-update-and-inner-join)
-        $affectedEvents = array();
-        $affectedEventsQb = $em->createQueryBuilder();
-        $affectedEventsQb->select('e.id')->from('HoneySens\app\models\entities\Event', 'e')
-            ->join('e.sensor', 's')
-            ->join('s.division', 'd');
-        if(V::key('id', V::intVal())->validate($criteria)) {
-            $affectedEventsQb->andWhere('e.id = :id')
-                ->setParameter('id', $criteria['id']);
-        } else if(V::key('ids', V::arrayType())->validate($criteria)) {
-            V::notEmpty()->check($criteria['ids']);
-            foreach($criteria['ids'] as $id) V::intVal()->check($id);
-            $affectedEventsQb->andWhere('e.id IN (:ids)')
-                ->setParameter('ids', $criteria['ids'], Connection::PARAM_STR_ARRAY);
+        V::oneOf(V::key('new_status'), V::key('new_comment'))->check($criteria);
+        // If the key 'id' or 'ids' is present, just update those individual IDs
+        if(V::oneOf(V::key('id'), V::key('ids'))->validate($criteria)) {
+            // Doctrine doesn't support JOINs in UPDATE queries, therefore we first manually
+            // preselect affected events with a separate query.
+            // (see https://stackoverflow.com/questions/15293502/doctrine-query-builder-not-working-with-update-and-inner-join)
+            $qb = $em->createQueryBuilder();
+            $qb->select('e.id')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
+            if(V::key('id', V::intVal())->validate($criteria)) {
+                $qb->andWhere('e.id = :id')
+                    ->setParameter('id', $criteria['id']);
+            } else if(V::key('ids', V::arrayType())->validate($criteria)) {
+                // We need at least one valid id
+                V::notEmpty()->check($criteria['ids']);
+                foreach($criteria['ids'] as $id) V::intVal()->check($id);
+                $qb->andWhere('e.id IN (:ids)')
+                    ->setParameter('ids', $criteria['ids'], Connection::PARAM_STR_ARRAY);
+            }
+            if(V::key('userID', V::intType())->validate($criteria)) {
+                $qb->andWhere(':userid MEMBER OF d.users')
+                    ->setParameter('userid', $criteria['userID']);
+            }
+        } else {
+            // Batch update events according to the remaining query parameters
+            $qb = $this->fetchEvents($criteria);
+            $qb->select('e.id');
         }
-        if(V::key('userID', V::intType())->validate($criteria)) {
-            $affectedEventsQb->andWhere(':userid MEMBER OF d.users')
-                ->setParameter('userid', $criteria['userID']);
-        }
-        foreach($affectedEventsQb->getQuery()->getResult() as $r) $affectedEvents[] = $r['id'];
-
-        $qb = $em->createQueryBuilder();
-        $qb->update('HoneySens\app\models\entities\Event', 'e')
-            ->where('e.id IN (:ids)')
-            ->setParameter('ids', $affectedEvents, Connection::PARAM_INT_ARRAY);
-        if(V::key('status', V::intVal()->between(0, 3))->validate($criteria)) {
-            $qb->set('e.status', ':status')
-                ->setParameter('status', $criteria['status']);
-        }
-        if(V::key('comment', V::stringType())->validate($criteria)) {
-            $qb->set('e.comment', ':comment')
-                ->setParameter('comment', $criteria['comment']);
-        }
+        $eventIDs = $qb->getQuery()->getResult();
+        if(sizeof($eventIDs) == 0) return;
         // Persistence
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->update('HoneySens\app\models\entities\Event', 'e')
+            ->where('e.id IN (:ids)')->setParameter('ids', $eventIDs);
+        if(V::key('new_status', V::intVal()->between(0, 3))->validate($criteria)) {
+            $qb->set('e.status', ':status')
+                ->setParameter('status', $criteria['new_status']);
+        }
+        if(V::key('new_comment', V::stringType())->validate($criteria)) {
+            $qb->set('e.comment', ':comment')
+                ->setParameter('comment', $criteria['new_comment']);
+        }
         $qb->getQuery()->execute();
     }
 
     /**
-     * Removes one or multiple Event objects.
-     * The following criteria have to be provided:
-     * - id: deletes the event with the given ID
-     * OR
-     * - ids: array of multiple IDs to delete
+     * Removes one or multiple Event objects according to various criteria (see documentation for fetchEvents()).
+     * Alternatively, a single id or multiple ids can be provided as deletion criteria.
+     *
      * Optional criteria:
      * - userID: removes only events that belong to the user with the given id
      *
@@ -407,7 +405,7 @@ class Events extends RESTResource {
             } else if (V::key('ids', V::arrayType())->validate($criteria)) {
                 // We need at least one valid id
                 V::notEmpty()->check($criteria['ids']);
-                foreach ($criteria['ids'] as $id) V::intVal()->check($id);
+                foreach($criteria['ids'] as $id) V::intVal()->check($id);
                 $qb->andWhere('e.id IN (:ids)')
                     ->setParameter('ids', $criteria['ids'], Connection::PARAM_STR_ARRAY);
             }
