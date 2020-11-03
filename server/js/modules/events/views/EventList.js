@@ -39,13 +39,13 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 dateFilter: 'div.dateFilter'
             },
             events: {
-                'click button.massExport': function(e) {
+                'click button.massExport': function() {
                     HoneySens.request('events:export:list', this.collection, new Models.Events(this.grid.getSelectedModels()));
                 },
-                'click button.massEdit': function(e) {
-                    HoneySens.request('events:edit', new Models.Events(this.grid.getSelectedModels()));
+                'click button.massEdit': function() {
+                    HoneySens.request('events:edit:some', new Models.Events(this.grid.getSelectedModels()));
                 },
-                'click button.massDelete': function(e) {
+                'click button.massDelete': function() {
                     HoneySens.request('events:remove:some', new Models.Events(this.grid.getSelectedModels()), this.collection);
                 },
                 'click a.exportPage': function() {
@@ -53,6 +53,12 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 },
                 'click a.exportAll': function() {
                     HoneySens.request('events:export:all', this.collection);
+                },
+                'click a.editPage': function() {
+                    HoneySens.request('events:edit:some', this.collection);
+                },
+                'click a.editAll': function() {
+                    HoneySens.request('events:edit:all', this.collection);
                 },
                 'click a.removePage': function() {
                     HoneySens.request('events:remove:some', this.collection, this.collection);
@@ -158,7 +164,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                             },
                             'click button.editStatus': function(e) {
                                 e.preventDefault();
-                                HoneySens.request('events:edit', new Models.Events(this.model));
+                                HoneySens.request('events:edit:single', this.model);
                                 this.$el.find('button.editStatus').popover('hide');
                             }
                         },
