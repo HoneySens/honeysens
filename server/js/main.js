@@ -21,6 +21,7 @@ requirejs.config({
 });
 
 require(['app/app', 'jquery', 'json', 'app/controller',
+    'app/patches/apply',
     'app/modules/dashboard/module',
     'app/modules/accounts/module',
     'app/modules/sensors/module',
