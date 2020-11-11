@@ -117,9 +117,8 @@ function(RootLayout, Marionette, Backbone, $, JSON, _) {
                             }
                         });
                     }
-                    if(_.has(data, 'event_filters')) app.data.models.eventfilters.fullCollection.set(data.event_filters);
-                    if(_.has(data, 'sensors')) app.data.models.sensors.fullCollection.set(data.sensors);
-                    else app.data.models.sensors.trigger('reset', app.data.models.sensors, {}); // always redraws sensor views to refresh the last_update counter
+                    if(_.has(data, 'event_filters')) app.data.models.eventfilters.fullCollection.reset(data.event_filters);
+                    if(_.has(data, 'sensors')) app.data.models.sensors.fullCollection.reset(data.sensors);
                     if(_.has(data, 'users')) app.data.models.users.set(data.users);
                     if(_.has(data, 'divisions')) app.data.models.divisions.set(data.divisions);
                     if(_.has(data, 'settings')) app.data.settings.set(data.settings);
