@@ -12,6 +12,10 @@
         <div class="classificationFilter" style="display: inline-block;"></div>
     </div>
     <div class="form-group">
+      <label>Status:&nbsp;</label>
+      <div class="statusFilter" style="display: inline-block;"></div>
+    </div>
+    <div class="form-group">
         <label>Zeitraum:&nbsp;</label>
         <div class="dateFilter" style="display: inline-block;"></div>
     </div>

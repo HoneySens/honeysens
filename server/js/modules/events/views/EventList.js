@@ -36,6 +36,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 list: 'div.table-responsive',
                 paginator: 'div.paginator',
                 eventFilter: 'div.eventFilter',
+                statusFilter: 'div.statusFilter',
                 dateFilter: 'div.dateFilter'
             },
             events: {
@@ -311,6 +312,20 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                     ]
                 });
                 this.classificationFilter.show(this.classificationFilterView);
+                // Status filter
+                this.statusFilterView = new Backgrid.Extension.SelectFilter({
+                    className: 'backgrid-filter form-control',
+                    collection: this.collection,
+                    field: 'status',
+                    selectOptions: [
+                        {label: 'Alle', value: null},
+                        {label: 'Neu', value: 0},
+                        {label: 'In Bearbeitung', value: 1},
+                        {label: 'Erledigt', value: 2},
+                        {label: 'Ignoriert', value: 3}
+                    ]
+                });
+                this.statusFilter.show(this.statusFilterView);
                 // Date filter
                 this.dateFilterView = new BackgridDatepickerFilter({
                     collection: this.collection,
