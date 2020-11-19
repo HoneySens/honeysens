@@ -1,0 +1,12 @@
+<?xml version='1.0' standalone='yes'?>
+<service>
+    <name>Heralding Honeypot</name>
+    <repository>honeysens/heralding</repository>
+    <description>Heralding is an honeypot with the simple and only goal to collect credentials. Currently the following protocols are supported: ftp, telnet, http, https, pop3, pop3s, imap, imaps, smtp, vnc, postgresql and socks5.</description>
+    <architecture>$ARCH</architecture>
+    <rawNetworkAccess>false</rawNetworkAccess>
+    <catchAll>false</catchAll>
+    <portAssignment>{"21/tcp":21, "23/tcp":23, "25/tcp":25, "110/tcp":110, "143/tcp":143, "443/tcp":443, "465/tcp":465, "993/tcp":993, "995/tcp":995, "1080/tcp":1080, "3306/tcp":3306, "5432/tcp":5432, "5900/tcp":5900, "80/tcp":8080}</portAssignment>
+    <revision>$REVISION</revision>
+    <revisionDescription>Upstream version 1.0.7 with SSH disabled</revisionDescription>
+</service>

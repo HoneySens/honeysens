@@ -1,0 +1,21 @@
+--- heralding.yml	2020-12-27 12:32:34.000000000 +0100
++++ heralding.yml	2020-12-28 03:33:07.688775978 +0100
+@@ -7,7 +7,7 @@
+ # logging of sessions and authentication attempts
+ activity_logging:
+   file:
+-    enabled: true
++    enabled: false
+     # Session details common for all protocols (capabilities) in CSV format, 
+     # written to file when the session ends. Set to "" to disable.
+     session_csv_log_file: "log_session.csv"
+@@ -18,6 +18,9 @@
+     # set to "" to disable
+     authentication_log_file: "log_auth.csv"
+ 
++  honeysens:
++    enabled: true
++
+   syslog:
+     enabled: false
+ 

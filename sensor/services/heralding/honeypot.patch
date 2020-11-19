@@ -1,0 +1,25 @@
+--- honeypot.py	2020-12-28 03:36:11.953438717 +0100
++++ honeypot.py	2020-12-28 03:38:43.203440075 +0100
+@@ -26,6 +26,7 @@
+ from heralding.reporting.syslog_logger import SyslogLogger
+ from heralding.reporting.hpfeeds_logger import HpFeedsLogger
+ from heralding.reporting.curiosum_integration import CuriosumIntegration
++from heralding.reporting.honeysens_logger import HoneySensLogger
+ 
+ import asyncssh
+ 
+@@ -106,6 +107,14 @@
+             common.on_unhandled_task_exception)
+         self._loggers.append(sys_logger)
+ 
++      if 'honeysens' in self.config['activity_logging'] and self.config[
++          'activity_logging']['honeysens']['enabled']:
++        honeysens_logger = HoneySensLogger()
++        self.sys_logger_task = self.loop.run_in_executor(None, honeysens_logger.start)
++        self.sys_logger_task.add_done_callback(
++            common.on_unhandled_task_exception)
++        self._loggers.append(honeysens_logger)
++
+       if 'hpfeeds' in self.config['activity_logging'] and self.config[
+           'activity_logging']['hpfeeds']['enabled']:
+         session_channel = self.config['activity_logging']['hpfeeds'][
