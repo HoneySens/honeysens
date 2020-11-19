@@ -14,13 +14,15 @@ from .handlers.event_forwarder import EventForwarder
 from .handlers.registry_manager import RegistryManager
 from .handlers.sensorcfg_creator import SensorConfigCreator
 from .handlers.upload_verifier import UploadVerifier
+from .handlers.sensor_timeout_checker import SensorTimeoutChecker
 
 handlers = {
     constants.TaskType.EVENT_EXTRACTOR: EventExtractor(),
     constants.TaskType.EVENT_FORWARDER: EventForwarder(),
     constants.TaskType.REGISTRY_MANAGER: RegistryManager(),
     constants.TaskType.SENSORCFG_CREATOR: SensorConfigCreator(),
-    constants.TaskType.UPLOAD_VERIFIER: UploadVerifier()
+    constants.TaskType.UPLOAD_VERIFIER: UploadVerifier(),
+    constants.TaskType.SENSOR_TIMEOUT_CHECKER: SensorTimeoutChecker()
 }
 logger = get_task_logger(__name__)
 

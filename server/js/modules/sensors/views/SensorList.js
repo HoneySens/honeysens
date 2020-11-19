@@ -113,7 +113,7 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                                 // Dye the cell background depending on service status and show an indicator,
                                 // but only if the sensor is online and the service is marked as active
                                 var lastServiceStatus = this.model.get('last_service_status');
-                                if(serviceActive && !this.model.isTimedOut()) {
+                                if(serviceActive && this.model.get('last_status') && this.model.get('last_status') !== Models.SensorStatus.status.TIMEOUT) {
                                     if (_.has(lastServiceStatus, service.id)) {
                                         // Current service status data is available
                                         switch (lastServiceStatus[service.id]) {
@@ -167,28 +167,31 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                         template: SensorListStatusCellTpl,
                         render: function() {
                             // Mix template helpers into template data
-                            var templateData = this.model.attributes,
-                                model = this.model;
-                            templateData.isTimedOut = function() {
-                                return model.isTimedOut();
-                            };
+                            var templateData = this.model.attributes;
                             templateData.showLastStatusTS = function() {
+                                var timeRef = this.last_status === Models.SensorStatus.status.TIMEOUT ? this.last_status_ts : this.last_status_since;
                                 var now = new Date().getTime() / 1000,
-                                    diffMin = Math.floor((now - this.last_status_ts) / 60);
+                                    diffMin = Math.floor((now - timeRef) / 60);
                                 if(diffMin < 60) {
-                                    return "vor " + diffMin + " Minuten";
+                                    return "seit " + diffMin + " Minuten";
                                 } else if(diffMin < (60 * 24)) {
-                                    return "vor " + Math.floor(diffMin / 60) + " Stunden";
+                                    return "seit " + Math.floor(diffMin / 60) + " Stunden";
                                 } else if(diffMin >= (60 * 24)) {
-                                    return "vor " + Math.floor(diffMin / (60 * 24)) + " Tag(en)";
+                                    return "seit " + Math.floor(diffMin / (60 * 24)) + " Tag(en)";
                                 }
                             };
                             // Calculate td classification (for color indication)
-                            var className = '',
-                                lastStatus = this.model.get('last_status');
-                            if(this.model.isTimedOut() || lastStatus === Models.SensorStatus.status.ERROR) className = 'danger';
-                            else if(lastStatus === Models.SensorStatus.status.UPDATING) className = 'info';
-                            else if(lastStatus === Models.SensorStatus.status.RUNNING) className = 'success';
+                            var className = '';
+                            switch(this.model.get('last_status')) {
+                                case Models.SensorStatus.status.RUNNING:
+                                    className = 'success';
+                                    break;
+                                case Models.SensorStatus.status.UPDATING:
+                                    className = 'info';
+                                    break;
+                                default:
+                                    className = 'danger';
+                            }
                             this.$el.addClass(className);
                             // Render template
                             this.$el.html(this.template(templateData));
@@ -249,6 +252,12 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
             onShow: function() {
                 // Readjust table margin so that all service labels are visible
                 this.$el.find('table.table').css('margin-top', Math.max(this.$el.find('span.serviceLabel').outerWidth() - 45, 0));
+                // Refresh the view upon model updates to recalculate status cell timers ("online/offline since")
+                this.listenTo(HoneySens.vent, 'models:updated', function() {
+                    // The sensor list is a PageableCollection. This only triggers a reset on the "frontend collection",
+                    // which is the currently visible page. The backend collection (fullCollection) is unaffected.
+                    this.collection.trigger('reset', null, {});
+                })
             },
             displayServiceCheckboxes: function($anchor) {
                 if(this.servicesEditable) {

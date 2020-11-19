@@ -43,7 +43,7 @@ def add_worker_arguments(parser):
     parser.add_argument('--hsconfig', dest='hsconfig', required=True, help='HoneySens configuration file path')
 
 
-app = Celery('processor', broker='redis://{}:{}'.format(os.environ['BROKER_HOST'], os.environ['BROKER_PORT']), include=['processor.tasks'])
+app = Celery('processor', broker='redis://{}:{}'.format(os.environ['BROKER_HOST'], os.environ['BROKER_PORT']), include=['processor.tasks', 'processor.beat'])
 app.user_options['worker'].add(add_worker_arguments)
 app.steps['worker'].add(ConfigBootstep)
 

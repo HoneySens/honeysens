@@ -9,9 +9,10 @@ use stdClass;
  */
 class SensorStatus {
 
-    const STATUS_ERROR = 0;
-    const STATUS_RUNNING = 1;
-    const STATUS_UPDATING = 2;
+    const STATUS_ERROR = 0;    // Sensor is running, but encountered an internal problem
+    const STATUS_RUNNING = 1;  // Sensor is up and running
+    const STATUS_UPDATING = 2; // Sensor is currently performing a firmware update
+    const STATUS_TIMEOUT = 3;  // Sensor didn't send a status report for a certain amount of time
 
     const SERVICE_STATUS_RUNNING = 0;
     const SERVICE_STATUS_SCHEDULED = 1;
@@ -40,31 +41,31 @@ class SensorStatus {
     protected $status;
 
     /**
-     * @Column(type="string")
+     * @Column(type="string", nullable=true)
      */
     protected $ip;
 
     /**
-     * @Column(type="integer")
+     * @Column(type="integer", nullable=true)
      */
     protected $freeMem;
 
     /**
      * Disk usage in Megabytes.
      *
-     * @Column(type="integer")
+     * @Column(type="integer", nullable=true)
      */
     protected $diskUsage;
 
     /**
      * Total disk size in Megabytes.
      *
-     * @Column(type="integer")
+     * @Column(type="integer", nullable=true)
      */
     protected $diskTotal;
 
     /**
-     * @Column(type="string")
+     * @Column(type="string", nullable=true)
      */
     protected $swVersion;
 
@@ -75,6 +76,14 @@ class SensorStatus {
      * @Column(type="string", nullable=true)
      */
     protected $serviceStatus;
+
+    /**
+     * Timestamp that depicts when this sensor originally went "online" (after its last disconnection).
+     * This timestamp is copied over from one SensorStatus to the next as long as the sensor is online without interruption.
+     *
+     * @Column(type="datetime", nullable=true)
+     */
+    protected $runningSince;
 
     /**
      * Get id
@@ -263,6 +272,26 @@ class SensorStatus {
         return json_decode($this->serviceStatus);
     }
 
+    /**
+     * Set the timestamp that indicates since when this sensor is running.
+     *
+     * @param \DateTime $timestamp
+     * @return SensorStatus
+     */
+    public function setRunningSince(\DateTime $timestamp) {
+        $this->runningSince = $timestamp;
+        return $this;
+    }
+
+    /**
+     * Get timestamp that indicates since when this sensor is running.
+     *
+     * @return \DateTime
+     */
+    public function getRunningSince() {
+        return $this->runningSince;
+    }
+
     public function getState() {
         return array(
             'id' => $this->getId(),
@@ -274,7 +303,8 @@ class SensorStatus {
             'disk_usage' => $this->getDiskUsage(),
             'disk_total' => $this->getDiskTotal(),
             'sw_version' => $this->getSWVersion(),
-            'service_status' => $this->getServiceStatus()
+            'service_status' => $this->getServiceStatus(),
+            'running_since' => $this->getRunningSince() ? $this->getRunningSince()->format('U') : null
         );
     }
 }

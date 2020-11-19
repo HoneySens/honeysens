@@ -181,7 +181,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'eapol_client_key_password': null,
                 'update_interval': null,
                 'last_status': '',
-                'last_status_ts': '',
+                'last_status_since': null,
+                'last_status_ts': null,
                 'sw_version': '',
                 'last_ip' : '',
                 'server_endpoint_mode': 0,
@@ -208,12 +209,6 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             },
             getFirmware: function() {
                 if(this.get('firmware')) return HoneySens.data.models.platforms.getFirmware(this.get('firmware'));
-            },
-            isTimedOut: function() {
-                var now = new Date().getTime() / 1000;
-                // Compare with global update interval in case no individual interval has been set
-                var update_interval = this.get('update_interval') === null ? HoneySens.data.settings.get('sensorsUpdateInterval') : this.get('update_interval');
-                return (now - this.get('last_status_ts')) > ((update_interval * 60) + 60); // 1 minute timeout tolerance
             }
         });
 
@@ -261,7 +256,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         Models.SensorStatus.status = {
             ERROR: 0,
             RUNNING: 1,
-            UPDATING: 2
+            UPDATING: 2,
+            TIMEOUT: 3
         };
 
         Models.SensorStatus.serviceStatus = {

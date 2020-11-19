@@ -762,8 +762,9 @@ class Sensor {
         $eapol_client_cert = $this->getEAPOLClientCert() ? $this->getEAPOLClientCert()->getFingerprint() : null;
         $eapol_client_key_password = $this->getEAPOLClientCertPassphrase() ? '******' : null;
         $last_status = $this->getLastStatus();
-        $last_status_ts = $last_status ? $last_status->getTimestamp()->format('U') : '';
+        $last_status_ts = $last_status ? $last_status->getTimestamp()->format('U') : null;
         $last_status_code = $last_status ? $last_status->getStatus() : null;
+        $last_status_since = $last_status ? $last_status->getRunningSince() ? $last_status->getRunningSince()->format('U') : null : null;
         $last_service_status = $last_status ? $last_status->getServiceStatus() : null;
         $sw_version = $last_status ? $last_status->getSWVersion() : '';
         $last_ip = $last_status ? $last_status->getIP() : null;
@@ -789,6 +790,7 @@ class Sensor {
             'eapol_client_key_password' => $eapol_client_key_password,
             'last_status' => $last_status_code,
             'last_status_ts' => $last_status_ts,
+            'last_status_since' => $last_status_since,
             'last_service_status' => $last_service_status,
             'sw_version' => $sw_version,
             'last_ip' => $last_ip,
