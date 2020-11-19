@@ -448,7 +448,7 @@ class Sensors extends RESTResource {
      *
      * The status data JSON object has to consist of the following attributes:
      * - timestamp: UNIX timestamp of the current sensor time
-     * - status: Flat that indicates the current sensor status (0 to 4)
+     * - status: Int that indicates the current sensor status (0 to 2)
      * - ip: IP address of the sensor's primary network interface
      * - free_mem: Free RAM on the sensor
      * - sw_version: Current sensor firmware revision
@@ -473,7 +473,7 @@ class Sensors extends RESTResource {
         $statusData = json_decode($statusDataDecoded);
         V::objectType()
             ->attribute('timestamp', V::intVal())
-            ->attribute('status', V::intVal()->between(0, 4))
+            ->attribute('status', V::intVal()->between(0, 2))
             ->attribute('ip', V::stringType())
             ->attribute('free_mem', V::intVal())
             ->attribute('disk_usage', V::intVal())
@@ -509,14 +509,20 @@ class Sensors extends RESTResource {
         $status = new SensorStatus();
         $timestamp = new \DateTime('@' . $statusData->timestamp);
         $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $status->setSensor($sensor)
-            ->setTimestamp($timestamp)
+        // Set runningSince timestamp depending on previous sensor status
+        $lastStatus = $sensor->getLastStatus();
+        if($lastStatus != null && $lastStatus->getRunningSince() != null) {
+            // Last status exists and wasn't a timeout: inherit its value
+            $status->setRunningSince($lastStatus->getRunningSince());
+        } else $status->setRunningSince($timestamp);
+        $status->setTimestamp($timestamp)
             ->setStatus($statusData->status)
             ->setIP($statusData->ip)
             ->setFreeMem($statusData->free_mem)
             ->setDiskUsage($statusData->disk_usage)
             ->setDiskTotal($statusData->disk_total)
             ->setSWVersion($statusData->sw_version);
+        $sensor->addStatus($status);
         if(property_exists($statusData, 'service_status')) $status->setServiceStatus($statusData->service_status);
         $em->persist($status);
         $em->flush();

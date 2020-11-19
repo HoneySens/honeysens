@@ -311,6 +311,18 @@ if config_version == '2.1.0':
     config.set('syslog', 'priority', '6')
     config.set('server', 'config_version', '2.2.0')
     config_version = '2.2.0'
+# 2.2.0 -> 2.3.0
+if config_version == '2.2.0':
+    print('Upgrading configuration 2.2.0 -> DEV')
+    db_statements = [
+        'ALTER TABLE statuslogs ADD runningSince DATETIME DEFAULT NULL',
+        'ALTER TABLE statuslogs CHANGE ip ip VARCHAR(255) DEFAULT NULL, CHANGE freeMem freeMem INT DEFAULT NULL, CHANGE diskUsage diskUsage INT DEFAULT NULL, CHANGE diskTotal diskTotal INT DEFAULT NULL, CHANGE swVersion swVersion VARCHAR(255) DEFAULT NULL'
+    ]
+    execute_sql(db, db_statements)
+    db.commit()
+    config.set('sensors', 'timeout_threshold', '1')
+    config.set('server', 'config_version', 'DEV')
+    config_version = 'DEV'
 
 # Write new config file
 with open(config_file, 'w') as f:
