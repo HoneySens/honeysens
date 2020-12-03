@@ -423,7 +423,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'sendAllEvents': false
             },
             getType: function() {
-                // defaults to mail if no data was set yet
+                // Defaults to mail if no data was set yet
                 if(this.get('user') == null) return Models.IncidentContact.type.MAIL;
                 else return Models.IncidentContact.type.USER;
             }

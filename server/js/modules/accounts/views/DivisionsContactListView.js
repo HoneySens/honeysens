@@ -30,8 +30,8 @@ function(HoneySens, Models, DivisionsContactItemTpl, DivisionsContactListViewTpl
             onRender: function() {
                 var userSelectView = new DivisionsContactUserSelect({el: this.$el.find('select[name="user"]'),
                         collection: HoneySens.request('accounts:division:users')}),
+                    type = this.model.getType(),
                     view = this;
-                var type = parseInt(this.$el.find('select[name="type"]').val());
 
                 userSelectView.render();
 
@@ -39,21 +39,26 @@ function(HoneySens, Models, DivisionsContactItemTpl, DivisionsContactListViewTpl
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
 
-                        type = parseInt(view.$el.find('select[name="type"]').val());
-                        var email = type == 0 ? view.$el.find('input[name="email"]').val() : null,
-                            user = type == 1 ? view.$el.find('select[name="user"]').val() : null,
-                            weeklySummary = view.$el.find('input[name="weeklySummary"]').is(':checked'),
-                            criticalEvents = view.$el.find('input[name="criticalEvents"]').is(':checked'),
-                            allEvents = view.$el.find('input[name="allEvents"]').is(':checked');
-
-                        view.model.set({email: email, user: user, sendWeeklySummary: weeklySummary,
-                            sendCriticalEvents: criticalEvents, sendAllEvents: allEvents});
+                        var newType = parseInt(view.$el.find('select[name="type"]').val()),
+                            newModel = {
+                                sendWeeklySummary: view.$el.find('input[name="weeklySummary"]').is(':checked'),
+                                sendCriticalEvents: view.$el.find('input[name="criticalEvents"]').is(':checked'),
+                                sendAllEvents: view.$el.find('input[name="allEvents"]').is(':checked')
+                            };
+                        if(newType === Models.IncidentContact.type.MAIL) {
+                            newModel.email = view.$el.find('input[name="email"]').val();
+                            view.model.unset('user');
+                        } else {
+                            newModel.user = view.$el.find('select[name="user"]').val();
+                            view.model.unset('email');
+                        }
+                        view.model.set(newModel);
                     }
                 });
 
-                if(type == Models.IncidentContact.type.USER) {
+                if(type === Models.IncidentContact.type.USER) {
                     this.$el.find('select[name="type"]').val(this.model.getType()).trigger('change');
-                    userSelectView.$el.val(view.model.get('user'));
+                    userSelectView.$el.val(this.model.get('user'));
                 }
 
                 this.refreshTypeSelection(type);
@@ -61,7 +66,9 @@ function(HoneySens, Models, DivisionsContactItemTpl, DivisionsContactListViewTpl
                 this.$el.find('button').tooltip();
             },
             changeType: function() {
+                // User manually changed the type
                 var type = parseInt(this.$el.find('select[name="type"]').val());
+                this.$el.find('input[name="email"]').val('');  // Always clear email field
 
                 this.refreshTypeSelection(type);
                 this.refreshValidators(type);

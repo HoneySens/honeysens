@@ -96,24 +96,25 @@ class Divisions extends RESTResource {
      *
      * @param IncidentContact $contact
      * @param stdClass $contactData
-     * @throws BadRequestException
      */
     private function updateContact(IncidentContact $contact, $contactData) {
         // Validation
-        V::attribute('email')
-            ->attribute('user')
-            ->attribute('sendWeeklySummary', V::boolVal())
+        V::attribute('sendWeeklySummary', V::boolVal())
             ->attribute('sendCriticalEvents', V::boolVal())
             ->attribute('sendAllEvents', V::boolVal())
             ->check($contactData);
-        // Entity update
-        if(V::email()->validate($contactData->email)) $contact->setEMail($contactData->email);
-        elseif(V::intVal()->validate($contactData->user)) {
+        // Only one of either 'user' or 'email' should be set
+        if(V::attribute('email')->validate($contactData)) {
+            V::not(V::attribute('user'))->check($contactData);
+            $contact->setEMail($contactData->email);
+            $contact->setUser();
+        } else {
+            V::attribute('user', V::intVal())->check($contactData);
+            V::not(V::attribute('email'))->check($contactData);
             $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($contactData->user);
             V::objectType()->check($user);
             $contact->setUser($user);
-        } else {
-            throw new BadRequestException();
+            $contact->setEMail(null);
         }
         $contact->setSendWeeklySummary($contactData->sendWeeklySummary)
             ->setSendCriticalEvents($contactData->sendCriticalEvents)
