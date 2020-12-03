@@ -31,7 +31,7 @@ class WeeklySummarizer(HandlerInterface):
                          'WHERE c.sendWeeklySummary = "1"'))
             rows = cur.fetchall()
             for row in rows:
-                recipient = row['email'] if row['email'] is not None else row['u.email']
+                recipient = row['u.email'] if row['u.email'] is not None else row['email']
                 candidates.setdefault(recipient, set()).add(row['division_id'])
         self._send_weekly_summaries(logger, db, config, candidates)
         return {}
