@@ -74,6 +74,10 @@ function(HoneySens, Models, Backgrid, TaskListTpl, TaskListTypeCellTpl, TaskList
                             'click button.inspectUpload': function(e) {
                                 e.preventDefault();
                                 HoneySens.request('tasks:upload:show', this.model);
+                            },
+                            'click button.inspectTestMail': function(e) {
+                                e.preventDefault();
+                                HoneySens.request('tasks:testmail:show', this.model);
                             }
                         },
                         render: function() {

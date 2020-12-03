@@ -1,7 +1,15 @@
 <?php
 namespace HoneySens\app\models;
 
+use HoneySens\app\models\entities\Task;
+
 class ContactService {
+
+    private $services;
+
+    public function __construct($services) {
+        $this->services = $services;
+    }
 
     private function getEventClassificationText($event) {
         if($event->getClassification() == $event::CLASSIFICATION_UNKNOWN) return 'Unbekannt';
@@ -11,28 +19,9 @@ class ContactService {
         elseif($event->getClassification() == $event::CLASSIFICATION_PORTSCAN) return 'Portscan';
     }
 
-    private function prepareEMail($config) {
-        $mail = new \PHPMailer();
-        $mail->isSMTP();
-        $mail->Host = $config['smtp']['server'];
-        $mail->Port = $config['smtp']['port'];
-        $mail->SMTPSecure = 'tls';
-        $smtpUser = $config['smtp']['user'];
-        if($smtpUser != '') {
-            $mail->SMTPAuth = true;
-            $mail->Username = $smtpUser;
-            $mail->Password = $config['smtp']['password'];
-        } else {
-            $mail->SMTPAuth = false;
-        }
-        $mail->From = $config['smtp']['from'];
-        $mail->FromName = 'HoneySens';
-        $mail->WordWrap = 120;
-        return $mail;
-    }
-
     public function sendIncident($config, $em, $event) {
         if($config['smtp']['enabled'] != 'true') return;
+        // Fetch associated contacts
         $division = $event->getSensor()->getDivision();
         $qb = $em->createQueryBuilder();
         $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c')
@@ -48,20 +37,17 @@ class ContactService {
         }
         $contacts = $qb->getQuery()->getResult();
         if(count($contacts) == 0) return array('success' => true);
-        $mail = $this->prepareEMail($config);
-        foreach($contacts as $contact) {
-            $mail->addAddress($contact->getEMail());
-        }
+        // Prepare content
         $classification = $this->getEventClassificationText($event);
-        $mail->Subject = $event->getClassification() >= $event::CLASSIFICATION_LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
-        $mail->Body = "Dies ist eine automatisch generierte Nachricht vom HoneySens-System, um auf einen Vorfall innerhalb ";
-        $mail->Body .= "des Sensornetzwerkes hinzuweisen. Details entnehmen Sie der nachfolgenden Auflistung.\n\n####### Vorfall " . $event->getId() . " #######\n\n";
-        $mail->Body .= "Datum: " . $event->getTimestamp()->format("d.m.Y") . "\n";
-        $mail->Body .= "Zeit: " . $event->getTimestamp()->format("H:i:s") . "\n";
-        $mail->Body .= "Sensor: " . $event->getSensor()->getName() . "\n";
-        $mail->Body .= "Klassifikation: " . $classification . "\n";
-        $mail->Body .= "Quelle: " . $event->getSource() . "\n";
-        $mail->Body .= "Details: " . $event->getSummary() . "\n";
+        $subject = $event->getClassification() >= $event::CLASSIFICATION_LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
+        $body = "Dies ist eine automatisch generierte Nachricht vom HoneySens-System, um auf einen Vorfall innerhalb ";
+        $body .= "des Sensornetzwerkes hinzuweisen. Details entnehmen Sie der nachfolgenden Auflistung.\n\n####### Vorfall " . $event->getId() . " #######\n\n";
+        $body .= "Datum: " . $event->getTimestamp()->format("d.m.Y") . "\n";
+        $body .= "Zeit: " . $event->getTimestamp()->format("H:i:s") . "\n";
+        $body .= "Sensor: " . $event->getSensor()->getName() . "\n";
+        $body .= "Klassifikation: " . $classification . "\n";
+        $body .= "Quelle: " . $event->getSource() . "\n";
+        $body .= "Details: " . $event->getSummary() . "\n";
         $details = $event->getDetails();
         $genericDetails = array();
         $interactionDetails = array();
@@ -72,92 +58,47 @@ class ContactService {
             }
         }
         if(count($genericDetails) > 0) {
-            $mail->Body .= "\n\n  Zusätzliche Informationen:\n  --------------------------\n";
+            $body .= "\n\n  Zusätzliche Informationen:\n  --------------------------\n";
             foreach($genericDetails as $genericDetail) {
-                $mail->Body .= "  " . $genericDetail->getData() . "\n";
+                $body .= "  " . $genericDetail->getData() . "\n";
             }
         }
         if(count($interactionDetails) > 0) {
-            $mail->Body .= "\n\n  Sensorinteraktion:\n  --------------------------\n";
+            $body .= "\n\n  Sensorinteraktion (Zeiten in UTC):\n  --------------------------\n";
             foreach($interactionDetails as $interactionDetail) {
-                $mail->Body .= "  " . $interactionDetail->getTimestamp()->format('H:i:s') . ": " . $interactionDetail->getData() . "\n";
+                $body .= "  " . $interactionDetail->getTimestamp()->format('H:i:s') . ": " . $interactionDetail->getData() . "\n";
             }
         }
-        if($mail->send()) {
-            return array('success' => true);
-        } else {
-            return array('success' => false, 'error' => $mail->ErrorInfo);
-        }
-    }
-
-    public function sendWeeklySummary($config, $em) {
-        if($config['smtp']['enabled'] != 'true') return;
-        $contacts = $em->getRepository('HoneySens\app\models\entities\IncidentContact')->findBy(array('sendWeeklySummary' => true));
-        if(count($contacts) == 0) return array('success' => true);
-        $mail = $this->prepareEMail($config);
+        // Notify each contact
+        $taskParams = array(
+            'subject' => $subject,
+            'body' => $body);
         foreach($contacts as $contact) {
-            $mail->addAddress($contact->getEMail());
+            $taskParams['to'] = $contact->getEMail();
+            $taskService = $this->services->get(ServiceManager::SERVICE_TASK);
+            $taskService->enqueue(null, Task::TYPE_EMAIL_EMITTER, $taskParams);
         }
-        $endInterval = new \Datetime();
-        $startInterval = clone $endInterval;
-        $startInterval = $startInterval->sub(new \DateInterval('P7D'));
-        $sensorCount = count($em->getRepository('HoneySens\app\models\entities\Sensor')->findAll());
-        $query = $em->createQuery('select e from HoneySens\app\models\entities\Event e where e.timestamp >= :timestamp')->setParameter('timestamp', $startInterval);
-        $events = $query->getResult();
-        $eventsBySensor = array();
-        $criticalEvents = array();
-        foreach($events as $event) {
-            $sensor = $event->getSensor()->getName();
-            if(array_key_exists($sensor, $eventsBySensor)) $eventsBySensor[$sensor] += 1;
-            else $eventsBySensor[$sensor] = 1;
-            if($event->getClassification() >= $event::CLASSIFICATION_LOW_HP) {
-                $criticalEvents[] = $event;
-            }
-        }
-        $mail->Subject = 'HoneySens Zusammenfassung des Zeitraums vom ' . $startInterval->format('d.m.Y') . ' bis ' . $endInterval->format('d.m.Y');
-        $mail->Body = "Dies ist eine automatisch generierte Nachricht vom HoneySens-System, um ueber den aktuellen Zustand des Sensornetzwerkes Auskunft zu geben ";
-        $mail->Body .= "und die gesammelten Daten der letzten Woche zusammenzufassen.\n\nZeitraum: " . $startInterval->format('d.m.Y') . " - " . $endInterval->format('d.m.Y') . "\n\n";
-        $mail->Body .= "Sensoren: " . $sensorCount . "\n";
-        $mail->Body .= "Ereignisse: " . count($events) . ", davon " . count($criticalEvents) . " kritisch\n\n";
-        if(count($events) > 0) {
-            $mail->Body .= "### Ereignisse pro Sensor ###\n\n";
-            foreach($eventsBySensor as $sensor => $amount) {
-                $mail->Body .= "  " . $sensor . ": " . $amount . "\n";
-            }
-        }
-        if(count($criticalEvents) > 0) {
-            $mail->Body .= "\n### Kritische Ereignisse ###\n\n";
-            foreach($criticalEvents as $event) {
-                $classification = $this->getEventClassificationText($event);
-                $mail->Body .= "  " . $event->getTimestamp()->format('d.m.Y H:i') . " (ID " . $event->getId() . "): " . $classification . " von " . $event->getSource() . " (" . $event->getSummary() . ")\n";
-            }
-        }
-        if($mail->send()) {
-            return array('success' => true);
-        } else {
-            return array('success' => false, 'error' => $mail->ErrorInfo);
-        }
+        return array('success' => true);
     }
 
-    public function sendTestMail($to, $server, $port, $user, $password, $from) {
-        $mail = new \PHPMailer();
-        $mail->isSMTP();
-        $mail->Host = $server;
-        $mail->Port = $port;
-        $mail->SMTPSecure = 'tls';
-        if($user != '') {
-            $mail->SMTPAuth = true;
-            $mail->Username = $user;
-            $mail->Password = $password;
-        } else {
-            $mail->SMTPAuth = false;
+    /**
+     * Enqueues and returns a task to send a test E-Mail with the given parameters.
+     */
+    public function sendTestMail($user, $from, $to, $smtpServer, $smtpPort, $smtpEncryption, $smtpUser, $smtpPassword) {
+        $taskParams = array(
+            'test_mail' => true,
+            'smtp_server' => $smtpServer,
+            'smtp_port' => $smtpPort,
+            'smtp_encryption' => $smtpEncryption,
+            'from' => $from,
+            'to' => $to,
+            'subject' => 'HoneySens Testnachricht',
+            'body' => 'Dies ist eine Testnachricht des HoneySens-Servers.');
+        if($smtpUser != '') {
+            $taskParams['smtp_user'] = $smtpUser;
+            $taskParams['smtp_password'] = $smtpPassword;
         }
-        $mail->From = $from;
-        $mail->FromName = 'HoneySens';
-        $mail->WordWrap = 120;
-        $mail->addAddress($to);
-        $mail->Subject = 'HoneySens Testnachricht';
-        $mail->Body = 'Dies ist eine Testnachricht des HoneySens-Servers.';
-        if(!$mail->send()) throw new \Exception($mail->ErrorInfo);
+        $taskService = $this->services->get(ServiceManager::SERVICE_TASK);
+        return $taskService->enqueue($user, Task::TYPE_EMAIL_EMITTER, $taskParams);
     }
 }

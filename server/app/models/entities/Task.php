@@ -23,6 +23,7 @@ class Task {
     const TYPE_REGISTRY_MANAGER = 2;
     const TYPE_EVENT_EXTRACTOR = 3;
     const TYPE_EVENT_FORWARDER = 4;
+    const TYPE_EMAIL_EMITTER = 6;
 
     /**
      * @Id

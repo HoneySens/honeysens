@@ -7,11 +7,6 @@ use Respect\Validation\Validator as V;
 
 class Settings extends RESTResource {
 
-    // Reusable specifications for external network connections (SMTP, LDAP etc.)
-    const ENCRYPTION_NONE = 0;
-    const ENCRYPTION_STARTTLS = 1;
-    const ENCRYPTION_TLS = 2;
-
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->get('/api/settings', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Settings($em, $services, $config);
@@ -33,8 +28,8 @@ class Settings extends RESTResource {
             $request = $app->request()->getBody();
             V::json()->check($request);
             $data = json_decode($request);
-            $controller->sendTestMail($data);
-            echo json_encode([]);
+            $task = $controller->sendTestMail($data);
+            echo json_encode($task->getState());
         });
 
         $app->post('/api/settings/testevent', function() use ($app, $em, $services, $config, $messages) {
@@ -70,6 +65,7 @@ class Settings extends RESTResource {
             $settings['smtpEnabled'] = $config->getBoolean('smtp', 'enabled');
             $settings['smtpServer'] = $config['smtp']['server'];
             $settings['smtpPort'] = $config['smtp']['port'];
+            $settings['smtpEncryption'] = $config['smtp']['encryption'];
             $settings['smtpFrom'] = $config['smtp']['from'];
             $settings['smtpUser'] = $config['smtp']['user'];
             $settings['smtpPassword'] = $config['smtp']['password'];
@@ -108,6 +104,7 @@ class Settings extends RESTResource {
      * Optional parameters:
      * - smtpServer: IP or hostname of a mail server
      * - smtpPort: TCP port to use for SMTP connections
+     * - smtpEncryption: SMTP transport encryption (0: none, 1: STARTTLS, 2: TLS)
      * - smtpFrom: E-Mail address to use as sender of system mails
      * - smtpUser: SMTP Username to authenticate with
      * - smtpPassword: SMTP Password to authenticate with
@@ -143,13 +140,15 @@ class Settings extends RESTResource {
         if($data->smtpEnabled) {
            V::attribute('smtpServer', V::stringType())
                ->attribute('smtpPort', V::intVal()->between(0, 65535))
+               ->attribute('smtpEncryption', V::intVal()->between(0, 2))
                ->attribute('smtpFrom', V::email())
-               ->attribute('smtpUser', V::optional(V::stringType()))
+               ->attribute('smtpUser', V::stringType())
                ->attribute('smtpPassword', V::stringType())
                ->check($data);
         } else {
            V::attribute('smtpServer', V::optional(V::stringType()))
                ->attribute('smtpPort', V::optional(V::intVal()->between(0, 65535)))
+               ->attribute('smtpEncryption', V::optional(V::intVal()->between(0, 2)))
                ->attribute('smtpFrom', V::optional(V::email()))
                ->attribute('smtpUser', V::optional(V::stringType()))
                ->attribute('smtpPassword', V::optional(V::stringType()))
@@ -190,6 +189,7 @@ class Settings extends RESTResource {
         $config->set('smtp', 'enabled', $data->smtpEnabled ? 'true' : 'false');
         $config->set('smtp', 'server', $data->smtpServer);
         $config->set('smtp', 'port', $data->smtpPort);
+        $config->set('smtp', 'encryption', $data->smtpEncryption);
         $config->set('smtp', 'from', $data->smtpFrom);
         $config->set('smtp', 'user', $data->smtpUser);
         $config->set('smtp', 'password', $data->smtpPassword);
@@ -217,6 +217,7 @@ class Settings extends RESTResource {
             'smtpEnabled' => $config->getBoolean('smtp', 'enabled'),
             'smtpServer' => $config['smtp']['server'],
             'smtpPort' => $config['smtp']['port'],
+            'smtpEncryption' => $config['smtp']['encryption'],
             'smtpFrom' => $config['smtp']['from'],
             'smtpUser' => $config['smtp']['user'],
             'smtpPassword' => $config['smtp']['password'],
@@ -245,13 +246,14 @@ class Settings extends RESTResource {
             ->attribute('recipient', V::stringType())
             ->attribute('smtpServer', V::stringType())
             ->attribute('smtpPort', V::intVal()->between(0, 65535))
-            ->attribute('smtpUser', V::optional(V::stringType()))
-            ->attribute('smtpFrom', V::optional(V::stringType()))
-            ->attribute('smtpPassword', V::optional(V::stringType()))
+            ->attribute('smtpEncryption', V::intVal()->between(0, 2))
+            ->attribute('smtpUser', V::stringType())
+            ->attribute('smtpFrom', V::stringType())
+            ->attribute('smtpPassword', V::stringType())
             ->check($data);
         // Send mail
         $contactService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
-        $contactService->sendTestMail($data->recipient, $data->smtpServer, $data->smtpPort, $data->smtpUser, $data->smtpPassword, $data->smtpFrom);
+        return $contactService->sendTestMail($this->getSessionUser(), $data->smtpFrom, $data->recipient, $data->smtpServer, $data->smtpPort, $data->smtpEncryption, $data->smtpUser, $data->smtpPassword);
     }
 
     public function sendTestEvent() {

@@ -5,6 +5,12 @@ use HoneySens\app\controllers;
 
 class EntityUpdateService {
 
+    private $services;
+
+    public function __construct($services) {
+        $this->services = $services;
+    }
+
     /**
      * Used to calculate an array of entities that have been changed since the given timestamp.
      *

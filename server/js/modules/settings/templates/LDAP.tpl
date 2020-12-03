@@ -15,7 +15,7 @@
         <label for="ldapEncryption" class="control-label">Verschl&uuml;sselung</label>
         <select name="ldapEncryption" class="form-control">
             <option value="<%- _.templateHelpers.getModels().Settings.encryption.NONE %>">Keine</option>
-            <option value="<%- _.templateHelpers.getModels().Settings.encryption.STARTTLS %>">StartTLS</option>
+            <option value="<%- _.templateHelpers.getModels().Settings.encryption.STARTTLS %>">STARTTLS</option>
             <option value="<%- _.templateHelpers.getModels().Settings.encryption.TLS %>">TLS</option>
         </select>
     </div>

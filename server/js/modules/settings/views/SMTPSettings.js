@@ -21,7 +21,8 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
                     if(this.isFormValid()) {
                         this.submitTestMail = true;
                         this.$el.find('form').trigger('submit');
-                    } else this.disableSection();
+                    }
+                    this.disableSection();
                 },
                 'click button.reset': function() {
                     this.$el.find('form').trigger('reset');
@@ -29,12 +30,14 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
             },
             onRender: function() {
                 var view = this;
+                // Set SMTP encryption from model
+                this.$el.find('select[name="smtpEncryption"] option[value="' + this.model.get('smtpEncryption') + '"]').prop('selected', true);
+                // Submission handler
                 this.$el.find('form').validator().on('submit', function (e) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
                         if(view.submitTestMail) {
                             var smtpModel = new Backbone.Model();
-                            smtpModel.url = function() {return 'api/settings/testmail'};
                             smtpModel.set(view.getFormData());
                             HoneySens.request('view:modal').show(new ModalSendTestMail({model: smtpModel}));
                         } else {
@@ -63,6 +66,7 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
                 return {
                     smtpServer: this.$el.find('input[name="smtpServer"]').val(),
                     smtpPort: this.$el.find('input[name="smtpPort"]').val(),
+                    smtpEncryption: this.$el.find('select[name="smtpEncryption"]').val(),
                     smtpFrom: this.$el.find('input[name="smtpFrom"]').val(),
                     smtpUser: this.$el.find('input[name="smtpUser"]').val(),
                     smtpPassword: this.$el.find('input[name="smtpPassword"]').val()

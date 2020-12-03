@@ -321,6 +321,7 @@ if config_version == '2.2.0':
     execute_sql(db, db_statements)
     db.commit()
     config.set('sensors', 'timeout_threshold', '1')
+    config.set('smtp', 'encryption', '0')
     config.set('server', 'config_version', 'DEV')
     config_version = 'DEV'
 

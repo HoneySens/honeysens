@@ -7,8 +7,10 @@ use HoneySens\app\models\exceptions\NotFoundException;
 class RegistryService {
 
     protected $appConfig = null;
+    private $services;
 
-    public function __construct($config) {
+    public function __construct($services, $config) {
+        $this->services = $services;
         $this->appConfig = $config;
     }
 

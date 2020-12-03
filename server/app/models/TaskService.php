@@ -16,12 +16,14 @@ class TaskService {
     const PRIORITY_LOW = 'low';
     const PRIORITY_HIGH = 'high';
 
-    private $config = null;
-    private $em = null;
-    private $queue_high = null;
-    private $queue_low = null;
+    private $config;
+    private $em;
+    private $queue_high;
+    private $queue_low;
+    private $services;
 
-    public function __construct(ConfigParser $config, EntityManager $em) {
+    public function __construct($services, ConfigParser $config, EntityManager $em) {
+        $this->services = $services;
         $broker_host = getenv('BROKER_HOST');
         $broker_port = getenv('BROKER_PORT');
         $this->queue_high = new Celery($broker_host, null, null, null, self::PRIORITY_HIGH, self::PRIORITY_HIGH, $broker_port, 'redis');
@@ -56,6 +58,9 @@ class TaskService {
         $this->em->flush();
         // Send to job queue
         switch ($task->getType()) {
+            case Task::TYPE_EMAIL_EMITTER:
+                $this->queue_low->PostTask('processor.tasks.emit_email', array($task->getId()));
+                break;
             case Task::TYPE_EVENT_EXTRACTOR:
                 $this->queue_low->PostTask('processor.tasks.extract_events', array($task->getId()));
                 break;

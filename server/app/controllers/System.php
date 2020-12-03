@@ -6,7 +6,6 @@ use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
-use HoneySens\app\models\ServiceManager;
 use NoiseLabs\ToolKit\ConfigParser\Exception\NoOptionException;
 use phpseclib\File\X509;
 use Respect\Validation\Validator as V;
@@ -18,12 +17,6 @@ class System extends RESTResource {
     const ERR_CONFIG_WRITE = 1;
 
     static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/triggerWeeklySummary', function() use ($app, $em, $services, $config, $messages) {
-            // TODO Move this to a task worker, add authentication
-            $contactService = $services->get(ServiceManager::SERVICE_CONTACT);
-            echo json_encode($contactService->sendWeeklySummary($config, $em));
-        });
-
         $app->get('/api/system', function() use ($app, $em, $services, $config, $messages) {
             $controller = new System($em, $services, $config);
             $systemData = $controller->get();
