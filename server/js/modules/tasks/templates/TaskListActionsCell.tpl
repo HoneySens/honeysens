@@ -13,6 +13,10 @@
         <button type="button" class="inspectUpload btn btn-default btn-xs" data-toggle="tooltip" title="Anzeigen">
             <span class="glyphicon glyphicon-search"></span>
         </button>
+    <% } else if(type === _.templateHelpers.getModels().Task.type.EMAIL_EMITTER) { %>
+        <button type="button" class="inspectTestMail btn btn-default btn-xs" data-toggle="tooltip" title="Anzeigen">
+            <span class="glyphicon glyphicon-search"></span>
+        </button>
     <% } %>
     <button type="button" class="removeTask btn btn-default btn-xs" data-toggle="tooltip" title="Ausblenden">
         <span class="glyphicon <% if(type === _.templateHelpers.getModels().Task.type.UPLOAD_VERIFIER) { %>glyphicon-remove<% } else { %>glyphicon-ok<% } %>"></span>

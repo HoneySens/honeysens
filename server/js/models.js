@@ -470,7 +470,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             UPLOAD_VERIFIER: 1,
             REGISTRY_MANAGER: 2,
             EVENT_EXTRACTOR: 3,
-            EVENT_FORWARDER: 4
+            EVENT_FORWARDER: 4,
+            EMAIL_EMITTER: 6
         };
 
         Models.Task.status = {

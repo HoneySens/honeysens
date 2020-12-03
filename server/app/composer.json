@@ -5,7 +5,6 @@
     "gargron/fileupload": "v1.4.5",
     "massivescale/celery-php": "2.1.2",
     "noiselabs/configparser": "dev-master",
-    "phpmailer/phpmailer": "v5.2.8",
     "phpseclib/phpseclib": "2.0.10",
     "predis/predis": "v1.1.1",
     "rmccue/requests": "v1.7.0",

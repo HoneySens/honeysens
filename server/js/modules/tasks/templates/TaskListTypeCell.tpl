@@ -8,4 +8,6 @@
     <span class="glyphicon glyphicon-export"></span>&nbsp;&nbsp;Ereignisexport
 <% } else if(type == _.templateHelpers.getModels().Task.type.EVENT_FORWARDER) { %>
     <span class="glyphicon glyphicon-send"></span>&nbsp;&nbsp;Ereignisweiterleitung
+<% } else if(type == _.templateHelpers.getModels().Task.type.EMAIL_EMITTER) { %>
+    <span class="glyphicon glyphicon-envelope"></span>&nbsp;&nbsp;Versand einer Testnachricht
 <% } %>

@@ -1,3 +1,4 @@
+from celery.schedules import crontab
 from celery.utils.log import get_task_logger
 import traceback
 from . import (
@@ -27,8 +28,14 @@ def perform_beat(task_type):
 @processor.app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(60.0, check_sensor_timeout.s(), queue='low')
+    sender.add_periodic_task(crontab(minute=0, hour=9, day_of_week='mon'), summarize_week.s(), queue='low')
 
 
 @processor.app.task
 def check_sensor_timeout():
     perform_beat(constants.TaskType.SENSOR_TIMEOUT_CHECKER)
+
+
+@processor.app.task
+def summarize_week():
+    perform_beat(constants.TaskType.WEEKLY_SUMMARIZER)

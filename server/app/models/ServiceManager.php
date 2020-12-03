@@ -16,8 +16,8 @@ class ServiceManager {
     const SERVICE_REGISTRY = 2;
     const SERVICE_TASK = 3;
 
-    private $config = null;
-    private $em = null;
+    private $config;
+    private $em;
     private $services = array();
 
     public function __construct(ConfigParser $config, EntityManager $em) {
@@ -35,10 +35,10 @@ class ServiceManager {
 
     private function instantiate($serviceID) {
         switch($serviceID) {
-            case 0: return new ContactService();
-            case 1: return new EntityUpdateService();
-            case 2: return new RegistryService($this->config);
-            case 3: return new TaskService($this->config, $this->em);
+            case 0: return new ContactService($this);
+            case 1: return new EntityUpdateService($this);
+            case 2: return new RegistryService($this, $this->config);
+            case 3: return new TaskService($this, $this->config, $this->em);
             default: return null;
         }
     }

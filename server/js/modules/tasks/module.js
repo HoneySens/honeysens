@@ -3,8 +3,9 @@ define(['app/app',
         'app/routing',
         'app/modules/tasks/views/Layout',
         'app/modules/tasks/views/TaskList',
-        'app/common/views/FileUpload'],
-function(HoneySens, Models, Routing, LayoutView, TaskListView, FileUploadView) {
+        'app/common/views/FileUpload',
+        'app/modules/settings/views/ModalSendTestMail'],
+function(HoneySens, Models, Routing, LayoutView, TaskListView, FileUploadView, ModalSendTestMail) {
     var TasksModule = Routing.extend({
         name: 'tasks',
         startWithParent: false,
@@ -44,6 +45,9 @@ function(HoneySens, Models, Routing, LayoutView, TaskListView, FileUploadView) {
             });
             HoneySens.reqres.setHandler('tasks:upload:show', function(model) {
                 HoneySens.request('view:content').overlay.show(new FileUploadView({model: model}));
+            });
+            HoneySens.reqres.setHandler('tasks:testmail:show', function(model) {
+                HoneySens.request('view:modal').show(new ModalSendTestMail({model: model}));
             });
         },
         stop: function() {

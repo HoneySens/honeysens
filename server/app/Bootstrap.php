@@ -66,7 +66,6 @@ function initSlim($appConfig) {
 
 function initClassLoading() {
     require_once('vendor/autoload.php');
-    //require_once('PHPMailer/PHPMailerAutoload.php');
 }
 
 function initConfig() {
