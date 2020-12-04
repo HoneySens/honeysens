@@ -13,7 +13,7 @@
         <thead>
             <th>Typ</th>
             <th>Kontakt</th>
-            <th>Nachricht f&uuml;r</th>
+            <th></th>
             <% if(_.templateHelpers.isAllowed('contacts', 'update')) { %><th>Aktionen</th><% } %>
         </thead>
         <tbody></tbody>

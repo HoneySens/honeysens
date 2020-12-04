@@ -63,21 +63,21 @@ class Divisions extends RESTResource {
      */
     private function createContact($contactData) {
         // Validation
-        V::attribute('email')
-            ->attribute('user')
-            ->attribute('sendWeeklySummary', V::boolVal())
+        V::attribute('sendWeeklySummary', V::boolVal())
             ->attribute('sendCriticalEvents', V::boolVal())
             ->attribute('sendAllEvents', V::boolVal())
             ->check($contactData);
-        // Entity creation
+        // Only one of either 'user' or 'email' should be set
         $contact = new IncidentContact();
-        if(V::email()->validate($contactData->email)) $contact->setEMail($contactData->email);
-        elseif(V::intVal()->validate($contactData->user)) {
+        if(V::attribute('email', V::email())->validate($contactData)) {
+            V::not(V::attribute('user'))->check($contactData);
+            $contact->setEMail($contactData->email);
+        } else {
+            V::attribute('user', V::intVal())->check($contactData);
+            V::not(V::attribute('email'))->check($contactData);
             $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($contactData->user);
             V::objectType()->check($user);
             $contact->setUser($user);
-        } else {
-            throw new BadRequestException();
         }
         $contact->setSendWeeklySummary($contactData->sendWeeklySummary)
             ->setSendCriticalEvents($contactData->sendCriticalEvents)
@@ -104,7 +104,7 @@ class Divisions extends RESTResource {
             ->attribute('sendAllEvents', V::boolVal())
             ->check($contactData);
         // Only one of either 'user' or 'email' should be set
-        if(V::attribute('email')->validate($contactData)) {
+        if(V::attribute('email', V::email())->validate($contactData)) {
             V::not(V::attribute('user'))->check($contactData);
             $contact->setEMail($contactData->email);
             $contact->setUser();

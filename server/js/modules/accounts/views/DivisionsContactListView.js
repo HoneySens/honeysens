@@ -106,6 +106,16 @@ function(HoneySens, Models, DivisionsContactItemTpl, DivisionsContactListViewTpl
                 }
 
                 $form.validator('update');
+            },
+            templateHelpers: {
+                getIdentifier: function() {
+                    // In case this contact has no id yet (i.e. it is new), return a unique id based on time.
+                    // This is necessary for the panel group to work.
+                    if(this.id === undefined) {
+                        if(this.shadowId === undefined) this.shadowId = new Date().getTime();
+                        return this.shadowId;
+                    } else return this.id;
+                }
             }
         });
 
