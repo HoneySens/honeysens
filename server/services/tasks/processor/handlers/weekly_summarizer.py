@@ -27,7 +27,7 @@ class WeeklySummarizer(HandlerInterface):
         candidates = {}  # recipient -> [division_ids]
         with db.cursor() as cur:
             cur.execute(('SELECT c.division_id,c.email,u.email FROM contacts AS c '
-                         'LEFT JOIN users AS u ON c.user_id = u.id ' ''
+                         'LEFT JOIN users AS u ON c.user_id = u.id '
                          'WHERE c.sendWeeklySummary = "1"'))
             rows = cur.fetchall()
             for row in rows:

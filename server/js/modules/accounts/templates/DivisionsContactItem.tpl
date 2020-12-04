@@ -11,7 +11,6 @@
                 <option value="">Bitte w&auml;hlen</option>
             </select>
             <input type="email" name="email" class="form-control" placeholder="E-Mail-Adresse" value="<%- email %>" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
-
             <div class="form-feedback">
                 <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                 <div class="help-block with-errors"></div>
@@ -20,19 +19,38 @@
     </form>
 </td>
 <td>
-    <div class="btn-group <% if(!_.templateHelpers.isAllowed('contacts', 'update')) { %>disabled<% } %>" data-toggle="buttons">
-        <label class="btn btn-default <% if(sendWeeklySummary) { %>active<% } %>">
-            <input type="checkbox" autocomplete="off" name="weeklySummary" <% if(sendWeeklySummary) { %>checked<% } %> <% if(!_.templateHelpers.isAllowed('contacts', 'update')) { %>disabled<% } %>>
-            W&ouml;chentl. Zusamenfassung
-        </label>
-        <label class="btn btn-default <% if(sendCriticalEvents) { %>active<% } %>">
-            <input type="checkbox" autocomplete="off" name="criticalEvents" <% if(sendCriticalEvents) { %>checked<% } %> <% if(!_.templateHelpers.isAllowed('contacts', 'update')) { %>disabled<% } %>>
-            Kritische Ereignisse
-        </label>
-        <label class="btn btn-default <% if(sendAllEvents) { %>active<% } %>">
-            <input type="checkbox" autocomplete="off" name="allEvents" <% if(sendAllEvents) { %>checked<% } %> <% if(!_.templateHelpers.isAllowed('contacts', 'update')) { %>disabled<% } %>>
-            ALLE Ereignisse
-        </label>
+    <div class="panel-group" id="contactDetails<%- getIdentifier() %>">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="collapsed" data-toggle="collapse" data-parent="#contactDetails<%- getIdentifier() %>" href="#contactDetailsContent<%- getIdentifier() %>">Benachrichtigungen</a>
+                </h4>
+            </div>
+            <div id="contactDetailsContent<%- getIdentifier() %>" class="details panel-collapse collapse">
+                <div class="panel-body">
+                    <fieldset <% if(!_.templateHelpers.isAllowed('contacts', 'update')) { %>disabled<% } %>>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="weeklySummary" <% if(sendWeeklySummary) { %>checked<% } %>>
+                                W&ouml;chentliche Ereignis&uuml;bersicht
+                            </label>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="criticalEvents" <% if(sendCriticalEvents) { %>checked<% } %>>
+                                Kritische Ereignisse (Klasse "Honeypot" oder "Scan")
+                            </label>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="allEvents" <% if(sendAllEvents) { %>checked<% } %>>
+                                Alle Ereignisse
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
     </div>
 </td>
 <% if(_.templateHelpers.isAllowed('contacts', 'update')) { %>
