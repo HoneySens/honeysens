@@ -55,6 +55,13 @@ class IncidentContact {
     protected $sendAllEvents;
 
     /**
+     * Whether to send a notification whenever a sensor in this division exceeds its timeout interval.
+     *
+     * @Column(type="boolean")
+     */
+    protected $sendSensorTimeouts;
+
+    /**
      * @ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="incidentContacts")
      */
     protected $division;
@@ -165,6 +172,23 @@ class IncidentContact {
     }
 
     /**
+     * @param boolean $sendSensorTimeouts
+     * @return IncidentContact
+     */
+    public function setSendSensorTimeouts($sendSensorTimeouts) {
+        $this->sendSensorTimeouts = $sendSensorTimeouts;
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getSendSensorTimeouts() {
+        return $this->sendSensorTimeouts;
+    }
+
+
+    /**
      * Set division
      *
      * @param Division $division
@@ -195,6 +219,7 @@ class IncidentContact {
             'sendWeeklySummary' => $this->getSendWeeklySummary(),
             'sendCriticalEvents' => $this->getSendCriticalEvents(),
             'sendAllEvents' => $this->getSendAllEvents(),
+            'sendSensorTimeouts' => $this->getSendSensorTimeouts(),
             'division' => $division
         );
     }

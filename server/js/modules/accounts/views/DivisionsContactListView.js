@@ -30,7 +30,7 @@ function(HoneySens, Models, DivisionsContactItemTpl, DivisionsContactListViewTpl
             onRender: function() {
                 var userSelectView = new DivisionsContactUserSelect({el: this.$el.find('select[name="user"]'),
                         collection: HoneySens.request('accounts:division:users')}),
-                    type = this.model.getType(),
+                    type = this.model.get('type'),
                     view = this;
 
                 userSelectView.render();
@@ -38,26 +38,21 @@ function(HoneySens, Models, DivisionsContactItemTpl, DivisionsContactListViewTpl
                 this.$el.find('form').validator().on('submit', function (e) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
-
-                        var newType = parseInt(view.$el.find('select[name="type"]').val()),
-                            newModel = {
+                        var newModel = {
+                                email: view.$el.find('input[name="email"]').val(),
+                                user: view.$el.find('select[name="user"]').val(),
                                 sendWeeklySummary: view.$el.find('input[name="weeklySummary"]').is(':checked'),
                                 sendCriticalEvents: view.$el.find('input[name="criticalEvents"]').is(':checked'),
-                                sendAllEvents: view.$el.find('input[name="allEvents"]').is(':checked')
+                                sendAllEvents: view.$el.find('input[name="allEvents"]').is(':checked'),
+                                sendSensorTimeouts: view.$el.find('input[name="sensorTimeouts"]').is(':checked'),
+                                type: parseInt(view.$el.find('select[name="type"]').val())
                             };
-                        if(newType === Models.IncidentContact.type.MAIL) {
-                            newModel.email = view.$el.find('input[name="email"]').val();
-                            view.model.unset('user');
-                        } else {
-                            newModel.user = view.$el.find('select[name="user"]').val();
-                            view.model.unset('email');
-                        }
                         view.model.set(newModel);
                     }
                 });
 
                 if(type === Models.IncidentContact.type.USER) {
-                    this.$el.find('select[name="type"]').val(this.model.getType()).trigger('change');
+                    this.$el.find('select[name="type"]').val(this.model.get('type')).trigger('change');
                     userSelectView.$el.val(this.model.get('user'));
                 }
 
