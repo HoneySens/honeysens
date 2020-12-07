@@ -1,6 +1,7 @@
 import configparser
 from datetime import datetime
 
+from ..common import emails
 from .handler import HandlerInterface
 
 
@@ -20,11 +21,18 @@ class SensorTimeoutChecker(HandlerInterface):
         timeout_threshold = config.getint('sensors', 'timeout_threshold')
         # Fetch sensors and their associated status data
         with db.cursor() as cur:
-            cur.execute('SELECT s.id,s.updateInterval,l.id,l.timestamp,l.status FROM sensors AS s INNER JOIN statuslogs as l ON s.id = l.sensor_id')
+            cur.execute(('SELECT s.id,s.name,s.division_id,s.updateInterval,l.id,l.timestamp,l.status FROM sensors AS s ' 
+                         'INNER JOIN statuslogs as l ON s.id = l.sensor_id'))
             rows = cur.fetchall()
             for row in rows:
                 sensors.setdefault(row['id'], [])
-                sensors[row['id']].append({'id': row['l.id'], 'ts': row['timestamp'], 'status': row['status'], 'interval': row['updateInterval']})
+                sensors[row['id']].append(
+                    {'id': row['l.id'],
+                     'name': row['name'],
+                     'division': row['division_id'],
+                     'ts': row['timestamp'],
+                     'status': row['status'],
+                     'interval': row['updateInterval']})
         # Evaluate each sensor
         # To be in sync with the PHP API and mysql default timezone ('SYSTEM'), which both use UTC, we don't attach a TZ
         now = datetime.now()
@@ -39,15 +47,24 @@ class SensorTimeoutChecker(HandlerInterface):
                 # Timeout and threshold exceeded, register timeout
                 logger.info('Registering timeout for sensor {} (threshold of {} min)'.format(s_id, timeout_threshold))
                 with db.cursor() as cur:
-                    sql = "INSERT INTO statuslogs (sensor_id, timestamp, status) VALUES (%s, %s, %s)"
+                    sql = 'INSERT INTO statuslogs (sensor_id, timestamp, status) VALUES (%s, %s, %s)'
                     cur.execute(sql, (s_id, now.strftime('%Y-%m-%d %H:%M:%S'), self.STATUS_TIMEOUT))
                     cur.execute('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "sensors"')
                     db.commit()
+                    # Find contacts and inform them
+                    cur.execute(('SELECT c.email,u.email FROM contacts AS c LEFT JOIN users AS u ON c.user_id = u.id ' 
+                                 'WHERE c.division_id = %s AND c.sendSensorTimeouts = 1'), last_status['division'])
+                    for row in cur.fetchall():
+                        recipient = row['u.email'] if row['u.email'] is not None else row['email']
+                        s_name = last_status['name']
+                        logger.info('Sending timeout notification for sensor {} (ID {}) to {}'.format(s_name, s_id,
+                                                                                                      recipient))
+                        self.notify_contact(config, recipient, s_id, s_name, interval, timeout_threshold)
         return {}
 
     @staticmethod
     def get_last_status(status_data):
-        """Takes a list of status dicts and returns the one with the newest timestamp in the 'ts' field."""
+        """Takes a list of status dicts and returns the one with the youngest timestamp in the 'ts' field."""
         candidate = None
         for s in status_data:
             if candidate is None:
@@ -56,3 +73,13 @@ class SensorTimeoutChecker(HandlerInterface):
                 if s['ts'] > candidate['ts']:
                     candidate = s
         return candidate
+
+    @staticmethod
+    def notify_contact(config, recipient, sensor_id, sensor_name, interval, timeout_threshold):
+        """Sends a mail to recipient, informing them that the given sensor exceeded its timeout and is now offline."""
+        subject = 'HoneySens: Sensor {} (ID {}) offline'.format(sensor_name, sensor_id)
+        body = ('Dies ist eine automatisch generierte Hinweismail über ein Ereignis im Sensornetzwerk.\n\n'
+                'Der Sensor "{}" mit der ID {} hat zu lange nicht mehr den Server kontaktiert und somit sein Timeout-'
+                'Intervall von {} Minute(n) zzgl. der Toleranzzeit von {} Minute(n) überschritten. ' 
+                'Er ist nun offline.'.format(sensor_name, sensor_id, interval, timeout_threshold))
+        emails.send_email(config, recipient, subject, body)

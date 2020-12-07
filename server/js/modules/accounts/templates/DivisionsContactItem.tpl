@@ -47,6 +47,12 @@
                                 Alle Ereignisse
                             </label>
                         </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="sensorTimeouts" <% if(sendSensorTimeouts) { %>checked<% } %>>
+                                Sensor-Timeout (nicht mehr erreichbar)
+                            </label>
+                        </div>
                     </fieldset>
                 </div>
             </div>

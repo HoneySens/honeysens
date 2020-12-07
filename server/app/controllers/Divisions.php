@@ -53,9 +53,11 @@ class Divisions extends RESTResource {
      * Caution: The presence of the fields 'email' or 'user' specify the contact type. Only one can be set at once.
      * - email: A plain E-Mail address string that resembles this contact
      * - user: The user ID that resembles this contact (his E-Mail address will be used)
+     * - type: Indicates whether this contact is a user (1) or just a plain E-Mail address (0).
      * - sendWeeklySummary: A boolean value that determines if this contact should receive a weekly summary
      * - sendCriticalEvents: A boolean value that determines if this contact should receive critical event mails
      * - sendAllEvents: A boolean value that determines if this contact should receive mails for all events
+     * - sendSensorTimeouts: A boolean value that determines if this contact should receive mails when sensors time out
      *
      * @param stdClass $contactData
      * @return IncidentContact
@@ -63,25 +65,28 @@ class Divisions extends RESTResource {
      */
     private function createContact($contactData) {
         // Validation
-        V::attribute('sendWeeklySummary', V::boolVal())
+        V::attribute('email')
+            ->attribute('user')
+            ->attribute('type', V::intType()->between(0, 1))
+            ->attribute('sendWeeklySummary', V::boolVal())
             ->attribute('sendCriticalEvents', V::boolVal())
             ->attribute('sendAllEvents', V::boolVal())
+            ->attribute('sendSensorTimeouts', V::boolVal())
             ->check($contactData);
-        // Only one of either 'user' or 'email' should be set
         $contact = new IncidentContact();
-        if(V::attribute('email', V::email())->validate($contactData)) {
-            V::not(V::attribute('user'))->check($contactData);
+        if($contactData->type === IncidentContact::TYPE_MAIL) {
+            V::attribute('email', V::email())->check($contactData);
             $contact->setEMail($contactData->email);
         } else {
             V::attribute('user', V::intVal())->check($contactData);
-            V::not(V::attribute('email'))->check($contactData);
             $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($contactData->user);
             V::objectType()->check($user);
             $contact->setUser($user);
         }
         $contact->setSendWeeklySummary($contactData->sendWeeklySummary)
             ->setSendCriticalEvents($contactData->sendCriticalEvents)
-            ->setSendAllEvents($contactData->sendAllEvents);
+            ->setSendAllEvents($contactData->sendAllEvents)
+            ->setSendSensorTimeouts($contactData->sendSensorTimeouts);
         return $contact;
     }
 
@@ -90,27 +95,31 @@ class Divisions extends RESTResource {
      * Caution: The presence of the fields 'email' or 'user' specify the contact type. Only one can be set at once.
      * - email: A plain E-Mail address string that resembles this contact
      * - user: The user ID that resembles this contact (his E-Mail address will be used)
+     * - type: Indicates whether this contact is a user (1) or just a plain E-Mail address (0).
      * - sendWeeklySummary: A boolean value that determines if this contact should receive a weekly summary
      * - sendCriticalEvents: A boolean value that determines if this contact should receive critical event mails
      * - sendAllEvents: A boolean value that determines if this contact should receive mails for all events
+     * - sendSensorTimeouts: A boolean value that determines if this contact should receive mails when sensors time out
      *
      * @param IncidentContact $contact
      * @param stdClass $contactData
      */
     private function updateContact(IncidentContact $contact, $contactData) {
         // Validation
-        V::attribute('sendWeeklySummary', V::boolVal())
+        V::attribute('email')
+            ->attribute('user')
+            ->attribute('type', V::intType()->between(0, 1))
+            ->attribute('sendWeeklySummary', V::boolVal())
             ->attribute('sendCriticalEvents', V::boolVal())
             ->attribute('sendAllEvents', V::boolVal())
+            ->attribute('sendSensorTimeouts', V::boolVal())
             ->check($contactData);
-        // Only one of either 'user' or 'email' should be set
-        if(V::attribute('email', V::email())->validate($contactData)) {
-            V::not(V::attribute('user'))->check($contactData);
+        if($contactData->type === IncidentContact::TYPE_MAIL) {
+            V::attribute('email', V::email())->check($contactData);
             $contact->setEMail($contactData->email);
             $contact->setUser();
         } else {
             V::attribute('user', V::intVal())->check($contactData);
-            V::not(V::attribute('email'))->check($contactData);
             $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($contactData->user);
             V::objectType()->check($user);
             $contact->setUser($user);
@@ -118,7 +127,8 @@ class Divisions extends RESTResource {
         }
         $contact->setSendWeeklySummary($contactData->sendWeeklySummary)
             ->setSendCriticalEvents($contactData->sendCriticalEvents)
-            ->setSendAllEvents($contactData->sendAllEvents);
+            ->setSendAllEvents($contactData->sendAllEvents)
+            ->setSendSensorTimeouts($contactData->sendSensorTimeouts);
     }
 
     /**

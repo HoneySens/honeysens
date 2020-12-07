@@ -316,7 +316,8 @@ if config_version == '2.2.0':
     print('Upgrading configuration 2.2.0 -> DEV')
     db_statements = [
         'ALTER TABLE statuslogs ADD runningSince DATETIME DEFAULT NULL',
-        'ALTER TABLE statuslogs CHANGE ip ip VARCHAR(255) DEFAULT NULL, CHANGE freeMem freeMem INT DEFAULT NULL, CHANGE diskUsage diskUsage INT DEFAULT NULL, CHANGE diskTotal diskTotal INT DEFAULT NULL, CHANGE swVersion swVersion VARCHAR(255) DEFAULT NULL'
+        'ALTER TABLE statuslogs CHANGE ip ip VARCHAR(255) DEFAULT NULL, CHANGE freeMem freeMem INT DEFAULT NULL, CHANGE diskUsage diskUsage INT DEFAULT NULL, CHANGE diskTotal diskTotal INT DEFAULT NULL, CHANGE swVersion swVersion VARCHAR(255) DEFAULT NULL',
+        'ALTER TABLE contacts ADD sendSensorTimeouts TINYINT(1) NOT NULL'
     ]
     execute_sql(db, db_statements)
     db.commit()
