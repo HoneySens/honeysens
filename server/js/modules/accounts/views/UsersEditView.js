@@ -104,11 +104,12 @@ function(HoneySens, Models, UsersEditViewTpl) {
                 var $password = this.$el.find('input[name="password"]'),
                     $fullName = this.$el.find('input[name="fullName"]'),
                     data = {
-                    name: this.$el.find('input[name="username"]').val(),
-                    domain: parseInt(this.$el.find('select[name="domain"]').val()),
-                    email: this.$el.find('input[name="email"]').val(),
-                    role: this.$el.find('select[name="role"]').val()
-                };
+                        name: this.$el.find('input[name="username"]').val(),
+                        domain: parseInt(this.$el.find('select[name="domain"]').val()),
+                        email: this.$el.find('input[name="email"]').val(),
+                        role: this.$el.find('select[name="role"]').val(),
+                        notifyOnCAExpiration: this.$el.find('input[name="notifyOnCAExpiration"]').is(':checked')
+                    };
                 if($password.val().length !== 0) data.password = $password.val();
                 if($fullName.val().length !== 0) data.fullName = $fullName.val();
                 return data;

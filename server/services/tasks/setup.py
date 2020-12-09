@@ -12,6 +12,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'celery==4.4.7',  # Until https://github.com/celery/celery/issues/6380 is fixed
+        'cryptography',
         'defusedxml',
         'pymysql',
         'redis'

@@ -392,7 +392,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'password': '',
                 'role': 1,
                 'divisions': [],
-                'permissions': []
+                'permissions': [],
+                'notify_on_ca_expiration': false
             }
         });
 

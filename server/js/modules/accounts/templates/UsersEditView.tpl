@@ -62,5 +62,17 @@
                 <dd>Hat zus&auml;tzlich zu den Rechten des Managers Zugriff auf Systemkonfiguration und die Benutzerverwaltung.</dd>
             </dl>
         </div>
+        <fieldset>
+            <legend>Benachrichtigungsoptionen</legend>
+                <p>Das Aktivieren der Optionen in diesem Abschnitt zieht den Versand von E-Mails über diesen Server nach sich.
+                   Damit dies wie erwartet funktioniert, muss für diesen Nutzer eine gültige E-Mail-Adresse hinterlegt und
+                    der Versand von E-Mails in den globalen Einstellungen aktiviert werden.</p>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="notifyOnCAExpiration" <% if(notify_on_ca_expiration) { %>checked<% } %>>
+                        Über den Ablauf des internen CA-Zertifikats informieren
+                    </label>
+                </div>
+        </fieldset>
     </form>
 </div>

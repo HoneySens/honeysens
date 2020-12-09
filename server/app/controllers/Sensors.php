@@ -892,7 +892,7 @@ class Sensors extends RESTResource {
     }
 
     /**
-     * For the given sensor, regenerates a new private key (if non exists yet) and issues a new signed certificate.
+     * For the given sensor, regenerates a new private key (if none exists yet) and issues a new signed certificate.
      *
      * @param Sensor $sensor The sensor to regenerate a certificate for
      * @param string $caCertPath Path to the CA certificate that is used to sign the certificates

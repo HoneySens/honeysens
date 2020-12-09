@@ -99,6 +99,7 @@ class Users extends RESTResource {
      * - email: E-Mail address
      * - password: User password
      * - role: User role, determining his permissions (0 to 3)
+     * - notifyOnCAExpiration: Whether this user should receive CA expiration notifications (bool)
      *
      * @param stdClass $data
      * @return User
@@ -113,6 +114,7 @@ class Users extends RESTResource {
             ->attribute('fullName', V::stringType()->length(1, 255), false)
             ->attribute('email', V::email())
             ->attribute('role', V::intVal()->between(1, 3))
+            ->attribute('notifyOnCAExpiration', V::boolVal())
             ->check($data);
         // Password is optional if another domain than the local one is used
         V::attribute('password', V::stringType()->length(6, 255), $data->domain == User::DOMAIN_LOCAL)
@@ -122,7 +124,8 @@ class Users extends RESTResource {
         $user->setName($data->name)
             ->setDomain($data->domain)
             ->setEmail($data->email)
-            ->setRole($data->role);
+            ->setRole($data->role)
+            ->setNotifyOnCAExpiration($data->notifyOnCAExpiration);
         if(V::attribute('password')->validate($data))
             $user->setPassword($data->password);
         if(V::attribute('fullName')->validate($data)) $user->setFullName($data->fullName);
@@ -139,6 +142,7 @@ class Users extends RESTResource {
      * - email: E-Mail address
      * - password: User password
      * - role: User role, determining his permissions (0 to 3)
+     * - notifyOnCAExpiration: Whether this user should receive CA expiration notifications (bool)
      *
      * @param int $id
      * @param stdClass $data
@@ -155,6 +159,7 @@ class Users extends RESTResource {
             ->attribute('fullName', V::stringType()->length(1, 255), false)
             ->attribute('email', V::email())
             ->attribute('role', V::intVal()->between(1, 3))
+            ->attribute('notifyOnCAExpiration', V::boolVal())
             ->check($data);
         $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($id);
         V::objectType()->check($user);
@@ -165,7 +170,8 @@ class Users extends RESTResource {
         // Persistence
         $user->setName($data->name)
             ->setDomain($data->domain)
-            ->setEmail($data->email);
+            ->setEmail($data->email)
+            ->setNotifyOnCAExpiration($data->notifyOnCAExpiration);
         // Set role, but force the first user to be an admin
         if($user->getId() != 1) $user->setRole($data->role);
         // Set optional password
