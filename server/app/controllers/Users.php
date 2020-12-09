@@ -87,8 +87,10 @@ class Users extends RESTResource {
      */
     public function getStateWithPermissionConfig($user) {
         $state = $user->getState();
-        if($user->getRole() == User::ROLE_MANAGER && $this->getConfig()->getBoolean('misc', 'restrict_manager_role'))
+        if($user->getRole() == User::ROLE_MANAGER && $this->getConfig()->getBoolean('misc', 'restrict_manager_role')) {
             $state['permissions']['events'] = array_values(array_diff($state['permissions']['events'], ['delete']));
+            $state['permissions']['sensors'] = array_values(array_diff($state['permissions']['sensors'], ['delete']));
+        }
         return $state;
     }
 
