@@ -29,6 +29,7 @@ def perform_beat(task_type):
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(60.0, check_sensor_timeout.s(), queue='low')
     sender.add_periodic_task(crontab(minute=0, hour=9, day_of_week='mon'), summarize_week.s(), queue='low')
+    sender.add_periodic_task(crontab(minute=0, hour=9), check_ca_expiration.s(), queue='low')
 
 
 @processor.app.task
@@ -39,3 +40,8 @@ def check_sensor_timeout():
 @processor.app.task
 def summarize_week():
     perform_beat(constants.TaskType.WEEKLY_SUMMARIZER)
+
+
+@processor.app.task
+def check_ca_expiration():
+    perform_beat(constants.TaskType.CA_EXPIRATION_CHECKER)

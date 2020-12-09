@@ -57,7 +57,10 @@ class WeeklySummarizer(HandlerInterface):
                     body += '{}\n'.format(division_summaries[d])
             if has_any_content:
                 logger.info('Sending summary E-Mail to {}'.format(recipient))
-                emails.send_email(config, recipient, subject, body)
+                try:
+                    emails.send_email(config, recipient, subject, body)
+                except Exception:
+                    pass
 
     def _summarize_weekly_division(self, db, division):
         """Returns a string that summarizes the given division (id) over the last week."""

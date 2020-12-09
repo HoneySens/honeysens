@@ -15,7 +15,7 @@ COPY processor /opt/processor/
 COPY setup.py /opt/
 
 RUN set -ex; \
-        apk --no-cache add py3-pip skopeo; \
+        apk --no-cache add py3-cryptography py3-pip skopeo; \
         pip3 install -e /opt
 
 CMD ["celery", "-A", "processor.processor", "worker", "-B", "-s", "/srv/data/tasks/celerybeat-schedule", "-l", "info", "-Q", "high,low", "-Ofair", "--uid", "33", "--prefetch-multiplier=1", "--hsconfig=/srv/data/config.cfg"]

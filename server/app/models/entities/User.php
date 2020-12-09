@@ -46,7 +46,7 @@ class User {
     /**
      * SHA1-hashed password used prior to upgrading to bcrypt hashes.
      * If this is null, this user's password uses the new hashing scheme.
-     * This attribute will be removed in figure versions.
+     * This attribute will be removed in future versions.
      *
      * @deprecated
      * @Column(type="string", nullable=true)
@@ -92,6 +92,13 @@ class User {
      * @OneToMany(targetEntity="HoneySens\app\models\entities\Task", mappedBy="user", cascade={"remove"})
      */
     protected $tasks;
+
+    /**
+     * Whether to send CA expiration warnings to the E-Mail address of this user.
+     *
+     * @Column(type="boolean")
+     */
+    protected $notifyOnCAExpiration;
 
     public function __construct() {
         $this->divisions = new ArrayCollection();
@@ -305,6 +312,26 @@ class User {
     }
 
     /**
+     * Enable or disable notifications in case of CA expiration for this user.
+     *
+     * @param boolean $notify
+     * @return $this
+     */
+    public function setNotifyOnCAExpiration($notify) {
+        $this->notifyOnCAExpiration = $notify;
+        return $this;
+    }
+
+    /**
+     * Whether this user receives notifications in case of CA expiration.
+     *
+     * @return boolean
+     */
+    public function getNotifyOnCAExpiration() {
+        return $this->notifyOnCAExpiration;
+    }
+
+    /**
      * Returns an array of controller permissions for this user
      * of the form array('<CONTROLLER>' => array('<METHOD>', ...), ...)
      *
@@ -375,7 +402,8 @@ class User {
             'email' => $this->getEmail(),
             'role' => $this->getRole(),
             'permissions' => $this->getPermissions(),
-            'divisions' => $divisions
+            'divisions' => $divisions,
+            'notify_on_ca_expiration' => $this->getNotifyOnCAExpiration()
         );
     }
 }

@@ -23,6 +23,7 @@ from .handlers.registry_manager import RegistryManager
 from .handlers.sensorcfg_creator import SensorConfigCreator
 from .handlers.sensor_timeout_checker import SensorTimeoutChecker
 from .handlers.upload_verifier import UploadVerifier
+from .handlers.ca_expiration_checker import CAExpirationChecker
 
 handlers = {
     constants.TaskType.EMAIL_EMITTER: EMailEmitter(),
@@ -32,7 +33,8 @@ handlers = {
     constants.TaskType.SENSORCFG_CREATOR: SensorConfigCreator(),
     constants.TaskType.SENSOR_TIMEOUT_CHECKER: SensorTimeoutChecker(),
     constants.TaskType.UPLOAD_VERIFIER: UploadVerifier(),
-    constants.TaskType.WEEKLY_SUMMARIZER: WeeklySummarizer()
+    constants.TaskType.WEEKLY_SUMMARIZER: WeeklySummarizer(),
+    constants.TaskType.CA_EXPIRATION_CHECKER: CAExpirationChecker()
 }
 logger = get_task_logger(__name__)
 
