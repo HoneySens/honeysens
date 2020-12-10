@@ -1,5 +1,6 @@
 <?php
 namespace HoneySens\app\controllers;
+use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\SensorStatus;
 use HoneySens\app\models\entities\ServiceAssignment;
@@ -64,7 +65,7 @@ class Sensors extends RESTResource {
             V::json()->check($request);
             $sensorData = json_decode($request);
             $sensor = $controller->create($sensorData);
-            echo json_encode($sensor->getState());
+            echo json_encode($controller->getSensorState($sensor));
         });
 
         // Used by sensors to send their status data and receive current configuration
@@ -81,7 +82,7 @@ class Sensors extends RESTResource {
             $status = $controller->createStatus($statusData);
             $controller->reduce($statusData->sensor, 10);
             // Collect sensor configuration and send it as response
-            $sensorData = $status->getSensor()->getState();
+            $sensorData = $controller->getSensorState($status->getSensor());
             if($status->getSensor()->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_DEFAULT) {
                 $sensorData['server_endpoint_host'] = $config['server']['host'];
                 $sensorData['server_endpoint_port_https'] = $config['server']['portHTTPS'];
@@ -142,16 +143,7 @@ class Sensors extends RESTResource {
             }
             $sensorData['firmware'] = $firmware;
             // Unhandled event status data for physical LED indication
-            $qb = $controller->getEntityManager()->createQueryBuilder();
-            $unhandledEventCount = $qb->select('COUNT(e.id)')
-                ->from('HoneySens\app\models\entities\Event', 'e')
-                ->join('e.sensor', 's')
-                ->andWhere('s.id = :sensor')
-                ->andWhere('e.status = :status')
-                ->setParameter('sensor', $statusData->sensor)
-                ->setParameter('status', 0)
-                ->getQuery()->getSingleScalarResult();
-            $sensorData['unhandledEvents'] = $unhandledEventCount != 0;
+            $sensorData['unhandledEvents'] = $sensorData['new_events'] != 0;
             // If the sensor cert fingerprint was sent and differs from the current cert, include updated cert data
             if(V::attribute('crt_fp', V::stringType())->validate($statusData) && $sensorData['crt_fp'] != $statusData->crt_fp)
                 $sensorData['sensor_crt'] = $sensor->getCert()->getContent();
@@ -179,7 +171,7 @@ class Sensors extends RESTResource {
             V::json()->check($request);
             $sensorData = json_decode($request);
             $sensor = $controller->update($id, $sensorData);
-            echo json_encode($sensor->getState());
+            echo json_encode($controller->getSensorState($sensor));
         });
 
         $app->delete('/api/sensors/:id', function($id) use ($app, $em, $services, $config, $messages) {
@@ -211,11 +203,11 @@ class Sensors extends RESTResource {
         if(V::key('id', V::intVal())->validate($criteria)) {
             $qb->andWhere('s.id = :id')
                 ->setParameter('id', $criteria['id']);
-            return $qb->getQuery()->getSingleResult()->getState();
+            return $this->getSensorState($qb->getQuery()->getSingleResult());
         } else {
             $sensors = array();
             foreach($qb->getQuery()->getResult() as $sensor) {
-                $sensors[] = $sensor->getState();
+                $sensors[] = $this->getSensorState($sensor);
             }
             return $sensors;
         }
@@ -838,7 +830,7 @@ class Sensors extends RESTResource {
         $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
         // Enqueue a new task and return it, it's the client's obligation to check that task's status and download the result
-        $taskParams = $sensor->getState();
+        $taskParams = $this->getSensorState($sensor);
         $taskParams['cert'] = $sensor->getCert()->getContent();
         $taskParams['key'] = $sensor->getCert()->getKey();
         // If this sensor doesn't have a custom service network defined, we rely on the system-wide configuration
@@ -963,5 +955,22 @@ class Sensors extends RESTResource {
             throw new BadRequestException();
         }
         throw new BadRequestException();
+    }
+
+    /**
+     * Enriches sensor state with data acquired from external sources (such as new event count) and returns it.
+     *
+     * @param Sensor $sensor
+     * @return array
+     */
+    private function getSensorState(Sensor $sensor) {
+        $state = $sensor->getState();
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('count(e.id)')
+            ->from('HoneySens\app\models\entities\Event', 'e')
+            ->where('e.sensor = :sensor AND e.status = :status')
+            ->setParameters(array('sensor' => $sensor, 'status' => Event::STATUS_UNEDITED));
+        $state['new_events'] = intval($qb->getQuery()->getSingleScalarResult());
+        return $state;
     }
 }

@@ -2,6 +2,7 @@
 namespace HoneySens\app\controllers;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManager;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventDetail;
 use HoneySens\app\models\entities\EventPacket;
@@ -303,6 +304,8 @@ class Events extends RESTResource {
             }
         }
         $em->flush();
+        // New events should also refresh the sensors repo so that dependent UI data (e.g. new event cnt) can be updated
+        if($em->getUnitOfWork()->size() > 0) $this->updateSensorRepo($em);
         // Event forwarding
         if($config->getBoolean('syslog', 'enabled')) {
             $taskService = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK);
@@ -367,8 +370,7 @@ class Events extends RESTResource {
         $eventIDs = $qb->getQuery()->getResult();
         if(sizeof($eventIDs) == 0) return;
         // Persistence
-        $qb = $this->getEntityManager()
-            ->createQueryBuilder()
+        $qb = $em->createQueryBuilder()
             ->update('HoneySens\app\models\entities\Event', 'e')
             ->where('e.id IN (:ids)')->setParameter('ids', $eventIDs);
         if(V::key('new_status', V::intVal()->between(0, 3))->validate($criteria)) {
@@ -380,6 +382,7 @@ class Events extends RESTResource {
                 ->setParameter('comment', $criteria['new_comment']);
         }
         $qb->getQuery()->execute();
+        $this->updateSensorRepo($em);
     }
 
     /**
@@ -426,36 +429,32 @@ class Events extends RESTResource {
             $eventIDs = $qb->getQuery()->getResult();
             if(sizeof($eventIDs) == 0) return;
             // Fetch EventDetail and EventPacket IDs associated with those events
-            $eventDetailIDs = $this->getEntityManager()
-                ->createQueryBuilder()
+            $eventDetailIDs = $em->createQueryBuilder()
                 ->select('ed.id')->from('HoneySens\app\models\entities\EventDetail', 'ed') ->join('ed.event', 'e')
                 ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
                 ->getQuery()->getResult();
-            $eventPacketIDs = $this->getEntityManager()
-                ->createQueryBuilder()
+            $eventPacketIDs = $em->createQueryBuilder()
                 ->select('ep.id')->from('HoneySens\app\models\entities\EventPacket', 'ep') ->join('ep.event', 'e')
                 ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
                 ->getQuery()->getResult();
             // Manual delete cascade
             if(sizeof($eventDetailIDs) > 0)
-                $this->getEntityManager()
-                    ->createQueryBuilder()
+                $em->createQueryBuilder()
                     ->delete('HoneySens\app\models\entities\EventDetail', 'ed')
                     ->where('ed.id in (:ids)')->setParameter('ids', $eventDetailIDs)
                     ->getQuery()->execute();
             if(sizeof($eventPacketIDs))
-                $this->getEntityManager()
-                    ->createQueryBuilder()
+                $em->createQueryBuilder()
                     ->delete('HoneySens\app\models\entities\EventPacket', 'ep')
                     ->where('ep.id in (:ids)')->setParameter('ids', $eventPacketIDs)
                     ->getQuery()->execute();
-            $this->getEntityManager()
-                ->createQueryBuilder()
+            $em->createQueryBuilder()
                 ->delete('HoneySens\app\models\entities\Event', 'e')
                 ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
                 ->getQuery()
                 ->execute();
         }
+        $this->updateSensorRepo($em);
     }
 
     /**
@@ -549,5 +548,15 @@ class Events extends RESTResource {
                 ->setParameter('list', $criteria['list'], Connection::PARAM_INT_ARRAY);
         }
         return $qb;
+    }
+
+    /**
+     * Updates the 'last_updates' table to indicate that there was an update to the sensors, allowing clients
+     * such as the UI to update their associated data (e.g. new event counter).
+     *
+     * @param EntityManager $em
+     */
+    private function updateSensorRepo(EntityManager $em) {
+        $em->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "sensors"');
     }
 }

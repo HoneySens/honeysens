@@ -71,6 +71,33 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                         }
                     })
                 }];
+                columns.push({
+                    name: 'new_events',
+                    label: 'NE',
+                    editable: false,
+                    sortable: true,
+                    cell: Backgrid.IntegerCell.extend({
+                        orderSeparator: '',
+                        render: function() {
+                            var events = this.model.get('new_events');
+                            // td classification (for color indication)
+                            if(events > 0) this.$el.addClass('warning');
+                            this.$el.html(events);
+                            return this;
+                        }
+                    }),
+                    headerCell: Backgrid.HeaderCell.extend({
+                        render: function () {
+                            Backgrid.HeaderCell.prototype.render.apply(this);
+                            // Add tooltip
+                            var $anchor = this.$el.find('a');
+                            $anchor.attr('data-toggle', 'tooltip');
+                            $anchor.attr('title', 'Neue Ereignisse');
+                            $anchor.tooltip();
+                            return this;
+                        }
+                    })
+                });
                 // Service columns
                 HoneySens.data.models.services.forEach(function (service) {
                     columns.push({
