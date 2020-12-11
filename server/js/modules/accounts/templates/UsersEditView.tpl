@@ -40,7 +40,7 @@
         </div>
         <div class="form-group has-feedback">
             <label for="email" class="control-label">E-Mail</label>
-            <input type="email" name="email" class="form-control" placeholder="E-Mail-Adresse" value="<%- email %>" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
+            <input type="email" name="email" class="form-control" placeholder="E-Mail-Adresse" value="<%- email %>" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
             <div class="help-block with-errors"></div>
         </div>
