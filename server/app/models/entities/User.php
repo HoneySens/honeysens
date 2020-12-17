@@ -98,7 +98,7 @@ class User {
      *
      * @Column(type="boolean")
      */
-    protected $notifyOnCAExpiration;
+    protected $notifyOnCAExpiration = false;
 
     public function __construct() {
         $this->divisions = new ArrayCollection();
@@ -342,6 +342,7 @@ class User {
             'eventdetails' => array(),
             'events' => array(),
             'eventfilters' => array(),
+            'logs' => array(),
             'sensors' => array(),
             'sensorstatus' => array(),
             'divisions' => array(),
@@ -360,6 +361,7 @@ class User {
                 array_push($permissions['settings'], 'create', 'update', 'delete');
                 array_push($permissions['platforms'], 'create', 'update', 'delete');
                 array_push($permissions['services'], 'create', 'update', 'delete');
+                array_push($permissions['logs'], 'get');
             case $this::ROLE_MANAGER:
                 array_push($permissions['certs'], 'create', 'delete');
                 array_push($permissions['events'], 'update', 'delete');
