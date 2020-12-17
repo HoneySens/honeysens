@@ -11,7 +11,7 @@ from .handler import HandlerInterface
 class CAExpirationChecker(HandlerInterface):
     """Parses the expiration date of the internal CA certificate and notifies users in case that date is approaching."""
 
-    NOTIFY_DAYS_UNTIL_EXPIRATION = [1, 3, 7, 14]
+    NOTIFY_DAYS_UNTIL_EXPIRATION = [1, 3, 7, 14, 28]
 
     def perform(self, logger, db, config_path, storage_path, working_dir, job_data):
         ca_crt_path = '{}/CA/ca.crt'.format(constants.STORAGE_PATH)
