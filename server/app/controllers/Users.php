@@ -1,8 +1,10 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\NotFoundException;
+use HoneySens\app\models\ServiceManager;
 use Respect\Validation\Validator as V;
 
 class Users extends RESTResource {
@@ -87,9 +89,15 @@ class Users extends RESTResource {
      */
     public function getStateWithPermissionConfig($user) {
         $state = $user->getState();
+        // Incorporate role restrictions
         if($user->getRole() == User::ROLE_MANAGER && $this->getConfig()->getBoolean('misc', 'restrict_manager_role')) {
             $state['permissions']['events'] = array_values(array_diff($state['permissions']['events'], ['delete']));
             $state['permissions']['sensors'] = array_values(array_diff($state['permissions']['sensors'], ['delete']));
+        }
+        // Enable API logging if the module is enabled and this user is an administrator
+        if($user->getRole() == User::ROLE_ADMIN &&
+            $this->getServiceManager()->get(ServiceManager::SERVICE_LOG)->isEnabled()) {
+            $state['permissions']['logs'] = array('get');
         }
         return $state;
     }
@@ -134,6 +142,7 @@ class Users extends RESTResource {
         $em = $this->getEntityManager();
         $em->persist($user);
         $em->flush();
+        $this->log(sprintf('User %s (ID %d) created', $user->getName(), $user->getId()), LogEntry::RESOURCE_USERS, $user->getId());
         return $user;
     }
 
@@ -185,6 +194,7 @@ class Users extends RESTResource {
         if(V::attribute('fullName')->validate($data)) $user->setFullName($data->fullName);
         else $user->setFullName(null);
         $this->getEntityManager()->flush();
+        $this->log(sprintf('User %s (ID %d) updated', $user->getName(), $user->getId()), LogEntry::RESOURCE_USERS, $user->getId());
         return $user;
     }
 
@@ -196,7 +206,9 @@ class Users extends RESTResource {
         $em = $this->getEntityManager();
         $user = $em->getRepository('HoneySens\app\models\entities\User')->find($id);
         V::objectType()->check($user);
+        $uid = $user->getId();
         $em->remove($user);
         $em->flush();
+        $this->log(sprintf('User %s (ID %d) deleted', $user->getName(), $uid), LogEntry::RESOURCE_USERS, $uid);
     }
 }

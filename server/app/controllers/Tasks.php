@@ -6,6 +6,7 @@ use Doctrine\ORM\NoResultException;
 use Exception;
 use FileUpload\FileSystem\Simple;
 use FileUpload\FileUpload;
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -160,6 +161,7 @@ class Tasks extends RESTResource {
                 $taskParams = array('path' => $file->getBasename());
                 $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_UPLOAD_VERIFIER, $taskParams);
                 $result['task'] = $task->getState();
+                $this->log(sprintf('File "%s" uploaded', $file->getBasename()), LogEntry::RESOURCE_TASKS);
             } elseif($file->errorCode != 0) {
                 // Upload failed during preprocessing (e.g. could not write to PHP upload_tmp_dir)
                 throw new Exception($file->error);

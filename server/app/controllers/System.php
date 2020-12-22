@@ -3,6 +3,7 @@ namespace HoneySens\app\controllers;
 
 use Doctrine\ORM\Tools\SchemaTool;
 use HoneySens\app\models\entities\Division;
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -134,6 +135,7 @@ class System extends RESTResource {
         $qb->getQuery()->execute();
         $qb->delete('HoneySens\app\models\entities\Event', 'e');
         $qb->getQuery()->execute();
+        $this->log('All events removed', LogEntry::RESOURCE_SYSTEM);
     }
 
     /**
@@ -231,6 +233,7 @@ class System extends RESTResource {
         foreach($em->getRepository('HoneySens\app\models\entities\Sensor')->findAll() as $sensor) {
             $sensorController->regenerateCert($sensor, $caCrtPath);
         }
+        $this->log('Certificates renewed', LogEntry::RESOURCE_SYSTEM);
         // Restart affected services
         exec('sudo ' . APPLICATION_PATH . '/scripts/restart.sh');
     }

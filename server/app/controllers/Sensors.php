@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\controllers;
 use HoneySens\app\models\entities\Event;
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\SensorStatus;
 use HoneySens\app\models\entities\ServiceAssignment;
@@ -428,6 +429,7 @@ class Sensors extends RESTResource {
         // TODO Config archive status is not necessary anymore
         $sensor->setConfigArchiveStatus(Sensor::CONFIG_ARCHIVE_STATUS_SCHEDULED);
         $em->flush();
+        $this->log(sprintf('Sensor %s (ID %d) created', $sensor->getName(), $sensor->getId()), LogEntry::RESOURCE_SENSORS, $sensor->getId());
         return $sensor;
     }
 
@@ -797,6 +799,7 @@ class Sensors extends RESTResource {
             $em->remove($deletionCandidate);
         }
         $em->flush();
+        $this->log(sprintf('Sensor %s (ID %d) updated', $sensor->getName(), $sensor->getId()), LogEntry::RESOURCE_SENSORS, $sensor->getId());
         return $sensor;
     }
 
@@ -811,8 +814,10 @@ class Sensors extends RESTResource {
         // TODO Consider moving those into some sort of archive
         $events = $em->getRepository('HoneySens\app\models\entities\Event')->findBy(array('sensor' => $sensor));
         foreach($events as $event) $em->remove($event);
+        $sid = $sensor->getId();
         $em->remove($sensor);
         $em->flush();
+        $this->log(sprintf('Sensor %s (ID %d) deleted', $sensor->getName(), $sid), LogEntry::RESOURCE_SENSORS, $sid);
     }
 
     /**

@@ -9,6 +9,7 @@ use HoneySens\app\controllers\Divisions;
 use HoneySens\app\controllers\Eventdetails;
 use HoneySens\app\controllers\Eventfilters;
 use HoneySens\app\controllers\Events;
+use HoneySens\app\controllers\Logs;
 use HoneySens\app\controllers\Platforms;
 use HoneySens\app\controllers\Sensors;
 use HoneySens\app\controllers\Services;
@@ -143,6 +144,7 @@ function initRoutes($app, $em, $services, $config, $messages) {
     Eventdetails::registerRoutes($app, $em, $services, $config, $messages);
     Eventfilters::registerRoutes($app, $em, $services, $config, $messages);
     Events::registerRoutes($app, $em, $services, $config, $messages);
+    Logs::registerRoutes($app, $em, $services, $config, $messages);
     Platforms::registerRoutes($app, $em, $services, $config, $messages);
     Sensors::registerRoutes($app, $em, $services, $config, $messages);
     Services::registerRoutes($app, $em, $services, $config, $messages);

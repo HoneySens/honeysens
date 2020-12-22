@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\controllers;
 use HoneySens\app\models\entities\Firmware;
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -198,6 +199,7 @@ class Platforms extends RESTResource {
         // Remove upload verification task
         $taskController = new Tasks($em, $this->getServiceManager(), $this->getConfig());
         $taskController->delete($task->getId());
+        $this->log(sprintf('Firmware revision %s for platform %s added', $firmware->getVersion(), $platform->getName()), LogEntry::RESOURCE_PLATFORMS, $platform->getId());
         return $firmware->getState();
     }
 
@@ -226,6 +228,7 @@ class Platforms extends RESTResource {
         V::objectType()->check($firmware);
         $platform->setDefaultFirmwareRevision($firmware);
         $em->flush();
+        $this->log(sprintf('Default firmware revision for platform %s set to %s', $platform->getName(), $firmware->getVersion()), LogEntry::RESOURCE_PLATFORMS, $platform->getId());
         return $platform;
     }
 
@@ -260,5 +263,6 @@ class Platforms extends RESTResource {
         $platform->unregisterFirmware($firmware, $this->getConfig());
         $em->remove($firmware);
         $em->flush();
+        $this->log(sprintf('Firmware revision %s of platform %s deleted', $firmware->getVersion(), $platform->getName()), LogEntry::RESOURCE_PLATFORMS, $platform->getId());
     }
 }

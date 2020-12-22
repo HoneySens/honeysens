@@ -3,6 +3,7 @@ namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\IncidentContact;
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use Respect\Validation\Validator as V;
@@ -196,6 +197,9 @@ class Divisions extends RESTResource {
         }
         $em->persist($division);
         $em->flush();
+        $this->log(sprintf('Division %s (ID %d) created with %d users and %d contacts',
+            $division->getName(), $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
+            LogEntry::RESOURCE_DIVISIONS, $division->getId());
         return $division;
     }
 
@@ -252,6 +256,9 @@ class Divisions extends RESTResource {
             $em->persist($contact);
         }
         $em->flush();
+        $this->log(sprintf('Division %s (ID %d) updated with %d users and %d contacts',
+            $division->getName(), $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
+            LogEntry::RESOURCE_DIVISIONS, $division->getId());
         return $division;
     }
 
@@ -263,7 +270,9 @@ class Divisions extends RESTResource {
         $em = $this->getEntityManager();
         $division = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Division')->find($id);
         V::objectType()->check($division);
+        $did = $division->getId();
         $em->remove($division);
         $em->flush();
+        $this->log(sprintf('Division %s (ID %d) and all associated users, sensors and events deleted', $division->getName(), $did), LogEntry::RESOURCE_DIVISIONS, $division->getId());
     }
 }

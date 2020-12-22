@@ -316,9 +316,14 @@ if config_version == '2.2.0':
     print('Upgrading configuration 2.2.0 -> DEV')
     db_statements = [
         'ALTER TABLE statuslogs ADD runningSince DATETIME DEFAULT NULL',
-        'ALTER TABLE statuslogs CHANGE ip ip VARCHAR(255) DEFAULT NULL, CHANGE freeMem freeMem INT DEFAULT NULL, CHANGE diskUsage diskUsage INT DEFAULT NULL, CHANGE diskTotal diskTotal INT DEFAULT NULL, CHANGE swVersion swVersion VARCHAR(255) DEFAULT NULL',
+        ('ALTER TABLE statuslogs CHANGE ip ip VARCHAR(255) DEFAULT NULL, '
+         'CHANGE freeMem freeMem INT DEFAULT NULL, CHANGE diskUsage diskUsage INT DEFAULT NULL, '
+         'CHANGE diskTotal diskTotal INT DEFAULT NULL, CHANGE swVersion swVersion VARCHAR(255) DEFAULT NULL'),
         'ALTER TABLE contacts ADD sendSensorTimeouts TINYINT(1) NOT NULL',
-        'ALTER TABLE users ADD notifyOnCAExpiration TINYINT(1) NOT NULL'
+        'ALTER TABLE users ADD notifyOnCAExpiration TINYINT(1) NOT NULL',
+        ('CREATE TABLE logs (id INT AUTO_INCREMENT NOT NULL, timestamp DATETIME NOT NULL, userID INT DEFAULT NULL, '
+         'resourceID INT DEFAULT NULL, resourceType INT NOT NULL, message VARCHAR(255) NOT NULL, '
+         'PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB')
     ]
     execute_sql(db, db_statements)
     db.commit()

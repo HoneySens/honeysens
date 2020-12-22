@@ -15,6 +15,7 @@ class ServiceManager {
     const SERVICE_ENTITY_UPDATE = 1;
     const SERVICE_REGISTRY = 2;
     const SERVICE_TASK = 3;
+    const SERVICE_LOG = 4;
 
     private $config;
     private $em;
@@ -39,6 +40,7 @@ class ServiceManager {
             case 1: return new EntityUpdateService($this);
             case 2: return new RegistryService($this, $this->config);
             case 3: return new TaskService($this, $this->config, $this->em);
+            case 4: return new LogService($this, $this->em);
             default: return null;
         }
     }
