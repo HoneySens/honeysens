@@ -2,6 +2,7 @@
 namespace HoneySens\app\controllers;
 use FileUpload\File;
 
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Service;
 use HoneySens\app\models\entities\ServiceRevision;
 use HoneySens\app\models\entities\Task;
@@ -193,6 +194,8 @@ class Services extends RESTResource {
         $em->flush();
         // Enqueue registry upload task
         $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_REGISTRY_MANAGER, $taskResult);
+        $this->log(sprintf('Service %s:%s (%s) added', $service->getName(), $serviceRevision->getRevision(),
+            $serviceRevision->getArchitecture()), LogEntry::RESOURCE_SERVICES, $service->getId());
         return $task->getState();
     }
 
@@ -222,6 +225,7 @@ class Services extends RESTResource {
         V::objectType()->check($defaultRevision);
         $service->setDefaultRevision($data->default_revision);
         $em->flush();
+        $this->log(sprintf('Default revision for service %s set to %s', $service->getName(), $defaultRevision->getRevision()), LogEntry::RESOURCE_SERVICES, $service->getId());
         return $service;
     }
 
@@ -237,8 +241,10 @@ class Services extends RESTResource {
         foreach($service->getRevisions() as $revision) $this->removeServiceRevision($revision);
         $this->getServiceManager()->get(ServiceManager::SERVICE_REGISTRY)->removeRepository($service->getRepository());
         // Remove service from the db
+        $sid = $service->getId();
         $em->remove($service);
         $em->flush();
+        $this->log(sprintf('Service %s and all associated revisions deleted', $service->getName()), LogEntry::RESOURCE_SERVICES, $sid);
     }
 
     /**
@@ -256,6 +262,8 @@ class Services extends RESTResource {
         V::objectType()->check($serviceRevision);
         $this->removeServiceRevision($serviceRevision);
         $em->flush();
+        $service = $serviceRevision->getService();
+        $this->log(sprintf('Revision %s (%s) of service %s deleted', $serviceRevision->getRevision(), $serviceRevision->getArchitecture(), $service->getName()), LogEntry::RESOURCE_SERVICES, $service->getId());
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -66,6 +67,7 @@ class Sessions extends RESTResource {
                     $userState = $userController->getStateWithPermissionConfig($user);
                     $_SESSION['user'] = $userState;
                     $_SESSION['authenticated'] = true;
+                    $this->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
                     return $userState;
                 } else throw new ForbiddenException();
                 break;
@@ -81,6 +83,7 @@ class Sessions extends RESTResource {
                                 $userState = $userController->getStateWithPermissionConfig($user);
                                 $_SESSION['user'] = $userState;
                                 $_SESSION['authenticated'] = true;
+                                $this->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
                                 return $userState;
                             } else throw new ForbiddenException();
                         } catch(\Exception $e) {
@@ -102,6 +105,8 @@ class Sessions extends RESTResource {
     public function destroy() {
         $guestUser = new User();
         $guestUser->setRole(User::ROLE_GUEST);
+        $user = $this->getSessionUser();
+        if($user != null) $this->log(sprintf('Logout by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
         session_destroy();
         return $guestUser;
     }

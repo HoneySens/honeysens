@@ -3,6 +3,7 @@ namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\entities\EventFilter;
 use HoneySens\app\models\entities\EventFilterCondition;
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use Respect\Validation\Validator as V;
@@ -197,6 +198,7 @@ class Eventfilters extends RESTResource {
         }
         $em->persist($filter);
         $em->flush();
+        $this->log(sprintf('Event filter %s (ID %d) created with %d condition(s)', $filter->getName(), $filter->getId(), sizeof($filter->getConditions())), LogEntry::RESOURCE_EVENTFILTERS, $filter->getId());
         return $filter;
     }
 
@@ -257,6 +259,7 @@ class Eventfilters extends RESTResource {
             $em->persist($condition);
         }
         $em->flush();
+        $this->log(sprintf('Event filter %s (ID %d) updated with %d conditions', $filter->getName(), $filter->getId(), sizeof($filter->getConditions())), LogEntry::RESOURCE_EVENTFILTERS, $filter->getId());
         return $filter;
     }
 
@@ -268,7 +271,9 @@ class Eventfilters extends RESTResource {
         $em = $this->getEntityManager();
         $filter = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         V::objectType()->check($filter);
+        $fid = $filter->getId();
         $em->remove($filter);
         $em->flush();
+        $this->log(sprintf('Event filter %s (ID %d) deleted', $filter->getName(), $fid), LogEntry::RESOURCE_EVENTFILTERS, $fid);
     }
 }

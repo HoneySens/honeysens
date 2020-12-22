@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManager;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventDetail;
 use HoneySens\app\models\entities\EventPacket;
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
@@ -84,7 +85,7 @@ class Events extends RESTResource {
      * - id: return just the event with the given id
      * - format: essentially the ACCEPT header of the HTTP request, defines the intended output format
      * - page: page number of result list (only together with 'per_page'), default 0
-     * - per_page: number of results per page (only together with 'page'), default 15, max 60
+     * - per_page: number of results per page (only together with 'page'), default 15, max 512
      *
      * If no criteria are given, all events are returned matching the default parameters.
      *
@@ -383,6 +384,7 @@ class Events extends RESTResource {
         }
         $qb->getQuery()->execute();
         $this->updateSensorRepo($em);
+        $this->log('Metadata for one or multiple events updated', LogEntry::RESOURCE_EVENTS);
     }
 
     /**
@@ -455,6 +457,7 @@ class Events extends RESTResource {
                 ->execute();
         }
         $this->updateSensorRepo($em);
+        $this->log('One or multiple events deleted', LogEntry::RESOURCE_EVENTS);
     }
 
     /**

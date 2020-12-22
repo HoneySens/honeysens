@@ -485,6 +485,50 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             url: 'api/tasks/'
         });
 
+        Models.LogEntry = Backbone.Model.extend({
+            defaults: {
+                timestamp: null,
+                user_id: null,
+                resource_id: null,
+                resource_type: 0,
+                message: ''
+            }
+        });
+
+        Models.LogEntry.resource = {
+            GENERIC: 0,
+            CONTACTS: 1,
+            DIVISIONS: 2,
+            EVENTFILTERS: 3,
+            EVENTS: 4,
+            PLATFORMS: 5,
+            SENSORS: 6,
+            SERVICES: 7,
+            SETTINGS: 8,
+            TASKS: 9,
+            USERS: 10,
+            SYSTEM: 11,
+            SESSIONS: 12
+        };
+
+        Models.Logs = Backbone.PageableCollection.extend({
+            model: Models.LogEntry,
+            mode: 'server',
+            url: 'api/logs/',
+            state: {
+                firstPage: 0,
+                pageSize: 15,
+                sortKey: 'timestamp',
+                order: 1
+            },
+            parseState: function(resp, queryParams, state, options) {
+                return {totalRecords: parseInt(resp.total_count)};
+            },
+            parseRecords: function(resp, options) {
+                return resp.items;
+            }
+        });
+
         Models.Settings = {
             encryption: {
                 NONE: 0,
@@ -510,6 +554,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             HoneySens.data.models.platforms = new Models.Platforms();
             HoneySens.data.models.stats = new Models.Stats();
             HoneySens.data.models.tasks = new Models.Tasks();
+            HoneySens.data.models.logs = new Models.Logs([], {state: {totalRecords: 0}});
             HoneySens.data.session.user = new Models.User();
         });
     });

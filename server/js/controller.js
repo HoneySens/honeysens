@@ -51,6 +51,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                             HoneySens.data.models.services.reset();
                             HoneySens.data.models.platforms.reset();
                             HoneySens.data.models.tasks.reset();
+                            HoneySens.data.models.logs.reset();
                             HoneySens.data.settings.clear();
                             HoneySens.vent.trigger('logout:success');
                         }
@@ -85,6 +86,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                                 HoneySens.data.models.platforms.reset(data.platforms);
                                 HoneySens.data.models.stats.set(data.stats);
                                 HoneySens.data.models.tasks.reset(data.tasks);
+                                HoneySens.data.models.logs.reset();
                                 HoneySens.data.settings.set(data.settings);
                                 HoneySens.data.system.set(data.system);
                                 HoneySens.data.lastUpdateTimestamp = data.timestamp;

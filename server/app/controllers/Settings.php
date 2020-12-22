@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\ServiceManager;
 use Respect\Validation\Validator as V;
@@ -210,6 +211,7 @@ class Settings extends RESTResource {
         $config->set('misc', 'restrict_manager_role', $data->restrictManagerRole ? 'true' : 'false');
         $config->save();
         $this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
+        $this->log('System settings updated', LogEntry::RESOURCE_SETTINGS);
         return array(
             'id' => 0,
             'serverHost' => $config['server']['host'],
@@ -253,6 +255,7 @@ class Settings extends RESTResource {
             ->check($data);
         // Send mail
         $contactService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
+        $this->log(sprintf('Test E-Mail sent to %s', $data->recipient), LogEntry::RESOURCE_SETTINGS);
         return $contactService->sendTestMail($this->getSessionUser(), $data->smtpFrom, $data->recipient, $data->smtpServer, $data->smtpPort, $data->smtpEncryption, $data->smtpUser, $data->smtpPassword);
     }
 
@@ -273,6 +276,7 @@ class Settings extends RESTResource {
             'comment' => ''
         );
         $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('event' => $ev));
+        $this->log('Syslog test event forwarded', LogEntry::RESOURCE_SESSIONS);
         return $ev;
     }
 }

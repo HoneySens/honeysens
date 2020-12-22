@@ -11,6 +11,7 @@ services:
       - server
     environment:
       - ACCESS_LOG=false
+      - API_LOG=true
       - DB_PASSWORD=honeysens
       - DOMAIN=server
       - TLS_FORCE_12=false

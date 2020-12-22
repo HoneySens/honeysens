@@ -4,6 +4,7 @@ use Doctrine\ORM\EntityManager;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
+use HoneySens\app\models\ServiceManager;
 use Slim\Slim;
 
 abstract class RESTResource {
@@ -155,5 +156,16 @@ abstract class RESTResource {
     public function getServerCert() {
         $certPath = APPLICATION_PATH . '/../data/https.chain.crt';
         return file_get_contents($certPath);
+    }
+
+    /**
+     * Retrieves the log service and records a log entry, references the session user by default.
+     */
+    public function log($message, $resourceType, $resourceID=null, $userID=null) {
+        if($userID === null) {
+            $sessionUser = $this->getSessionUser();
+            $userID = $sessionUser != null ? $sessionUser->getId() : null;
+        }
+        $this->services->get(ServiceManager::SERVICE_LOG)->log($message, $resourceType, $resourceID, $userID);
     }
 }

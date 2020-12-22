@@ -31,6 +31,7 @@ require(['app/app', 'jquery', 'json', 'app/controller',
     'app/modules/events/module',
     'app/modules/info/module',
     'app/modules/tasks/module',
+    'app/modules/logs/module',
     'app/modules/setup/module'], function(HoneySens, $) {
         $(document).ready(function() {
             HoneySens.start();
