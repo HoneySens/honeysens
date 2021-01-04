@@ -329,6 +329,7 @@ if config_version == '2.2.0':
     db.commit()
     config.set('sensors', 'timeout_threshold', '1')
     config.set('smtp', 'encryption', '0')
+    config.set('misc', 'api_log_keep_days', '7')
     config.set('server', 'config_version', 'DEV')
     config_version = 'DEV'
 

@@ -2,11 +2,12 @@ define(['app/app',
         'app/modules/settings/views/ServerEndpoint',
         'app/modules/settings/views/Sensors',
         'app/modules/settings/views/Permissions',
+        'app/modules/settings/views/Logging',
         'app/modules/settings/views/LDAP',
         'app/modules/settings/views/SMTPSettings',
         'app/modules/settings/views/EventForwarding',
         'tpl!app/modules/settings/templates/Settings.tpl'],
-function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LDAPView, SMTPSettingsView, EventForwardingView, SettingsTpl) {
+function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LoggingView, LDAPView, SMTPSettingsView, EventForwardingView, SettingsTpl) {
     HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.Settings = Marionette.LayoutView.extend({
             template: SettingsTpl,
@@ -15,6 +16,7 @@ function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LDAPView, 
                 endpoint: 'div#settings-endpoint',
                 sensors: 'div#settings-sensors',
                 permissions: 'div#settings-permissions',
+                logging: 'div#settings-logging',
                 ldap: 'div#settings-ldap',
                 smtp: 'div#settings-smtp',
                 evforward: 'div#settings-evforward'
@@ -37,6 +39,7 @@ function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LDAPView, 
                 this.getRegion('endpoint').show(new ServerEndpointView({model: this.model}));
                 this.getRegion('sensors').show(new SensorsView({model: this.model}));
                 this.getRegion('permissions').show(new PermissionsView({model: this.model}));
+                this.getRegion('logging').show(new LoggingView({model: this.model}));
                 this.getRegion('ldap').show(new LDAPView({model: this.model}));
                 this.getRegion('smtp').show(new SMTPSettingsView({model: this.model}));
                 this.getRegion('evforward').show(new EventForwardingView({model: this.model}));
