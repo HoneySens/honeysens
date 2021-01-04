@@ -84,6 +84,7 @@ class Settings extends RESTResource {
             $settings['syslogFacility'] = $config['syslog']['facility'];
             $settings['syslogPriority'] = $config['syslog']['priority'];
             // Misc
+            $settings['apiLogKeepDays'] = $config['misc']['api_log_keep_days'];
             $settings['restrictManagerRole'] = $config->getBoolean('misc', 'restrict_manager_role');
         }
         return $settings;
@@ -100,6 +101,7 @@ class Settings extends RESTResource {
      * - sensorsUpdateInterval: The delay between status update connection attempts initiated by sensors
      * - sensorsServiceNetwork: The internal network range that sensors should use for service containers
      * - sensorsTimeoutThreshold: Period (in minutes) that needs to pass after the last contact until a sensor is declared as 'offline'
+     * - apiLogKeepDays: Specifies how many days the API log should be kept (if API log is enabled)
      * - restrictManagerRole: Enables or disable permission restrictions for managers
      *
      * Optional parameters:
@@ -136,6 +138,7 @@ class Settings extends RESTResource {
             ->attribute('sensorsUpdateInterval', V::intVal()->between(1, 60))
             ->attribute('sensorsServiceNetwork', V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/'))
             ->attribute('sensorsTimeoutThreshold', V::intVal()->between(1, 1440))
+            ->attribute('apiLogKeepDays', V::intVal()->between(0, 65535))
             ->attribute('restrictManagerRole', V::boolType())
             ->check($data);
         if($data->smtpEnabled) {
@@ -208,6 +211,7 @@ class Settings extends RESTResource {
         $config->set('sensors', 'update_interval', $data->sensorsUpdateInterval);
         $config->set('sensors', 'service_network', $data->sensorsServiceNetwork);
         $config->set('sensors', 'timeout_threshold', $data->sensorsTimeoutThreshold);
+        $config->set('misc', 'api_log_keep_days', $data->apiLogKeepDays);
         $config->set('misc', 'restrict_manager_role', $data->restrictManagerRole ? 'true' : 'false');
         $config->save();
         $this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
@@ -237,6 +241,7 @@ class Settings extends RESTResource {
             'sensorsUpdateInterval' => $config['sensors']['update_interval'],
             'sensorsServiceNetwork' => $config['sensors']['service_network'],
             'sensorsTimeoutThreshold' => $config['sensors']['timeout_threshold'],
+            'apiLogKeepDays' => $config['misc']['api_log_keep_days'],
             'restrictManagerRole' => $config->getBoolean('misc', 'restrict_manager_role')
         );
     }

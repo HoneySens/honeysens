@@ -24,6 +24,7 @@ from .handlers.sensorcfg_creator import SensorConfigCreator
 from .handlers.sensor_timeout_checker import SensorTimeoutChecker
 from .handlers.upload_verifier import UploadVerifier
 from .handlers.ca_expiration_checker import CAExpirationChecker
+from .handlers.api_log_cleaner import APILogCleaner
 
 handlers = {
     constants.TaskType.EMAIL_EMITTER: EMailEmitter(),
@@ -34,7 +35,8 @@ handlers = {
     constants.TaskType.SENSOR_TIMEOUT_CHECKER: SensorTimeoutChecker(),
     constants.TaskType.UPLOAD_VERIFIER: UploadVerifier(),
     constants.TaskType.WEEKLY_SUMMARIZER: WeeklySummarizer(),
-    constants.TaskType.CA_EXPIRATION_CHECKER: CAExpirationChecker()
+    constants.TaskType.CA_EXPIRATION_CHECKER: CAExpirationChecker(),
+    constants.TaskType.API_LOG_CLEANER: APILogCleaner()
 }
 logger = get_task_logger(__name__)
 

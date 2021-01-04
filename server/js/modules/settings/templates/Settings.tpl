@@ -26,6 +26,14 @@
         </div>
         <div id="settings-permissions" class="panel-collapse collapse"></div>
     </div>
+    <div class="panel panel-default <% if(!_.templateHelpers.isAllowed('logs', 'get')) { %>hidden<% } %>">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a class="collapsed" data-toggle="collapse" data-parent="#settings" href="#settings-logging">Logdaten</a>
+            </h4>
+        </div>
+        <div id="settings-logging" class="panel-collapse collapse"></div>
+    </div>
     <div class="panel panel-default ldapSettings">
         <div class="panel-heading">
             <button type="button" class="toggle btn btn-primary btn-xs pull-right" data-inactive-text="Deaktiviert" data-active-text="Aktiviert">Deaktiviert</button>
