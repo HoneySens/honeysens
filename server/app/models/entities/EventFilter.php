@@ -35,6 +35,13 @@ class EventFilter {
     protected $type;
 
     /**
+     * Free-form text field describing this filter.
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $description;
+
+    /**
      * Counts the collected packages that were collected by this filter
      *
      * @Column(type="integer")
@@ -120,6 +127,26 @@ class EventFilter {
     }
 
     /**
+     * Set a description for this event filter.
+     *
+     * @param string $description
+     * @return $this
+     */
+    public function setDescription($description) {
+        $this->description = $description;
+        return $this;
+    }
+
+    /**
+     * Returns the description of this event filter, if there is any.
+     *
+     * @return string
+     */
+    public function getDescription() {
+        return $this->description;
+    }
+
+    /**
      * Adds an arbitrary number to the current counter value
      *
      * @param integer $amount
@@ -188,6 +215,7 @@ class EventFilter {
             'division' => $division,
             'name' => $this->getName(),
             'type' => $this->getType(),
+            'description' => $this->getDescription(),
             'count' => $this->getCount(),
             'conditions' => $conditions
         );

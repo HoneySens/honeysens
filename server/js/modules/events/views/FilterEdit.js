@@ -32,12 +32,14 @@ function(HoneySens, Models, FilterConditionListView, FilterEditTpl) {
                         var model = this.model,
                             name = this.$el.find('input[name="filtername"]').val(),
                             type = parseInt(this.$el.find('select[name="type"]').val()),
+                            description = this.$el.find('textarea[name="description"]').val(),
                             division = parseInt(this.$el.find('select[name="division"]').val()),
                             conditions = this.conditionCollection.toJSON();
                         if(!model.id) HoneySens.data.models.eventfilters.add(model);
-                        model.save({name: name, type: type, division: division, conditions: conditions}, {success: function() {
-                            HoneySens.request('view:content').overlay.empty();
-                        }});
+                        model.save({name: name, type: type, description: description, division: division, conditions: conditions},
+                            {success: function() {
+                                    HoneySens.request('view:content').overlay.empty();
+                                }});
                     }
                 }
             },
@@ -54,6 +56,7 @@ function(HoneySens, Models, FilterConditionListView, FilterEditTpl) {
                 });
 
                 this.getRegion('conditions').show(new FilterConditionListView({collection: view.conditionCollection}));
+                this.$el.find('textarea[name="description"]').val(this.model.get('description'));
             },
             templateHelpers: {
                 isNew: function() {

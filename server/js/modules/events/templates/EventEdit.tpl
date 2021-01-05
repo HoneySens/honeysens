@@ -22,7 +22,7 @@
         </div>
         <div class="form-group">
             <label for="comment" class="control-label">Kommentar</label>
-            <textarea rows="10" class="form-control" name="comment" <% if(isMultiEdit()) { %>placeholder="Hier eingegebener Text wird alle Einzelkommentare überschreiben"<% } %>></textarea>
+            <textarea rows="10" class="form-control" name="comment" style="resize: none;" <% if(isMultiEdit()) { %>placeholder="Hier eingegebener Text wird alle Einzelkommentare überschreiben"<% } %>></textarea>
         </div>
         <hr />
         <div class="form-group">
