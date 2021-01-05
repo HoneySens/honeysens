@@ -167,6 +167,7 @@ class Eventfilters extends RESTResource {
      * The following parameters are required:
      * - name: Name of this filter
      * - type: Type of this filter (currently only '0', whitelist, is supported)
+     * - description: Free-form text that describes the filter's intention (can be null)
      * - division: The Division id this filter belongs to
      * - conditions: Array specifying a list of filter conditions to add. Each item is another array
      *               specifying condition data.
@@ -180,6 +181,7 @@ class Eventfilters extends RESTResource {
         V::objectType()
             ->attribute('name', V::alnum('._-')->length(1, 255))
             ->attribute('type', V::intVal()->equals(0))
+            ->attribute('description', V::optional(V::stringType()->length(1, 65535)))
             ->attribute('division', V::intVal())
             ->attribute('conditions', V::arrayVal()->each(V::objectType()))
             ->check($data);
@@ -190,6 +192,7 @@ class Eventfilters extends RESTResource {
         V::objectType()->check($division);
         $filter->setName($data->name)
             ->setType($data->type)
+            ->setDescription($data->description)
             ->setDivision($division);
         foreach($data->conditions as $conditionData) {
             $condition = $this->createCondition($conditionData);
@@ -207,6 +210,7 @@ class Eventfilters extends RESTResource {
      * The following parameters are required:
      * - name: Name of this filter
      * - type: Type of this filter (currently only '0', whitelist, is supported)
+     * - description: Free-form text that describes the filter's intention (can be null)
      * - division: The Division id this filter belongs to
      * - conditions: Array specifying a list of filter conditions to add. Each item is another array
      *               specifying condition data.
@@ -222,6 +226,7 @@ class Eventfilters extends RESTResource {
         V::objectType()
             ->attribute('name', V::alnum('._-')->length(1, 255))
             ->attribute('type', V::intVal()->equals(0))
+            ->attribute('description', V::optional(V::stringType()->length(1, 65535)))
             ->attribute('division', V::intVal())
             ->attribute('conditions', V::arrayVal()->each(V::objectType()))
             ->check($data);
@@ -231,6 +236,7 @@ class Eventfilters extends RESTResource {
         V::objectType()->check($filter);
         $filter->setName($data->name);
         $filter->setType($data->type);
+        $filter->setDescription($data->description);
         $division = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Division')->find($data->division);
         V::objectType()->check($division);
         $filter->setDivision($division);

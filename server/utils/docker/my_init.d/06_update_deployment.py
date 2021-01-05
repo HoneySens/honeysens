@@ -323,7 +323,8 @@ if config_version == '2.2.0':
         'ALTER TABLE users ADD notifyOnCAExpiration TINYINT(1) NOT NULL',
         ('CREATE TABLE logs (id INT AUTO_INCREMENT NOT NULL, timestamp DATETIME NOT NULL, userID INT DEFAULT NULL, '
          'resourceID INT DEFAULT NULL, resourceType INT NOT NULL, message VARCHAR(255) NOT NULL, '
-         'PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB')
+         'PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB'),
+        'ALTER TABLE event_filters ADD description VARCHAR(255) DEFAULT NULL'
     ]
     execute_sql(db, db_statements)
     db.commit()
