@@ -237,7 +237,6 @@ class Services extends RESTResource {
         $service = $em->getRepository('HoneySens\app\models\entities\Service')->find($id);
         V::objectType()->check($service);
         // Remove revisions and service from the registry
-        // TODO Don't remove revisions that are either default or otherwise in use by sensors
         foreach($service->getRevisions() as $revision) $this->removeServiceRevision($revision);
         $this->getServiceManager()->get(ServiceManager::SERVICE_REGISTRY)->removeRepository($service->getRepository());
         // Remove service from the db
@@ -253,13 +252,14 @@ class Services extends RESTResource {
      * @param int $id
      */
     public function deleteRevision($id) {
-        // TODO Don't remove revisions that are either default or otherwise in use by sensors
         $this->assureAllowed('delete');
         // Validation
         V::intVal()->check($id);
         $em = $this->getEntityManager();
         $serviceRevision = $em->getRepository('HoneySens\app\models\entities\ServiceRevision')->find($id);
         V::objectType()->check($serviceRevision);
+        // Don't remove the default revision
+        if($serviceRevision->getRevision() === $serviceRevision->getService()->getDefaultRevision()) throw new BadRequestException();
         $this->removeServiceRevision($serviceRevision);
         $em->flush();
         $service = $serviceRevision->getService();
