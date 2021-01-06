@@ -61,6 +61,9 @@ function(HoneySens, Models, FilterConditionListView, FilterEditTpl) {
             templateHelpers: {
                 isNew: function() {
                     return !this.hasOwnProperty('id');
+                },
+                requireFilterDescription: function() {
+                    return HoneySens.data.settings.get('requireFilterDescription');
                 }
             },
             serializeData: function() {

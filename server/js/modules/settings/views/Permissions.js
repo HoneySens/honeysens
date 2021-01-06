@@ -8,10 +8,13 @@ function(HoneySens, PermissionsTpl) {
             events: {
                 'change input[type="checkbox"][name="restrictManagers"]': function(e) {
                     this.model.save({restrictManagerRole: e.target.checked});
+                },
+                'change input[type="checkbox"][name="requireEventComment"]': function(e) {
+                    this.model.save({requireEventComment: e.target.checked});
+                },
+                'change input[type="checkbox"][name="requireFilterDescription"]': function(e) {
+                    this.model.save({requireFilterDescription: e.target.checked});
                 }
-            },
-            onRender: function() {
-
             }
         });
     });

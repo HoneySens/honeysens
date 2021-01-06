@@ -325,8 +325,10 @@ class Events extends RESTResource {
 
     /**
      * Updates one or multiple Event objects according to various criteria (see documentation for fetchEvents()).
-     * Alternatively, a single id or multiple ids can be provided as deletion criteria.
+     * Alternatively, a single id or multiple ids can be provided as selection criteria.
      * To simplify the refresh process on the client side, only status and comment fields can be updated.
+     * If permissions settings require comments, each status flag update to anything other than "UNEDITED"
+     * also required a comment to be present.
      *
      * At least one of the following parameters have to be set to update the event model:
      * - new_status: Status value, 0 to 3
@@ -375,10 +377,12 @@ class Events extends RESTResource {
             ->update('HoneySens\app\models\entities\Event', 'e')
             ->where('e.id IN (:ids)')->setParameter('ids', $eventIDs);
         if(V::key('new_status', V::intVal()->between(0, 3))->validate($criteria)) {
+            if(V::intVal()->between(1, 3)->validate($criteria['new_status']) && $this->getConfig()->getBoolean('misc', 'require_event_comment'))
+                V::key('new_comment', V::stringType()->length(1, 65535))->check($criteria);
             $qb->set('e.status', ':status')
                 ->setParameter('status', $criteria['new_status']);
         }
-        if(V::key('new_comment', V::stringType())->validate($criteria)) {
+        if(V::key('new_comment', V::stringType()->length(0, 65535))->validate($criteria)) {
             $qb->set('e.comment', ':comment')
                 ->setParameter('comment', $criteria['new_comment']);
         }

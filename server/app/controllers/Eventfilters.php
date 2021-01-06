@@ -167,7 +167,7 @@ class Eventfilters extends RESTResource {
      * The following parameters are required:
      * - name: Name of this filter
      * - type: Type of this filter (currently only '0', whitelist, is supported)
-     * - description: Free-form text that describes the filter's intention (can be null)
+     * - description: Free-form text that describes the filter's intention (can be null, depending on global settings)
      * - division: The Division id this filter belongs to
      * - conditions: Array specifying a list of filter conditions to add. Each item is another array
      *               specifying condition data.
@@ -181,10 +181,12 @@ class Eventfilters extends RESTResource {
         V::objectType()
             ->attribute('name', V::alnum('._-')->length(1, 255))
             ->attribute('type', V::intVal()->equals(0))
-            ->attribute('description', V::optional(V::stringType()->length(1, 65535)))
             ->attribute('division', V::intVal())
             ->attribute('conditions', V::arrayVal()->each(V::objectType()))
             ->check($data);
+        if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
+            V::attribute('description', V::stringType()->length(1, 65535))->check($data);
+        else V::attribute('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
         // Persistence
         $filter = new EventFilter();
         $em = $this->getEntityManager();
@@ -210,7 +212,7 @@ class Eventfilters extends RESTResource {
      * The following parameters are required:
      * - name: Name of this filter
      * - type: Type of this filter (currently only '0', whitelist, is supported)
-     * - description: Free-form text that describes the filter's intention (can be null)
+     * - description: Free-form text that describes the filter's intention (can be null, depending on global settings)
      * - division: The Division id this filter belongs to
      * - conditions: Array specifying a list of filter conditions to add. Each item is another array
      *               specifying condition data.
@@ -226,10 +228,12 @@ class Eventfilters extends RESTResource {
         V::objectType()
             ->attribute('name', V::alnum('._-')->length(1, 255))
             ->attribute('type', V::intVal()->equals(0))
-            ->attribute('description', V::optional(V::stringType()->length(1, 65535)))
             ->attribute('division', V::intVal())
             ->attribute('conditions', V::arrayVal()->each(V::objectType()))
             ->check($data);
+        if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
+            V::attribute('description', V::stringType()->length(1, 65535))->check($data);
+        else V::attribute('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
         // Persistence
         $em = $this->getEntityManager();
         $filter = $em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);

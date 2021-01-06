@@ -28,7 +28,7 @@
                 <div class="col-sm-6">
                     <div class="form-group">
                         <label for="description" class="control-label">Beschreibung</label>
-                        <textarea class="form-control" name="description" style="height: 160px; resize:none;" maxlength="65535"></textarea>
+                        <textarea class="form-control" name="description" style="height: 160px; resize:none;" maxlength="65535" <% if(requireFilterDescription()) { %>required<% } %>></textarea>
                     </div>
                 </div>
             </div>

@@ -331,6 +331,8 @@ if config_version == '2.2.0':
     config.set('sensors', 'timeout_threshold', '1')
     config.set('smtp', 'encryption', '0')
     config.set('misc', 'api_log_keep_days', '7')
+    config.set('misc', 'require_event_comment', 'false')
+    config.set('misc', 'require_filter_description', 'false')
     config.set('server', 'config_version', 'DEV')
     config_version = 'DEV'
 
