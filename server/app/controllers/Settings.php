@@ -58,7 +58,9 @@ class Settings extends RESTResource {
             'sensorsServiceNetwork' => $config['sensors']['service_network'],
             'sensorsTimeoutThreshold' => $config['sensors']['timeout_threshold'],
             'caFP' => openssl_x509_fingerprint($caCert),
-            'caExpire' => openssl_x509_parse($caCert)['validTo_time_t']
+            'caExpire' => openssl_x509_parse($caCert)['validTo_time_t'],
+            'requireEventComment' => $config->getBoolean('misc', 'require_event_comment'),
+            'requireFilterDescription' => $config->getBoolean('misc', 'require_filter_description')
         );
         // Settings only relevant to admins
         if($this->getSessionUserID() == null) {
@@ -103,6 +105,8 @@ class Settings extends RESTResource {
      * - sensorsTimeoutThreshold: Period (in minutes) that needs to pass after the last contact until a sensor is declared as 'offline'
      * - apiLogKeepDays: Specifies how many days the API log should be kept (if API log is enabled)
      * - restrictManagerRole: Enables or disable permission restrictions for managers
+     * - requireEventComment: Forces users to enter a comment when editing events
+     * - requireFilterDescription: Forces users to enter a description when creating or updating event filters
      *
      * Optional parameters:
      * - smtpServer: IP or hostname of a mail server
@@ -140,6 +144,8 @@ class Settings extends RESTResource {
             ->attribute('sensorsTimeoutThreshold', V::intVal()->between(1, 1440))
             ->attribute('apiLogKeepDays', V::intVal()->between(0, 65535))
             ->attribute('restrictManagerRole', V::boolType())
+            ->attribute('requireEventComment', V::boolType())
+            ->attribute('requireFilterDescription', V::boolType())
             ->check($data);
         if($data->smtpEnabled) {
            V::attribute('smtpServer', V::stringType())
@@ -213,6 +219,8 @@ class Settings extends RESTResource {
         $config->set('sensors', 'timeout_threshold', $data->sensorsTimeoutThreshold);
         $config->set('misc', 'api_log_keep_days', $data->apiLogKeepDays);
         $config->set('misc', 'restrict_manager_role', $data->restrictManagerRole ? 'true' : 'false');
+        $config->set('misc', 'require_event_comment', $data->requireEventComment ? 'true' : 'false');
+        $config->set('misc', 'require_filter_description', $data->requireFilterDescription ? 'true' : 'false');
         $config->save();
         $this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
         $this->log('System settings updated', LogEntry::RESOURCE_SETTINGS);
@@ -242,7 +250,9 @@ class Settings extends RESTResource {
             'sensorsServiceNetwork' => $config['sensors']['service_network'],
             'sensorsTimeoutThreshold' => $config['sensors']['timeout_threshold'],
             'apiLogKeepDays' => $config['misc']['api_log_keep_days'],
-            'restrictManagerRole' => $config->getBoolean('misc', 'restrict_manager_role')
+            'restrictManagerRole' => $config->getBoolean('misc', 'restrict_manager_role'),
+            'requireEventComment' => $config->getBoolean('misc', 'require_event_comment'),
+            'requireFilterDescription' => $config->getBoolean('misc', 'require_filter_description')
         );
     }
 
