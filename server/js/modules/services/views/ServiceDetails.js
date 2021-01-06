@@ -89,6 +89,8 @@ function(HoneySens, Backgrid, ServiceDetailsTpl, RevisionListActionsCellTpl, Ver
                                 }
                             },
                             render: function() {
+                                // Hide action buttons for all default service revisions
+                                this.model.set('nondef', this.model.get('revision') !== view.model.get('default_revision'));
                                 this.$el.html(this.template(this.model.attributes));
                                 this.$el.find('button').tooltip();
                                 this.delegateEvents(); // Not exactly sure why events won't work without this call
