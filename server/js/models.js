@@ -132,6 +132,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         });
 
         Models.EventFilter = Backbone.Model.extend({
+            urlRoot: 'api/eventfilters',
             defaults: {
                 'division': null,
                 'name': null,

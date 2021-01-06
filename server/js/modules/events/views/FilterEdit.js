@@ -38,8 +38,9 @@ function(HoneySens, Models, FilterConditionListView, FilterEditTpl) {
                         if(!model.id) HoneySens.data.models.eventfilters.add(model);
                         model.save({name: name, type: type, description: description, division: division, conditions: conditions},
                             {success: function() {
-                                    HoneySens.request('view:content').overlay.empty();
-                                }});
+                                HoneySens.data.models.eventfilters.fetch();
+                                HoneySens.request('view:content').overlay.empty();
+                            }});
                     }
                 }
             },
