@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>2.2.0</dd>
+        <dd>2.3.0</dd>
         <dt>Lizenz</dt>
         <dd><a href="https://www.apache.org/licenses/LICENSE-2.0.html" target="_blank">Apache 2.0 Software License</a></dd>
         <dt>Entwicklung</dt>
@@ -46,6 +46,20 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
+                    <p>
+                    <ul>
+                        <li>Serverseitiges Tracking des Sensor-Zustands, Darstellung von Up-/Downtime entsprechend angepasst</li>
+                        <li>Ereignisbenachrichtigungen um Notifikationen bei Sensor-Timeouts und CA-Zertifikatsablauf erweitert</li>
+                        <li>Ereignisliste um Status-Filter und Zähler für neue Ereignisse (pro Sensor) ergänzt</li>
+                        <li>Funktionen zum simultanen Bearbeiten und Entfernen aller Ereignisse der Ereignisliste</li>
+                        <li>Optional aktivierbares API-Aktitätslog für Administratoren</li>
+                        <li>Beschreibungs-Freitextfeld für Whitelist-Einträge hinzugefügt</li>
+                        <li>Sonderbrechtigungen um zusätzliche Pflichtfelder erweitert</li>
+                        <li>Fehlerkorrekturen im Front- und Backend, insbesondere im Zusammenhang mit Privilegien und Filterkriterien</li>
+                    </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
                     <p>
                         <ul>
