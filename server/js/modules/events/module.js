@@ -218,7 +218,7 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 $.ajax({
                     type: 'PUT',
                     url: 'api/events',
-                    data: JSON.stringify({...calculateEventQueryParams(queryParams), ...eventData}),
+                    data: JSON.stringify(Object.assign(calculateEventQueryParams(queryParams), eventData)),
                     dataType: 'json',
                     success: success
                 });
