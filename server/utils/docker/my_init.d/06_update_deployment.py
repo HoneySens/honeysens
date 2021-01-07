@@ -313,7 +313,7 @@ if config_version == '2.1.0':
     config_version = '2.2.0'
 # 2.2.0 -> 2.3.0
 if config_version == '2.2.0':
-    print('Upgrading configuration 2.2.0 -> DEV')
+    print('Upgrading configuration 2.2.0 -> 2.3.0')
     db_statements = [
         'ALTER TABLE statuslogs ADD runningSince DATETIME DEFAULT NULL',
         ('ALTER TABLE statuslogs CHANGE ip ip VARCHAR(255) DEFAULT NULL, '
@@ -333,8 +333,8 @@ if config_version == '2.2.0':
     config.set('misc', 'api_log_keep_days', '7')
     config.set('misc', 'require_event_comment', 'false')
     config.set('misc', 'require_filter_description', 'false')
-    config.set('server', 'config_version', 'DEV')
-    config_version = 'DEV'
+    config.set('server', 'config_version', '2.3.0')
+    config_version = '2.3.0'
 
 # Write new config file
 with open(config_file, 'w') as f:
