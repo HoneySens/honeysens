@@ -2,7 +2,8 @@
 set -e
 
 # Install requirements
-apk --update add git gcc g++ bash curl openssh-keygen openssh-client zeromq-dev py-pip py-virtualenv musl-dev python2-dev mpfr-dev openssl-dev mpc1-dev libffi-dev gmp-dev
+apk --update --no-cache add --virtual build-dependencies gcc g++ git curl py-virtualenv mpfr-dev mpc1-dev gmp-dev musl-dev python2-dev
+apk --update add bash openssh-keygen openssh-client openssl-dev libffi-dev py-pip zeromq-dev
 
 # Install cowrie from git
 curl -s -L https://github.com/cowrie/cowrie/archive/1.6.0.tar.gz -o /root/cowrie.tar.gz
@@ -18,4 +19,5 @@ adduser -D -s /bin/sh cowrie cowrie
 chmod -R 777 /opt/cowrie-1.6.0/var
 
 # Clean up
+apk del build-dependencies
 rm -rf /var/cache/apk/* /root/*
