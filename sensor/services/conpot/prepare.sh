@@ -16,5 +16,5 @@ sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/my
 pip install --no-cache-dir -r /tmp/conpot-Release_0.5.2/requirements.txt pyzmq
 (cd /tmp/conpot-Release_0.5.2 && python setup.py install)
 cp -v /tmp/conpot-Release_0.5.2/conpot/testing.cfg /srv/conpot.cfg
-apk del build-dependencies build-base mariadb-dev # Build-time dependency removal
+apk del build-dependencies # Build-time dependency removal
 rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /root/*
