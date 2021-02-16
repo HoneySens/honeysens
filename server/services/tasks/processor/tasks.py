@@ -88,7 +88,7 @@ def update_task_status(db, task_id, status):
 def store_task_result(db, task_id, result):
     """Stores the given result dictionary data in the db for a given task."""
     cursor = db.cursor()
-    cursor.execute('UPDATE tasks SET result = "{}" WHERE id = "{}"'.format(pymysql.escape_string(json.dumps(result)), task_id))
+    cursor.execute('UPDATE tasks SET result = %s WHERE id = %s', (json.dumps(result), task_id))
     db.commit()
     cursor.close()
 
