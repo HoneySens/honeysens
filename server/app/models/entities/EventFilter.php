@@ -197,7 +197,15 @@ class EventFilter {
         return $this->conditions;
     }
 
+    /**
+     * Runs all filter conditions against the given event.
+     * Returns true if ALL conditions did match (logical AND) and there exists at least one condition.
+     *
+     * @param $event
+     * @return bool
+     */
     public function matches($event) {
+        if(count($this->conditions) == 0) return false;
         foreach($this->conditions as $condition) {
             if(!$condition->matches($event)) return false;
         }
