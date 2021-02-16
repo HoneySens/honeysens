@@ -44,7 +44,7 @@ elif [[ "$FORCE" = "force" ]]; then
     echo "Generating new TLS certificate for existing key"
     # Use subject line of existing certificate if one exists
     if [[ -e /opt/HoneySens/data/${TARGET}.crt ]]; then
-      SUBJECT=$(openssl x509 -noout -subject -in /opt/HoneySens/data/${TARGET}.crt | sed -e "s/subject=\(.*\)/\1/" | awk '{$1=$1};1')
+      SUBJECT=$(openssl x509 -noout -subject -nameopt compat -in /opt/HoneySens/data/${TARGET}.crt | sed -e "s/subject=\(.*\)/\1/" | awk '{$1=$1};1')
       echo "  Re-using subject of existing certificate: ${SUBJECT}"
     fi
     openssl req -new -key /opt/HoneySens/data/${TARGET}.key -out /opt/HoneySens/data/${TARGET}.csr -subj "${SUBJECT}"
