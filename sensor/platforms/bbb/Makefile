@@ -27,6 +27,8 @@ ${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/armh
 	cp -v prepare.sh ${OUTDIR}/build/image-root/root/
 	cp -v manager.service usb_audit/usb-audit@.service ${OUTDIR}/build/image-root/etc/systemd/system/
 	cp -v usb_audit/90-usb-audit.rules ${OUTDIR}/build/image-root/etc/udev/rules.d/
+	mkdir -p ${OUTDIR}/build/image-root/etc/docker
+	cp -v daemon.json ${OUTDIR}/build/image-root/etc/docker/
 	mount -t proc proc ${OUTDIR}/build/image-root/proc/
 	mount -t sysfs sys ${OUTDIR}/build/image-root/sys/
 	mount -o bind /dev ${OUTDIR}/build/image-root/dev/

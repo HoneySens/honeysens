@@ -6,6 +6,10 @@
   <description>Debian-based firmware that runs dockerized services</description>
   <changelog>
     <entry>
+      <version>2.3.0</version>
+      <desc>Fixed rare network address conflicts</desc>
+    </entry>
+    <entry>
       <version>2.2.2</version>
       <desc>Networking fixes</desc>
     </entry>
