@@ -7,6 +7,7 @@ ARG REVISION=unversioned
 
 COPY platforms/docker_x86/setup_prepare.sh platforms/docker_x86/setup_release.sh platforms/docker_x86/ifup.sh /opt/
 COPY manager /opt/manager
+COPY platforms/docker_x86/daemon.json /etc/docker/
 COPY platforms/docker_x86/dhcpcd.conf /etc/
 COPY platforms/docker_x86/services/ /etc/services.d/
 COPY platforms/docker_x86/shutdown/00_stop_docker.sh platforms/docker_x86/shutdown/01_cleanup_network.sh /etc/cont-finish.d/

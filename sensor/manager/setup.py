@@ -19,7 +19,7 @@ setup(
         'pycrypto',
         'pycurl<=7.43.0.3',
         'pyyaml',
-        'pyzmq'
+        'pyzmq==19.0.2'
     ],
     entry_points={
         'console_scripts': [

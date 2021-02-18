@@ -20,6 +20,10 @@ cp -vr /mnt/platforms/docker_x86/services/wpa_supplicant /etc/services.d
 echo "Adding shutdown scripts"
 cp -vr /mnt/platforms/docker_x86/shutdown/* /etc/cont-finish.d/
 
+echo "Copying docker daemon configuration"
+mkdir -p /etc/docker
+cp -vr /mnt/platforms/docker_x86/daemon.json /etc/docker/
+
 mkdir -p /etc/services.d/grunt-watch
 cat > /etc/services.d/grunt-watch/run << DELIMITER
 #!/usr/bin/with-contenv bash

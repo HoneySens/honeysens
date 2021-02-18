@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 # Basic container initialization for both productive and development environments
 
 # Basic requirements

@@ -152,6 +152,15 @@
             </div>
             <div id="releasenotesBBB" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
+                    <p>Fixed rare network address conflicts</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.2</strong><br/>
+                    <p>Networking fixes</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.1</strong><br/>
+                    <p>Enforcement of HTTP/1.1 communication</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
                     <p>EAPOL support</p>
                     <hr />
@@ -186,6 +195,15 @@
             </div>
             <div id="releasenotesDocker" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
+                    <p>Fixed rare network address conflicts</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.2</strong><br/>
+                    <p>Internal dependency update</p>
+                    <hr />
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.1</strong><br/>
+                    <p>Enforcement of HTTP/1.1 communication</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
                     <p>EAPOL support</p>
                     <hr />
