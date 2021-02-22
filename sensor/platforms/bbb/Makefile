@@ -1,7 +1,7 @@
 PREFIX := HoneySens-Firmware-BBB
 # Either '2gb' (older models) or '4gb' (retail models)
 IMG_SIZE := 4gb
-REVISION := ${IMG_SIZE}-2.2.2
+REVISION := ${IMG_SIZE}-2.3.0
 TIME := $(shell date +%Y-%m-%d)
 ARCH := $(shell uname -m)
 OUTDIR := out
@@ -32,6 +32,8 @@ ${OUTDIR}/build/omap-image-builder/deploy/debian-10.3-console-armhf-${TIME}/armh
 	mount -t proc proc ${OUTDIR}/build/image-root/proc/
 	mount -t sysfs sys ${OUTDIR}/build/image-root/sys/
 	mount -o bind /dev ${OUTDIR}/build/image-root/dev/
+	rm -v ${OUTDIR}/build/image-root/etc/resolv.conf
+	cp -v /etc/resolv.conf ${OUTDIR}/build/image-root/etc/resolv.conf
 	chroot ${OUTDIR}/build/image-root/ /root/prepare.sh "${REVISION}"
 	umount ${OUTDIR}/build/image-root/proc ${OUTDIR}/build/image-root/sys ${OUTDIR}/build/image-root/dev
 	tar -cf $@ -C ${OUTDIR}/build/image-root/ .
