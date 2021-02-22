@@ -38,6 +38,10 @@ mv /etc/dnsmasq.d /etc/dnsmasq.d.disabled
 # Disable ConnMan, a network manager that conflicts with our sensor manager
 systemctl disable connman
 
+# Fix /etc/resolv.conf symlink (occupied by connman)
+rm -v /etc/resolv.conf
+dpkg-reconfigure resolvconf
+
 # Disable background APT activity
 apt-get --purge remove -y unattended-upgrades
 
