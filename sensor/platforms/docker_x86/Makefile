@@ -24,8 +24,8 @@ ${OUTDIR}/utils/docker-compose: | DIR.${OUTDIR}/utils
 
 ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/firmware.img ${OUTDIR}/build/metadata.xml ${OUTDIR}/build/docker-compose.yml | DIR.${OUTDIR}/dist
 	mkdir -p ${OUTDIR}/build/conf
-	cp -v .env Readme.md ${OUTDIR}/build/
-	tar -czf $@ -C ${OUTDIR}/build/ firmware.img metadata.xml docker-compose.yml conf/ .env Readme.md
+	cp -v .env Deployment.md ${OUTDIR}/build/
+	tar -czf $@ -C ${OUTDIR}/build/ firmware.img metadata.xml docker-compose.yml conf/ .env Deployment.md
 
 ${OUTDIR}/build/firmware.img: | DIR.${OUTDIR}/build
 	docker build --no-cache --build-arg REVISION=${REVISION} -t honeysens/sensorx86:${REVISION} -f Dockerfile ../../
