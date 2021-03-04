@@ -96,6 +96,12 @@ function(HoneySens, Models, Backgrid, FilterListTpl, FilterListActionsCellTpl) {
                     selectOptions: divisions
                 });
                 this.groupFilter.show(this.groupFilterView);
+            },
+            templateHelpers: {
+                hasDivision: function() {
+                    // checks whether there is at least one division available
+                    return HoneySens.data.models.divisions.length > 0;
+                }
             }
         });
     });
