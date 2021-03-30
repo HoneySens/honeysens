@@ -21,7 +21,7 @@ class Division {
     protected $name;
 
     /**
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\Sensor", mappedBy="division", cascade={"remove"})
+     * @OneToMany(targetEntity="HoneySens\app\models\entities\Sensor", mappedBy="division")
      */
     protected $sensors;
 

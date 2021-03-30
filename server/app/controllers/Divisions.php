@@ -271,6 +271,8 @@ class Divisions extends RESTResource {
         $division = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Division')->find($id);
         V::objectType()->check($division);
         $did = $division->getId();
+        $sensorController = new Sensors($em, $this->getServiceManager(), $this->getConfig());
+        foreach($division->getSensors() as $sensor) $sensorController->delete($did);
         $em->remove($division);
         $em->flush();
         $this->log(sprintf('Division %s (ID %d) and all associated users, sensors and events deleted', $division->getName(), $did), LogEntry::RESOURCE_DIVISIONS, $division->getId());
