@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import binascii
 import fcntl
 import json
@@ -12,7 +10,7 @@ import sys
 import tarfile
 import threading
 import time
-# import traceback
+#import traceback
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -80,10 +78,10 @@ def get_ip_address(iface):
 def get_certificate_fp(path):
     if path is not None and os.path.isfile(path):
         try:
-            with open(path, 'r') as f:
+            with open(path, 'rb') as f:
                 crt_src = f.read()
             crt = x509.load_pem_x509_certificate(crt_src, default_backend())
-            return binascii.hexlify(crt.fingerprint(hashes.SHA256()))
+            return binascii.hexlify(crt.fingerprint(hashes.SHA256())).decode('ascii')
         except Exception:
             return None
     return None
@@ -114,8 +112,8 @@ def collect_data():
     else:
         service_status = services.get_status()
     return {'crt_fp': sensor_crt_fp,
-            'disk_total': disk_total,
-            'disk_usage': disk_usage,
+            'disk_total': int(disk_total),
+            'disk_usage': int(disk_usage),
             'eapol_ca_crt_fp': eapol_ca_cert_fp,
             'eapol_client_crt_fp': eapol_client_cert_fp,
             'free_mem': free_mem,
@@ -150,6 +148,7 @@ def update_config_param(section, param, updated_params, updated_key, trigger_net
             _config.set(section, param, str(updated_params[updated_key]))
             return trigger_network_change
     return False
+
 
 def update_config(config_data):
     network_changed = False or update_config_param('server', 'host', config_data, 'server_endpoint_host', True)

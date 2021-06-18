@@ -1,13 +1,13 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
-import ConfigParser
+import configparser
 import os
 
 honeysens_cfg_path = '/honeysens.cfg'  # The manager is responsible for the /honeysens.cfg symlink
 
 # Add proxy environment data if required
 if os.path.isfile(honeysens_cfg_path):
-    config = ConfigParser.ConfigParser(allow_no_value=True)
+    config = configparser.ConfigParser(allow_no_value=True)
     try:
         config.readfp(open(honeysens_cfg_path))
         if config.get('proxy', 'mode') == '1':

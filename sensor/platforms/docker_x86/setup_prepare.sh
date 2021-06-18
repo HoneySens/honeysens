@@ -3,8 +3,8 @@ set -e
 # Basic container initialization for both productive and development environments
 
 # Basic requirements
-apk --update --no-cache add --virtual build-dependencies alpine-sdk python-dev python3-dev linux-headers zeromq-dev libffi-dev libressl-dev yaml-dev
-apk --update --no-cache add ca-certificates cntlm curl dhcpcd docker docker-py libffi libressl libpcap macchanger py-pip py-curl py-cryptography tar yaml wpa_supplicant zeromq
+apk --update --no-cache add --virtual build-dependencies alpine-sdk python3-dev linux-headers zeromq-dev libffi-dev libressl-dev yaml-dev
+apk --update --no-cache add ca-certificates cntlm curl-dev dhcpcd docker libffi libressl libpcap macchanger py3-cryptography py3-pip tar yaml wpa_supplicant zeromq
 
 # Install arpd and honeyd dependencies
 # apk --no-cache add libevent-dev libdnet-dev libpcap-dev pcre-dev libedit-dev automake autoconf zlib-dev libtool

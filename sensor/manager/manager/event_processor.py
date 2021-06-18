@@ -1,9 +1,7 @@
-from __future__ import absolute_import
-
 import collections
 import json
 import logging
-import Queue
+import queue
 import threading
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA
@@ -48,7 +46,7 @@ class EventProcessor(threading.Thread):
         while not self.ev_stop.is_set():
             try:
                 event = self.queue.get(True, 1)
-            except Queue.Empty:
+            except queue.Empty:
                 # Submit events ASAP if there are no further queued events to process
                 self.submit_events(sensor_id, key)
                 continue

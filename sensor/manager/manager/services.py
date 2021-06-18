@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import docker
 import json
 import logging
@@ -231,7 +229,7 @@ def apply_services(config, server_response, reset_network):
     if 'services' in server_response:
         arch = _platform.get_architecture()
         service_assignments = server_response['services']
-        for service_id, service_archs in service_assignments.iteritems():
+        for service_id, service_archs in service_assignments.items():
             if arch not in service_archs:
                 _logger.warning('Service {} not available on this architecture ({})'.format(service_id, arch))
                 continue
@@ -321,7 +319,7 @@ def check_docker():
 def get_status():
     result = {}
     with _services_lock:
-        for service, service_data in _services.iteritems():
+        for service, service_data in _services.items():
             if service_data['container'] is None:
                 status = constants.ServiceStatus.SCHEDULED
             else:

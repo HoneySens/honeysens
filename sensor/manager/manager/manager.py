@@ -1,14 +1,12 @@
-#!/usr/bin/env python2
-
-from __future__ import absolute_import
+#!/usr/bin/env python3
 
 import argparse
 import coloredlogs
-import ConfigParser
+import configparser
 import logging
 import netifaces
 import os
-import Queue
+import queue
 import shutil
 import signal
 import sys
@@ -36,15 +34,15 @@ class Manager:
     collector = None
     commands = None
     config_archive = None
-    config = ConfigParser.ConfigParser(allow_no_value=True)
+    config = configparser.ConfigParser(allow_no_value=True)
     config_dir = None
     dev_mode = False
     event_processor = None
-    event_queue = Queue.Queue()
+    event_queue = queue.Queue()
     interface = None
     logger = None
     platform = None
-    state_queue = Queue.Queue()
+    state_queue = queue.Queue()
     state_worker = None
     zmq_context = zmq.Context()
 

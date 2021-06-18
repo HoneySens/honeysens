@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import logging
 import os
 import re
@@ -99,13 +97,13 @@ class Platform(GenericPlatform):
         # and 'search' statements in /etc/resolv.conf. Since the hostname 'honeysens' should be interpreted
         # without consideration of 'search' and 'domain' statements, we remove those and force users to always
         # specify the server name as FQDN.
-        with open('/etc/resolv.conf', 'rb') as f:
+        with open('/etc/resolv.conf', 'r') as f:
             resolv_content = f.read()
         if 'search' in resolv_content or 'domain' in resolv_content:
             self.logger.info('Removing search and domain entries from /etc/resolv.conf')
             # Replace 'search' and 'domain' statements with comments
             resolv_content = re.sub('search\s\S+', '#', re.sub('domain\s\S+', '#', resolv_content))
-            with open('/etc/resolv.conf', 'wb') as f:
+            with open('/etc/resolv.conf', 'w') as f:
                 f.write(resolv_content)
             reset_network = True
         if reset_network:
@@ -180,7 +178,7 @@ class Platform(GenericPlatform):
                         fw_archive.extractall(tempdir)
                     if not os.path.isfile('{}/firmware.img'.format(tempdir)):
                         raise Exception()
-                    os.chmod('{}/firmware.img'.format(tempdir), 0666)
+                    os.chmod('{}/firmware.img'.format(tempdir), 0o666)
                     self.logger.info('Update: Loading new firmware')
                     subprocess.call(['/usr/bin/docker', '-H', HOST_DOCKER_SOCKET, 'load', '-i', '{}/firmware.img'.format(tempdir)])
                     next_project = 'hs_{}_{}'.format(config.get('general', 'sensor_id'), int(time.time()))
@@ -217,9 +215,9 @@ class Platform(GenericPlatform):
                     self.set_firmware_update_in_progress(False)
 
     def get_container_id(self):
-        # Use /proc magic to FIgure out our own container ID
+        # Use /proc magic to figure out our own container ID
         my_id = None
-        with open('/proc/self/cgroup', 'rb') as f:
+        with open('/proc/self/cgroup', 'r') as f:
             raw_cgroup = f.read()
         for cgroup in raw_cgroup.split('\n'):
             if 'docker' in cgroup:
