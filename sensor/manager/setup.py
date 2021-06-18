@@ -1,15 +1,15 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
 
 setup(
     name='honeysens-manager',
-    version='1.0.0',
+    version='2.3.0',
     description='HoneySens sensor management daemon',
     author='Pascal Brueckner',
     author_email='pascal.brueckner@sylence.cc',
-    license='BSD',
+    license='Apache License 2.0',
     packages=find_packages(),
     install_requires=[
         'coloredlogs',
@@ -17,9 +17,9 @@ setup(
         'docker',
         'netifaces',
         'pycrypto',
-        'pycurl<=7.43.0.3',
+        'pycurl',
         'pyyaml',
-        'pyzmq==19.0.2'
+        'pyzmq'
     ],
     entry_points={
         'console_scripts': [

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import base64
 import pycurl
 import json
@@ -21,6 +19,7 @@ def perform_https_request(config, config_dir, path, request_type, verify=True, p
     c.setopt(pycurl.HTTP_VERSION, pycurl.CURL_HTTP_VERSION_1_1)
 
     def parse_headers(header_line):
+        header_line = header_line.decode('utf-8')
         if ':' not in header_line:
             return
         name, value = header_line.split(':', 1)

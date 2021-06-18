@@ -22,12 +22,7 @@ module.exports = function(grunt) {
         },
         shell: {
             manager_install: {
-                command: 'python setup.py develop',
-                options: {
-                    execOptions: {
-                        cwd: dstPrefix
-                    }
-                }
+                command: 'pip3 install -e ' + dstPrefix,
             },
             manager_restart: {
                 command: [

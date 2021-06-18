@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import logging
 
 from manager.platforms.generic import GenericPlatform

@@ -1,7 +1,5 @@
-from __future__ import absolute_import
-
 import logging
-import Queue
+import queue
 import re
 import threading
 
@@ -27,7 +25,7 @@ class StateWorker(threading.Thread):
         while not self.ev_stop.is_set():
             try:
                 state_config = self.queue.get(True, 1)
-            except Queue.Empty:
+            except queue.Empty:
                 continue
             self.logger.debug('Configuration received')
             self.apply_config(state_config['config'], state_config['server_response'], state_config['network_changed'])
@@ -58,16 +56,16 @@ class StateWorker(threading.Thread):
 
     def update_server_endpoint(self, host, name):
         self.logger.info('Updating server endpoint in /etc/hosts')
-        with open('/etc/hosts', 'rb') as f:
+        with open('/etc/hosts', 'r') as f:
             hosts_content = f.read()
         if 'honeysens-server' in hosts_content:
             # Adjust existing hosts entry
             # TODO Only write if changes happened
 
-            # We can't use the fileinput module here because that one physically moves file which is not possible
+            # We can't use the fileinput module here because that one physically moves files which is not possible
             # with /etc/hosts inside docker containers (it's a mounted file)
             hosts_content = re.sub('\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}\t\S+ honeysens-server', '{}\t{} honeysens-server'.format(host, name), hosts_content)
-            with open('/etc/hosts', 'wb') as f:
+            with open('/etc/hosts', 'w') as f:
                 f.write(hosts_content)
         else:
             # Add new hosts entry

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 hooks = {}  # {hook => [cb1(), cb2(), ...], ...}
 
 

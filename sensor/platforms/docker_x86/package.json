@@ -1,6 +1,6 @@
 {
   "name": "dockerized_sensor",
-  "version": "1.0.0",
+  "version": "2.3.0",
   "description": "Dockerized Sensor for HoneySens",
   "author": "Pascal Brückner",
   "devDependencies": {

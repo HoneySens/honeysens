@@ -25,8 +25,6 @@ Message format (JSON):
         }, ...]
   }
 """
-from __future__ import absolute_import
-
 import logging
 import netifaces
 import threading

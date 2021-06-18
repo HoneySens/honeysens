@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from debinterface import interfaces
 import glob
 import logging
