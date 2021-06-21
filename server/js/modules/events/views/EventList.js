@@ -78,6 +78,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 delete HoneySens.data.models.events.queryParams.classification;
                 delete HoneySens.data.models.events.queryParams.sensor;
                 delete HoneySens.data.models.events.queryParams.division;
+                delete HoneySens.data.models.events.queryParams.status;
 
                 var columns = [{
                     name: '',
