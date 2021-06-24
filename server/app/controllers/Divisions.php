@@ -10,6 +10,8 @@ use Respect\Validation\Validator as V;
 
 class Divisions extends RESTResource {
 
+    const ERROR_DUPLICATE = 1;
+
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->get('/api/divisions(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
             $controller = new Divisions($em, $services, $config);
@@ -180,6 +182,8 @@ class Divisions extends RESTResource {
             ->attribute('users', V::arrayVal()->each(V::intType()))
             ->attribute('contacts', V::arrayVal()->each(V::objectType()))
             ->check($data);
+        // Name duplication check
+        if($this->getDivisionByName($data->name) != null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
         // Persistence
         $division = new Division();
         $division->setName($data->name);
@@ -223,10 +227,14 @@ class Divisions extends RESTResource {
             ->attribute('users', V::arrayVal()->each(V::intType()))
             ->attribute('contacts', V::arrayVal()->each(V::objectType()))
             ->check($data);
-        // Persistence
         $em = $this->getEntityManager();
         $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($id);
         V::objectType()->check($division);
+        // Name duplication check
+        $duplicate = $this->getDivisionByName($data->name);
+        if($duplicate != null && $duplicate->getId() != $division->getId())
+            throw new BadRequestException(Divisions::ERROR_DUPLICATE);
+        // Persistence
         $division->setName($data->name);
         // Process user association
         $userRepository = $em->getRepository('HoneySens\app\models\entities\User');
@@ -276,5 +284,9 @@ class Divisions extends RESTResource {
         $em->remove($division);
         $em->flush();
         $this->log(sprintf('Division %s (ID %d) and all associated users, sensors and events deleted', $division->getName(), $did), LogEntry::RESOURCE_DIVISIONS, $division->getId());
+    }
+
+    private function getDivisionByName($name) {
+        return $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Division')->findOneBy(array('name' => $name));
     }
 }

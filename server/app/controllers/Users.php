@@ -3,11 +3,14 @@ namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
+use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
 use Respect\Validation\Validator as V;
 
 class Users extends RESTResource {
+
+    const ERROR_DUPLICATE = 1;
 
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->get('/api/users(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
@@ -129,6 +132,8 @@ class Users extends RESTResource {
         // Password is optional if another domain than the local one is used
         V::attribute('password', V::stringType()->length(6, 255), $data->domain == User::DOMAIN_LOCAL)
             ->check($data);
+        // Name duplication check
+        if($this->getUserByName($data->name) != null) throw new BadRequestException(Users::ERROR_DUPLICATE);
         // Persistence
         $user = new User();
         $user->setName($data->name)
@@ -178,6 +183,10 @@ class Users extends RESTResource {
         $requirePassword = $data->domain == User::DOMAIN_LOCAL && $user->getPassword() == null;
         V::attribute('password', V::stringType()->length(6, 255), $requirePassword)
             ->check($data);
+        // Name duplication check
+        $duplicate = $this->getUserByName($data->name);
+        if($duplicate != null && $duplicate->getId() != $user->getId())
+            throw new BadRequestException(Users::ERROR_DUPLICATE);
         // Persistence
         $user->setName($data->name)
             ->setDomain($data->domain)
@@ -210,5 +219,9 @@ class Users extends RESTResource {
         $em->remove($user);
         $em->flush();
         $this->log(sprintf('User %s (ID %d) deleted', $user->getName(), $uid), LogEntry::RESOURCE_USERS, $uid);
+    }
+
+    private function getUserByName($name) {
+        return $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $name));
     }
 }
