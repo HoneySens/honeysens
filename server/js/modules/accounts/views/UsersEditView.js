@@ -1,13 +1,17 @@
 define(['app/app',
         'app/models',
+        'app/common/views/ModalServerError',
         'tpl!app/modules/accounts/templates/UsersEditView.tpl',
         'app/views/common',
         'validator'],
-function(HoneySens, Models, UsersEditViewTpl) {
+function(HoneySens, Models, ModalServerError, UsersEditViewTpl) {
     HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.UsersEditView = HoneySens.Views.SlideItemView.extend({
             template: UsersEditViewTpl,
             className: 'transitionView row',
+            errors: {
+                1: 'Das Login ist bereits im System vorhanden und kann nicht doppelt vergeben werden.'
+            },
             events: {
                 'click button.cancel': function(e) {
                     e.preventDefault();
@@ -59,6 +63,10 @@ function(HoneySens, Models, UsersEditViewTpl) {
                                 type: 'PUT',
                                 url: 'api/users/' + model.id,
                                 data: JSON.stringify(modelData),
+                                error: function(xhr) {
+                                    HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
+                                    view.$el.find('button').prop('disabled', false);
+                                },
                                 success: function() {
                                     HoneySens.data.models.users.fetch({ reset: true, success: function() {
                                         if(model.id == HoneySens.data.session.user.id) HoneySens.execute('logout');
@@ -68,12 +76,21 @@ function(HoneySens, Models, UsersEditViewTpl) {
                             });
                         } else {
                             // Create new user
-                            $.post('api/users', JSON.stringify(modelData), function(data) {
-                                data = JSON.parse(data);
-                                model.id = data.id;
-                                HoneySens.data.models.users.fetch({ reset: true, success: function() {
-                                    HoneySens.request('accounts:show', {animation: 'slideRight'});
-                                }});
+                            $.ajax({
+                                type: 'POST',
+                                url: 'api/users',
+                                data: JSON.stringify(modelData),
+                                error: function(xhr) {
+                                    HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
+                                    view.$el.find('button').prop('disabled', false);
+                                },
+                                success: function(data) {
+                                    data = JSON.parse(data);
+                                    model.id = data.id;
+                                    HoneySens.data.models.users.fetch({ reset: true, success: function() {
+                                            HoneySens.request('accounts:show', {animation: 'slideRight'});
+                                    }});
+                                }
                             });
                         }
                     }

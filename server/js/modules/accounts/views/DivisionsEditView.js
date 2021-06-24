@@ -1,14 +1,18 @@
 define(['app/app',
         'app/models',
+        'app/common/views/ModalServerError',
         'app/modules/accounts/views/DivisionsUserListView',
         'app/modules/accounts/views/DivisionsContactListView',
         'tpl!app/modules/accounts/templates/DivisionsEditView.tpl',
         'validator'],
-function(HoneySens, Models, DivisionsUserListView, DivisionsContactListView, DivisionsEditViewTpl) {
+function(HoneySens, Models, ModalServerError, DivisionsUserListView, DivisionsContactListView, DivisionsEditViewTpl) {
     HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.DivisionsEditView = HoneySens.Views.SlideLayoutView.extend({
             template: DivisionsEditViewTpl,
             className: 'transitionView row',
+            errors: {
+                1: 'Der Gruppenname ist bereits im System vorhanden und kann nicht doppelt vergeben werden.'
+            },
             regions: {
                 users: 'div.userList',
                 contacts: 'div.contactList'
@@ -20,7 +24,8 @@ function(HoneySens, Models, DivisionsUserListView, DivisionsContactListView, Div
                 },
                 'click button.save': function(e) {
                     e.preventDefault();
-                    var valid = true;
+                    var valid = true,
+                        view = this;
 
                     this.$el.find('form').validator('validate');
                     this.$el.find('form .form-group').each(function() {
@@ -37,10 +42,15 @@ function(HoneySens, Models, DivisionsUserListView, DivisionsContactListView, Div
                             contacts = this.getRegion('contacts').currentView.collection;
 
                         if(!model.id) HoneySens.data.models.divisions.add(model);
-                        model.save({name: name, users: users, contacts: contacts.toJSON()}, {success: function() {
-                            HoneySens.execute('fetchUpdates');
-                            HoneySens.request('accounts:show', {animation: 'slideRight'});
-                        }});
+                        model.save({name: name, users: users, contacts: contacts.toJSON()}, {
+                            error: function(model, xhr) {
+                                HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
+                                view.$el.find('button').prop('disabled', false);
+                            },
+                            success: function() {
+                                HoneySens.execute('fetchUpdates');
+                                HoneySens.request('accounts:show', {animation: 'slideRight'});
+                            }});
                     }
                     
                 }
