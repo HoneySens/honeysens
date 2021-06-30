@@ -338,10 +338,12 @@ class Event {
 
     public function getState() {
         $sensor = $this->getSensor() == null ? '' : $this->getSensor()->getId();
+        $division = $sensor == null ? null : $this->getSensor()->getDivision()->getId();
         return array(
             'id' => $this->getId(),
             'timestamp' => $this->getTimestamp()->format('U'),
             'sensor' => $sensor,
+            'division' => $division,
             'service' => $this->getService(),
             'classification' => $this->getClassification(),
             'source' => $this->getSource(),

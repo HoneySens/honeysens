@@ -106,13 +106,26 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                         }
                     })
                 }, {
+                    name: 'division',
+                    label: 'Gruppe',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: Backgrid.Cell.extend({
+                        render: function() {
+                            var sensor = this.model.get('sensor');
+                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showDivision(sensor));
+                            return this;
+                        }
+                    })
+                }, {
                     name: 'sensor',
                     label: 'Sensor',
                     editable: false,
                     sortType: 'toggle',
                     cell: Backgrid.Cell.extend({
                         render: function() {
-                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showSensor(this.model.get('sensor')));
+                            var sensor = this.model.get('sensor');
+                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showSensor(sensor));
                             return this;
                         }
                     })

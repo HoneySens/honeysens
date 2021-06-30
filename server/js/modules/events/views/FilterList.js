@@ -29,6 +29,20 @@ function(HoneySens, Models, Backgrid, FilterListTpl, FilterListActionsCellTpl) {
                         orderSeparator: ''
                     })
                 }, {
+                    name: 'division',
+                    label: 'Gruppe',
+                    editable: false,
+                    sortType: 'toggle',
+                    cell: Backgrid.Cell.extend({
+                        render: function() {
+                            if(this.model.has('division')) {
+                                var division_id = this.model.get('division');
+                                this.$el.html(HoneySens.data.models.divisions.get(division_id).get('name'));
+                            }
+                            return this;
+                        }
+                    })
+                }, {
                     name: 'name',
                     label: 'Name',
                     editable: false,

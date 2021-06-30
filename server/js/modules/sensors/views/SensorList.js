@@ -32,45 +32,55 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
             onRender: function() {
                 var view = this,
                     columns = [{
-                    name: 'id',
-                    label: 'ID',
-                    editable: false,
-                    cell: Backgrid.IntegerCell.extend({
-                        orderSeparator: ''
-                    })
-                }, {
-                    name: 'name',
-                    label: 'Name',
-                    editable: false,
-                    cell: 'string'
-                }, {
-                    name: 'location',
-                    label: 'Standort',
-                    editable: false,
-                    cell: 'string'
-                }, {
-                    label: 'Firmware',
-                    editable: false,
-                    sortable: false,
-                    cell: Backgrid.Cell.extend({
-                        render: function() {
-                            if(this.model.get('sw_version')) this.$el.html(this.model.get('sw_version'));
-                            else this.$el.html('N.A.');
-                            return this;
-                        }
-                    })
-                }, {
-                    label: 'IP-Adresse',
-                    editable: false,
-                    sortable: false,
-                    cell: Backgrid.Cell.extend({
-                        render: function() {
-                            if(this.model.get('last_ip')) this.$el.html(this.model.get('last_ip'));
-                            else this.$el.html('N.A.');
-                            return this;
-                        }
-                    })
-                }];
+                        name: 'id',
+                        label: 'ID',
+                        editable: false,
+                        cell: Backgrid.IntegerCell.extend({
+                            orderSeparator: ''
+                        })
+                    }, {
+                        name: 'division',
+                        label: 'Gruppe',
+                        editable: false,
+                        cell: Backgrid.Cell.extend({
+                            render: function() {
+                                this.$el.html(HoneySens.Views.EventTemplateHelpers.showDivision(this.model.get('division')));
+                                return this;
+                            }
+                        })
+                    }, {
+                        name: 'name',
+                        label: 'Name',
+                        editable: false,
+                        cell: 'string'
+                    }, {
+                        name: 'location',
+                        label: 'Standort',
+                        editable: false,
+                        cell: 'string'
+                    }, {
+                        label: 'Firmware',
+                        editable: false,
+                        sortable: false,
+                        cell: Backgrid.Cell.extend({
+                            render: function() {
+                                if(this.model.get('sw_version')) this.$el.html(this.model.get('sw_version'));
+                                else this.$el.html('N.A.');
+                                return this;
+                            }
+                        })
+                    }, {
+                        label: 'IP-Adresse',
+                        editable: false,
+                        sortable: false,
+                        cell: Backgrid.Cell.extend({
+                            render: function() {
+                                if(this.model.get('last_ip')) this.$el.html(this.model.get('last_ip'));
+                                else this.$el.html('N.A.');
+                                return this;
+                            }
+                        })
+                    }];
                 columns.push({
                     name: 'new_events',
                     label: 'NE',
