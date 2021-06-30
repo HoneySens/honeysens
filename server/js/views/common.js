@@ -34,6 +34,11 @@ function(HoneySens, Models, Spinner) {
                 var sensor = sensor || this.sensor;
                 return HoneySens.data.models.sensors.get(sensor).get('name');
             },
+            showDivision: function(sensor) {
+                var sensor = sensor || this.sensor;
+                var division_id =  HoneySens.data.models.sensors.get(sensor).get('division');
+                return HoneySens.data.models.divisions.get(division_id).get('name');
+            },
             showSummary: function (summary, numberOfPackets, numberOfDetails) {
                 var summary = summary || this.summary;
                 var interactionCount;
