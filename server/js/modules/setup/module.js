@@ -6,9 +6,10 @@ define(['app/app',
         'app/modules/setup/views/AdminPassword',
         'app/modules/setup/views/Endpoint',
         'app/modules/setup/views/Division',
-        'app/modules/setup/views/FinalizeInstall'],
+        'app/modules/setup/views/FinalizeInstall',
+        'app/modules/setup/views/UserPassword'],
 function(HoneySens, Routing, LayoutView, ErrorView, LandingView, AdminPasswordView, EndpointView, DivisionView,
-         FinalizeInstallView) {
+         FinalizeInstallView, UserPasswordView) {
     var SetupModule = Routing.extend({
         name: 'setup',
         startWithParent: false,
@@ -60,17 +61,27 @@ function(HoneySens, Routing, LayoutView, ErrorView, LandingView, AdminPasswordVi
                         break;
                 }
             });
+            HoneySens.reqres.setHandler('setup:changepw:show', function() {
+                if(HoneySens.data.session.user.get('require_password_change')) {
+                    contentRegion.show(new UserPasswordView());
+                    router.navigate('setup/changepw');
+                } else HoneySens.execute('logout');
+            });
         },
         stop: function() {
             console.log('Stopping module: setup');
             HoneySens.reqres.removeHandler('setup:landing:show');
+            HoneySens.reqres.removeHandler('setup:install:show');
+            HoneySens.reqres.removeHandler('setup:changepw:show');
         },
         routesList: {
             'setup': 'showLanding',
-            'setup/install': 'showInstall'
+            'setup/install': 'showInstall',
+            'setup/changepw': 'changeOwnPassword'
         },
         showLanding: function() {HoneySens.request('setup:landing:show');},
-        showInstall: function() {HoneySens.request('setup:install:show', {step: 1, model: new Backbone.Model()})}
+        showInstall: function() {HoneySens.request('setup:install:show', {step: 1, model: new Backbone.Model()})},
+        changeOwnPassword: function() {HoneySens.request('setup:changepw:show');}
     });
 
     return HoneySens.module('Setup.Routing', SetupModule);

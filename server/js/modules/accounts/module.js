@@ -41,7 +41,9 @@ function(HoneySens, Routing, Models, AccountsView, AccountsListView, DivisionsEd
             });
             HoneySens.reqres.setHandler('accounts:user:add', function(options) {
                 if(!HoneySens.assureAllowed('users', 'create')) return false;
-                contentRegion.show(new UsersEditView({model: new Models.User()}), options);
+                contentRegion.show(new UsersEditView({model: new Models.User({
+                        require_password_change: true
+                    })}), options);
                 router.navigate('accounts/user/add');
             });
             HoneySens.reqres.setHandler('accounts:user:edit', function(user, options) {

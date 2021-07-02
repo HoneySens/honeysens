@@ -54,6 +54,13 @@ class User {
     protected $legacyPassword;
 
     /**
+     * If true, this user will be prompted for a password change after the next login.
+     *
+     * @Column(type="boolean")
+     */
+    protected $requirePasswordChange = false;
+
+    /**
      * The domain that this user is authenticated against
      *
      * @Column(type="integer")
@@ -235,6 +242,26 @@ class User {
     }
 
     /**
+     * Sets whether a password change is required upon the next login.
+     *
+     * @param boolean $require
+     * @return $this
+     */
+    public function setRequirePasswordChange($require) {
+        $this->requirePasswordChange = $require;
+        return $this;
+    }
+
+    /**
+     * Whether a password change is required upon the next login.
+     *
+     * @return boolean
+     */
+    public function getRequirePasswordChange() {
+        return $this->requirePasswordChange;
+    }
+
+    /**
      * Set role
      *
      * @param integer $role
@@ -383,6 +410,7 @@ class User {
                 array_push($permissions['settings'], 'all', 'get');
                 array_push($permissions['stats'], 'get');
                 array_push($permissions['tasks'], 'get', 'create', 'update', 'delete');
+                array_push($permissions['users'], 'updateSelf');
             case $this::ROLE_GUEST:
                 array_push($permissions['state'], 'get');
                 break;
@@ -401,6 +429,7 @@ class User {
             'domain' => $this->getDomain(),
             'full_name' => $this->getFullName(),
             'email' => $this->getEmail(),
+            'require_password_change' => $this->getRequirePasswordChange(),
             'role' => $this->getRole(),
             'permissions' => $this->getPermissions(),
             'divisions' => $divisions,

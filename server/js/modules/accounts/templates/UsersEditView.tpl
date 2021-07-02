@@ -34,6 +34,12 @@
             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
             <div class="help-block with-errors"></div>
         </div>
+        <div class="checkbox requirePasswordChange">
+            <label>
+                <input type="checkbox" name="requirePasswordChange" <% if(require_password_change) { %>checked<% } %>>
+                Passwort&auml;nderung bei n&auml;chstem Login erzwingen
+            </label>
+        </div>
         <div class="form-group has-feedback">
             <label for="fullName" class="control-label">Vollst&auml;ndiger Name</label>
             <input type="text" name="fullName" class="form-control" value="<%- full_name %>" placeholder="Name oder Beschreibung" />

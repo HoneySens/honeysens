@@ -11,5 +11,5 @@ initDBSchema($messages, $em);
 initDBEventManager($em);
 $services = initServiceManager($config, $em);
 initRoutes($app, $em, $services, $config, $messages);
-initSession();
+initSession($app);
 $app->run();
