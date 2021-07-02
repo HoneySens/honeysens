@@ -106,7 +106,7 @@ function(HoneySens, Models, ModalServerError, UsersEditViewTpl) {
              * Set validators based on whether we create a new user or edit an existing one.
              */
             refreshPasswordFields: function(domain) {
-                var $fields = this.$el.find('div.form-group.password');
+                var $fields = this.$el.find('div.form-group.password, div.checkbox.requirePasswordChange');
                 if(parseInt(domain) === Models.User.domain.LOCAL) {
                     $fields.removeClass('hide');
                     // Require a password for new models or if the current model doesn't use local authentication
@@ -125,7 +125,8 @@ function(HoneySens, Models, ModalServerError, UsersEditViewTpl) {
                         domain: parseInt(this.$el.find('select[name="domain"]').val()),
                         email: this.$el.find('input[name="email"]').val(),
                         role: this.$el.find('select[name="role"]').val(),
-                        notifyOnCAExpiration: this.$el.find('input[name="notifyOnCAExpiration"]').is(':checked')
+                        notifyOnCAExpiration: this.$el.find('input[name="notifyOnCAExpiration"]').is(':checked'),
+                        requirePasswordChange: this.$el.find('input[name="requirePasswordChange"]').is(':checked')
                     };
                 if($password.val().length !== 0) data.password = $password.val();
                 if($fullName.val().length !== 0) data.fullName = $fullName.val();

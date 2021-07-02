@@ -4,6 +4,7 @@ namespace HoneySens\app\controllers;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
+use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
 use Respect\Validation\Validator as V;
@@ -11,6 +12,7 @@ use Respect\Validation\Validator as V;
 class Users extends RESTResource {
 
     const ERROR_DUPLICATE = 1;
+    const ERROR_REQUIRE_PASSWORD_CHANGE = 2;
 
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->get('/api/users(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
@@ -41,6 +43,15 @@ class Users extends RESTResource {
             V::json()->check($request);
             $userData = json_decode($request);
             $user = $controller->update($id, $userData);
+            echo json_encode($user->getState());
+        });
+
+        $app->put('/api/users/session', function() use ($app, $em, $services, $config) {
+            $controller = new Users($em, $services, $config);
+            $request = $app->request()->getBody();
+            V::json()->check($request);
+            $userData = json_decode($request);
+            $user = $controller->updateSelf($userData);
             echo json_encode($user->getState());
         });
 
@@ -128,6 +139,7 @@ class Users extends RESTResource {
             ->attribute('email', V::email())
             ->attribute('role', V::intVal()->between(1, 3))
             ->attribute('notifyOnCAExpiration', V::boolVal())
+            ->attribute('requirePasswordChange', V::boolVal())
             ->check($data);
         // Password is optional if another domain than the local one is used
         V::attribute('password', V::stringType()->length(6, 255), $data->domain == User::DOMAIN_LOCAL)
@@ -140,7 +152,8 @@ class Users extends RESTResource {
             ->setDomain($data->domain)
             ->setEmail($data->email)
             ->setRole($data->role)
-            ->setNotifyOnCAExpiration($data->notifyOnCAExpiration);
+            ->setNotifyOnCAExpiration($data->notifyOnCAExpiration)
+            ->setRequirePasswordChange($data->requirePasswordChange);
         if(V::attribute('password')->validate($data))
             $user->setPassword($data->password);
         if(V::attribute('fullName')->validate($data)) $user->setFullName($data->fullName);
@@ -176,6 +189,7 @@ class Users extends RESTResource {
             ->attribute('email', V::email())
             ->attribute('role', V::intVal()->between(1, 3))
             ->attribute('notifyOnCAExpiration', V::boolVal())
+            ->attribute('requirePasswordChange', V::boolVal())
             ->check($data);
         $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($id);
         V::objectType()->check($user);
@@ -191,7 +205,8 @@ class Users extends RESTResource {
         $user->setName($data->name)
             ->setDomain($data->domain)
             ->setEmail($data->email)
-            ->setNotifyOnCAExpiration($data->notifyOnCAExpiration);
+            ->setNotifyOnCAExpiration($data->notifyOnCAExpiration)
+            ->setRequirePasswordChange($data->requirePasswordChange);
         // Set role, but force the first user to be an admin
         if($user->getId() != 1) $user->setRole($data->role);
         // Set optional password
@@ -205,6 +220,30 @@ class Users extends RESTResource {
         $this->getEntityManager()->flush();
         $this->log(sprintf('User %s (ID %d) updated', $user->getName(), $user->getId()), LogEntry::RESOURCE_USERS, $user->getId());
         return $user;
+    }
+
+    /**
+     * Updates the user the current session belongs to, e.g. allows logged-in users to change their own password.
+     *
+     * @param stdClass $data
+     * @return User
+     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     */
+    public function updateSelf($data) {
+        $this->assureAllowed('updateSelf');
+        $em = $this->getEntityManager();
+        $sessionUser = $em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
+        if($sessionUser == null || !$sessionUser->getRequirePasswordChange()) throw new ForbiddenException();
+        // Validation
+        V::objectType()->attribute('password', V::stringType()->length(6, 255))->check($data);
+        if($sessionUser->getPassword() != null && password_verify($data->password, $sessionUser->getPassword())) throw new BadRequestException(Users::ERROR_REQUIRE_PASSWORD_CHANGE);
+        // Persistence
+        $sessionUser->setPassword($data->password)
+            ->setLegacyPassword(null)
+            ->setRequirePasswordChange(false);
+        $em->flush();
+        $this->log(sprintf('Password of user %s (ID %d) updated', $sessionUser->getName(), $sessionUser->getId()), LogEntry::RESOURCE_USERS, $sessionUser->getId());
+        return $sessionUser;
     }
 
     public function delete($id) {

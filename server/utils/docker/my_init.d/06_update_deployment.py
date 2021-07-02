@@ -335,6 +335,16 @@ if config_version == '2.2.0':
     config.set('misc', 'require_filter_description', 'false')
     config.set('server', 'config_version', '2.3.0')
     config_version = '2.3.0'
+# 2.3.0 -> devel
+if config_version == '2.3.0':
+    print('Upgrading configuration 2.2.0 -> devel')
+    db_statements = [
+        'ALTER TABLE users ADD requirePasswordChange TINYINT(1) NOT NULL'
+    ]
+    execute_sql(db, db_statements)
+    db.commit()
+    config_version = 'devel'
+
 
 # Write new config file
 with open(config_file, 'w') as f:

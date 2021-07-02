@@ -14,6 +14,12 @@ function(RootLayout, Marionette, Backbone, $, JSON, _) {
         this.currentModule = module;
         this.currentModule.start();
     };
+    app.stopCurrentModule = function() {
+        if(this.currentModule) {
+            this.currentModule.stop();
+            this.currentModule = null;
+        }
+    }
 
     /**
      * Global menu

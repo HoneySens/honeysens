@@ -9,6 +9,9 @@ use Respect\Validation\Validator as V;
 
 class Sessions extends RESTResource {
 
+    const SESSION_TIMEOUT_DEFAULT = 1200;  # Seconds of inactivity until a regular session expires
+    const SESSION_TIMEOUT_CHANGEPW = 600;  # Seconds until the "change password on first login" session expires
+
     static function registerRoutes($app, $em, $services, $config, $messages) {
         $app->post('/api/sessions', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Sessions($em, $services, $config);
@@ -64,10 +67,25 @@ class Sessions extends RESTResource {
                 }
                 // Check password
                 if($user->getPassword() != null && password_verify($data->password, $user->getPassword())) {
-                    $userState = $userController->getStateWithPermissionConfig($user);
+                    if($user->getRequirePasswordChange()) {
+                        // User is not permitted to do anything except change his/her password
+                        $guestUser = new User();
+                        $guestUser->setRole(USER::ROLE_GUEST); // Temporarily assign guest permissions within this ession
+                        $userState = $userController->getStateWithPermissionConfig($user);
+                        $userState['permissions'] = $guestUser->getState()['permissions'];
+                        $userState['permissions']['users'] = array('updateSelf');
+                        $sessionTimeout = Sessions::SESSION_TIMEOUT_CHANGEPW;
+                        $this->log(sprintf('Password change request sent to user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
+                    } else {
+                        $userState = $userController->getStateWithPermissionConfig($user);
+                        $sessionTimeout = Sessions::SESSION_TIMEOUT_DEFAULT;
+                        $this->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
+                    }
+                    session_regenerate_id(true);
                     $_SESSION['user'] = $userState;
                     $_SESSION['authenticated'] = true;
-                    $this->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
+                    $_SESSION['last_activity'] = time();
+                    $_SESSION['timeout'] = $sessionTimeout;
                     return $userState;
                 } else throw new ForbiddenException();
                 break;
@@ -81,8 +99,10 @@ class Sessions extends RESTResource {
                             if($config['ldap']['encryption'] == '1') ldap_start_tls($ldapHandle);
                             if(ldap_bind($ldapHandle, str_replace('%s', $data->username, $config['ldap']['template']), $data->password))  {
                                 $userState = $userController->getStateWithPermissionConfig($user);
+                                session_regenerate_id(true);
                                 $_SESSION['user'] = $userState;
                                 $_SESSION['authenticated'] = true;
+                                $_SESSION['last_activity'] = time();
                                 $this->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
                                 return $userState;
                             } else throw new ForbiddenException();

@@ -157,9 +157,21 @@ function initRoutes($app, $em, $services, $config, $messages) {
     Users::registerRoutes($app, $em, $services, $config, $messages);
 }
 
-function initSession() {
+function initSession($app) {
     session_cache_limiter(false);
     session_start();
+    if(isset($_SESSION['last_activity'])) {
+        // Handle session activity timeout
+        if(time() - $_SESSION['last_activity'] > $_SESSION['timeout']) {
+            session_unset();
+            session_destroy();
+            // 403 forbidden for API requests, '/' will be rendered regularly
+            if(strpos($app->request->getPathInfo(), '/api/') === 0) {
+                http_response_code(403);
+                exit();
+            }
+        } else $_SESSION['last_activity'] = time();
+    }
     if(!isset($_SESSION['authenticated']) || !isset($_SESSION['user'])) {
         $guestUser = new User();
         $guestUser->setRole(User::ROLE_GUEST);
