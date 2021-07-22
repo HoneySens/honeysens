@@ -16,7 +16,7 @@ setup(
         'debinterface',
         'docker',
         'netifaces',
-        'pycrypto',
+        'pycryptodomex',
         'pycurl',
         'pyyaml',
         'pyzmq'

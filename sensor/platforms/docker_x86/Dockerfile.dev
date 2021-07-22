@@ -1,10 +1,10 @@
-# Execute docker build for this Dockerfile from the sensor root directory
-FROM woahbase/alpine-s6
+FROM alpine:3.13
 
 MAINTAINER Pascal Brueckner pascal.brueckner@sylence.cc
 
 ARG REVISION=unversioned
 
+RUN apk --no-cache add bash
 COPY setup_prepare.sh setup_dev.sh ifup.sh /opt/
 COPY init/00_init_dev_env.sh /etc/cont-init.d/
 RUN /opt/setup_prepare.sh $REVISION

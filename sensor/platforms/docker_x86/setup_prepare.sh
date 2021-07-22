@@ -4,13 +4,16 @@ set -e
 
 # Basic requirements
 apk --update --no-cache add --virtual build-dependencies alpine-sdk python3-dev linux-headers zeromq-dev libffi-dev libressl-dev yaml-dev
-apk --update --no-cache add ca-certificates cntlm curl-dev dhcpcd docker libffi libressl libpcap macchanger py3-cryptography py3-pip tar yaml wpa_supplicant zeromq
+apk --update --no-cache add ca-certificates cntlm curl-dev dhcpcd docker docker-compose libffi libressl libpcap macchanger py3-pip tar yaml wpa_supplicant zeromq
+
+# Overlay s6 init system
+S6_VERSION=$(curl -sNL https://api.github.com/repos/just-containers/s6-overlay/releases/latest | awk '/tag_name/{print $4;exit}' FS='[""]' | sed -e 's_v__')
+echo "Building with s6 version: ${S6_VERSION}"
+curl -o /tmp/s6-overlay-amd64.tar.gz -sL https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-amd64.tar.gz
+tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
 
 # Install arpd and honeyd dependencies
 # apk --no-cache add libevent-dev libdnet-dev libpcap-dev pcre-dev libedit-dev automake autoconf zlib-dev libtool
-
-# Install Docker Compose
-pip3 install docker-compose
 
 # Ensure the existence of /etc/network/interfaces
 touch /etc/network/interfaces
