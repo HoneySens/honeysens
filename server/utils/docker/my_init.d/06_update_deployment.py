@@ -5,6 +5,7 @@ import glob
 import os
 import pymysql
 import re
+import subprocess
 import sys
 import time
 from OpenSSL import crypto
@@ -337,12 +338,13 @@ if config_version == '2.2.0':
     config_version = '2.3.0'
 # 2.3.0 -> devel
 if config_version == '2.3.0':
-    print('Upgrading configuration 2.2.0 -> devel')
+    print('Upgrading configuration 2.3.0 -> devel')
     db_statements = [
         'ALTER TABLE users ADD requirePasswordChange TINYINT(1) NOT NULL'
     ]
     execute_sql(db, db_statements)
     db.commit()
+    subprocess.run(['/etc/my_init.d/03_regen_https_cert.sh', 'force'])
     config_version = 'devel'
 
 

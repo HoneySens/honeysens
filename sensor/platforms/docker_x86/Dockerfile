@@ -1,10 +1,11 @@
 # Execute docker build for this Dockerfile from the sensor root directory
-FROM woahbase/alpine-s6
+FROM alpine:3.13
 
 MAINTAINER Pascal Brueckner pascal.brueckner@sylence.cc
 
 ARG REVISION=unversioned
 
+RUN APK --no-cache add bash
 COPY platforms/docker_x86/setup_prepare.sh platforms/docker_x86/setup_release.sh platforms/docker_x86/ifup.sh /opt/
 COPY manager /opt/manager
 COPY platforms/docker_x86/daemon.json /etc/docker/

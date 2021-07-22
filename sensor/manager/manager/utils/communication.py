@@ -1,9 +1,9 @@
 import base64
 import pycurl
 import json
-from Crypto.PublicKey import RSA
-from Crypto.Hash import SHA
-from Crypto.Signature import PKCS1_v1_5
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Hash import SHA
+from Cryptodome.Signature import PKCS1_v1_5
 from io import BytesIO
 
 REQUEST_TYPE_HEAD = 0
