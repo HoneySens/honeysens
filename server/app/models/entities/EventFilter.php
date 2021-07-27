@@ -53,6 +53,13 @@ class EventFilter {
      */
     protected $conditions;
 
+    /**
+     * Whether this filter is currently evaluated when processing incoming events.
+     *
+     * @Column(type="boolean")
+     */
+    protected $enabled = true;
+
     public function __construct() {
         $this->conditions = new ArrayCollection();
     }
@@ -198,6 +205,23 @@ class EventFilter {
     }
 
     /**
+     * Enable or disable this filter.
+     */
+    public function setEnabled($enabled) {
+        $this->enabled = $enabled;
+        return $this;
+    }
+
+    /**
+     * Returns the status (enabled/disabled) of this filter.
+     *
+     * @return boolean
+     */
+    public function isEnabled() {
+        return $this->enabled;
+    }
+
+    /**
      * Runs all filter conditions against the given event.
      * Returns true if ALL conditions did match (logical AND) and there exists at least one condition.
      *
@@ -225,7 +249,8 @@ class EventFilter {
             'type' => $this->getType(),
             'description' => $this->getDescription(),
             'count' => $this->getCount(),
-            'conditions' => $conditions
+            'conditions' => $conditions,
+            'enabled' => $this->isEnabled()
         );
     }
 }

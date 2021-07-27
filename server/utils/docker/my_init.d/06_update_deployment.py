@@ -340,7 +340,9 @@ if config_version == '2.2.0':
 if config_version == '2.3.0':
     print('Upgrading configuration 2.3.0 -> devel')
     db_statements = [
-        'ALTER TABLE users ADD requirePasswordChange TINYINT(1) NOT NULL'
+        'ALTER TABLE users ADD requirePasswordChange TINYINT(1) NOT NULL',
+        'ALTER TABLE event_filters ADD enabled TINYINT(1) NOT NULL',
+        'UPDATE event_filters SET enabled=1'
     ]
     execute_sql(db, db_statements)
     db.commit()

@@ -297,7 +297,7 @@ class Events extends RESTResource {
         $filters = $sensor->getDivision()->getEventFilters();
         foreach($events as $event) {
             foreach($filters as $filter) {
-                if($filter->matches($event)) {
+                if($filter->isEnabled() && $filter->matches($event)) {
                     $em->remove($event);
                     $filter->addToCount(1);
                     break;
