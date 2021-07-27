@@ -134,7 +134,7 @@ class ServiceRevision {
         return $this->rawNetworkAccess;
     }
 
-    /*
+    /**
      * Enable or disable catch-all demands of this revision
      */
     public function setCatchAll($catchAll) {

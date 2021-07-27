@@ -2,10 +2,11 @@ define(['app/app',
         'app/models',
         'backgrid',
         'tpl!app/modules/events/templates/FilterList.tpl',
+        'tpl!app/modules/events/templates/FilterListStatusCell.tpl',
         'tpl!app/modules/events/templates/FilterListActionsCell.tpl',
         'app/views/common',
         'backgrid-select-filter'],
-function(HoneySens, Models, Backgrid, FilterListTpl, FilterListActionsCellTpl) {
+function(HoneySens, Models, Backgrid, FilterListTpl, FilterListStatusCellTpl, FilterListActionsCellTpl) {
     HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.FilterList = Marionette.LayoutView.extend({
             template: FilterListTpl,
@@ -68,12 +69,29 @@ function(HoneySens, Models, Backgrid, FilterListTpl, FilterListActionsCellTpl) {
                         orderSeparator: ''
                     })
                 }, {
+                    name: 'enabled',
+                    label: 'Status',
+                    editable: false,
+                    cell: Backgrid.Cell.extend({
+                        template: FilterListStatusCellTpl,
+                        render: function() {
+                            this.$el.html(this.template(this.model.attributes));
+                            if(this.model.get('enabled')) this.$el.removeClass('danger').addClass('success');
+                            else this.$el.removeClass('success').addClass('danger');
+                            return this;
+                        }
+                    })
+                }, {
                     label: 'Aktionen',
                     editable: false,
                     sortable: false,
                     cell: Backgrid.Cell.extend({
                         template: FilterListActionsCellTpl,
                         events: {
+                            'click button.toggle': function(e) {
+                                e.preventDefault();
+                                HoneySens.request('events:filters:toggle', this.model);
+                            },
                             'click button.edit': function(e) {
                                 e.preventDefault();
                                 HoneySens.request('events:filters:edit', this.model);
@@ -82,6 +100,12 @@ function(HoneySens, Models, Backgrid, FilterListTpl, FilterListActionsCellTpl) {
                                 e.preventDefault();
                                 HoneySens.request('events:filters:remove', this.model);
                             }
+                        },
+                        initialize: function(options) {
+                           // Re-render this cell on model changes
+                            this.listenTo(this.model, 'change', function() {
+                                this.render();
+                            });
                         },
                         render: function() {
                             this.$el.html(this.template(this.model.attributes));

@@ -62,6 +62,11 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 if(!HoneySens.assureAllowed('eventfilters', 'create')) return false;
                 HoneySens.request('view:content').overlay.show(new FilterEditView({model: new Models.EventFilter()}));
             });
+            HoneySens.reqres.setHandler('events:filters:toggle', function(filter) {
+                if(!HoneySens.assureAllowed('eventfilters', 'update')) return false;
+                filter.save({enabled: !filter.get('enabled')}, {wait: true});
+            });
+
             HoneySens.reqres.setHandler('events:filters:edit', function(filter) {
                 if(!HoneySens.assureAllowed('eventfilters', 'update')) return false;
                 HoneySens.request('view:content').overlay.show(new FilterEditView({model: filter}));

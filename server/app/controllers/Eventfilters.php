@@ -216,6 +216,7 @@ class Eventfilters extends RESTResource {
      * - division: The Division id this filter belongs to
      * - conditions: Array specifying a list of filter conditions to add. Each item is another array
      *               specifying condition data.
+     * - enabled: Whether this filter should be evaluated when processing events.
      *
      * @param int $id
      * @param stdClass $data
@@ -230,6 +231,7 @@ class Eventfilters extends RESTResource {
             ->attribute('type', V::intVal()->equals(0))
             ->attribute('division', V::intVal())
             ->attribute('conditions', V::arrayVal()->each(V::objectType()))
+            ->attribute('enabled', V::boolType())
             ->check($data);
         if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
             V::attribute('description', V::stringType()->length(1, 65535))->check($data);
@@ -241,6 +243,7 @@ class Eventfilters extends RESTResource {
         $filter->setName($data->name);
         $filter->setType($data->type);
         $filter->setDescription($data->description);
+        $filter->setEnabled($data->enabled);
         $division = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Division')->find($data->division);
         V::objectType()->check($division);
         $filter->setDivision($division);
