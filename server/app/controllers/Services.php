@@ -114,6 +114,7 @@ class Services extends RESTResource {
      */
     public function getStatus($id) {
         $this->assureAllowed('get');
+        V::intVal()->check($id);
         $service = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Service')->find($id);
         if(!V::objectType()->validate($service)) throw new NotFoundException();
         $tags = $this->getServiceManager()->get(ServiceManager::SERVICE_REGISTRY)->getTags($service->getRepository());
