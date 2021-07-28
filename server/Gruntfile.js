@@ -44,7 +44,7 @@ module.exports = function(grunt) {
                 expand: true,
                 cwd: srcPrefix + '/static/',
                 dest: dstPrefix + '/public/',
-                src: ['fonts/**', 'images/**', 'docs/**', '.htaccess']
+                src: ['fonts/**', 'images/**', 'docs/**']
             },
             app: {
                 expand: true,
