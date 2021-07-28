@@ -85,8 +85,10 @@ echo "Adjusting sudo configuration"
 cp -v /srv/utils/docker/sudoers.conf /etc/sudoers.d/honeysens
 
 echo "Configuring Apache web server"
+mkdir -p /etc/apache2/conf
 cp -v /srv/utils/docker/apache.http.conf /etc/apache2/sites-available/honeysens_http.conf
 cp -v /srv/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
+cp -v /srv/utils/docker/apache.public.conf /etc/apache2/conf/honeysens.public.conf
 sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/apache2/sites-available/*.conf
 cp -v /srv/utils/docker/my_init.d/05_init_apache.sh /srv/my_init.d/
 /srv/my_init.d/05_init_apache.sh

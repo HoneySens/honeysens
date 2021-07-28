@@ -3,9 +3,11 @@ set -e
 
 # Apache
 chown -R www-data:www-data /opt/HoneySens/cache/ /opt/HoneySens/data/
+mkdir -p /etc/apache2/conf
 cp -v /opt/HoneySens/utils/docker/apache.http.conf /etc/apache2/sites-available/honeysens_http.conf
 cp -v /opt/HoneySens/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
 cp -v /opt/HoneySens/utils/docker/apache.ssl_proxy_auth.conf /etc/apache2/sites-available/honeysens_ssl_proxy_auth.conf
+cp -v /opt/HoneySens/utils/docker/apache.public.conf /etc/apache2/conf/honeysens.public.conf
 
 # Cron and sudo configuration
 cp -v /opt/HoneySens/utils/docker/cron.conf /etc/cron.d/honeysens
