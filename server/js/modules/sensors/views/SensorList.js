@@ -44,7 +44,7 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                         editable: false,
                         cell: Backgrid.Cell.extend({
                             render: function() {
-                                this.$el.html(HoneySens.Views.EventTemplateHelpers.showDivision(this.model.get('division')));
+                                this.$el.html(HoneySens.Views.EventTemplateHelpers.showDivision(this.model));
                                 return this;
                             }
                         })
