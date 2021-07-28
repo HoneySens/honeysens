@@ -8,7 +8,7 @@
     "phpseclib/phpseclib": "2.0.10",
     "predis/predis": "v1.1.1",
     "rmccue/requests": "v1.7.0",
-    "respect/validation": "1.1.15",
+    "respect/validation": "1.1.30",
     "slim/slim": "2.6.3"
   },
   "autoload": {
