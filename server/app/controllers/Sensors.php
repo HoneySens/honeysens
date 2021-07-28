@@ -468,7 +468,7 @@ class Sensors extends RESTResource {
         V::objectType()
             ->attribute('timestamp', V::intVal())
             ->attribute('status', V::intVal()->between(0, 2))
-            ->attribute('ip', V::stringType())
+            ->attribute('ip', V::stringType()->ip())
             ->attribute('free_mem', V::intVal())
             ->attribute('disk_usage', V::intVal())
             ->attribute('disk_total', V::intVal())
@@ -583,7 +583,7 @@ class Sensors extends RESTResource {
             ->attribute('firmware', V::optional(V::intVal()))
             ->attribute('services', V::arrayVal()->each(V::objectType()
                 ->attribute('service', V::intVal())
-                ->attribute('revision')
+                ->attribute('revision', V::nullType())  // The revision field is currently unused
             ))->check($data);
         $em = $this->getEntityManager();
         $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
