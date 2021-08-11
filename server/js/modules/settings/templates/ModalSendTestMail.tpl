@@ -7,7 +7,7 @@
             <form class="form-group">
                 <div class="form-group has-feedback">
                     <label for="targetAddress" class="control-label">Empf&auml;nger-Adresse</label>
-                    <input type="email" name="recipient" class="form-control" placeholder="E-Mail-Adresse" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." value="<%- getRecipient() %>" <% if(isDone()) { %>disabled<% } %> required />
+                    <input type="email" name="recipient" class="form-control" placeholder="E-Mail-Adresse" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." value="<%- getRecipient() %>" <% if(isDone()) { %>disabled<% } %> required />
                     <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                     <div class="help-block with-errors"></div>
                 </div>
