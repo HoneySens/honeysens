@@ -7,7 +7,7 @@
             </button>
         </div>
         <div class="form-group">
-            <label>Service-Registry:&nbsp;</label>
+            <label>Status:&nbsp;</label>
             <span class="help-block" style="display: inline-block;">Abfrage l&auml;uft...</span>
         </div>
         <% } %>

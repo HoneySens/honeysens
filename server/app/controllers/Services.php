@@ -27,10 +27,9 @@ class Services extends RESTResource {
             echo json_encode($result);
         });
 
-        $app->get('/api/services/registry', function() use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/services/status', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Services($em, $services, $config);
-            if($controller->getRegistryStatus()) echo json_encode([]);
-            else throw new NotFoundException();
+            echo json_encode($controller->getStatusSummary());
         });
 
         $app->get('/api/services/:id/status', function($id = null) use ($app, $em, $services, $config, $messages) {
@@ -95,17 +94,31 @@ class Services extends RESTResource {
     }
 
     /**
-     * Queries the registry for availability
+     * Queries the registry for availability and checks all registered services
+     * for their status. Only returns true if all revisionsof all registered
+     * services have a matching template in the registry.
      *
-     * @return bool
+     * @return array
      */
-    public function getRegistryStatus() {
+    public function getStatusSummary() {
         $this->assureAllowed('get');
-        return $this->getServiceManager()->get(ServiceManager::SERVICE_REGISTRY)->isAvailable();
+        $registryStatus = $this->getServiceManager()->get(ServiceManager::SERVICE_REGISTRY)->isAvailable();
+        $serviceStatus = true;
+        if($registryStatus) {
+            foreach($this->getEntityManager()->getRepository('HoneySens\app\models\entities\Service')->findAll() as $service) {
+                try {
+                    $ss = $this->getStatus($service->getId());
+                    $serviceStatus = $serviceStatus && !in_array(false, $ss, true);
+                } catch(\Exception $e) {
+                    $serviceStatus = false;
+                }
+            }
+        } else $serviceStatus = false;  // If the registry isn't available, services aren't either
+        return array('registry' => $registryStatus, 'services' => $serviceStatus);
     }
 
     /**
-     * Used to query the individual service status from the registry. This basically lists for each service revision
+     * Used to query individual service status from the registry. This basically lists for each service revision
      * registered in the db whether there is a matching template registered in the docker service registry.
      *
      * @param int $id

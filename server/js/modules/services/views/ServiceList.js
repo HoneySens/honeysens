@@ -67,13 +67,18 @@ function(HoneySens, Backgrid, ServiceListTpl, ServiceListActionsCellTpl) {
                 var view = this;
                 $.ajax({
                     type: 'GET',
-                    url: 'api/services/registry',
-                    success: function() {
-                        view.$el.find('div.filters span.help-block').removeClass('registryOffline').addClass('statusOnline').text('Online');
-                        view.enableInterface(true);
+                    dataType: 'json',
+                    url: 'api/services/status',
+                    success: function(res) {
+                        let $status = view.$el.find('div.filters span.help-block');
+                        if(res.registry) {
+                            if(res.services) $status.addClass('statusOnline').text('Online');
+                            else $status.addClass('statusWarning').text('Dienste nur eingeschränkt verfügbar');
+                            view.enableInterface(true);
+                        } else $status.addClass('statusOffline').text('Registry offline');
                     },
                     error: function() {
-                        view.$el.find('div.filters span.help-block').removeClass('registryOnline').addClass('statusOffline').text('Offline');
+                        view.$el.find('div.filters span.help-block').addClass('statusOffline').text('Keine Verbindung zum Server');
                     }
                 });
             },
