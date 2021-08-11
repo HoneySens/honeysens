@@ -217,6 +217,7 @@ div.main table tr td {-moz-transition: 1s; -webkit-transition: 1s; -ms-transitio
 
 /* Status indicators */
 span.statusOnline {color: #468847; font-weight: bold}
+span.statusWarning {color: #d9831f; font-weight: bold}
 span.statusOffline {color: #b94a48; font-weight: bold}
 
 /* Supports transitions within the add sensor overlay */
