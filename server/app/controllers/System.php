@@ -7,6 +7,7 @@ use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
+use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\Exception\NoOptionException;
 use phpseclib\File\X509;
 use Respect\Validation\Validator as V;
@@ -171,7 +172,7 @@ class System extends RESTResource {
                 ->setPassword('admin')
                 ->setDomain(User::DOMAIN_LOCAL)
                 ->setFullName('Administrator')
-                ->setEmail('admin@example.org')
+                ->setEmail('')
                 ->setRole($admin::ROLE_ADMIN);
             $em->persist($admin);
             $em->flush();
@@ -260,6 +261,7 @@ class System extends RESTResource {
         };
         // Validation
         V::objectType()
+            ->attribute('email', Utils::emailValidator())
             ->attribute('password', V::stringType()->length(6, 255))
             ->attribute('serverEndpoint', V::stringType())
             ->attribute('divisionName', V::alnum()->length(1, 255))
@@ -269,6 +271,7 @@ class System extends RESTResource {
         $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("1", "bbb", "BeagleBone Black", "BeagleBone Black is a low-cost, community-supported development platform.", "bbb")')->execute();
         $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("2", "docker_x86", "Docker (x86)", "Dockerized sensor platform to be used on generic x86 hardware.", "docker_x86")')->execute();
         $admin = $em->getRepository('HoneySens\app\models\entities\User')->find(1);
+        $admin->setEmail($data->email);
         $admin->setPassword($data->password);
         $config->set('server', 'host', $data->serverEndpoint);
         $config->set('server', 'setup', 'false');

@@ -18,8 +18,9 @@ function(HoneySens, AdminPasswordTpl) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();
 
-                        var password = view.$el.find('input[name="adminPassword"]').val();
-                        view.model.set({password: password});
+                        let email = view.$el.find('input[name="adminEmail"]').val(),
+                            password = view.$el.find('input[name="adminPassword"]').val();
+                        view.model.set({email: email, password: password});
                         HoneySens.request('setup:install:show', {step: 2, model: view.model});
                     }
                 });
