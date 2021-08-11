@@ -21,7 +21,7 @@
     </div>
     <div class="form-group has-feedback">
         <label class="control-label">Absender</label>
-        <input type="email" name="smtpFrom" class="form-control" value="<%- smtpFrom %>" placeholder="user@example.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." <% if(smtpEnabled) { %>required<% } %> />
+        <input type="email" name="smtpFrom" class="form-control" value="<%- smtpFrom %>" placeholder="user@example.com" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." <% if(smtpEnabled) { %>required<% } %> />
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>

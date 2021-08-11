@@ -4,6 +4,7 @@ namespace HoneySens\app\controllers;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\ServiceManager;
+use HoneySens\app\models\Utils;
 use Respect\Validation\Validator as V;
 
 class Settings extends RESTResource {
@@ -151,7 +152,7 @@ class Settings extends RESTResource {
            V::attribute('smtpServer', V::stringType())
                ->attribute('smtpPort', V::intVal()->between(0, 65535))
                ->attribute('smtpEncryption', V::intVal()->between(0, 2))
-               ->attribute('smtpFrom', V::email())
+               ->attribute('smtpFrom', Utils::emailValidator())
                ->attribute('smtpUser', V::stringType())
                ->attribute('smtpPassword', V::stringType())
                ->check($data);
@@ -159,7 +160,7 @@ class Settings extends RESTResource {
            V::attribute('smtpServer', V::optional(V::stringType()))
                ->attribute('smtpPort', V::optional(V::intVal()->between(0, 65535)))
                ->attribute('smtpEncryption', V::optional(V::intVal()->between(0, 2)))
-               ->attribute('smtpFrom', V::optional(V::email()))
+               ->attribute('smtpFrom', V::optional(Utils::emailValidator()))
                ->attribute('smtpUser', V::optional(V::stringType()))
                ->attribute('smtpPassword', V::optional(V::stringType()))
                ->check($data);
@@ -260,12 +261,12 @@ class Settings extends RESTResource {
         $this->assureAllowed('update');
         // Validation
         V::objectType()
-            ->attribute('recipient', V::stringType())
+            ->attribute('recipient', Utils::emailValidator())
             ->attribute('smtpServer', V::stringType())
             ->attribute('smtpPort', V::intVal()->between(0, 65535))
             ->attribute('smtpEncryption', V::intVal()->between(0, 2))
             ->attribute('smtpUser', V::stringType())
-            ->attribute('smtpFrom', V::stringType())
+            ->attribute('smtpFrom', Utils::emailValidator())
             ->attribute('smtpPassword', V::stringType())
             ->check($data);
         // Send mail

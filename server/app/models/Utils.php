@@ -2,6 +2,7 @@
 namespace HoneySens\app\models;
 
 use Doctrine\ORM\Query;
+use Respect\Validation\Validator as V;
 
 class Utils {
 
@@ -92,4 +93,8 @@ class Utils {
         return $parmeters;
     }
 
+    static function emailValidator() {
+        // TLDs are optional in E-Mail addresses
+        return V::regex('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$/');
+    }
 }

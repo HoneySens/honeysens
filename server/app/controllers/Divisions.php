@@ -6,6 +6,7 @@ use HoneySens\app\models\entities\IncidentContact;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
+use HoneySens\app\models\Utils;
 use Respect\Validation\Validator as V;
 
 class Divisions extends RESTResource {
@@ -78,7 +79,7 @@ class Divisions extends RESTResource {
             ->check($contactData);
         $contact = new IncidentContact();
         if($contactData->type === IncidentContact::TYPE_MAIL) {
-            V::attribute('email', V::email())->check($contactData);
+            V::attribute('email', Utils::emailValidator())->check($contactData);
             $contact->setEMail($contactData->email);
         } else {
             V::attribute('user', V::intVal())->check($contactData);
@@ -118,7 +119,7 @@ class Divisions extends RESTResource {
             ->attribute('sendSensorTimeouts', V::boolVal())
             ->check($contactData);
         if($contactData->type === IncidentContact::TYPE_MAIL) {
-            V::attribute('email', V::email())->check($contactData);
+            V::attribute('email', Utils::emailValidator())->check($contactData);
             $contact->setEMail($contactData->email);
             $contact->setUser();
         } else {

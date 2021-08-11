@@ -7,6 +7,7 @@ use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
+use HoneySens\app\models\Utils;
 use Respect\Validation\Validator as V;
 
 class Users extends RESTResource {
@@ -136,7 +137,7 @@ class Users extends RESTResource {
             ->attribute('name', V::alnum()->length(1, 255))
             ->attribute('domain', V::intVal()->between(0, 1))
             ->attribute('fullName', V::stringType()->length(1, 255), false)
-            ->attribute('email', V::email())
+            ->attribute('email', Utils::emailValidator())
             ->attribute('role', V::intVal()->between(1, 3))
             ->attribute('notifyOnCAExpiration', V::boolVal())
             ->attribute('requirePasswordChange', V::boolVal())
@@ -186,7 +187,7 @@ class Users extends RESTResource {
             ->attribute('name', V::alnum()->length(1, 255))
             ->attribute('domain', V::intVal()->between(0, 1))
             ->attribute('fullName', V::stringType()->length(1, 255), false)
-            ->attribute('email', V::email())
+            ->attribute('email', Utils::emailValidator())
             ->attribute('role', V::intVal()->between(1, 3))
             ->attribute('notifyOnCAExpiration', V::boolVal())
             ->attribute('requirePasswordChange', V::boolVal())
