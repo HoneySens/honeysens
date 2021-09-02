@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-mysqldump -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" >/srv/db.sql
+mysqldump -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" -p"${DB_PASSWORD}" -y "${DB_NAME}" >/srv/db.sql
 if [[ "${1}" == "-l" ]]; then
   TARGET=$(printf "/srv/backup/${CRON_TEMPLATE}.tar.bz2" "$(date +%Y%m%d-%H%M)")
   # Remove old backups
