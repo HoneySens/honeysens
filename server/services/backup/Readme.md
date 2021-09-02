@@ -9,7 +9,7 @@ All manual tasks have to be executed from within the container. For this, both `
 
 The available commands are:
 
-* **backup**: Writes a compressed backup archive (`.tar.bz2`) to stdout that contains all volume and database contents. Shoule be piped into a file (see <em>Examples</em> below).
+* **backup**: Writes a compressed backup archive (`.tar.bz2`) to stdout that contains all volume and database contents. Should be piped into a file (see <em>Examples</em> below).
 * **restore**: Reads a compressed backup archive (`.tar.bz2`) from stdin and restores it on the current deployment. All services except the database and backup containers have to be brought down manually beforehand.
 * **reset**: Performs a factory reset by removing all volume and database contents. All services except the database and backup containers have to be brought down manually beforehand.
 
@@ -19,12 +19,12 @@ The scheduling of periodic backups can be controlled via the `CRON_*` environmen
 Scheduled backups will be written to `/srv/backup/` within the container, which should be bound to an external storage volume in `docker-compose.yml`.
 
 ### Database-only vs full backups
-By default, full backups will be created, which include both the database and data volumes. To just backup the database itself without volume data (in case a backup procedure for the volumes already exists), either utilize the backup parameter `-d` for manual backups or set the environment variable `CRON_DBONLY` to `true` for scheduled database-only backups. The restoration script is aware of both backup types and doesn't require additional parameterization.
+By default, full backups will be created, which include both the database and data volumes. To just back up the database itself without volume data (in case a backup procedure for the volumes already exists), either utilize the backup parameter `-d` for manual backups or set the environment variable `CRON_DBONLY` to `true` for scheduled database-only backups. The restoration script is aware of both backup types and doesn't require additional parameterization.
 
 ### Examples
 The following examples utilize manual invocation with docker-compose and should be run from within a directory that contains a `docker-compose.yml` for the current deployment.
 
-To take a snapshot from the currently running deployment, issue
+To take a live snapshot from the currently running deployment, issue
 
 `docker-compose exec -T backup backup > backup_archive.tar.bz2`
 
