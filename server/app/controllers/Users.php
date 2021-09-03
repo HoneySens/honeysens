@@ -195,7 +195,7 @@ class Users extends RESTResource {
         $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($id);
         V::objectType()->check($user);
         // Only require a password if the user didn't have one previously (e.g. due to it being created as an LDAP account)
-        $requirePassword = $data->domain == User::DOMAIN_LOCAL && $user->getPassword() == null;
+        $requirePassword = $data->domain == User::DOMAIN_LOCAL && $user->getPassword() == null && $user->getLegacyPassword() == null;
         V::attribute('password', V::stringType()->length(6, 255), $requirePassword)
             ->check($data);
         // Name duplication check
