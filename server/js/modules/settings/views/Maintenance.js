@@ -1,7 +1,8 @@
 define(['app/app',
+        'app/common/views/ModalConfirmation',
         'tpl!app/modules/settings/templates/Maintenance.tpl',
         'app/views/common'],
-function(HoneySens, MaintenanceTpl) {
+function(HoneySens, ModalConfirmation, MaintenanceTpl) {
     HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.DatabaseSettings = Marionette.ItemView.extend({
             template: MaintenanceTpl,
@@ -13,42 +14,49 @@ function(HoneySens, MaintenanceTpl) {
                     $.ajax({
                         type: 'DELETE',
                         url: 'api/system/db',
-                        success: function() {
+                        success: function () {
                             HoneySens.execute('logout');
                         }
                     });
                 },
                 'click button.removeEvents': function () {
-                    var view = this;
-                    this.$el.find('button.removeEvents').button('loading');
-                    $.ajax({
-                        type: 'DELETE',
-                        url: 'api/system/events',
-                        success: function() {
-                            HoneySens.data.models.events.reset();
-                            view.$el.find('button.removeEvents').text('Erledigt');
-                        }
-                    });
+                    HoneySens.request('view:modal').show(new ModalConfirmation({
+                        model: new Backbone.Model({
+                            msg: 'Wenn Sie fortfahren, werden <strong>ALLE</strong> gespeicherten Ereignisse unwiderruflich entfernt!',
+                            onConfirm: function () {
+                                $.ajax({
+                                    type: 'DELETE',
+                                    url: 'api/system/events',
+                                    success: function () {
+                                        HoneySens.data.models.events.reset();
+                                        HoneySens.request('view:modal').empty();
+                                    }
+                                });
+                            }
+                        })
+                    }));
                 },
-                'click button.refreshCA': function() {
-                    var view = this;
-                    this.$el.find('button.refreshCA').button('loading');
-                    $.ajax({
-                        type: 'PUT',
-                        url: 'api/system/ca',
-                        success: function() {
-                            view.model.fetch({
-                                success: function() {
-                                    view.render();
-                                }
-                            });
-                        }
-                    });
-                    // Reload the whole page if a new CA was activated after a short timeout (to allow the server to restart)
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                }
+                'click button.refreshCA': function () {
+                    let modal = HoneySens.request('view:modal'),
+                        view = this;
+                    HoneySens.request('view:modal').show(new ModalConfirmation({
+                        model: new Backbone.Model({
+                            msg: 'Wenn Sie fortfahren, werden alle Zertifikate dieser HoneySens-Installation erneuert. Anschließend wird die Webanwendung automatisch neu geladen.',
+                            onConfirm: function () {
+                                modal.$el.find('button.btn-primary').text('Bitte warten');
+                                modal.$el.find('button').prop('disabled', true);
+                                $.ajax({
+                                    type: 'PUT',
+                                    url: 'api/system/ca',
+                                });
+                                // Reload the whole page if a new CA was activated after a short timeout (to allow the server to restart)
+                                setTimeout(function () {
+                                    location.reload();
+                                }, 2000);
+                            }
+                        })
+                    }));
+                },
             },
             templateHelpers: {
                 showCaFP: function() {

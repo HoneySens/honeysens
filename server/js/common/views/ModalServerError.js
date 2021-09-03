@@ -1,9 +1,9 @@
 define(['app/app',
         'tpl!app/common/templates/ModalServerError.tpl'],
-function(HoneySens, ModalDuplicateNameTpl) {
-    HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-        Views.ModalDuplicateName = Marionette.ItemView.extend({
-            template: ModalDuplicateNameTpl,
+function(HoneySens, ModalServerErrorTpl) {
+    HoneySens.module('Common.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
+        Views.ModalServerError = Marionette.ItemView.extend({
+            template: ModalServerErrorTpl,
             templateHelpers: {
                 getMessage: function() {
                     var msg = null;
@@ -25,5 +25,5 @@ function(HoneySens, ModalDuplicateNameTpl) {
         });
     });
 
-    return HoneySens.Accounts.Views.ModalDuplicateName;
+    return HoneySens.Common.Views.ModalServerError;
 });
