@@ -29,12 +29,11 @@
         <div id="evreset" class="panel-collapse collapse">
             <div class="panel-body">
                 <div class="pull-right">
-                    <button type="button" class="removeEvents btn btn-primary btn-sm" data-loading-text="Entfernen...">
+                    <button type="button" class="removeEvents btn btn-primary btn-sm">
                         Entfernen
                     </button>
                 </div>
-                Achtung, wenn Sie diese Aktion durchf&uuml;hren, werden <strong>ALLE gespeicherten Ereignisse unwiderruflich
-                entfernt!</strong>
+                <p>Diese Funktion entfernt <strong>ALLE</strong> derzeit gespeicherten Ereignisse. Dies kann nicht r&uuml;ckg&auml;ngig gemacht werden!</p>
             </div>
         </div>
     </div>
@@ -58,7 +57,7 @@
                 </p>
                 <hr />
                 <p><strong>Achtung: Dieser Vorgang kann nicht r&uuml;ckg&auml;ngig gemacht werden!</strong></p>
-                <button type="button" class="refreshCA btn btn-primary btn-block" data-loading-text="In Bearbeitung...">
+                <button type="button" class="refreshCA btn btn-primary btn-block" >
                     Zertifikate verl&auml;ngern
                 </button>
             </div>
