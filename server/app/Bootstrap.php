@@ -19,6 +19,7 @@ use HoneySens\app\controllers\State;
 use HoneySens\app\controllers\Stats;
 use HoneySens\app\controllers\System;
 use HoneySens\app\controllers\Tasks;
+use HoneySens\app\controllers\Templates;
 use HoneySens\app\controllers\Users;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\EntityUpdateSubscriber;
@@ -154,6 +155,7 @@ function initRoutes($app, $em, $services, $config, $messages) {
     Stats::registerRoutes($app, $em, $services, $config, $messages);
     System::registerRoutes($app, $em, $services, $config, $messages);
     Tasks::registerRoutes($app ,$em, $services, $config, $messages);
+    Templates::registerRoutes($app ,$em, $services, $config, $messages);
     Users::registerRoutes($app, $em, $services, $config, $messages);
 }
 

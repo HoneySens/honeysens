@@ -16,6 +16,7 @@ class ServiceManager {
     const SERVICE_REGISTRY = 2;
     const SERVICE_TASK = 3;
     const SERVICE_LOG = 4;
+    const SERVICE_TEMPLATE = 5;
 
     private $config;
     private $em;
@@ -27,7 +28,7 @@ class ServiceManager {
     }
 
     public function get($serviceID) {
-        if($serviceID < 0 || $serviceID > 4) throw new Exception('Illegal service requested (ID' . $serviceID . ')');
+        if($serviceID < 0 || $serviceID > 5) throw new Exception('Illegal service requested (ID' . $serviceID . ')');
         if(!array_key_exists($serviceID, $this->services)) {
             $this->services[$serviceID] = $this->instantiate($serviceID);
         }
@@ -41,6 +42,7 @@ class ServiceManager {
             case 2: return new RegistryService($this, $this->config);
             case 3: return new TaskService($this, $this->config, $this->em);
             case 4: return new LogService($this, $this->em);
+            case 5: return new TemplateService($this, $this->em);
             default: return null;
         }
     }
