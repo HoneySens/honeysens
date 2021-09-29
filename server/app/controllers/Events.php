@@ -171,7 +171,7 @@ class Events extends RESTResource {
      *
      * The method returns an array of all the Event objects that were created.
      *
-     * @param string $data
+     * @param \stdClass $data
      * @param ConfigParser $config
      * @return array
      * @throws BadRequestException

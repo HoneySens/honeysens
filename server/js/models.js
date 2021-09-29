@@ -543,6 +543,21 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             }
         };
 
+        Models.Template = Backbone.Model.extend({
+            idAttribute: 'type',
+            defaults: {
+                name: '',
+                template: '',
+                variables: {},
+                overlay: null
+            }
+        });
+
+        Models.Templates = Backbone.Collection.extend({
+            model: Models.Template,
+            url: 'api/templates/'
+        });
+
         // Initialize runtime models
         HoneySens.addInitializer(function() {
             HoneySens.data.models.sensors = new Models.Sensors();

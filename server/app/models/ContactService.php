@@ -1,7 +1,9 @@
 <?php
 namespace HoneySens\app\models;
 
+use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\Task;
+use HoneySens\app\models\entities\Template;
 
 class ContactService {
 
@@ -17,6 +19,50 @@ class ContactService {
         elseif($event->getClassification() == $event::CLASSIFICATION_CONN_ATTEMPT) return 'Verbindungsversuch';
         elseif($event->getClassification() == $event::CLASSIFICATION_LOW_HP) return 'Honeypot-Verbindung';
         elseif($event->getClassification() == $event::CLASSIFICATION_PORTSCAN) return 'Portscan';
+    }
+
+    private function createEventSummary(Event $event) {
+        $result = 'Datum: ' . $event->getTimestamp()->format('d.m.Y') . "\n";
+        $result .= 'Zeit: ' . $event->getTimestamp()->format('H:i:s') . "\n";
+        $result .= 'Sensor: ' . $event->getSensor()->getName() . "\n";
+        $result .= 'Klassifikation: ' . $this->getEventClassificationText($event) . "\n";
+        $result .= 'Quelle: ' . $event->getSource() . "\n";
+        $result .= 'Details: ' . $event->getSummary();
+        return $result;
+    }
+
+    private function createEventDetails(Event $event) {
+        $result = '';
+        $details = $event->getDetails();
+        $genericDetails = array();
+        $interactionDetails = array();
+        if(count($details) > 0) {
+            foreach($details as $detail) {
+                if($detail->getType() == $detail::TYPE_GENERIC) $genericDetails[] = $detail;
+                elseif($detail->getType() == $detail::TYPE_INTERACTION) $interactionDetails[] = $detail;
+            }
+        }
+        if(count($genericDetails) > 0) {
+            $itemCount = 0;
+            $result .= "Zusätzliche Informationen:\n--------------------------\n";
+            foreach($genericDetails as $genericDetail) {
+                $itemCount++;
+                $result .= $genericDetail->getData();
+                if($itemCount != count($genericDetails)) $result .= "\n";
+            }
+        }
+        if(count($interactionDetails) > 0) {
+            $itemCount = 0;
+            # Add an additional newline in case a generic details block exists for clear separation
+            if(count($genericDetails) > 0) $result .= "\n";
+            $result .= "Sensorinteraktion (Zeiten in UTC):\n----------------------------------\n";
+            foreach($interactionDetails as $interactionDetail) {
+                $itemCount++;
+                $result .= $interactionDetail->getTimestamp()->format('H:i:s') . ': ' . $interactionDetail->getData();
+                if($itemCount != count($interactionDetails)) $result .= "\n";
+            }
+        }
+        return $result;
     }
 
     public function sendIncident($config, $em, $event) {
@@ -38,41 +84,17 @@ class ContactService {
         $contacts = $qb->getQuery()->getResult();
         if(count($contacts) == 0) return array('success' => true);
         // Prepare content
-        $classification = $this->getEventClassificationText($event);
         $subject = $event->getClassification() >= $event::CLASSIFICATION_LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
-        $body = "Dies ist eine automatisch generierte Nachricht vom HoneySens-System, um auf einen Vorfall innerhalb ";
-        $body .= "des Sensornetzwerkes hinzuweisen. Details entnehmen Sie der nachfolgenden Auflistung.\n\n####### Vorfall " . $event->getId() . " #######\n\n";
-        $body .= "Datum: " . $event->getTimestamp()->format("d.m.Y") . "\n";
-        $body .= "Zeit: " . $event->getTimestamp()->format("H:i:s") . "\n";
-        $body .= "Sensor: " . $event->getSensor()->getName() . "\n";
-        $body .= "Klassifikation: " . $classification . "\n";
-        $body .= "Quelle: " . $event->getSource() . "\n";
-        $body .= "Details: " . $event->getSummary() . "\n";
-        $details = $event->getDetails();
-        $genericDetails = array();
-        $interactionDetails = array();
-        if(count($details) > 0) {
-            foreach($details as $detail) {
-                if($detail->getType() == $detail::TYPE_GENERIC) $genericDetails[] = $detail;
-                elseif($detail->getType() == $detail::TYPE_INTERACTION) $interactionDetails[] = $detail;
-            }
-        }
-        if(count($genericDetails) > 0) {
-            $body .= "\n\n  Zusätzliche Informationen:\n  --------------------------\n";
-            foreach($genericDetails as $genericDetail) {
-                $body .= "  " . $genericDetail->getData() . "\n";
-            }
-        }
-        if(count($interactionDetails) > 0) {
-            $body .= "\n\n  Sensorinteraktion (Zeiten in UTC):\n  --------------------------\n";
-            foreach($interactionDetails as $interactionDetail) {
-                $body .= "  " . $interactionDetail->getTimestamp()->format('H:i:s') . ": " . $interactionDetail->getData() . "\n";
-            }
-        }
-        // Notify each contact
+        $templateService = $this->services->get(ServiceManager::SERVICE_TEMPLATE);
+        $body = $templateService->processTemplate(Template::TYPE_EMAIL_EVENT_NOTIFICATION, array(
+            'ID' => $event->getId(),
+            'SUMMARY' => $this->createEventSummary($event),
+            'DETAILS' => $this->createEventDetails($event)
+        ));
         $taskParams = array(
             'subject' => $subject,
             'body' => $body);
+        // Notify each contact
         foreach($contacts as $contact) {
             $taskParams['to'] = $contact->getEMail();
             $taskService = $this->services->get(ServiceManager::SERVICE_TASK);

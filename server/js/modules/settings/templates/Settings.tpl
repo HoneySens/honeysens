@@ -52,6 +52,14 @@
         </div>
         <div id="settings-smtp" class="panel-collapse collapse"></div>
     </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a class="collapsed" data-toggle="collapse" data-parent="#settings" href="#settings-smtp-templates">E-Mail-Templates</a>
+            </h4>
+        </div>
+        <div id="settings-smtp-templates" class="panel-collapse collapse"></div>
+    </div>
     <div class="panel panel-default evforwardSettings">
         <div class="panel-heading">
             <button type="button" class="toggle btn btn-primary btn-xs pull-right" data-inactive-text="Deaktiviert" data-active-text="Aktiviert">Deaktiviert</button>

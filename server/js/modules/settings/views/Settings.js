@@ -1,13 +1,15 @@
 define(['app/app',
+        'app/models',
         'app/modules/settings/views/ServerEndpoint',
         'app/modules/settings/views/Sensors',
         'app/modules/settings/views/Permissions',
         'app/modules/settings/views/Logging',
         'app/modules/settings/views/LDAP',
         'app/modules/settings/views/SMTPSettings',
+        'app/modules/settings/views/SMTPTemplates',
         'app/modules/settings/views/EventForwarding',
         'tpl!app/modules/settings/templates/Settings.tpl'],
-function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LoggingView, LDAPView, SMTPSettingsView, EventForwardingView, SettingsTpl) {
+function(HoneySens, Models, ServerEndpointView, SensorsView, PermissionsView, LoggingView, LDAPView, SMTPSettingsView, SMTPTemplatesView, EventForwardingView, SettingsTpl) {
     HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.Settings = Marionette.LayoutView.extend({
             template: SettingsTpl,
@@ -19,8 +21,10 @@ function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LoggingVie
                 logging: 'div#settings-logging',
                 ldap: 'div#settings-ldap',
                 smtp: 'div#settings-smtp',
+                smtpTemplates: 'div#settings-smtp-templates',
                 evforward: 'div#settings-evforward'
             },
+            templates: new Models.Templates(),
             events: {
                 'click div.ldapSettings button.toggle': function(e) {
                     e.preventDefault();
@@ -33,6 +37,9 @@ function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LoggingVie
                 'click div.evforwardSettings button.toggle': function(e) {
                     e.preventDefault();
                     this.handleStatusButton($(e.target), this.$el.find(this.regions.evforward), 'syslogEnabled', this.evforward.currentView);
+                },
+                'show.bs.collapse #settings-smtp-templates': function(e) {
+                    this.templates.fetch();
                 }
             },
             onRender: function() {
@@ -42,6 +49,7 @@ function(HoneySens, ServerEndpointView, SensorsView, PermissionsView, LoggingVie
                 this.getRegion('logging').show(new LoggingView({model: this.model}));
                 this.getRegion('ldap').show(new LDAPView({model: this.model}));
                 this.getRegion('smtp').show(new SMTPSettingsView({model: this.model}));
+                this.getRegion('smtpTemplates').show(new SMTPTemplatesView({collection: this.templates}));
                 this.getRegion('evforward').show(new EventForwardingView({model: this.model}));
                 // Bind SMTP button to model
                 var $smtpButton = this.$el.find('div.smtpSettings button.toggle');
