@@ -2,6 +2,7 @@
 namespace HoneySens\app\models;
 
 use Doctrine\ORM\EntityManager;
+use Predis;
 use HoneySens\app\models\entities\Template;
 use HoneySens\app\models\entities\TemplateOverlay;
 use HoneySens\app\models\exceptions\NotFoundException;
@@ -14,48 +15,21 @@ use HoneySens\app\models\exceptions\NotFoundException;
 class TemplateService {
 
     private $em;
-    private $services;
     private $templates;
 
     public function __construct($services, EntityManager $em) {
         $this->em = $em;
-        $this->services = $services;
-        $this->templates = array(
-            Template::TYPE_EMAIL_EVENT_NOTIFICATION => new Template(Template::TYPE_EMAIL_EVENT_NOTIFICATION,
-                'Ereignis-Benachrichtigung',
-                <<<BOUNDARY
-Dies ist eine automatisch generierte Nachricht vom HoneySens-System, um auf einen Vorfall innerhalb des Sensornetzwerkes hinzuweisen. Details entnehmen Sie der nachfolgenden Auflistung.
-
-####### Vorfall {{ID}} #######
-
-{{SUMMARY}}
-
-{{DETAILS}}
-BOUNDARY
-                , array(
-                    'ID' => 'Identifikationsnummer des Ereignisses',
-                    'SUMMARY' => 'Tabellarische Kurzzusammenfassung des Ereignisses',
-                    'DETAILS' => 'Ereignisspezifische Details'),
-                array(
-                    'ID' => '12345',
-                    'SUMMARY' => <<<BOUNDARY
-Datum: 12.08.2020
-Zeit: 13:26:00
-Sensor: Zentrale
-Klassifikation: Honeypot-Verbindung
-Quelle: 192.168.1.2
-Details: SSH
-BOUNDARY
-                    , 'DETAILS' => <<<BOUNDARY
-Sensorinteraktion:
---------------------------
-13:26:00: SSH: Connection from 192.168.1.2:48102 
-13:26:02: SSH: Invalid login attempt (root/1234)
-13:26:03: SSH: Connection closed
-BOUNDARY
-                ))
-        );
-        // Fetch and link overlay from the database
+        $this->templates = array();
+        // Fetch default templates from broker
+        $broker = new Predis\Client(array(
+            'scheme' => 'tcp',
+            'host' => getenv('BROKER_HOST'),
+            'port' => getenv('BROKER_PORT')
+        ));
+        foreach(json_decode($broker->get('templates'), true) as $type => $template)
+            $this->templates[$type] = new Template(
+                $type, $template['name'], $template['template'], $template['variables'], $template['preview']);
+        // Fetch and link overlays from the database
         foreach($this->em->getRepository('HoneySens\app\models\entities\TemplateOverlay')->findAll() as $overlay) {
             if(array_key_exists($overlay->getType(), $this->templates)) {
                 $this->templates[$overlay->getType()]->setOverlay($overlay);
@@ -64,7 +38,7 @@ BOUNDARY
     }
 
     /**
-     * Returns all raw templates, factoring in potential overlays.
+     * Returns all templates, factoring in potential overlays.
      *
      * @return array
      */
