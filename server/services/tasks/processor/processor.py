@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+from . import constants
 from celery import (
     bootsteps,
     Celery
 )
-from . import constants
+from click import Option
+import json
 from kombu import Queue
 import logging
 import os
@@ -44,7 +46,7 @@ def add_worker_arguments(parser):
 
 
 app = Celery('processor', broker='redis://{}:{}'.format(os.environ['BROKER_HOST'], os.environ['BROKER_PORT']), include=['processor.tasks', 'processor.beat'])
-app.user_options['worker'].add(add_worker_arguments)
+app.user_options['worker'].add(Option(['--hsconfig'], required=True, help='HoneySens configuration file path'))
 app.steps['worker'].add(ConfigBootstep)
 
 # Task queues for different priorities
