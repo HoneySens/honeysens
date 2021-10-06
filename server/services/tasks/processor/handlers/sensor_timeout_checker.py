@@ -1,7 +1,7 @@
 import configparser
 from datetime import datetime
 
-from ..common import emails
+from ..common import emails, templates
 from .handler import HandlerInterface
 
 
@@ -59,7 +59,7 @@ class SensorTimeoutChecker(HandlerInterface):
                         s_name = last_status['name']
                         logger.info('Sending timeout notification for sensor {} (ID {}) to {}'.format(s_name, s_id,
                                                                                                       recipient))
-                        self._notify_contact(config, recipient, s_id, s_name, interval, timeout_threshold)
+                        self._notify_contact(db, config, recipient, s_id, s_name, interval, timeout_threshold)
         return {}
 
     @staticmethod
@@ -75,13 +75,15 @@ class SensorTimeoutChecker(HandlerInterface):
         return candidate
 
     @staticmethod
-    def _notify_contact(config, recipient, sensor_id, sensor_name, interval, timeout_threshold):
+    def _notify_contact(db, config, recipient, sensor_id, sensor_name, interval, timeout_threshold):
         """Sends a mail to recipient, informing them that the given sensor exceeded its timeout and is now offline."""
         subject = 'HoneySens: Sensor {} (ID {}) offline'.format(sensor_name, sensor_id)
-        body = ('Dies ist eine automatisch generierte Hinweismail über ein Ereignis im Sensornetzwerk.\n\n'
-                'Der Sensor "{}" mit der ID {} hat zu lange nicht mehr den Server kontaktiert und somit sein Timeout-'
-                'Intervall von {} Minute(n) zzgl. der Toleranzzeit von {} Minute(n) überschritten. ' 
-                'Er ist nun offline.'.format(sensor_name, sensor_id, interval, timeout_threshold))
+        body = templates.process_template(db, templates.TemplateType.EMAIL_SENSOR_TIMEOUT, {
+            'SENSOR_NAME': sensor_name,
+            'SENSOR_ID': sensor_id,
+            'UPDATE_INTERVAL': interval,
+            'TIMEOUT_TOLERANCE': timeout_threshold
+        })
         try:
             emails.send_email(config, recipient, subject, body)
         except Exception:

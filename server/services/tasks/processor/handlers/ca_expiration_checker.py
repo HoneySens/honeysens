@@ -4,7 +4,7 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
 from .. import constants
-from ..common import emails
+from ..common import emails, templates
 from .handler import HandlerInterface
 
 
@@ -30,18 +30,16 @@ class CAExpirationChecker(HandlerInterface):
                 for row in cur.fetchall():
                     recipient = row['email']
                     logger.info('Sending expiration notice to {}'.format(recipient))
-                    self._notify_user(config, recipient, expires_in.days)
+                    self._notify_user(db, config, recipient, expires_in.days)
 
     @staticmethod
-    def _notify_user(config, recipient, expiration_days):
+    def _notify_user(db, config, recipient, expiration_days):
         server_name = config.get('server', 'host')
         subject = 'HoneySens: CA-Zertifikat des Servers {} läuft in {} Tagen ab'.format(server_name, expiration_days)
-        body = ('Dies ist eine automatisch generierte Hinweismail des HoneySens-Servers {}.\n\n'
-                'Das interne CA-Zertifikat läuft in {} Tagen ab und sollte zuvor unbedingt erneuert werden. '
-                'Melden Sie sich hierzu mit einem administrativen Account an der Weboberfläche des Servers an und '
-                'folgen Sie den Anweisungen unter "System" -> "Certificate Authority".\n\n'
-                'Nach Ablauf des Zertifikats ohne rechtzeitige Verlängerung können die bestehenden Sensoren nicht mehr '
-                'mit dem Server kommunizieren und müssen neu aufgesetzt werden.').format(server_name, expiration_days)
+        body = templates.process_template(db, templates.TemplateType.EMAIL_CA_EXPIRATION, {
+            'SERVER_NAME': server_name,
+            'EXPIRATION_TIME': expiration_days
+        })
         try:
             emails.send_email(config, recipient, subject, body)
         except Exception:

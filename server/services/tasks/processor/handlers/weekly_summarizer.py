@@ -1,7 +1,7 @@
 import configparser
 from datetime import datetime, timedelta
 
-from ..common import emails
+from ..common import emails, templates
 from .handler import HandlerInterface
 
 
@@ -45,18 +45,21 @@ class WeeklySummarizer(HandlerInterface):
         range_start_str = range_start.strftime('%d.%m.%Y')
         for recipient, divisions in candidates.items():
             has_any_content = False
+            division_summary = ''
             subject = 'HoneySens: Zusammenfassung des Zeitraums vom {} bis {}'.format(range_start_str, range_end_str)
-            body = ('Dies ist eine automatisch generierte Zusammenfassung der im Sensornetzwerk in Ihren Gruppen '
-                    'aufgetretenen Ereignisse der vergangenen Woche.\n\n'
-                    'Zeitraum: {} bis {}\n\n'.format(range_start_str, range_end_str))
             for d in divisions:
                 if d not in division_summaries:
                     division_summaries[d] = self._summarize_weekly_division(db, d)
                 if division_summaries[d] is not None:
                     has_any_content = True
-                    body += '{}\n'.format(division_summaries[d])
+                    division_summary += '{}\n'.format(division_summaries[d])
             if has_any_content:
                 logger.info('Sending summary E-Mail to {}'.format(recipient))
+                body = templates.process_template(db, templates.TemplateType.EMAIL_SUMMARY, {
+                    'RANGE_FROM': range_start_str,
+                    'RANGE_TO': range_end_str,
+                    'EVENTS': division_summary
+                })
                 try:
                     emails.send_email(config, recipient, subject, body)
                 except Exception:
