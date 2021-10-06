@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from . import constants
+from .common.templates import SYSTEM_NOTIFICATION_TEMPLATES
 from celery import (
     bootsteps,
     Celery
@@ -10,6 +11,7 @@ import json
 from kombu import Queue
 import logging
 import os
+import redis
 import time
 
 # Global vars
@@ -41,13 +43,19 @@ class ConfigBootstep(bootsteps.Step):
             exit()
 
 
-def add_worker_arguments(parser):
-    parser.add_argument('--hsconfig', dest='hsconfig', required=True, help='HoneySens configuration file path')
+class NotificationTemplateInstaller(bootsteps.StartStopStep):
+    requires = {'celery.worker.consumer.connection:Connection'}
+
+    def start(self, parent):
+        _logger.info('Pushing default notification templates to broker')
+        r = redis.Redis(host=os.environ['BROKER_HOST'], port=os.environ['BROKER_PORT'])
+        r.set('templates', json.dumps(SYSTEM_NOTIFICATION_TEMPLATES))
 
 
 app = Celery('processor', broker='redis://{}:{}'.format(os.environ['BROKER_HOST'], os.environ['BROKER_PORT']), include=['processor.tasks', 'processor.beat'])
 app.user_options['worker'].add(Option(['--hsconfig'], required=True, help='HoneySens configuration file path'))
 app.steps['worker'].add(ConfigBootstep)
+app.steps['consumer'].add(NotificationTemplateInstaller)
 
 # Task queues for different priorities
 app.conf.broker_transport_options = {
