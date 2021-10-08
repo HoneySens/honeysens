@@ -343,7 +343,7 @@ if config_version == '2.3.0':
         'ALTER TABLE users ADD requirePasswordChange TINYINT(1) NOT NULL',
         'ALTER TABLE event_filters ADD enabled TINYINT(1) NOT NULL',
         'UPDATE event_filters SET enabled=1',
-        'CREATE TABLE template_overlays (type INT NOT NULL, template VARCHAR(255) NOT NULL, PRIMARY KEY(type)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB'
+        'CREATE TABLE template_overlays (type INT NOT NULL, template LONGTEXT NOT NULL, PRIMARY KEY(type)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB'
     ]
     execute_sql(db, db_statements)
     db.commit()
