@@ -24,7 +24,7 @@ class TemplateOverlay {
     /**
      * Overridden user-defined template content.
      *
-     * @Column(type="string")
+     * @Column(type="text")
      */
     protected $template;
 
