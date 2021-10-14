@@ -53,7 +53,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 firstPage: 0,
                 pageSize: 15,
                 sortKey: 'timestamp',
-                order: -1
+                order: 1
             },
             parseState: function(resp, queryParams, state, options) {
                 return {totalRecords: parseInt(resp.total_count)};

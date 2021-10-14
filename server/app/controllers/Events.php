@@ -473,7 +473,7 @@ class Events extends RESTResource {
      * - division: Division id to limit results
      * - sensor: Sensor id to limit results
      * - classification: classification (int) to limit results (0 to 4)
-     * - status: status (int) to limit results (0 to 3)
+     * - status: status values (int array) to limit results (0 to 3)
      * - fromTS: timestamp, to specify the beginning of a date range
      * - toTS: timestamp, to specify the end of a date range
      * - list: list of requested event ids
@@ -534,9 +534,16 @@ class Events extends RESTResource {
             $qb->andWhere('e.classification = :classification')
                 ->setParameter('classification', $criteria['classification']);
         }
-        if(V::key('status', V::intVal()->between(0, 3))->validate($criteria)) {
-            $qb->andWhere('e.status = :status')
-                ->setParameter('status', $criteria['status']);
+        if(V::key('status', V::stringType())->validate($criteria)) {
+            if(strpos($criteria['status'], ',') !== false) {
+                $status = explode(',', $criteria['status']);
+                V::arrayVal()->each(V::intVal()->between(0, 3))->check($status);
+            } else {
+                V::intVal()->between(0, 3)->check($criteria['status']);
+                $status = array($criteria['status']);
+            }
+            $qb->andWhere('e.status IN (:status)')
+                ->setParameter('status', $status, Connection::PARAM_INT_ARRAY);
         }
         if(V::key('fromTS', V::intVal())->validate($criteria)) {
             $timestamp = new \DateTime('@' . $criteria['fromTS']);

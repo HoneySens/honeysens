@@ -74,11 +74,13 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 $(window).resize(function() {
                     view.refreshPageSize(view.collection);
                 });
-                // Reset collection (in case some queryParams were set previously)
+                // Reset query params (in case they were set previously), status is set via its filters' initialValue
                 delete HoneySens.data.models.events.queryParams.classification;
                 delete HoneySens.data.models.events.queryParams.sensor;
                 delete HoneySens.data.models.events.queryParams.division;
-                delete HoneySens.data.models.events.queryParams.status;
+                this.collection.state.order = 1;
+                this.collection.state.sortKey = 'timestamp';
+
 
                 var columns = [{
                     name: '',
@@ -99,6 +101,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                     label: 'Zeitpunkt',
                     editable: false,
                     sortType: 'toggle',
+                    direction: 'descending',
                     cell: Backgrid.Cell.extend({
                         render: function() {
                             this.$el.html(HoneySens.Views.EventTemplateHelpers.showTimestamp(this.model.get('timestamp')));
@@ -280,7 +283,6 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 });
                 this.list.show(this.grid);
                 this.paginator.show(paginator);
-                this.grid.sort('timestamp', 'descending');
                 // Division filter
                 var divisions = _.union([{label: 'Alle', value: null}],
                     HoneySens.data.models.divisions.map(function(division) {
@@ -331,12 +333,15 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                     className: 'backgrid-filter form-control',
                     collection: this.collection,
                     field: 'status',
+                    initialValue: '0,1',
                     selectOptions: [
-                        {label: 'Alle', value: null},
-                        {label: 'Neu', value: 0},
-                        {label: 'In Bearbeitung', value: 1},
-                        {label: 'Erledigt', value: 2},
-                        {label: 'Ignoriert', value: 3}
+                        {label: 'Neu & In Bearb.', value: '0,1'},
+                        {label: 'Erledigt & Ign.', value: '2,3'},
+                        {label: 'Neu', value: '0'},
+                        {label: 'In Bearbeitung', value: '1'},
+                        {label: 'Erledigt', value: '2'},
+                        {label: 'Ignoriert', value: '3'},
+                        {label: 'Alle', value: null}
                     ]
                 });
                 this.statusFilter.show(this.statusFilterView);
