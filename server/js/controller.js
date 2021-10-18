@@ -42,6 +42,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                         // clear models
                         HoneySens.data.models.certs.reset();
                         HoneySens.data.models.events.reset();
+                        HoneySens.data.models.new_events.reset();
                         HoneySens.data.models.eventfilters.fullCollection.reset();
                         HoneySens.data.models.sensors.fullCollection.reset();
                         HoneySens.data.models.users.reset();
@@ -52,6 +53,8 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                         HoneySens.data.models.tasks.reset();
                         HoneySens.data.models.logs.reset();
                         HoneySens.data.settings.clear();
+                        HoneySens.data.lastEventID = null;
+                        HoneySens.data.lastUpdateTimestamp = null;
                         HoneySens.vent.trigger('logout:success');
                     },
                     error: function() {
@@ -80,9 +83,6 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                                     data = JSON.parse(data);
                                     // Update client model
                                     HoneySens.data.models.sensors.fullCollection.reset(data.sensors);
-                                    var totalRecords = parseInt(data.events.total_count) || 0;
-                                    HoneySens.data.models.events.state.totalRecords = totalRecords;
-                                    HoneySens.data.models.events.reset(data.events.items);
                                     HoneySens.data.models.eventfilters.fullCollection.reset(data.event_filters);
                                     HoneySens.data.models.users.reset(data.users);
                                     HoneySens.data.models.divisions.reset(data.divisions);
@@ -94,6 +94,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                                     HoneySens.data.models.logs.reset();
                                     HoneySens.data.settings.set(data.settings);
                                     HoneySens.data.system.set(data.system);
+                                    HoneySens.data.lastEventID = data.lastEventID;
                                     HoneySens.data.lastUpdateTimestamp = data.timestamp;
                                     // Update Layout
                                     HoneySens.commands.execute('init:layout');
@@ -157,9 +158,6 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                     data = JSON.parse(data);
                     HoneySens.data.session.user.set(data.user);
                     HoneySens.data.models.sensors.fullCollection.reset(data.sensors);
-                    var totalRecords = parseInt(data.events.total_count) || 0;
-                    HoneySens.data.models.events.state.totalRecords = totalRecords;
-                    HoneySens.data.models.events.reset(data.events.items);
                     HoneySens.data.models.eventfilters.fullCollection.reset(data.event_filters);
                     HoneySens.data.models.users.reset(data.users);
                     HoneySens.data.models.divisions.reset(data.divisions);
@@ -170,6 +168,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                     HoneySens.data.models.tasks.reset(data.tasks);
                     HoneySens.data.settings.set(data.settings);
                     HoneySens.data.system.set(data.system);
+                    HoneySens.data.lastEventID = data.lastEventID;
                     HoneySens.data.lastUpdateTimestamp = data.timestamp;
                     HoneySens.commands.execute('init:finalize');
                 }

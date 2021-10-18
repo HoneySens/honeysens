@@ -20,20 +20,32 @@ class State extends RESTResource {
             V::optional(V::intVal())->check($ts);
             V::optional(V::oneOf(V::intVal(), V::equals('null')))->check($lastEventId);
             $now = new \DateTime();
+            $eventsController = new Events($em, $services, $config);
             if($ts == null) {
                 // Return full state
                 $state = $controller->get($userID);
             } else {
                 // Return incremental state
+                $events = array();
                 if($lastEventId) {
-                    $eventsController = new Events($em, $services, $config);
-                    $events = $eventsController->get(array_merge($stateParams, array('lastID' => $lastEventId)));
-                } else {
-                    $events = (new Events($em, $services, $config))->get($stateParams);
+                    // Return new events since the provided last event ID
+                    $events = $eventsController->get(array_merge($stateParams, array('lastID' => $lastEventId)))['items'];
                 }
                 $updateService = $services->get(ServiceManager::SERVICE_ENTITY_UPDATE);
                 $state = $updateService->getUpdatedEntities($em, $services, $config, $ts, $stateParams);
-                $state['events'] = $events;
+                $state['new_events'] = $events;
+            }
+            try {
+                // The lastEventID is only returned if a user is logged in, otherwise this will throw a ForbiddenException
+                $state['lastEventID'] = $eventsController->get(array(
+                    'userID' => $userID,
+                    'sort_by' => 'id',
+                    'order' => 'desc',
+                    'page' => 0,
+                    'per_page' => 1
+                ))['items'][0]['id'];
+            } catch(\Exception $e) {
+                $state['lastEventID'] = null;
             }
             $state['timestamp'] = $now->format('U');
             echo json_encode($state);
@@ -47,7 +59,6 @@ class State extends RESTResource {
         $config = $this->getConfig();
 
         try { $sensors = (new Sensors($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $sensors = array(); }
-        try { $events = (new Events($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $events = array(); }
         try { $event_filters = (new Eventfilters($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $event_filters = array(); }
         try { $users = (new Users($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $users = array(); }
         try { $divisions = (new Divisions($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $divisions = array(); }
@@ -62,7 +73,7 @@ class State extends RESTResource {
         return array(
             'user' => $_SESSION['user'],
             'sensors' => $sensors,
-            'events' => $events,
+            'new_events' => array(),
             'event_filters' => $event_filters,
             'users' => $users,
             'divisions' => $divisions,

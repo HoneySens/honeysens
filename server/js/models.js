@@ -2,9 +2,6 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
     HoneySens.module('Models', function(Models, HoneySens, Backbone, Marionette, $, _) {
         Models.Event = Backbone.Model.extend({
             urlRoot: 'api/events',
-            defaults: {
-                new: false // Marker used to highlight new events that appeared after an incremental update
-            },
             getDetailsAndPackets: function() {
                 var details = new Models.EventDetails(),
                     packets = new Models.EventPackets();
@@ -562,6 +559,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         HoneySens.addInitializer(function() {
             HoneySens.data.models.sensors = new Models.Sensors();
             HoneySens.data.models.events = new Models.Events([], {state: {totalRecords: 0}});
+            HoneySens.data.models.new_events = new Models.Events([], {state: {totalRecords: 0}});  // Tracks yet unseen events
             HoneySens.data.models.eventfilters = new Models.EventFilters();
             HoneySens.data.models.users = new Models.Users();
             HoneySens.data.models.divisions = new Models.Divisions();

@@ -240,20 +240,21 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 var row = Backgrid.Row.extend({
                     render: function() {
                         Backgrid.Row.prototype.render.call(this);
-                        // Highlight newly added rows
-                        if(this.model.get('new')) {
-                            var $itemView = this.$el;
+                        // In case the currently rendered row is new, highlight it
+                        if(HoneySens.data.models.new_events.get(this.model.id)) {
+                            let $itemView = this.$el,
+                                newModelId = this.model.id;
                             $itemView.addClass('info');
                             setTimeout(function() {
                                 $itemView.removeClass('info');
+                                HoneySens.data.models.new_events.remove(newModelId);
                             }, 1000);
-                            //this.model.set('new', false);
                         }
                         // Render row color depending upon the event classification
                         switch(this.model.get('classification')) {
                             case Models.Event.classification.LOW_HP:
                                 if(this.$el.hasClass('info')) {
-                                    var $itemView = this.$el;
+                                    let $itemView = this.$el;
                                     setTimeout(function() {
                                         $itemView.addClass('danger');
                                     }, 1000);
@@ -373,9 +374,21 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 this.listenTo(this.collection, 'pageable:state:change', function() {
                     view.grid.clearSelectedModels();
                 });
+                // Update event collection when new events are announced
+                this.listenTo(HoneySens.vent, 'models:events:new', function(ids) {
+                    this.collection.fetch({
+                        success: function(collection) {
+                            // Force rendering of potential new rows
+                            collection.trigger('reset', collection, {});
+                        }
+                    });
+                });
             },
             onShow: function() {
                 this.refreshPageSize(this.collection);
+            },
+            onDestroy: function() {
+                HoneySens.data.models.events.reset();
             },
             refreshPageSize: function(collection) {
                 if(collection.length > 0) {
