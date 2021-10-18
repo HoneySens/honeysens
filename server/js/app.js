@@ -94,34 +94,18 @@ function(RootLayout, Marionette, Backbone, $, JSON, _) {
         });
 
         app.commands.setHandler('fetchUpdates', function() {
-            var lastEventID = app.data.models.events.length > 0 ? app.data.models.events.max('id').id : null,
-                stats = app.data.models.stats,
-                events= app.data.models.events,
-                url = 'api/state?ts=' + app.data.lastUpdateTimestamp + '&last_id=' + lastEventID + '&stats_year=' + stats.get('year') + '&stats_month='+ stats.get('month') + '&stats_division=' + stats.get('division')
-                + '&page=' + events.state.currentPage + '&per_page=' + events.state.pageSize
-                + '&sort_by=' + events.state.sortKey + '&order=' + events.state.order;
-            if(_.has(events.queryParams, 'division')) url += '&division=' + events.queryParams.division;
-            if(_.has(events.queryParams, 'sensor')) url += '&sensor=' + events.queryParams.sensor;
-            if(_.has(events.queryParams, 'classification')) url += '&classification=' + events.queryParams.classification;
+            let stats = app.data.models.stats,
+                url = 'api/state?ts=' + app.data.lastUpdateTimestamp + '&last_id=' + app.data.lastEventID + '&stats_year=' + stats.get('year') + '&stats_month='+ stats.get('month') + '&stats_division=' + stats.get('division');
             $.ajax({
                 type: 'GET',
                 url: url,
                 success: function(data) {
                     data = JSON.parse(data);
                     app.data.lastUpdateTimestamp = data.timestamp;
-                    if(data.events.items.length > 0) {
-                        var ids = _.pluck(data.events.items, 'id');
-                        app.data.models.events.fetch({
-                            success: function(collection) {
-                                collection.each(function(model) {
-                                    if(_.contains(ids, model.id)) {
-                                        // Set a marker on new models for highlighting
-                                        model.set('new', true);
-                                    }
-                                });
-                                collection.trigger('reset', collection, {});
-                            }
-                        });
+                    app.data.lastEventID = data.lastEventID;
+                    if(data.new_events.length > 0) {
+                        app.data.models.new_events.add(data.new_events);
+                        app.vent.trigger('models:events:new', _.pluck(data.new_events.items, 'id'));
                     }
                     if(_.has(data, 'event_filters')) app.data.models.eventfilters.fullCollection.reset(data.event_filters);
                     if(_.has(data, 'sensors')) app.data.models.sensors.fullCollection.reset(data.sensors);

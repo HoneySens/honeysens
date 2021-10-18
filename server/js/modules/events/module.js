@@ -33,10 +33,27 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
         name: 'events',
         startWithParent: false,
         rootView: null,
-        menuItems: [
-            {title: 'Ereignisse', uri: 'events', iconClass: 'glyphicon glyphicon-list', permission: {domain: 'events', action: 'get'}, priority: 1},
-            {title: 'Filter', uri: 'events/filters', iconClass: 'glyphicon glyphicon-filter', permission: {domain: 'eventfilters', action: 'create'}}
-        ],
+        menuItems: [{
+            title: 'Ereignisse',
+            uri: 'events',
+            iconClass: 'glyphicon glyphicon-list',
+            permission: {domain: 'events', action: 'get'},
+            priority: 1,
+            highlight: {
+                count: function() {
+                    return HoneySens.data.models.new_events.length;
+                },
+                getModel: function() {
+                    return HoneySens.data.models.new_events;
+                },
+                event: 'update'
+            }
+        }, {
+            title: 'Filter',
+            uri: 'events/filters',
+            iconClass: 'glyphicon glyphicon-filter',
+            permission: {domain: 'eventfilters', action: 'create'}
+        }],
         start: function() {
             console.log('Starting module: event');
             var module = this;
