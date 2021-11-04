@@ -4,7 +4,12 @@
             <h4>Gruppe entfernen</h4>
         </div>
         <div class="modal-body">
-            <p>Soll die Gruppe <strong><%- name %></strong> wirklich entfernt werden?</p>
+            <p>Soll die Gruppe <strong><%- name %></strong> mit all ihren assoziierten Sensoren und Ergebnissen wirklich entfernt werden?</p>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="archive">Ereignisse zuvor in Archiv verschieben
+                </label>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>

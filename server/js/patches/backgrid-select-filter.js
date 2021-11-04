@@ -23,4 +23,15 @@ function() {
         if (!this.serverSide) this.onChange();
         return this;
     }
+
+    // Add optional beforeChange() and afterChange() callbacks that are called with the
+    // new value after the selection has changed, but before/after the collection state was/is modified.
+    prototype.defaults.afterChange = undefined;
+    prototype.defaults.beforeChange = undefined;
+    let _onChange = prototype.onChange;
+    prototype.onChange = function(e) {
+        if(this.beforeChange !== undefined) this.beforeChange.call(this, e);
+        _onChange.call(this, e);
+        if(this.afterChange !== undefined) this.afterChange.call(this, e);
+    }
 });

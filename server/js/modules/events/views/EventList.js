@@ -37,7 +37,8 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 paginator: 'div.paginator',
                 eventFilter: 'div.eventFilter',
                 statusFilter: 'div.statusFilter',
-                dateFilter: 'div.dateFilter'
+                dateFilter: 'div.dateFilter',
+                sourceFilter: 'div.sourceFilter'
             },
             events: {
                 'click button.massExport': function() {
@@ -78,6 +79,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 delete HoneySens.data.models.events.queryParams.classification;
                 delete HoneySens.data.models.events.queryParams.sensor;
                 delete HoneySens.data.models.events.queryParams.division;
+                delete HoneySens.data.models.events.queryParams.archived;
                 this.collection.state.order = 1;
                 this.collection.state.sortKey = 'timestamp';
 
@@ -93,8 +95,11 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                     label: 'ID',
                     editable: false,
                     sortType: 'toggle',
-                    cell: Backgrid.IntegerCell.extend({
-                        orderSeparator: ''
+                    cell: Backgrid.Cell.extend({
+                        render: function() {
+                            this.$el.html(this.model.get('archived') ? this.model.get('oid') : this.model.id);
+                            return this;
+                        }
                     })
                 }, {
                     name: 'timestamp',
@@ -115,8 +120,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                     sortType: 'toggle',
                     cell: Backgrid.Cell.extend({
                         render: function() {
-                            var sensor = this.model.get('sensor');
-                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showDivision(sensor));
+                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showDivisionForEvent(this.model.attributes));
                             return this;
                         }
                     })
@@ -127,8 +131,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                     sortType: 'toggle',
                     cell: Backgrid.Cell.extend({
                         render: function() {
-                            var sensor = this.model.get('sensor');
-                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showSensor(sensor));
+                            this.$el.html(HoneySens.Views.EventTemplateHelpers.showSensor(this.model.attributes));
                             return this;
                         }
                     })
@@ -218,10 +221,13 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                             },
                             'click button.removeEvent': function(e) {
                                 e.preventDefault();
-                                var dialog = new ModalEventRemoveView({model: this.model});
-                                this.listenTo(dialog, 'confirm', function() {
-                                    this.model.destroy({
-                                        wait: true, success: function () {
+                                let dialog = new ModalEventRemoveView({model: this.model});
+                                this.listenTo(dialog, 'confirm', function(archive) {
+                                    $.ajax({
+                                        type: 'DELETE',
+                                        url: 'api/events',
+                                        data: JSON.stringify({id: this.model.id, archived: this.model.get('archived'), archive: archive}),
+                                        success: function() {
                                             HoneySens.data.models.events.fetch();
                                             HoneySens.request('view:modal').empty();
                                         }
@@ -363,6 +369,39 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                     placeholder: "Suche nach Datum, Quelle oder Kommentar"
                 });
                 this.eventFilter.show(eventFilter);
+                // Source filter
+                this.sourceFilterView = new Backgrid.Extension.SelectFilter({
+                    className: 'backgrid-filter form-control',
+                    collection: this.collection,
+                    field: 'archived',
+                    selectOptions: [
+                        {label: 'Live', value: false},
+                        {label: 'Archiv', value: true}
+                    ],
+                    beforeChange: function(e) {
+                        let switchingToArchive = e.target.value === 'true',
+                            $sensorFilter = view.$el.find('div.sensorFilter select');
+                        if(switchingToArchive) {
+                            // Reset both sensor (not filterable) and status filter (to show all archived events)
+                            delete HoneySens.data.models.events.queryParams.sensor;
+                            delete HoneySens.data.models.events.queryParams.status;
+                            view.$el.find('div.statusFilter select').val('null');
+                            $sensorFilter.val('null');
+                        } else {
+                            // When switching back to live view, only show new and busy events
+                            HoneySens.data.models.events.queryParams.status = '0,1';
+                            view.$el.find('div.statusFilter select').val('"0,1"');
+                        }
+                        // Enable/disable sensor filter
+                        $sensorFilter.prop('disabled', switchingToArchive);
+                        // Edit buttons
+                        view.$el.find('button.massEdit').prop('disabled', switchingToArchive);
+                        let $groupEditElements = view.$el.find('.groupEditElement');
+                        if(switchingToArchive) $groupEditElements.addClass('hidden')
+                        else $groupEditElements.removeClass('hidden');
+                    }
+                });
+                this.sourceFilter.show(this.sourceFilterView);
                 // Display control box when models are selected and update counter
                 this.listenTo(this.collection, 'backgrid:selected', function() {
                     view.updateSelectionControlPanel()

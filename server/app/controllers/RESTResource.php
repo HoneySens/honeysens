@@ -103,7 +103,7 @@ abstract class RESTResource {
     }
 
     /**
-     * Returns the user id of the currently loggend in user or null in case of an admin user.
+     * Returns the user id of the currently logged in user or null in case of an admin user.
      * This means that for both admin and guest users null is returned, which means that an additional permission check is
      * required. This step is usually done inside of the resource classes/controllers.
      *

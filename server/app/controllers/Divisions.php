@@ -5,6 +5,7 @@ use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\IncidentContact;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\exceptions\BadRequestException;
+use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\Utils;
 use Respect\Validation\Validator as V;
@@ -47,7 +48,13 @@ class Divisions extends RESTResource {
 
         $app->delete('/api/divisions/:id', function($id) use ($app, $em, $services, $config, $messages) {
             $controller = new Divisions($em, $services, $config);
-            $controller->delete($id);
+            $request = $app->request->getBody();
+            $criteria =array();
+            if(strlen($request) > 0) {
+                V::json()->check($request);
+                $criteria = json_decode($request, true);
+            }
+            $controller->delete($id, $criteria);
             echo json_encode([]);
         });
     }
@@ -271,20 +278,46 @@ class Divisions extends RESTResource {
         return $division;
     }
 
-    public function delete($id) {
+    /**
+     * Removes the division with the given id.
+     * If 'archive' is set to true in additional criteria, all events of all sensors (of this division) are sent
+     * to the archive first.
+     *
+     * @param int $id
+     * @param array $criteria Additional deletion criteria
+     * @throws ForbiddenException
+     */
+    public function delete($id, $criteria) {
         $this->assureAllowed('delete');
         // Validation
+        $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
         V::intVal()->check($id);
         // Persistence
         $em = $this->getEntityManager();
         $division = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Division')->find($id);
         V::objectType()->check($division);
         $did = $division->getId();
+        // Delete sensors
         $sensorController = new Sensors($em, $this->getServiceManager(), $this->getConfig());
-        foreach($division->getSensors() as $sensor) $sensorController->delete($did);
+        foreach($division->getSensors() as $sensor) {
+            $sensorController->delete($sensor->getId(), array('archive' => $archive));
+        }
+        // Remove division associations from archived events
+        $em->createQueryBuilder()
+            ->update('HoneySens\app\models\entities\ArchivedEvent', 'e')
+            ->set('e.division', ':null')
+            ->set('e.divisionName', ':dname')
+            ->where('e.division = :division')
+            ->setParameter('dname', $division->getName())
+            ->setParameter('division', $division)
+            ->setParameter('null', null)
+            ->getQuery()
+            ->execute();
         $em->remove($division);
         $em->flush();
-        $this->log(sprintf('Division %s (ID %d) and all associated users, sensors and events deleted', $division->getName(), $did), LogEntry::RESOURCE_DIVISIONS, $division->getId());
+        // Detach entities, otherwise we would run into conflicts with the now-detached ArchivedEvents
+        $em->clear();
+        $this->log(sprintf('Division %s (ID %d) and all associated users and sensors deleted. Events were %s.', $division->getName(), $did, $archive ? 'archived' : 'deleted'), LogEntry::RESOURCE_DIVISIONS, $division->getId());
     }
 
     private function getDivisionByName($name) {

@@ -1,5 +1,5 @@
 <button type="button" class="editStatus pull-right btn btn-default btn-xs"
-    <% if(!_.templateHelpers.isAllowed('events', 'update')) { %>disabled="disabled"<% } %>>
+    <% if(!_.templateHelpers.isAllowed('events', 'update') || archived) { %>disabled="disabled"<% } %>>
     <span class="glyphicon glyphicon-pencil"></span>
 </button>
 <% if(status == _.templateHelpers.getModels().Event.status.UNEDITED) { %>Neu

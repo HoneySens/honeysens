@@ -9,7 +9,7 @@ function(HoneySens, ModalEventRemoveSingleTpl, ModalEventRemoveMassTpl) {
             events: {
                 'click button.btn-primary': function(e) {
                     e.preventDefault();
-                    this.trigger('confirm');
+                    this.trigger('confirm', this.$el.find('input[name="archive"]').is(':checked'));
                 }
             },
             initialize: function() {

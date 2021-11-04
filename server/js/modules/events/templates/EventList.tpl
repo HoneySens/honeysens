@@ -1,28 +1,34 @@
 <div class="filters form-inline">
     <div class="form-group">
-        <label>Gruppe:&nbsp;</label>
-        <div class="groupFilter" style="display: inline-block;"></div>
+        <label>Datensatz</label>
+        <div class="sourceFilter"></div>
     </div>
     <div class="form-group">
-        <label>Sensor:&nbsp;</label>
-        <div class="sensorFilter" style="display: inline-block;"></div>
+        <label>Gruppe</label>
+        <div class="groupFilter"></div>
     </div>
     <div class="form-group">
-        <label>Klassifikation:&nbsp;</label>
-        <div class="classificationFilter" style="display: inline-block;"></div>
+        <label>Sensor</label>
+        <div class="sensorFilter"></div>
     </div>
     <div class="form-group">
-      <label>Status:&nbsp;</label>
-      <div class="statusFilter" style="display: inline-block;"></div>
+        <label>Klassifikation</label>
+        <div class="classificationFilter"></div>
     </div>
     <div class="form-group">
-        <label>Zeitraum:&nbsp;</label>
-        <div class="dateFilter" style="display: inline-block;"></div>
+      <label>Status</label>
+      <div class="statusFilter"></div>
     </div>
     <div class="form-group">
-        <div class="eventFilter" style="display: inline-block;"></div>
+        <label>Zeitraum</label>
+        <div class="dateFilter"></div>
+    </div>
+    <div class="form-group">
+        <label>Suche</label>
+        <div class="eventFilter"></div>
     </div>
     <div class="form-group pull-right">
+        <label style="visibility: hidden;">X</label>
         <div class="dropdown">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
                 <span class="glyphicon glyphicon-option-vertical"></span>&nbsp;<span class="caret"></span>
@@ -32,10 +38,10 @@
                 <li><a class="exportPage">Aktuelle Seite</a></li>
                 <li><a class="exportAll">Alle Seiten</a></li>
                 <% if(_.templateHelpers.isAllowed('events', 'update')) { %>
-                    <li role="separator" class="divider"></li>
-                    <li class="dropdown-header"><span class="glyphicon glyphicon-pencil"></span>&nbsp;Bearbeiten</li>
-                    <li><a class="editPage">Aktuelle Seite</a></li>
-                    <li><a class="editAll">Alle Seiten</a></li>
+                    <li role="separator" class="divider groupEditElement"></li>
+                    <li class="dropdown-header groupEditElement"><span class="glyphicon glyphicon-pencil"></span>&nbsp;Bearbeiten</li>
+                    <li><a class="editPage groupEditElement">Aktuelle Seite</a></li>
+                    <li><a class="editAll groupEditElement">Alle Seiten</a></li>
                 <% } %>
                 <% if(_.templateHelpers.isAllowed('events', 'delete')) { %>
                     <li role="separator" class="divider"></li>
