@@ -5,6 +5,13 @@
         </div>
         <div class="modal-body">
             <p>Sollen die ausgew&auml;hlten <strong><%- total %> Ereignisse</strong> wirklich entfernt werden?</p>
+            <% if(!archived) { %>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="archive">Ereignisse archivieren
+                    </label>
+                </div>
+            <% } %>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>

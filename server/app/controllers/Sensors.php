@@ -177,7 +177,13 @@ class Sensors extends RESTResource {
 
         $app->delete('/api/sensors/:id', function($id) use ($app, $em, $services, $config, $messages) {
             $controller = new Sensors($em, $services, $config);
-            $controller->delete($id);
+            $request = $app->request->getBody();
+            $criteria = array();
+            if(strlen($request) > 0) {
+                V::json()->check($request);
+                $criteria = json_decode($request, true);
+            }
+            $controller->delete($id, $criteria);
             echo json_encode([]);
         });
     }
@@ -803,17 +809,29 @@ class Sensors extends RESTResource {
         return $sensor;
     }
 
-    public function delete($id) {
+    /**
+     * Removes the sensor with the given id.
+     * If 'archive' is set to true in additional criteria, all events of this sensor are sent to the archive first.
+     *
+     * @param int $id
+     * @param array $criteria Additional deletion criteria
+     * @throws ForbiddenException
+     */
+    public function delete($id, $criteria) {
         $this->assureAllowed('delete');
         // Validation
+        $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
         V::intVal()->check($id);
         $em = $this->getEntityManager();
         $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
-        // Remove all events that belong to this sensor
-        // TODO Consider moving those into some sort of archive
+        // (Archive and) Remove all events that belong to this sensor
         $events = $em->getRepository('HoneySens\app\models\entities\Event')->findBy(array('sensor' => $sensor));
-        foreach($events as $event) $em->remove($event);
+        if($archive) {
+            $eventIDs = array_map(function($e) { return $e->getId();}, $events);
+            $eventController = new Events($em, $this->getServiceManager(), $this->getConfig());
+            $eventController->archiveEvents($em, $eventIDs, true);
+        } else foreach($events as $event) $em->remove($event);
         $sid = $sensor->getId();
         $em->remove($sensor);
         $em->flush();

@@ -152,9 +152,10 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
             });
             HoneySens.reqres.setHandler('events:remove:all', function(collection) {
                 if(!HoneySens.assureAllowed('events', 'delete')) return false;
-                var dialog = new ModalEventRemoveView({model: new Backbone.Model({total: collection.state.totalRecords})});
-                dialog.listenTo(dialog, 'confirm', function() {
-                    module.removeEvents(collection.queryParams, function() {
+                let archived = collection.queryParams.hasOwnProperty('archived') && collection.queryParams.archived,
+                    dialog = new ModalEventRemoveView({model: new Backbone.Model({archived: archived, total: collection.state.totalRecords})});
+                dialog.listenTo(dialog, 'confirm', function(archive) {
+                    module.removeEvents(collection.queryParams, archive, function() {
                         HoneySens.data.models.events.fetch();
                         HoneySens.request('view:modal').empty();
                     });
@@ -163,8 +164,9 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
             });
             HoneySens.reqres.setHandler('events:remove:some', function(selection, fullCollection) {
                 if(!HoneySens.assureAllowed('events', 'delete') || selection.length === 0) return false;
-                var dialog = new ModalEventRemoveView({model: new Backbone.Model({total: selection.length})});
-                dialog.listenTo(dialog, 'confirm', function() {
+                let archived = fullCollection.queryParams.hasOwnProperty('archived') && fullCollection.queryParams.archived,
+                    dialog = new ModalEventRemoveView({model: new Backbone.Model({archived: archived, total: selection.length})});
+                dialog.listenTo(dialog, 'confirm', function(archive) {
                     // Avoid RangeError when deleting all events of the last page (if currently displayed)
                     if(fullCollection.state.currentPage > 0 &&
                         fullCollection.state.currentPage + 1 === fullCollection.state.totalPages &&
@@ -175,7 +177,7 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                     $.ajax({
                         type: 'DELETE',
                         url: 'api/events',
-                        data: JSON.stringify({ids: selection.pluck('id')}),
+                        data: JSON.stringify({ids: selection.pluck('id'), archived: archived, archive: archive}),
                         success: function() {
                             HoneySens.data.models.events.fetch();
                             HoneySens.request('view:modal').empty();
@@ -246,11 +248,11 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 });
             else success();
         },
-        removeEvents: function(queryParams, success) {
+        removeEvents: function(queryParams, archive, success) {
             $.ajax({
                 type: 'DELETE',
                 url: 'api/events',
-                data: JSON.stringify(calculateEventQueryParams(queryParams)),
+                data: JSON.stringify(Object.assign(calculateEventQueryParams(queryParams), {archived: queryParams.hasOwnProperty('archived') && queryParams.archived, archive: archive})),
                 dataType: 'json',
                 success: success
             });

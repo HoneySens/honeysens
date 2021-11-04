@@ -3,6 +3,7 @@ import json
 import os
 import pymysql
 import shutil
+from string import digits
 
 from .handler import HandlerInterface
 
@@ -11,27 +12,13 @@ class EventExtractor(HandlerInterface):
 
     def perform(self, logger, db, config_path, storage_path, working_dir, job_data):
         job_params = json.loads(job_data['params'])
+        sensors = self.fetch_sensors(db)
         cursor = db.cursor(pymysql.cursors.DictCursor)
         cursor.execute(job_params['query'])
-        headers = ['id', 'sensor_id', 'timestamp', 'source', 'classification', 'summary', 'status', 'comment']
+        headers = ['id', 'sensor_id', 'sensor_name', 'timestamp', 'source', 'classification', 'summary', 'archived', 'status', 'comment']
         result = []
         for row in cursor.fetchall():
-            event = {}
-            for k in row.keys():
-                # Find an appropriate header field for each given key
-                for h in headers:
-                    if k[:-1] == h:
-                        if h == 'classification':
-                            event[h] = self.classification2string(row[k])
-                        elif h == 'status':
-                            event[h] = self.status2string(row[k])
-                        else:
-                            event[h] = row[k]
-                        break
-            event_serial = []
-            for h in headers:
-                event_serial.append(event[h])
-            result.append(event_serial)
+            result.append(self.generate_event_row(self.parse_db_event(row), headers, sensors))
         # Store result
         result_dir = '{}/{}'.format(storage_path, job_data['id'])
         if os.path.isdir(result_dir):
@@ -46,6 +33,40 @@ class EventExtractor(HandlerInterface):
             writer.writerows(result)
         # 'path' is relative to the base result directory
         return {'path': result_filename}
+
+    @staticmethod
+    def fetch_sensors(db) -> dict:
+        """Fetches and returns all sensors in an ID-indexed dict from the database."""
+        result = {}
+        cursor = db.cursor(pymysql.cursors.DictCursor)
+        cursor.execute('SELECT * FROM sensors')
+        for row in cursor.fetchall():
+            result[row['id']] = row
+        return result
+
+    @staticmethod
+    def parse_db_event(row):
+        """Parses a raw event row into a dictionary, e.g. renaming keys from 'id0' to 'id'."""
+        result = {}
+        for key, val in row.items():
+            result[key.translate(str.maketrans('', '', digits))] = val
+        return result
+
+    def generate_event_row(self, event: dict, headers: list, sensors: dict) -> list:
+        """Takes a dictionary of parsed db event data and returns it in a serialized format structured by headers."""
+        result = []
+        ev = event.copy()
+        archived = 'oid' in event.keys()
+        ev['id'] = ev['oid'] if archived else ev['id']
+        ev['archived'] = archived
+        ev['classification'] = self.classification2string(ev['classification'])
+        ev['status'] = self.status2string(ev['status'])
+        ev['sensor_id'] = '' if archived else ev['sensor_id']
+        ev['sensor_name'] = ev['sensor'] if archived else sensors[ev['sensor_id']]['name']
+        for h in headers:
+            if h in ev.keys():
+                result.append(ev[h])
+        return result
 
     def classification2string(self, classification):
         if classification == 1:

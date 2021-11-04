@@ -3,11 +3,13 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         Models.Event = Backbone.Model.extend({
             urlRoot: 'api/events',
             getDetailsAndPackets: function() {
-                var details = new Models.EventDetails(),
-                    packets = new Models.EventPackets();
+                let details = new Models.EventDetails(),
+                    packets = new Models.EventPackets(),
+                    subURL = this.get('archived') ? 'by-archived-event' : 'by-event';
+
                 $.ajax({
                     method: 'GET',
-                    url: 'api/eventdetails/by-event/' + this.id,
+                    url: 'api/eventdetails/' + subURL + '/' + this.id,
                     success: function(data) {
                         data = JSON.parse(data);
                         details.reset(data.details);
@@ -73,10 +75,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
         };
 
         Models.EventDetails = Backbone.Collection.extend({
-            model: Models.EventDetail,
-            url: function() {
-                return 'api/eventdetails/by-event/' + this.event.id;
-            }
+            model: Models.EventDetail
         });
 
         Models.EventPacket = Backbone.Model.extend({

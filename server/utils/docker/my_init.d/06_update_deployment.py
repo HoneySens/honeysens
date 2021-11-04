@@ -343,7 +343,10 @@ if config_version == '2.3.0':
         'ALTER TABLE users ADD requirePasswordChange TINYINT(1) NOT NULL',
         'ALTER TABLE event_filters ADD enabled TINYINT(1) NOT NULL',
         'UPDATE event_filters SET enabled=1',
-        'CREATE TABLE template_overlays (type INT NOT NULL, template LONGTEXT NOT NULL, PRIMARY KEY(type)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB'
+        'CREATE TABLE template_overlays (type INT NOT NULL, template LONGTEXT NOT NULL, PRIMARY KEY(type)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB',
+        'CREATE TABLE archived_events (id INT AUTO_INCREMENT NOT NULL, division_id INT DEFAULT NULL, oid INT NOT NULL, timestamp DATETIME NOT NULL, sensor VARCHAR(255) NOT NULL, divisionName VARCHAR(255) DEFAULT NULL, service INT NOT NULL, classification INT NOT NULL, source VARCHAR(255) NOT NULL, summary VARCHAR(255) NOT NULL, status INT NOT NULL, comment VARCHAR(255) DEFAULT NULL, lastModificationTime DATETIME DEFAULT NULL, details LONGTEXT NOT NULL, packets LONGTEXT NOT NULL, INDEX IDX_1F331E1D41859289 (division_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB',
+        'ALTER TABLE archived_events ADD CONSTRAINT FK_1F331E1D41859289 FOREIGN KEY (division_id) REFERENCES divisions (id)',
+        'ALTER TABLE events ADD lastModificationTime DATETIME DEFAULT NULL'
     ]
     execute_sql(db, db_statements)
     db.commit()

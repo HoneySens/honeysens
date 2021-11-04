@@ -5,7 +5,12 @@
         </div>
         <div class="modal-body">
             <p>Soll der Sensor <strong><%- name %></strong> wirklich entfernt werden?</p>
-            <p>Alle von diesem aufgezeichneten Ereignisse werden unwiederruflich gel&ouml;scht.</p>
+            <p>Alle von diesem aufgezeichneten Ereignisse werden gel&ouml;scht.</p>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="archive">Ereignisse zuvor in Archiv verschieben
+                </label>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>

@@ -64,7 +64,7 @@ class Event {
     protected $source;
 
     /**
-     * Most of the time a one-liner to summary the event
+     * Most of the time a one-liner to summarize the event
      *
      * @Column(type="string")
      */
@@ -83,6 +83,13 @@ class Event {
      * @Column(type="string", nullable=true)
      */
     protected $comment;
+
+    /**
+     * Timestamp that indicates the date and time of the last status or comment update.
+     *
+     * @Column(type="datetime", nullable=true)
+     */
+    protected $lastModificationTime;
 
     /**
      * @OneToMany(targetEntity="HoneySens\app\models\entities\EventDetail", mappedBy="event", cascade={"remove"})
@@ -271,6 +278,26 @@ class Event {
     }
 
     /**
+     * Updates the last modification time.
+     *
+     * @param \DateTime $lastModificationTime
+     * @return Event
+     */
+    public function setLastModificationTime($lastModificationTime) {
+        $this->lastModificationTime = $lastModificationTime;
+        return $this;
+    }
+
+    /**
+     * Returns the last modification timestamp.
+     *
+     * @return \DateTime
+     */
+    public function getLastModificationTime() {
+        return $this->lastModificationTime;
+    }
+
+    /**
      * Add event details
      *
      * @param EventDetail $details
@@ -350,8 +377,10 @@ class Event {
             'summary' => $this->getSummary(),
             'status' => $this->getStatus(),
             'comment' => $this->getComment(),
+            'lastModificationTime' => $this->getLastModificationTime(),
             'numberOfPackets' => sizeof($this->getPackets()),
-            'numberOfDetails' => sizeof($this->getDetails())
+            'numberOfDetails' => sizeof($this->getDetails()),
+            'archived' => false
         );
     }
 }

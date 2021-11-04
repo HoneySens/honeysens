@@ -3,12 +3,14 @@ namespace HoneySens\app\controllers;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManager;
+use HoneySens\app\models\entities\ArchivedEvent;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventDetail;
 use HoneySens\app\models\entities\EventPacket;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
+use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
@@ -61,13 +63,6 @@ class Events extends RESTResource {
             echo json_encode([]);
         });
 
-        $app->delete('/api/events/:id', function($id) use ($app, $em, $services, $config, $messages) {
-            $controller = new Events($em, $services, $config);
-            $criteria = array('userID' => $controller->getSessionUserID(), 'id' => $id);
-            $controller->delete($criteria);
-            echo json_encode([]);
-        });
-
         $app->delete('/api/events', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Events($em, $services, $config);
             $request = $app->request()->getBody();
@@ -76,6 +71,13 @@ class Events extends RESTResource {
             $criteria['userID'] = $controller->getSessionUserID();
             $controller->delete($criteria);
             echo json_encode([]);
+        });
+
+        $app->get('/api/test', function() use ($app, $em, $services, $config, $messages) {
+            $r = $em->createQueryBuilder()
+                ->select('e')->from('HoneySens\app\models\entities\ArchivedEvent', 'e')->join('e.division', 'd')
+                ->getQuery()->getResult();
+            echo sizeof($r);
         });
     }
 
@@ -94,7 +96,7 @@ class Events extends RESTResource {
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\Query\QueryException
-     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     * @throws ForbiddenException
      * @throws \Exception
      */
     public function get($criteria) {
@@ -328,7 +330,7 @@ class Events extends RESTResource {
      * Alternatively, a single id or multiple ids can be provided as selection criteria.
      * To simplify the refresh process on the client side, only status and comment fields can be updated.
      * If permissions settings require comments, each status flag update to anything other than "UNEDITED"
-     * also required a comment to be present.
+     * also requires a comment to be present.
      *
      * At least one of the following parameters have to be set to update the event model:
      * - new_status: Status value, 0 to 3
@@ -344,6 +346,8 @@ class Events extends RESTResource {
         $this->assureAllowed('update');
         $em = $this->getEntityManager();
         V::oneOf(V::key('new_status'), V::key('new_comment'))->check($criteria);
+        // Prevent modification of archived events
+        if(V::key('archived', V::trueVal())->validate($criteria)) throw new BadRequestException();
         // If the key 'id' or 'ids' is present, just update those individual IDs
         if(V::oneOf(V::key('id'), V::key('ids'))->validate($criteria)) {
             // Doctrine doesn't support JOINs in UPDATE queries, therefore we first manually
@@ -396,19 +400,31 @@ class Events extends RESTResource {
      * Alternatively, a single id or multiple ids can be provided as deletion criteria.
      *
      * Optional criteria:
+     * - archive: after deletion, send the event to the archive
      * - userID: removes only events that belong to the user with the given id
      *
      * @param array $criteria
+     * @throws BadRequestException
+     * @throws ForbiddenException
      */
     public function delete($criteria) {
         $this->assureAllowed('delete');
         $em = $this->getEntityManager();
+        $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
+        $archived = V::key('archived', V::boolType())->validate($criteria) && $criteria['archived'];
+        // We can't archive already archived events
+        if($archive && $archived) throw new BadRequestException();
+        $entity = $archived ? 'HoneySens\app\models\entities\ArchivedEvent' : 'HoneySens\app\models\entities\Event';
         // If the key 'id' or 'ids' is present, just delete those individual IDs
         if(V::oneOf(V::key('id'), V::key('ids'))->validate($criteria)) {
             // DQL doesn't support joins in DELETE, so we collect the candidates first
             $qb = $em->createQueryBuilder();
-            $qb->select('e')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
-            if (V::key('id', V::intVal())->validate($criteria)) {
+            if($archived) {
+                $qb->select('e')->from($entity, 'e')->join('e.division', 'd');
+            } else {
+                $qb->select('e')->from($entity, 'e')->join('e.sensor', 's')->join('s.division', 'd');
+            }
+            if(V::key('id', V::intVal())->validate($criteria)) {
                 $qb->andWhere('e.id = :id')
                     ->setParameter('id', $criteria['id']);
             } else if (V::key('ids', V::arrayType())->validate($criteria)) {
@@ -418,44 +434,52 @@ class Events extends RESTResource {
                 $qb->andWhere('e.id IN (:ids)')
                     ->setParameter('ids', $criteria['ids'], Connection::PARAM_STR_ARRAY);
             }
-            if (V::key('userID', V::intType())->validate($criteria)) {
+            if(V::key('userID', V::intType())->validate($criteria)) {
                 $qb->andWhere(':userid MEMBER OF d.users')
                     ->setParameter('userid', $criteria['userID']);
             }
             // Persistence
             $results = $qb->getQuery()->getResult();
-            foreach ($results as $result) {
-                $em->remove($result);
+            if($archive) {
+                $eventIDs = array_map(function($e) { return $e->getId();}, $results);
+                $this->archiveEvents($em, $eventIDs, true);
+            } else {
+                foreach ($results as $result) $em->remove($result);
+                $em->flush();
             }
-            $em->flush();
         } else {
             // Batch delete events according to the remaining query parameters
             $qb = $this->fetchEvents($criteria);
             $qb->select('e.id');
             $eventIDs = $qb->getQuery()->getResult();
             if(sizeof($eventIDs) == 0) return;
-            // Fetch EventDetail and EventPacket IDs associated with those events
-            $eventDetailIDs = $em->createQueryBuilder()
-                ->select('ed.id')->from('HoneySens\app\models\entities\EventDetail', 'ed') ->join('ed.event', 'e')
-                ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
-                ->getQuery()->getResult();
-            $eventPacketIDs = $em->createQueryBuilder()
-                ->select('ep.id')->from('HoneySens\app\models\entities\EventPacket', 'ep') ->join('ep.event', 'e')
-                ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
-                ->getQuery()->getResult();
-            // Manual delete cascade
-            if(sizeof($eventDetailIDs) > 0)
-                $em->createQueryBuilder()
-                    ->delete('HoneySens\app\models\entities\EventDetail', 'ed')
-                    ->where('ed.id in (:ids)')->setParameter('ids', $eventDetailIDs)
-                    ->getQuery()->execute();
-            if(sizeof($eventPacketIDs))
-                $em->createQueryBuilder()
-                    ->delete('HoneySens\app\models\entities\EventPacket', 'ep')
-                    ->where('ep.id in (:ids)')->setParameter('ids', $eventPacketIDs)
-                    ->getQuery()->execute();
+            if($archive) {
+                $this->archiveEvents($em, $eventIDs, false);
+            }
+            if(!$archived) {
+                // Fetch EventDetail and EventPacket IDs associated with those events
+                $eventDetailIDs = $em->createQueryBuilder()
+                    ->select('ed.id')->from('HoneySens\app\models\entities\EventDetail', 'ed')->join('ed.event', 'e')
+                    ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
+                    ->getQuery()->getResult();
+                $eventPacketIDs = $em->createQueryBuilder()
+                    ->select('ep.id')->from('HoneySens\app\models\entities\EventPacket', 'ep')->join('ep.event', 'e')
+                    ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
+                    ->getQuery()->getResult();
+                // Manual delete cascade
+                if(sizeof($eventDetailIDs) > 0)
+                    $em->createQueryBuilder()
+                        ->delete('HoneySens\app\models\entities\EventDetail', 'ed')
+                        ->where('ed.id in (:ids)')->setParameter('ids', $eventDetailIDs)
+                        ->getQuery()->execute();
+                if(sizeof($eventPacketIDs))
+                    $em->createQueryBuilder()
+                        ->delete('HoneySens\app\models\entities\EventPacket', 'ep')
+                        ->where('ep.id in (:ids)')->setParameter('ids', $eventPacketIDs)
+                        ->getQuery()->execute();
+            }
             $em->createQueryBuilder()
-                ->delete('HoneySens\app\models\entities\Event', 'e')
+                ->delete($entity, 'e')
                 ->where('e.id in (:ids)')->setParameter('ids', $eventIDs)
                 ->getQuery()
                 ->execute();
@@ -478,6 +502,7 @@ class Events extends RESTResource {
      * - toTS: timestamp, to specify the end of a date range
      * - list: list of requested event ids
      * - filter: search term to find events that contain the given string
+     * - archived: whether to fetch from archived events (true, false or a string)
      *
      * If no criteria are given, all events will be selected matching the default parameters.
      *
@@ -487,7 +512,18 @@ class Events extends RESTResource {
      */
     private function fetchEvents($criteria) {
         $qb = $this->getEntityManager()->createQueryBuilder();
-        $qb->select('e')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
+        $archived = V::key('archived', V::trueVal())->validate($criteria) && $criteria['archived'];
+        if($archived) {
+            $qb->select('e')->from('HoneySens\app\models\entities\ArchivedEvent', 'e');
+            if(V::key('userID', V::intType())->validate($criteria) || V::key('division', V::intVal())->validate($criteria)) {
+                // Only JOIN with division if we require to either show events for a certain userID or of a specific
+                // division. Omitting this JOIN enables admin users (userID == null) to fetch archived events for
+                // already deleted divisions, which don't have a division associated with them anymore.
+                $qb->join('e.division', 'd');
+            }
+        } else {
+            $qb->select('e')->from('HoneySens\app\models\entities\Event', 'e')->join('e.sensor', 's')->join('s.division', 'd');
+        }
         if(V::key('userID', V::intType())->validate($criteria)) {
             $qb->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $criteria['userID']);
@@ -526,7 +562,8 @@ class Events extends RESTResource {
             $qb->andWhere('d.id = :division')
                 ->setParameter('division', $criteria['division']);
         }
-        if(V::key('sensor', V::intVal())->validate($criteria)) {
+        if(V::key('sensor', V::intVal())->validate($criteria) && !$archived) {
+            // Sensor ID filtering is not possible for archived events
             $qb->andWhere('s.id = :sensor')
                 ->setParameter('sensor', $criteria['sensor']);
         }
@@ -562,6 +599,25 @@ class Events extends RESTResource {
                 ->setParameter('list', $criteria['list'], Connection::PARAM_INT_ARRAY);
         }
         return $qb;
+    }
+
+    /**
+     * Sends the given events (by ID) to the archive and removes them from the primary event list.
+     *
+     * @param EntityManager $em
+     * @param $eventIDs
+     */
+    public function archiveEvents(EntityManager $em, $eventIDs, $delete=false) {
+        if(sizeof($eventIDs) == 0) return;
+        foreach($em->createQueryBuilder()->select('e')->from('HoneySens\app\models\entities\Event', 'e')
+                    ->where('e.id IN (:ids)')
+                    ->setParameter('ids', $eventIDs)->getQuery()->getResult() as $event) {
+            $archivedEvent = new ArchivedEvent($event);
+            $em->persist($archivedEvent);
+            if($delete) $em->remove($event);
+            $em->flush();
+        }
+        $this->log('One or multiple events archived', LogEntry::RESOURCE_EVENTS);
     }
 
     /**

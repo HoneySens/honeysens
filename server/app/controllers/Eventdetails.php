@@ -13,6 +13,11 @@ class Eventdetails extends RESTResource {
             $packets = $controller->get(array('userID' => $controller->getSessionUserID(), 'eventID' => $id, 'type' => 1));
             echo json_encode(array('details' => $details, 'packets' => $packets));
         });
+
+        $app->get('/api/eventdetails/by-archived-event/:id', function($id) use($app, $em, $services, $config, $messages) {
+            $controller = new Eventdetails($em, $services, $config);
+            echo json_encode($controller->getArchivedDetails($id, $controller->getSessionUserID()));
+        });
     }
 
     /**
@@ -56,5 +61,33 @@ class Eventdetails extends RESTResource {
             }
             return $details;
         }
+    }
+
+    /**
+     * Fetches and returns event details from the event archive for a given archived event ID.
+     *
+     * @param int $eventID
+     * @param int $userID
+     * @return array
+     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     */
+    public function getArchivedDetails($eventID, $userID=null) {
+        $this->assureAllowed('get');
+        V::intVal()->check($eventID);
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->select('e')
+            ->from('HoneySens\app\models\entities\ArchivedEvent', 'e');
+        if($userID != null) {
+            // Only join with division in case a user ID was provided. Otherwise this won't return results for
+            // archived events without a division.
+            $qb->join('e.division', 'd')
+                ->andWhere(':userid MEMBER OF d.users')
+                ->setParameter('userid', $userID);
+        }
+        $qb->andWhere('e.id = :id')
+            ->setParameter('id', $eventID);
+        $event = $qb->getQuery()->getSingleResult();
+        V::objectType()->check($event);
+        return array('details' => $event->getDetails(), 'packets' => $event->getPackets());
     }
 }

@@ -30,9 +30,23 @@ function(HoneySens, Models, Spinner) {
                         return 'Ungültige Klassifikation';
                 }
             },
-            showSensor: function (sensor) {
-                var sensor = sensor || this.sensor;
-                return HoneySens.data.models.sensors.get(sensor).get('name');
+            showSensor: function (eventAttrs) {
+                eventAttrs = eventAttrs || this;
+                // On archived events, the sensor name is directly attached to the event
+                if(eventAttrs.archived) return eventAttrs.sensor;
+                else return HoneySens.data.models.sensors.get(eventAttrs.sensor).get('name');
+            },
+            showDivisionForEvent: function(eventAttrs) {
+                eventAttrs = eventAttrs || this;
+                if(eventAttrs.archived) {
+                    // On archived events, the division is usually a reference or. In case it doesn't exist anymore,
+                    // division is null and its last name can be found in divisionName.
+                    if(eventAttrs.division === null) {
+                        return eventAttrs.divisionName;
+                    } else {
+                        return HoneySens.data.models.divisions.get(eventAttrs.division).get('name');
+                    }
+                } else return Views.EventTemplateHelpers.showDivision(eventAttrs.sensor);
             },
             showDivision: function(sensor) {
                 var sensor = sensor || this.sensor;
