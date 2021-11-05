@@ -20,6 +20,7 @@ function(HoneySens, Models, EventEditTpl) {
                     var status = this.$el.find('select[name="statusCode"]').val(),
                         comment = this.$el.find('textarea[name="comment"]').val(),
                         data = {},
+                        model = this.model,
                         valid = true;
                     // Perform validation
                     this.$el.find('form').validator('validate');
@@ -27,9 +28,18 @@ function(HoneySens, Models, EventEditTpl) {
                         valid = !$(this).hasClass('has-error') && valid;
                     });
                     if(valid) {
-                        // Set status/comment if editing a single model or if something was entered when editing multiple
-                        if (parseInt(status) >= 0 || !this.model.has('total')) data.new_status = status;
-                        if (comment.length > 0 || !this.model.has('total')) data.new_comment = comment;
+                        let isSingleEdit = !this.model.has('total');
+
+                        // Set status/comment depending on whether a single or multiple events are edited
+                        if(isSingleEdit) {
+                            // For single edits we can simply compare to the model to spot differences
+                            if(parseInt(status) !== model.get('status')) data.new_status = status;
+                            if(comment !== model.get('comment')) data.new_comment = comment;
+                        } else {
+                            // When editing multiple events, user's have to explicitly select or enter new values
+                            if(parseInt(status) >= 0) data.new_status = status;
+                            if(comment.length > 0) data.new_comment = comment;
+                        }
                         this.trigger('confirm', data);
                     }
                 }
@@ -44,6 +54,10 @@ function(HoneySens, Models, EventEditTpl) {
             templateHelpers: {
                 isMultiEdit: function() {
                     return typeof this.total !== 'undefined';
+                },
+                showLastModificationTime: function() {
+                    if(this.lastModificationTime) return HoneySens.Views.EventTemplateHelpers.showTimestamp(this.lastModificationTime);
+                    else return '-'
                 }
             },
             refreshValidators: function(statusCode) {

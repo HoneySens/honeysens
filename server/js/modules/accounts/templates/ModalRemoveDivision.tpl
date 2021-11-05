@@ -7,7 +7,7 @@
             <p>Soll die Gruppe <strong><%- name %></strong> mit all ihren assoziierten Sensoren und Ergebnissen wirklich entfernt werden?</p>
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" name="archive">Ereignisse zuvor in Archiv verschieben
+                    <input type="checkbox" name="archive" <% if(archivePrefer()) { %>checked<% } %>>Ereignisse zuvor in Archiv verschieben
                 </label>
             </div>
         </div>

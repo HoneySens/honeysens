@@ -25,6 +25,7 @@
                 <label for="comment" class="control-label">Kommentar</label>
                 <textarea rows="10" class="form-control" name="comment" maxlength="65535" style="resize: none;" <% if(isMultiEdit()) { %>placeholder="Hier eingegebener Text wird alle Einzelkommentare überschreiben"<% } %>></textarea>
             </div>
+            <p>Letzte Status&auml;nderung: <strong><%- showLastModificationTime() %></strong></p>
             <hr />
             <div class="form-group">
                 <div class="btn-group btn-group-justified">

@@ -2,6 +2,7 @@ define(['app/app',
         'app/models',
         'app/modules/settings/views/ServerEndpoint',
         'app/modules/settings/views/Sensors',
+        'app/modules/settings/views/EventArchive',
         'app/modules/settings/views/Permissions',
         'app/modules/settings/views/Logging',
         'app/modules/settings/views/LDAP',
@@ -9,7 +10,7 @@ define(['app/app',
         'app/modules/settings/views/SMTPTemplates',
         'app/modules/settings/views/EventForwarding',
         'tpl!app/modules/settings/templates/Settings.tpl'],
-function(HoneySens, Models, ServerEndpointView, SensorsView, PermissionsView, LoggingView, LDAPView, SMTPSettingsView, SMTPTemplatesView, EventForwardingView, SettingsTpl) {
+function(HoneySens, Models, ServerEndpointView, SensorsView, EventArchiveView, PermissionsView, LoggingView, LDAPView, SMTPSettingsView, SMTPTemplatesView, EventForwardingView, SettingsTpl) {
     HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.Settings = Marionette.LayoutView.extend({
             template: SettingsTpl,
@@ -17,6 +18,7 @@ function(HoneySens, Models, ServerEndpointView, SensorsView, PermissionsView, Lo
             regions: {
                 endpoint: 'div#settings-endpoint',
                 sensors: 'div#settings-sensors',
+                archive: 'div#settings-archive',
                 permissions: 'div#settings-permissions',
                 logging: 'div#settings-logging',
                 ldap: 'div#settings-ldap',
@@ -45,6 +47,7 @@ function(HoneySens, Models, ServerEndpointView, SensorsView, PermissionsView, Lo
             onRender: function() {
                 this.getRegion('endpoint').show(new ServerEndpointView({model: this.model}));
                 this.getRegion('sensors').show(new SensorsView({model: this.model}));
+                this.getRegion('archive').show(new EventArchiveView({model: this.model}));
                 this.getRegion('permissions').show(new PermissionsView({model: this.model}));
                 this.getRegion('logging').show(new LoggingView({model: this.model}));
                 this.getRegion('ldap').show(new LDAPView({model: this.model}));

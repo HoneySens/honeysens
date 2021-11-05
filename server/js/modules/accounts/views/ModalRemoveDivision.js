@@ -18,6 +18,11 @@ function(HoneySens, JSON, ModalRemoveDivisionTpl) {
                         }
                     });
                 }
+            },
+            templateHelpers: {
+                archivePrefer: function() {
+                    return HoneySens.data.settings.get('archivePrefer');
+                }
             }
         });
     });

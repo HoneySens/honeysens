@@ -9,7 +9,7 @@
             <% if(!archived) { %>
                 <div class="checkbox">
                     <label>
-                        <input type="checkbox" name="archive">Ereignis archivieren
+                        <input type="checkbox" name="archive" <% if(archivePrefer()) { %>checked<% } %>>Ereignis archivieren
                     </label>
                 </div>
             <% } %>

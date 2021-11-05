@@ -110,8 +110,16 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 if(!HoneySens.assureAllowed('events', 'update')) return false;
                 var dialog = new EventEditView({model: model});
                 dialog.listenTo(dialog, 'confirm', function(data) {
-                    model.save(data, {
-                        wait: true, success: function () {
+                    // Only send a request in case something was modified
+                    if(Object.keys(data).length === 0) {
+                        HoneySens.request('view:content').overlay.empty();
+                        return;
+                    }
+                    $.ajax({
+                        type: 'PUT',
+                        url: 'api/events/' + model.id,
+                        data: JSON.stringify(data),
+                        success: function() {
                             HoneySens.data.models.events.fetch();
                             HoneySens.request('view:content').overlay.empty();
                         }
