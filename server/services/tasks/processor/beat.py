@@ -31,6 +31,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute=1, hour=0), clean_api_log.s(), queue='low')
     sender.add_periodic_task(crontab(minute=0, hour=9, day_of_week='mon'), summarize_week.s(), queue='low')
     sender.add_periodic_task(crontab(minute=0, hour=9), check_ca_expiration.s(), queue='low')
+    sender.add_periodic_task(crontab(minute=0, hour=3), archive_caretaker.s(), queue='low')
 
 
 @processor.app.task
@@ -51,3 +52,8 @@ def check_ca_expiration():
 @processor.app.task
 def clean_api_log():
     perform_beat(constants.TaskType.API_LOG_CLEANER)
+
+
+@processor.app.task
+def archive_caretaker():
+    perform_beat(constants.TaskType.ARCHIVE_CARETAKER)

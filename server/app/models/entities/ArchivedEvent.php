@@ -87,6 +87,13 @@ class ArchivedEvent {
     protected $lastModificationTime;
 
     /**
+     * Timestamp of when this event was archived.
+     *
+     * @Column(type="datetime")
+     */
+    protected $archiveTime;
+
+    /**
      * Holds event details as JSON structure.
      *
      * @Column(type="text")
@@ -118,6 +125,7 @@ class ArchivedEvent {
         $this->status = $e->getStatus();
         $this->comment = $e->getComment();
         $this->lastModificationTime = $e->getLastModificationTime();
+        $this->archiveTime = new \DateTime();
         $details = array();
         $packets = array();
         foreach($e->getDetails() as $detail) $details[] = $detail->getState();
@@ -142,6 +150,7 @@ class ArchivedEvent {
 
     public function getState() {
         $division = $this->division == null ? null : $this->division->getId();
+        $lastmod = $this->lastModificationTime ? $this->lastModificationTime->format('U') : null;
         return array(
             'id' => $this->id,
             'oid' => $this->oid,
@@ -155,7 +164,8 @@ class ArchivedEvent {
             'summary' => $this->summary,
             'status' => $this->status,
             'comment' => $this->comment,
-            'lastModificationTime' => $this->lastModificationTime,
+            'lastModificationTime' => $lastmod,
+            'archiveTime' => $this->archiveTime->format('U'),
             'numberOfPackets' => sizeof($this->getPackets()),
             'numberOfDetails' => sizeof($this->getDetails()),
             'archived' => true

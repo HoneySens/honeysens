@@ -384,7 +384,9 @@ class Events extends RESTResource {
             if(V::intVal()->between(1, 3)->validate($criteria['new_status']) && $this->getConfig()->getBoolean('misc', 'require_event_comment'))
                 V::key('new_comment', V::stringType()->length(1, 65535))->check($criteria);
             $qb->set('e.status', ':status')
-                ->setParameter('status', $criteria['new_status']);
+                ->set('e.lastModificationTime', ':lastmod')
+                ->setParameter('status', $criteria['new_status'])
+                ->setParameter('lastmod', new \DateTime());
         }
         if(V::key('new_comment', V::stringType()->length(0, 65535))->validate($criteria)) {
             $qb->set('e.comment', ':comment')

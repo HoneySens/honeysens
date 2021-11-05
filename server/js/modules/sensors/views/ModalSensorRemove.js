@@ -22,6 +22,11 @@ function(HoneySens, JSON, ModalSensorRemoveTpl) {
                         }
                     });
                 }
+            },
+            templateHelpers: {
+                archivePrefer: function() {
+                    return HoneySens.data.settings.get('archivePrefer');
+                }
             }
         });
     });

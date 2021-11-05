@@ -5,7 +5,6 @@ define(['app/app',
 function(HoneySens, ModalEventRemoveSingleTpl, ModalEventRemoveMassTpl) {
     HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.ModalRemoveEvent = Marionette.ItemView.extend({
-            templateHelpers: HoneySens.Views.EventTemplateHelpers,
             events: {
                 'click button.btn-primary': function(e) {
                     e.preventDefault();
@@ -17,7 +16,12 @@ function(HoneySens, ModalEventRemoveSingleTpl, ModalEventRemoveMassTpl) {
                 // count is submitted, otherwise we receive an Event object
                 if(this.model.has('total')) this.template = ModalEventRemoveMassTpl;
                 else this.template = ModalEventRemoveSingleTpl;
-            }
+            },
+            templateHelpers: Object.assign({
+                archivePrefer: function() {
+                    return HoneySens.data.settings.get('archivePrefer');
+                }
+            }, HoneySens.Views.EventTemplateHelpers)
         });
     });
 

@@ -21,6 +21,14 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4 class="panel-title">
+                <a class="collapsed" data-toggle="collapse" data-parent="#settings" href="#settings-archive">Ereignis-Archiv</a>
+            </h4>
+        </div>
+        <div id="settings-archive" class="panel-collapse collapse"></div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
                 <a class="collapsed" data-toggle="collapse" data-parent="#settings" href="#settings-permissions">Rechteverwaltung</a>
             </h4>
         </div>

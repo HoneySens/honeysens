@@ -61,7 +61,8 @@ class Settings extends RESTResource {
             'caFP' => openssl_x509_fingerprint($caCert),
             'caExpire' => openssl_x509_parse($caCert)['validTo_time_t'],
             'requireEventComment' => $config->getBoolean('misc', 'require_event_comment'),
-            'requireFilterDescription' => $config->getBoolean('misc', 'require_filter_description')
+            'requireFilterDescription' => $config->getBoolean('misc', 'require_filter_description'),
+            'archivePrefer' => $config->getBoolean('misc', 'archive_prefer')
         );
         // Settings only relevant to admins
         if($this->getSessionUserID() == null) {
@@ -89,6 +90,8 @@ class Settings extends RESTResource {
             // Misc
             $settings['apiLogKeepDays'] = $config['misc']['api_log_keep_days'];
             $settings['restrictManagerRole'] = $config->getBoolean('misc', 'restrict_manager_role');
+            $settings['archiveMoveDays'] = $config['misc']['archive_move_days'];
+            $settings['archiveKeepDays'] = $config['misc']['archive_keep_days'];
         }
         return $settings;
     }
@@ -108,6 +111,9 @@ class Settings extends RESTResource {
      * - restrictManagerRole: Enables or disable permission restrictions for managers
      * - requireEventComment: Forces users to enter a comment when editing events
      * - requireFilterDescription: Forces users to enter a description when creating or updating event filters
+     * - archivePrefer: Instructs the client to preselect the "archive" checkbox by default when deleting events
+     * - archiveMoveDays: Specifies after how many days after their last modification events are moved into the archive
+     * - archiveKeepDays: Specifies how many days archived events should be kept
      *
      * Optional parameters:
      * - smtpServer: IP or hostname of a mail server
@@ -147,6 +153,9 @@ class Settings extends RESTResource {
             ->attribute('restrictManagerRole', V::boolType())
             ->attribute('requireEventComment', V::boolType())
             ->attribute('requireFilterDescription', V::boolType())
+            ->attribute('archivePrefer', V::boolType())
+            ->attribute('archiveMoveDays', V::intVal()->between(0, 65535))
+            ->attribute('archiveKeepDays', V::intVal()->between(0, 65535))
             ->check($data);
         if($data->smtpEnabled) {
            V::attribute('smtpServer', V::stringType())
@@ -222,6 +231,9 @@ class Settings extends RESTResource {
         $config->set('misc', 'restrict_manager_role', $data->restrictManagerRole ? 'true' : 'false');
         $config->set('misc', 'require_event_comment', $data->requireEventComment ? 'true' : 'false');
         $config->set('misc', 'require_filter_description', $data->requireFilterDescription ? 'true' : 'false');
+        $config->set('misc', 'archive_prefer', $data->archivePrefer ? 'true' : 'false');
+        $config->set('misc', 'archive_move_days', $data->archiveMoveDays);
+        $config->set('misc', 'archive_keep_days', $data->archiveKeepDays);
         $config->save();
         $this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
         $this->log('System settings updated', LogEntry::RESOURCE_SETTINGS);
@@ -253,7 +265,10 @@ class Settings extends RESTResource {
             'apiLogKeepDays' => $config['misc']['api_log_keep_days'],
             'restrictManagerRole' => $config->getBoolean('misc', 'restrict_manager_role'),
             'requireEventComment' => $config->getBoolean('misc', 'require_event_comment'),
-            'requireFilterDescription' => $config->getBoolean('misc', 'require_filter_description')
+            'requireFilterDescription' => $config->getBoolean('misc', 'require_filter_description'),
+            'archivePrefer' => $config->getBoolean('misc', 'archive_prefer'),
+            'archiveMoveDays' => $config['misc']['archive_move_days'],
+            'archiveKeepDays' => $config['misc']['archive_keep_days']
         );
     }
 

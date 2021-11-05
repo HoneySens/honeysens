@@ -366,6 +366,7 @@ class Event {
     public function getState() {
         $sensor = $this->getSensor() == null ? '' : $this->getSensor()->getId();
         $division = $sensor == null ? null : $this->getSensor()->getDivision()->getId();
+        $lastmod = $this->getLastModificationTime() ? $this->getLastModificationTime()->format('U') : null;
         return array(
             'id' => $this->getId(),
             'timestamp' => $this->getTimestamp()->format('U'),
@@ -377,7 +378,7 @@ class Event {
             'summary' => $this->getSummary(),
             'status' => $this->getStatus(),
             'comment' => $this->getComment(),
-            'lastModificationTime' => $this->getLastModificationTime(),
+            'lastModificationTime' => $lastmod,
             'numberOfPackets' => sizeof($this->getPackets()),
             'numberOfDetails' => sizeof($this->getDetails()),
             'archived' => false
