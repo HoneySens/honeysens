@@ -2,6 +2,7 @@
 namespace HoneySens\app\models;
 
 use HoneySens\app\models\entities\Event;
+use HoneySens\app\models\entities\EventPacket;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\Template;
 
@@ -21,6 +22,37 @@ class ContactService {
         elseif($event->getClassification() == $event::CLASSIFICATION_PORTSCAN) return 'Portscan';
     }
 
+    private function getPacketProtocolAndPort($packet) {
+        $protocol = 'UNK';
+        switch($packet->getProtocol()) {
+            case EventPacket::PROTOCOL_TCP: $protocol = 'TCP'; break;
+            case EventPacket::PROTOCOL_UDP: $protocol = 'UDP'; break;
+        }
+        return $protocol . '/' . $packet->getPort();
+    }
+
+    private function getPacketFlags($packet) {
+        $headers = $packet->getHeaders();
+        if(!$headers) return '';
+        $flags = json_decode($headers, true)[0]['flags'];
+        $result = '';
+        if(($flags & 0b1) > 0) $result .= 'F';
+        if(($flags & 0b10) > 0) $result .= 'S';
+        if(($flags & 0b100) > 0) $result .= 'R';
+        if(($flags & 0b1000) > 0) $result .= 'P';
+        if(($flags & 0b10000) > 0) $result .= 'A';
+        if(($flags & 0b100000) > 0) $result .= 'U';
+        return $result;
+    }
+
+    private function getPayload($packet) {
+        // Escape tabs and newlines
+        $payload = $packet->getPayload();
+        if($payload != null) {
+            return str_replace("\t", "\\t", str_replace("\n", "\\n", base64_decode($packet->getPayload())));
+        } else return '';
+    }
+
     private function createEventSummary(Event $event) {
         $result = 'Datum: ' . $event->getTimestamp()->format('d.m.Y') . "\n";
         $result .= 'Zeit: ' . $event->getTimestamp()->format('H:i:s') . "\n";
@@ -34,6 +66,7 @@ class ContactService {
     private function createEventDetails(Event $event) {
         $result = '';
         $details = $event->getDetails();
+        $packets = $event->getPackets();
         $genericDetails = array();
         $interactionDetails = array();
         if(count($details) > 0) {
@@ -42,6 +75,7 @@ class ContactService {
                 elseif($detail->getType() == $detail::TYPE_INTERACTION) $interactionDetails[] = $detail;
             }
         }
+        $detailBlockWritten = false;
         if(count($genericDetails) > 0) {
             $itemCount = 0;
             $result .= "Zusätzliche Informationen:\n--------------------------\n";
@@ -50,16 +84,30 @@ class ContactService {
                 $result .= $genericDetail->getData();
                 if($itemCount != count($genericDetails)) $result .= "\n";
             }
+            $detailBlockWritten = true;
         }
         if(count($interactionDetails) > 0) {
             $itemCount = 0;
-            # Add an additional newline in case a generic details block exists for clear separation
-            if(count($genericDetails) > 0) $result .= "\n";
+            # Add an additional newline in case a generic details block exists for visual separation
+            if($detailBlockWritten) $result .= "\n";
             $result .= "Sensorinteraktion (Zeiten in UTC):\n----------------------------------\n";
             foreach($interactionDetails as $interactionDetail) {
                 $itemCount++;
                 $result .= $interactionDetail->getTimestamp()->format('H:i:s') . ': ' . $interactionDetail->getData();
                 if($itemCount != count($interactionDetails)) $result .= "\n";
+            }
+            $detailBlockWritten = true;
+        }
+        if(count($packets) > 0) {
+            $itemCount = 0;
+            # Add an additional newline in case a generic or interaction details block exists for visual separation
+            if($detailBlockWritten) $result .= "\n";
+            $result .= "Paketübersicht (Zeit in UTC | Protocol/Port | Flags | Payload):\n---------------------------------------------------------------\n";
+            foreach($packets as $packet) {
+                $itemCount++;
+                $result .= $packet->getTimestamp()->format('H:i:s') . ': ' . $this->getPacketProtocolAndPort($packet) .
+                    ' | ' . $this->getPacketFlags($packet) . ' | ' . $this->getPayload($packet);
+                if($itemCount != count($packets)) $result .= "\n";
             }
         }
         return $result;

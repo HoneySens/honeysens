@@ -179,7 +179,7 @@ class EventPacket {
     }
 
     /**
-     * Returns all header fields and values as an associative array
+     * Returns all header fields and values as an JSON string
      *
      * @return array
      */
