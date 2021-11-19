@@ -38,7 +38,7 @@ if [[ "$?" == "0" ]]; then
     exit 0
 fi
 
-if [[ ! -e /opt/HoneySens/data/${TARGET}.key ]]; then
+if [[ ! -s /opt/HoneySens/data/${TARGET}.key ]]; then
     echo "Generating new TLS key pair"
     openssl genrsa -out /opt/HoneySens/data/${TARGET}.key 2048
     openssl req -new -key /opt/HoneySens/data/${TARGET}.key -out /opt/HoneySens/data/${TARGET}.csr -subj "${SUBJECT}"
