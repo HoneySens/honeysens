@@ -1,6 +1,7 @@
 STORAGE_PATH = '/srv/data'  # Mount point of the HoneySens data directory
 RESULT_PATH = 'tasks'  # Path relative to the global data path that is used to store task results
 UPLOAD_PATH = 'upload'  # Path relative to the global data path that is used to store uploaded files
+TLS_CERT_PATH = '/srv/tls/https.crt'
 
 
 class TaskStatus:

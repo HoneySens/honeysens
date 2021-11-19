@@ -12,3 +12,7 @@ touch /opt/HoneySens/data/config.cfg
 
 # Disable certificate verification within the dev environment
 echo -e "TLS_REQCERT\tnever" >> /etc/ldap/ldap.conf
+
+# TLS key and certs
+ln -s /srv/data/https.chain.crt /srv/tls/https.crt
+ln -s /srv/data/https.key /srv/tls/https.key

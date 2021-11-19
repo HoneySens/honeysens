@@ -25,3 +25,6 @@ echo /var/run/apache2 > /etc/container_environment/APACHE_RUN_DIR
 a2enmod rewrite ssl headers proxy_http
 a2dissite 000-default
 chmod 755 /var/run/screen # see https://github.com/stucki/docker-cyanogenmod/issues/2
+
+# TLS Directory
+mkdir -p /srv/tls

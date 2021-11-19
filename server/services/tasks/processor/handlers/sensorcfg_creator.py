@@ -28,9 +28,8 @@ class SensorConfigCreator(HandlerInterface):
         logger.debug('Writing sensor key to {}/key.pem'.format(working_dir))
         with open('{}/key.pem'.format(working_dir), 'w') as f:
             f.write(job_params['key'])
-        certfile = '{}/https.chain.crt'.format(constants.STORAGE_PATH)
-        logger.debug('Copying server certificate bundle: {} -> {}/server-cert.pem'.format(certfile, working_dir))
-        shutil.copy(certfile, '{}/server-cert.pem'.format(working_dir))
+        logger.debug('Copying server certificate bundle: {} -> {}/server-cert.pem'.format(constants.TLS_CERT_PATH, working_dir))
+        shutil.copy(constants.TLS_CERT_PATH, '{}/server-cert.pem'.format(working_dir))
         if job_params['eapol_ca_cert'] is not None:
             eapol_ca_crt_path = 'eapol_ca.rt'
             logger.debug('Writing EAPOL CA certificate to {}/{}'.format(working_dir, eapol_ca_crt_path))
