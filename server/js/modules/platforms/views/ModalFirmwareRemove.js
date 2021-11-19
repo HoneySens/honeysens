@@ -18,6 +18,23 @@ function(HoneySens, ModalFirmwareRemoveTpl) {
                         }
                     });
                 }
+            },
+            templateHelpers: {
+                hasAffectedSensors: function() {
+                    let firmware = this.id,
+                        affectedSensors = HoneySens.data.models.sensors.filter(function(s) {
+                        return s.get('firmware') === firmware;
+                    });
+                    return affectedSensors.length > 0;
+                },
+                getAffectedSensors: function() {
+                    let firmware = this.id;
+                    return HoneySens.data.models.sensors.filter(function(s) {
+                        return s.get('firmware') === firmware;
+                    }).map(function(s) {
+                        return s.get('name') + ' (' + s.id + ')';
+                    }).join(', ');
+                }
             }
         });
     });
