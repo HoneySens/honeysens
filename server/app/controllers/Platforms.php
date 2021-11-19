@@ -252,7 +252,7 @@ class Platforms extends RESTResource {
         V::objectType()->check($platform);
         // Don't remove the default firmware revision for this platform
         if($platform->getDefaultFirmwareRevision() == $firmware) throw new BadRequestException();
-        // In case this revision is set as target firmware on some platforms, reset those back to their default revision
+        // In case this revision is set as target firmware on some sensors, reset those back to their default revision
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('s')->from('HoneySens\app\models\entities\Sensor', 's')
             ->where('s.firmware = :firmware')

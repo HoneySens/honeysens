@@ -5,8 +5,10 @@
         </div>
         <div class="modal-body">
             <p>Soll die Firmware <strong><%- name %> (Version <%- version %>)</strong> wirklich entfernt werden?</p>
-            <p><strong>Achtung:</strong> Sensoren, für die individuelle Firmware konfiguriert ist, werden auf die
-                systemweite Standardrevision zurückgesetzt.</p>
+            <% if(hasAffectedSensors()) { %>
+                <p><strong>Achtung:</strong> Sensoren, für die individuelle Firmware konfiguriert ist, werden auf die systemweite Standardrevision zurückgesetzt.</p>
+                <p>Dies betrifft die folgenden Sensoren: <%- getAffectedSensors() %></p>
+            <% } %>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
