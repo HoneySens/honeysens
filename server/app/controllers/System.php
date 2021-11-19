@@ -93,12 +93,11 @@ class System extends RESTResource {
     public function get() {
         $config = $this->getConfig();
         // Fetch TLS cert common name
-        $certfile = sprintf('%s/https.chain.crt', DATA_PATH);
         $commonName = null;
         $x509 = new X509();
         try {
             // Manually select the first cert of a potential chain (see https://github.com/phpseclib/phpseclib/issues/708)
-            $certs = preg_split('#-+BEGIN CERTIFICATE-+#', file_get_contents($certfile));
+            $certs = preg_split('#-+BEGIN CERTIFICATE-+#', file_get_contents('/srv/tls/https.crt'));
             array_shift($certs); // Remove the first empty element
             $cert = $x509->loadX509(sprintf('%s%s', '-----BEGIN CERTIFICATE-----', array_shift($certs)));
             foreach($cert['tbsCertificate']['subject']['rdnSequence'] as $prim) {

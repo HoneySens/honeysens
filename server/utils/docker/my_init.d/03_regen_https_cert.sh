@@ -27,7 +27,11 @@ if [[ -e /opt/HoneySens/data/ssl-cert.key ]] && [[ -e /opt/HoneySens/data/ssl-ce
     fi
 fi
 
-# Figure out whether a custom certificate was submitted as a bind mount, in which case we can safely quit
+# Figure out whether a custom certificate was submitted as a bind mount, in which case we can safely quit.
+# Starting with server 2.4.0, custom certificates are mounted into /srv/tls, so that
+# /srv/tls/https* -> /opt/HoneySens/data/https*. Custom certificates can be mounted on top of /srv/tls/http*.
+# However, docker compose follows symlinks and will in this case still mount directly onto /opt/HoneySens/data/https*,
+# which is why we always check whether that path contains a bind mount prior to generating new self-signed certs.
 findmnt -n -M /opt/HoneySens/data/https.key >/dev/null
 if [[ "$?" == "0" ]]; then
     echo "Bind-mounted TLS certificate found, not generating a new one"

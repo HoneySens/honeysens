@@ -55,7 +55,11 @@ Auch hier ist darauf zu achten, alle Operationen mit demselben Projektnamen ausz
 * Instanz im Anschluss mittels 'docker-compose up -d' neu starten
 * Für die Nutzung des Webinterfaces empfiehlt es sich, nach Updates den Browser-Cache zu leeren
 
-ACHTUNG: Beim Update von Server-Versionen 2.1.0 oder früher ist VOR DEM UPDATE unbedingt in der laufenden alten Instanz
+----------------------------
+VERSIONSSPEZIFISCHE HINWEISE
+----------------------------
+1. Update von Server 2.1.0 oder früher
+Beim Update von Server 2.1.0 oder früher ist VOR DEM UPDATE unbedingt in der laufenden alten Instanz
 folgender Befehl im Server-Container auszuführen (darauf achten, den korrekten Projektnamen zu verwenden - siehe Installation, Punkt 3):
 
 echo "GRANT ALL PRIVILEGES ON honeysens.* TO 'honeysens'@'%' IDENTIFIED BY '<passwort>';" | docker-compose exec -T honeysens mysql
@@ -63,3 +67,12 @@ echo "GRANT ALL PRIVILEGES ON honeysens.* TO 'honeysens'@'%' IDENTIFIED BY '<pas
 Das hier gesetzte Passwort muss identisch sein zum in docker-compose.yml gesetzten Datenbank-Passwort (DB_PASSWORD und MYSQL_PASSWORD).
 Nur so ist sichergestellt, dass nach dem Update die Kommunikation mit der nun in einen separaten Container ausgelagerten Datenbank
 weiterhin möglich ist.
+
+2. Update von Server 2.3.0 oder früher
+Beginnend mit Server 2.4.0 haben sich die Einhängepunkte für TLS-Zertifikat und -key geändert. Beide werden
+nun in den Containern 'server' und 'tasks' innerhalb des Pfades /srv/tls/ eingehangen. In der mitgelieferten
+docker-compose.yml sind diese Beispielpfade auskommentiert:
+  #- <path to https.chain.crt>:/srv/tls/https.crt
+  #- <path to https.key>:/srv/tls/https.key
+Bei einem Update einer älteren Version ist darauf zu achten, die Zielpfade (nach dem ":") im Composefile auf
+die hier angegebenen Pfade unterhalb von /srv/tls/ zu ändern.

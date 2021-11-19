@@ -154,8 +154,7 @@ abstract class RESTResource {
      * Returns the current server TLS certificate data as a string.
      */
     public function getServerCert() {
-        $certPath = APPLICATION_PATH . '/../data/https.chain.crt';
-        return file_get_contents($certPath);
+        return file_get_contents('/srv/tls/https.crt');
     }
 
     /**

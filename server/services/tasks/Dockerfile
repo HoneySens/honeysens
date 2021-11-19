@@ -15,6 +15,9 @@ COPY processor /opt/processor/
 COPY setup.py /opt/
 
 RUN set -ex; \
+        mkdir -p /srv/tls; \
+        ln -s /srv/data/https.chain.crt /srv/tls/https.crt; \
+        ln -s /srv/data/https.key /srv/tls/https.key; \
         apk --no-cache add py3-cryptography py3-pip skopeo; \
         pip3 install -e /opt
 
