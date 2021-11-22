@@ -160,7 +160,6 @@ function initRoutes($app, $em, $services, $config, $messages) {
 }
 
 function initSession($app) {
-    session_cache_limiter(false);
     session_start();
     if(isset($_SESSION['last_activity'])) {
         // Handle session activity timeout
