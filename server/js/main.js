@@ -16,8 +16,7 @@ requirejs.config({
         bootstrap: {exports: '$', deps: ['jquery']},
         'backgrid-select-filter': {exports: 'Backgrid.Extension.SelectFilter', deps: ['backgrid']},
         'backgrid-subgrid-cell': {deps: ['backgrid']}
-    },
-    urlArgs: 'bust=' + (new Date()).getTime()
+    }
 });
 
 require(['app/app', 'jquery', 'json', 'app/controller',
