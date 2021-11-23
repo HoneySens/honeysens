@@ -28,6 +28,7 @@ LED_GPIO_LOW = 'low'
 LED_CONTROLLER_INTERVAL = 1.0  # LED worker timing (in seconds)
 LED_TRANSIENT_DURATION = 6 # Number of cycles (of length LED_CONTROLLER_INTERVAL) the transient mode should last
 
+DHCP_CONFIG_FILE = '/etc/dhcp/dhclient.conf'
 EAPOL_CONFIG_DIR = '/etc/wpa_supplicant'
 EAPOL_CONFIG_FILE = 'eapol.conf'
 
@@ -96,6 +97,8 @@ class Platform(GenericPlatform):
                                             config.get('eapol', 'ca_cert'), config.get('eapol', 'anon_identity'),
                                             config.get('eapol', 'client_cert'), config.get('eapol', 'client_key'),
                                             config.get('eapol', 'client_key_password'))
+            # Configure DHCP client
+            self.configure_dhcp_client(config.get('network', 'dhcp_hostname'))
             # Change MAC address if required
             if config.get('mac', 'mode') == '1':
                 GenericPlatform.update_mac_address(self, self.interface, config.get('mac', 'address'))
@@ -221,6 +224,24 @@ class Platform(GenericPlatform):
                     self.logger.error('Error during update process ({})'.format(e.message))
                     shutil.rmtree(tempdir)
                     self.set_firmware_update_in_progress(False)
+
+    def configure_dhcp_client(self, desired_hostname):
+        """Creates a default DHCP config incorporating the given options."""
+        target_config = ('option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;\n'
+                         'request subnet-mask, broadcast-address, time-offset, routers, domain-name, '
+                         'domain-name-servers, domain-search, host-name, netbios-name-servers, netbios-scope, '
+                         'interface-mtu, rfc3442-classless-static-routes, ntp-servers;\n')
+        if desired_hostname is not None:
+            target_config += f'send host-name = "{desired_hostname}";\n'
+        if os.path.exists(DHCP_CONFIG_FILE):
+            with open(DHCP_CONFIG_FILE, 'r') as f:
+                active_config = f.read()
+        else:
+            active_config = ''
+        if active_config != target_config:
+            self.logger.info(f'Update: Writing new {DHCP_CONFIG_FILE}')
+            with open(DHCP_CONFIG_FILE, 'w') as f:
+                f.write(target_config)
 
     def notify_led(self, mode):
         # Sets a transient led mode as a form of notification

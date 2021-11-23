@@ -131,6 +131,19 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="form-group networkModeDHCP has-feedback">
+                            <label for="networkDHCPHostname" class="control-label">Hostname</label>
+                            <div class="input-group">
+                                <input pattern="^[a-z0-9.\-]+$" data-pattern-error="Nur Kleinbuchstaben, Zahlen und Sonderzeichen (-, .) sind erlaubt" data-maxlength-error="Der Hostname muss zwischen 1 und 253 Zeichen lang sein" maxlength="253" minlength="1" type="text" class="form-control" name="networkDHCPHostname" placeholder="optional" />
+                                <div class="input-group-addon">
+                                    <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
+                                </div>
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Optionaler Hostname, der zusammen mit DHCP-Anfragen zum DHCP-Server gesendet wird. Feld freilassen, um keinen Hostnamen zum Server zu senden.">
+                                    <span class="glyphicon glyphicon-question-sign"></span>
+                                </div>
+                            </div>
+                            <div class="help-block with-errors"></div>
+                        </div>
                         <div class="form-group networkModeDHCP">
                             <p class="form-control-static">IP-Adresse und Subnetzmaske werden automatisch vom DHCP-Server bezogen.</p>
                         </div>

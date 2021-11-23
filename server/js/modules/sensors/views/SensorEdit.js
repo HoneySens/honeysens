@@ -212,6 +212,7 @@ function(HoneySens, Models, SensorEditTpl) {
                                 networkNetmask = view.$el.find('input[name="networkNetmask"]').val(),
                                 networkGateway = view.$el.find('input[name="networkGateway"]').val(),
                                 networkDNS = view.$el.find('input[name="networkDNS"]').val(),
+                                networkDHCPHostname = view.$el.find('input[name="networkDHCPHostname"]').val(),
                                 EAPOLMode = view.$el.find('select[name="networkEAPOLMode"]').val(),
                                 EAPOLIdentity = view.$el.find('input[name="networkEAPOLIdentity"]').val(),
                                 EAPOLPassword = view.$el.find('input[name="networkEAPOLPassword"]').val().length > 0 ? view.$el.find('input[name="networkEAPOLPassword"]').val() : null,
@@ -239,6 +240,7 @@ function(HoneySens, Models, SensorEditTpl) {
                                 network_ip_netmask: networkNetmask,
                                 network_ip_gateway: networkGateway,
                                 network_ip_dns: networkDNS,
+                                network_dhcp_hostname: networkDHCPHostname,
                                 eapol_mode: EAPOLMode,
                                 eapol_identity: EAPOLIdentity,
                                 eapol_anon_identity: EAPOLAnonIdentity,
@@ -308,7 +310,7 @@ function(HoneySens, Models, SensorEditTpl) {
                 this.$el.find('select[name="division"] option[value="' + this.model.get('division') + '"]').prop('selected', true);
                 // Do the same for the remaining attributes
                 this.$el.find('input[name="networkMode"][value="' + this.model.get('network_ip_mode') + '"]').prop('checked', true).parent().addClass('active');
-                this.refreshNetworkMode(this.model.get('network_ip_mode'), this.model.get('network_ip_address'), this.model.get('network_ip_netmask'), this.model.get('network_ip_gateway'), this.model.get('network_ip_dns'));
+                this.refreshNetworkMode(this.model.get('network_ip_mode'), this.model.get('network_ip_address'), this.model.get('network_ip_netmask'), this.model.get('network_ip_gateway'), this.model.get('network_ip_dns'), this.model.get('network_dhcp_hostname'));
                 this.$el.find('select[name="networkEAPOLMode"] option[value="' + this.model.get('eapol_mode') + '"]').prop('selected', true);
                 this.refreshNetworkEAPOL(this.model.get('eapol_mode'), this.model.get('eapol_identity'), this.model.get('eapol_password'), this.model.get('eapol_anon_identity'), this.model.get('eapol_ca_cert'), this.model.get('eapol_client_cert'), this.model.get('eapol_client_key_password'));
                 this.$el.find('input[name="networkMACMode"][value="' + this.model.get('network_mac_mode') + '"]').prop('checked', true).parent().addClass('active');
@@ -407,7 +409,7 @@ function(HoneySens, Models, SensorEditTpl) {
             /**
              * Render the IPv4 configuration form based on the given mode. Also set default values, if given.
              */
-            refreshNetworkMode: function(mode, ip, netmask, gateway, dns) {
+            refreshNetworkMode: function(mode, ip, netmask, gateway, dns, dhcpHostname) {
                 var EAPOLMode = this.$el.find('select[name="networkEAPOLMode"]').val(),
                     MACMode = this.$el.find('input[name="networkMACMode"]:checked').val(),
                     proxyMode = this.$el.find('input[name="proxyType"]:checked').val();
@@ -416,11 +418,13 @@ function(HoneySens, Models, SensorEditTpl) {
                 netmask = netmask || null;
                 gateway = gateway || null;
                 dns = dns || null;
+                dhcpHostname = dhcpHostname || null;
                 switch(mode) {
                     case 0:
                         this.$el.find('div.networkModeStatic').addClass('hide');
                         this.$el.find('div.networkModeNone').addClass('hide');
                         this.$el.find('div.networkModeDHCP').removeClass('hide');
+                        this.$el.find('div.networkModeDHCP input[name="networkDHCPHostname"]').val(dhcpHostname);
                         break;
                     case 1:
                         this.$el.find('div.networkModeDHCP').addClass('hide');

@@ -70,6 +70,7 @@ class SensorConfigCreator(HandlerInterface):
         sensor_config.set('network', 'netmask', job_params['network_ip_netmask'])
         sensor_config.set('network', 'gateway', job_params['network_ip_gateway'])
         sensor_config.set('network', 'dns', job_params['network_ip_dns'])
+        sensor_config.set('network', 'dhcp_hostname', job_params['network_dhcp_hostname'])
         sensor_config.set('mac', 'mode', str(job_params['network_mac_mode']))
         sensor_config.set('mac', 'address', job_params['network_mac_address'])
         sensor_config.set('proxy', 'mode', str(job_params['proxy_mode']))
