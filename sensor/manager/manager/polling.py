@@ -160,6 +160,7 @@ def update_config(config_data):
     network_changed |= update_config_param('network', 'netmask', config_data, 'network_ip_netmask', True)
     network_changed |= update_config_param('network', 'gateway', config_data, 'network_ip_gateway', True)
     network_changed |= update_config_param('network', 'dns', config_data, 'network_ip_dns', True)
+    network_changed |= update_config_param('network', 'dhcp_hostname', config_data, 'network_dhcp_hostname', True)
     network_changed |= update_config_param('eapol', 'mode', config_data, 'eapol_mode', True)
     network_changed |= update_config_param('eapol', 'identity', config_data, 'eapol_identity', True)
     network_changed |= update_config_param('eapol', 'password', config_data, 'eapol_password', True)

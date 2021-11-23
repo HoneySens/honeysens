@@ -115,6 +115,14 @@ class Sensor {
     protected $networkMACAddress;
 
     /**
+     * Optional desired hostname to include within DHCP requests.
+     * If null, no hostname is sent to the DHCP server.
+     *
+     * @Column(type="string", nullable=true)
+     */
+    protected $networkDHCPHostname;
+
+    /**
      * @Column(type="integer")
      */
     protected $proxyMode;
@@ -457,6 +465,15 @@ class Sensor {
 
     public function getNetworkMACAddress() {
         return $this->networkMACAddress;
+    }
+
+    public function setNetworkDHCPHostname($hostname) {
+        $this->networkDHCPHostname = $hostname;
+        return $this;
+    }
+
+    public function getNetworkDHCPHostname() {
+        return $this->networkDHCPHostname;
     }
 
     public function setProxyMode($mode) {
@@ -804,6 +821,7 @@ class Sensor {
             'network_ip_dns' => $this->getNetworkIPDNS(),
             'network_mac_mode' => $this->getNetworkMACMode(),
             'network_mac_address' => $this->getNetworkMACAddress(),
+            'network_dhcp_hostname' => $this->getNetworkDHCPHostname(),
             'proxy_mode' => $this->getProxyMode(),
             'proxy_host' => $this->getProxyHost(),
             'proxy_port' => $this->getProxyPort(),

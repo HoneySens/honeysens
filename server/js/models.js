@@ -190,6 +190,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'network_ip_netmask': null,
                 'network_mac_mode': 0,
                 'network_mac_address': null,
+                'network_dhcp_hostname': null,
                 'new_events': 0,
                 'proxy_mode': 0,
                 'proxy_host': null,

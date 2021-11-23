@@ -297,6 +297,7 @@ class Sensors extends RESTResource {
      * - network_ip_gateway: Gateway in case of static network configuration (optional)
      * - network_ip_dns: DNS server to use in case of static network configuration (optional)
      * - network_mac_address: Custom MAC address
+     * - network_dhcp_hostname: Desired hostname to send with DHCP requests (optional)
      * - proxy_host: Hostname / IP address of a HTTPS proxy to use
      * - proxy_port: The TCP port the proxy server listens on
      * - proxy_user: Required for proxy authentication
@@ -368,6 +369,9 @@ class Sensors extends RESTResource {
                 ->setNetworkIPNetmask($data->network_ip_netmask)
                 ->setNetworkIPGateway($data->network_ip_gateway)
                 ->setNetworkIPDNS($data->network_ip_dns);
+        } elseif ($sensor->getNetworkIPMode() == Sensor::NETWORK_IP_MODE_DHCP) {
+            V::attribute('network_dhcp_hostname', V::optional(V::alnum('-.')->lowercase()->length(1, 253)))->check($data);
+            $sensor->setNetworkDHCPHostname($data->network_dhcp_hostname == '' ? null : $data->network_dhcp_hostname);
         }
         if($sensor->getNetworkMACMode() == Sensor::NETWORK_MAC_MODE_CUSTOM) {
             V::attribute('network_mac_address', V::stringType()->macAddress())
@@ -553,6 +557,7 @@ class Sensors extends RESTResource {
      * - network_ip_gateway: Gateway in case of static network configuration (optional)
      * - network_ip_dNS: DNS server to use in case of static network configuration (optional)
      * - network_mac_address: Custom MAC address
+     * - network_dhcp_hostname: Desired hostname to send with DHCP requests (optional)
      * - proxy_host: Hostname / IP address of a HTTPS proxy to use
      * - proxy_port: The TCP port the proxy server listens on
      * - proxy_user: Required for proxy authentication
@@ -628,6 +633,12 @@ class Sensors extends RESTResource {
                 ->setNetworkIPNetmask(null)
                 ->setNetworkIPGateway(null)
                 ->setNetworkIPDNS(null);
+        }
+        if($sensor->getNetworkIPMode() == Sensor::NETWORK_IP_MODE_DHCP) {
+            V::attribute('network_dhcp_hostname', V::optional(V::alnum('-.')->lowercase()->length(1, 253)))->check($data);
+            $sensor->setNetworkDHCPHostname($data->network_dhcp_hostname == '' ? null : $data->network_dhcp_hostname);
+        } else {
+            $sensor->setNetworkDHCPHostname(null);
         }
         $sensor->setNetworkMACMode($data->network_mac_mode);
         if($sensor->getNetworkMACMode() == Sensor::NETWORK_MAC_MODE_CUSTOM) {
