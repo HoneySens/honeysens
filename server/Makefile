@@ -35,6 +35,7 @@ ${OUTDIR}/build/${PREFIX}-${REVISION}/tasks-${REVISION}.tar: | DIR.${OUTDIR}/bui
 	docker build --no-cache -t honeysens/tasks:${REVISION} services/tasks/
 	docker save -o $@ honeysens/tasks:${REVISION}
 
+${OUTDIR}/build/${PREFIX}-${REVISION}/backup-${REVISION}.tar: export DOCKER_CONTENT_TRUST := 1
 ${OUTDIR}/build/${PREFIX}-${REVISION}/backup-${REVISION}.tar: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
 	docker build --no-cache -t honeysens/backup:${REVISION} services/backup/
 	docker save -o $@ honeysens/backup:${REVISION}
