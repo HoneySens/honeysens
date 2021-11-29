@@ -26,6 +26,9 @@ python3 setup.py install
 # Register sensor manager service
 ln -s /etc/systemd/system/manager.service /etc/systemd/system/multi-user.target.wants/manager.service
 
+# Disable IPv6
+echo "net.ipv6.conf.all.disable_ipv6 = 1" > /etc/sysctl.d/70-disable-ipv6.conf
+
 # Restrict SSH access to Ethernet-over-USB connections
 sed -i 's/#ListenAddress 0.0.0.0/ListenAddress 192.168.7.2/g' /etc/ssh/sshd_config
 sed -i 's/#Port 22/Port 22222/g' /etc/ssh/sshd_config
