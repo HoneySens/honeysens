@@ -221,7 +221,7 @@ class Platform(GenericPlatform):
                     shutil.rmtree(tempdir)
                     subprocess.call('/sbin/reboot')
                 except Exception as e:
-                    self.logger.error('Error during update process ({})'.format(e.message))
+                    self.logger.error('Error during update process ({})'.format(str(e)))
                     shutil.rmtree(tempdir)
                     self.set_firmware_update_in_progress(False)
 
@@ -269,7 +269,7 @@ class LEDController(threading.Thread):
         # Enable required GPIO pins
         for pin in [LED_GPIO_PIN_A, LED_GPIO_PIN_B]:
             try:
-                with open('/sys/class/gpio/export', 'wb') as f:
+                with open('/sys/class/gpio/export', 'w') as f:
                     f.write(str(pin))
                 self.logger.debug('GPIO {} enabled'.format(pin))
             except IOError:
@@ -343,7 +343,7 @@ class LEDController(threading.Thread):
     def set_pin(self, pin, value):
         if pin not in [LED_GPIO_PIN_A, LED_GPIO_PIN_B] or value not in [LED_GPIO_LOW, LED_GPIO_HIGH]:
             raise Exception('Invalid pin data ({}, {})'.format(pin, value))
-        with open('/sys/class/gpio/gpio{}/direction'.format(pin), 'wb') as f:
+        with open('/sys/class/gpio/gpio{}/direction'.format(pin), 'w') as f:
             f.write(value)
 
     def mode2status(self, mode):
