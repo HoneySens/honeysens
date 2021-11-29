@@ -210,7 +210,7 @@ class Platform(GenericPlatform):
                                     cwd=COMPOSEFILE_DIR,
                                     env=os.environ.copy())
                 except Exception as e:
-                    self.logger.error('Error during update process ({})'.format(e.message))
+                    self.logger.error('Error during update process ({})'.format(str(e)))
                     shutil.rmtree(tempdir)
                     self.set_firmware_update_in_progress(False)
 
