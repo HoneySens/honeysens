@@ -2,7 +2,10 @@
 Software for the BeagleBone Black (BBB) is distributed as an installer image that has to be written (together with a sensor configuration archive provided by the server) to a micro SD card to boot the BBB from. Upon boot the installer will wipe the board's internal eMMC and copy over the new system accompanied by the specific sensor configuration. This process is based on the official images distributed by the vendor. Since our aim is to centralize sensor management, updates will utilize a similar process: A new firmware installer is automatically distributed by the server, written to the external micro SD card and launched with a system restart. The current sensor configuration will survive that process. After a while, the BBB will restart into the new sensor system.
 
 ## Build
-The build process relies on the official [OMAP image builder](https://github.com/RobertCNelson/omap-image-builder) project. Since the image builder only supports building on ARM devices ([source](https://github.com/RobertCNelson/omap-image-builder/issues/118)), we recommended to do so as well. Apart from GNU make and git, the build process only requires tools that are by default installed on most Linux distributions. Consult the Makefile for details.
+The build process relies on the official [OMAP image builder](https://github.com/RobertCNelson/omap-image-builder) project. Since the image builder only supports building on ARM devices ([source](https://github.com/RobertCNelson/omap-image-builder/issues/118)), we recommended to do so as well. Apart from GNU make and git, the build process on a default [BBB IoT image](https://beagleboard.org/latest-images) requires installation of some additional packages via
+```
+$ apt install dosfstools git kpartx wget parted
+```
 
 To initiate the BeagleBone Black firmware build process, checkout this repository on a BeagleBone Black, `cd` to the directory `sensor/platforms/bbb/` and execute `make`. If the build was successful, the resulting production-ready firmware tarball can be found in `sensor/platforms/bbb/out/dist/`. The target `make clean` can be utilized to clean the `out/` directory.
 
