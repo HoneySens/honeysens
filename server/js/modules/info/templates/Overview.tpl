@@ -172,6 +172,9 @@
             </div>
             <div id="releasenotesBBB" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong><br/>
+                    <p>Custom DHCP hostname support</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
                     <p>Fixed rare network address conflicts</p>
                     <hr />
@@ -215,6 +218,9 @@
             </div>
             <div id="releasenotesDocker" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong><br/>
+                    <p>Custom DHCP hostname support</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
                     <p>Fixed rare network address conflicts</p>
                     <hr />
