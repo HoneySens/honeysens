@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>2.3.0</dd>
+        <dd>2.4.0</dd>
         <dt>Lizenz</dt>
         <dd><a href="https://www.apache.org/licenses/LICENSE-2.0.html" target="_blank">Apache 2.0 Software License</a></dd>
         <dt>Entwicklung</dt>
@@ -46,18 +46,38 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong><br/>
+                    <p>
+                        <ul>
+                            <li>Ereignisarchiv für die Langzeitaufbewahrung von Ereignisdaten</li>
+                            <li>Individualisierbare E-Mail-Templates für alle automatisch versandten Systemnachrichten</li>
+                            <li>Ereignisfilter können nun gezielt aktiviert/deaktiviert werden</li>
+                            <li>Visualisierung neu eintreffender Ereignisse mittels Zähler in der Sidebar</li>
+                            <li>Status-Filter der Ereignisliste um häufig benötigte Kombinationen erweitert</li>
+                            <li>Spalte mit Gruppenzuordnung zur Ereignis-, Filter- und Sensor-Übersichten hinzugefügt</li>
+                            <li>Übersichts-Statusanzeige in Dienste-Verzeichnis integriert</li>
+                            <li>Der zum DHCP-Server gesendete Hostname ist nun optional und frei wählbar</li>
+                            <li>Dialoge überarbeitet, bspw. listet der "<em>Firmware Entfernen</em>"-Dialog jetzt betroffene Sensoren auf, die nicht den Systemstandard nutzen</li>
+                            <li>E-Mail-Benachrichtigungen über Verbindungsversuch-Ereignisse beinhalten nun eine Paketübersicht</li>
+                            <li>Passwortänderung bei nächstem oder erstmaligen Login erzwingbar</li>
+                            <li>Administrative E-Mail-Adresse als Pflichtfeld für Neuinstallationen eingefügt</li>
+                            <li>Prozess zum Einbinden eigener TLS-Zertifikate für die Kompatibilität mit alternativen Container-Runtimes überarbeitet</li>
+                            <li>Fehlerkorrekturen in Front- und Backend, speziell in den Bereichen Session-Handling, Caching und serverseitive Validierung</li>
+                        </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
                     <p>
-                    <ul>
-                        <li>Serverseitiges Tracking des Sensor-Zustands, Darstellung von Up-/Downtime entsprechend angepasst</li>
-                        <li>Ereignisbenachrichtigungen um Notifikationen bei Sensor-Timeouts und CA-Zertifikatsablauf erweitert</li>
-                        <li>Ereignisliste um Status-Filter und Zähler für neue Ereignisse (pro Sensor) ergänzt</li>
-                        <li>Funktionen zum simultanen Bearbeiten und Entfernen aller Ereignisse der Ereignisliste</li>
-                        <li>Optional aktivierbares API-Aktitätslog für Administratoren</li>
-                        <li>Beschreibungs-Freitextfeld für Whitelist-Einträge hinzugefügt</li>
-                        <li>Sonderbrechtigungen um zusätzliche Pflichtfelder erweitert</li>
-                        <li>Fehlerkorrekturen im Front- und Backend, insbesondere im Zusammenhang mit Privilegien und Filterkriterien</li>
-                    </ul>
+                        <ul>
+                            <li>Serverseitiges Tracking des Sensor-Zustands, Darstellung von Up-/Downtime entsprechend angepasst</li>
+                            <li>Ereignisbenachrichtigungen um Notifikationen bei Sensor-Timeouts und CA-Zertifikatsablauf erweitert</li>
+                            <li>Ereignisliste um Status-Filter und Zähler für neue Ereignisse (pro Sensor) ergänzt</li>
+                            <li>Funktionen zum simultanen Bearbeiten und Entfernen aller Ereignisse der Ereignisliste</li>
+                            <li>Optional aktivierbares API-Aktitätslog für Administratoren</li>
+                            <li>Beschreibungs-Freitextfeld für Whitelist-Einträge hinzugefügt</li>
+                            <li>Sonderbrechtigungen um zusätzliche Pflichtfelder erweitert</li>
+                            <li>Fehlerkorrekturen im Front- und Backend, insbesondere im Zusammenhang mit Privilegien und Filterkriterien</li>
+                        </ul>
                     </p>
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>

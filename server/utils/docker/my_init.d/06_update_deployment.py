@@ -336,9 +336,9 @@ if config_version == '2.2.0':
     config.set('misc', 'require_filter_description', 'false')
     config.set('server', 'config_version', '2.3.0')
     config_version = '2.3.0'
-# 2.3.0 -> devel
+# 2.3.0 -> 2.4.0
 if config_version == '2.3.0':
-    print('Upgrading configuration 2.3.0 -> devel')
+    print('Upgrading configuration 2.3.0 -> 2.4.0')
     db_statements = [
         'ALTER TABLE users ADD requirePasswordChange TINYINT(1) NOT NULL',
         'ALTER TABLE event_filters ADD enabled TINYINT(1) NOT NULL',
@@ -355,8 +355,8 @@ if config_version == '2.3.0':
     config.set('misc', 'archive_auto_days', '7')
     config.set('misc', 'archive_keep_days', '30')
     config.set('misc', 'archive_prefer', 'true')
-    config_version = 'devel'
-
+    config.set('server', 'config_version', '2.4.0')
+    config_version = '2.4.0'
 
 # Write new config file
 with open(config_file, 'w') as f:
