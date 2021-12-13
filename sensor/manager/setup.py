@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='honeysens-manager',
-    version='2.3.0',
+    version='2.4.0',
     description='HoneySens sensor management daemon',
     author='Pascal Brueckner',
     author_email='pascal.brueckner@sylence.cc',

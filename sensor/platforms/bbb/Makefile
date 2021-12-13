@@ -1,7 +1,7 @@
 PREFIX := HoneySens-Firmware-BBB
 # Either '2gb' (older models) or '4gb' (retail models)
 IMG_SIZE := 4gb
-REVISION := ${IMG_SIZE}-2.3.0
+REVISION := ${IMG_SIZE}-2.4.0
 TIME := $(shell date +%Y-%m-%d)
 ARCH := $(shell uname -m)
 OUTDIR := out
