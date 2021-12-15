@@ -119,7 +119,7 @@ class System extends RESTResource {
     }
 
     /**
-     * Removes all events from the database
+     * Removes all events from the database, including archived ones.
      *
      * @throws \Exception
      */
@@ -134,6 +134,8 @@ class System extends RESTResource {
         $qb->delete('HoneySens\app\models\entities\EventPacket', 'ep');
         $qb->getQuery()->execute();
         $qb->delete('HoneySens\app\models\entities\Event', 'e');
+        $qb->getQuery()->execute();
+        $qb->delete('HoneySens\app\models\entities\ArchivedEvent', 'ae');
         $qb->getQuery()->execute();
         $this->log('All events removed', LogEntry::RESOURCE_SYSTEM);
     }
