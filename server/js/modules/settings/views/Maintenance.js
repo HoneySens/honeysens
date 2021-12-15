@@ -22,7 +22,7 @@ function(HoneySens, ModalConfirmation, MaintenanceTpl) {
                 'click button.removeEvents': function () {
                     HoneySens.request('view:modal').show(new ModalConfirmation({
                         model: new Backbone.Model({
-                            msg: 'Wenn Sie fortfahren, werden <strong>ALLE</strong> gespeicherten Ereignisse unwiderruflich entfernt!',
+                            msg: 'Wenn Sie fortfahren, werden <strong>ALLE</strong> gespeicherten Ereignisse (auch archivierte) unwiderruflich entfernt!',
                             onConfirm: function () {
                                 $.ajax({
                                     type: 'DELETE',

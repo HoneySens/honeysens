@@ -2,7 +2,7 @@
     <h3>Wartung</h3>
 </div>
 <div class="panel-group" id="maintenance">
-    <!-- DISABLED UNTIL SERVER-SIDE RESET IS FIXED
+    <!-- DISABLED, THIS CAN ONLY BE PERFORMED WITH SYSTEM ACCESS (VIA BACKUP CONTAINER)
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4 class="panel-title">
@@ -33,7 +33,7 @@
                         Entfernen
                     </button>
                 </div>
-                <p>Diese Funktion entfernt <strong>ALLE</strong> derzeit gespeicherten Ereignisse. Dies kann nicht r&uuml;ckg&auml;ngig gemacht werden!</p>
+                <p>Diese Funktion entfernt <strong>ALLE</strong> derzeit gespeicherten Ereignisse und bereinigt zus&auml;tzlich das Ereignis-Archiv. Dies kann nicht r&uuml;ckg&auml;ngig gemacht werden!</p>
             </div>
         </div>
     </div>
