@@ -6,7 +6,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get -qq update
 
 # Basic dependencies
-apt-get install -y screen python python-yaml python-openssl python-pymysql python-pip python-celery-common python3-redis curl openssl apache2 sudo
+apt-get install -y screen python3-openssl python3-pymysql curl openssl apache2 sudo
 
 # PHP 5
 add-apt-repository -y ppa:ondrej/php
