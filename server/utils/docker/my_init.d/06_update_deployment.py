@@ -1,12 +1,11 @@
-#!/usr/bin/python2 -u
+#!/usr/bin/python3 -u
 
-import ConfigParser
+import configparser
 import glob
 import os
 import pymysql
 import re
 import subprocess
-import sys
 import time
 from OpenSSL import crypto
 
@@ -23,10 +22,6 @@ def execute_sql(db, statements):
             errors += 1
     print('{} out of {} database statements performed successfully, {} errors'.format(statement_count - errors, statement_count, errors))
 
-# Force UTF8 encoding
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 # Global paths
 BASE_PATH = '/opt/HoneySens'
 APPLICATION_PATH = '{}/app'.format(BASE_PATH)
@@ -39,10 +34,10 @@ if not os.path.isfile(config_file):
     exit(1)
 else:
     print('Updater: Checking if an update to the local deployment is required...')
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 # Preserve the case of config keys instead of forcing them lower-case
 config.optionxform = str
-config.readfp(open(config_file))
+config.read_file(open(config_file))
 
 # Quit in case the data directory is not accessible
 if not os.path.isdir(DATA_PATH):
@@ -352,7 +347,7 @@ if config_version == '2.3.0':
     execute_sql(db, db_statements)
     db.commit()
     subprocess.run(['/etc/my_init.d/03_regen_https_cert.sh', 'force'])
-    config.set('misc', 'archive_auto_days', '7')
+    config.set('misc', 'archive_move_days', '7')
     config.set('misc', 'archive_keep_days', '30')
     config.set('misc', 'archive_prefer', 'true')
     config.set('server', 'config_version', '2.4.0')
