@@ -347,9 +347,9 @@ if config_version == '2.3.0':
     execute_sql(db, db_statements)
     db.commit()
     subprocess.run(['/etc/my_init.d/03_regen_https_cert.sh', 'force'])
-    config.set('misc', 'archive_move_days', '7')
-    config.set('misc', 'archive_keep_days', '30')
-    config.set('misc', 'archive_prefer', 'true')
+    config.set('misc', 'archive_move_days', '0')
+    config.set('misc', 'archive_keep_days', '0')
+    config.set('misc', 'archive_prefer', 'false')
     config.set('server', 'config_version', '2.4.0')
     config_version = '2.4.0'
 
