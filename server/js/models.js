@@ -134,7 +134,8 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'name': null,
                 'type': 0,
                 'count': 0,
-                'conditions': []
+                'conditions': [],
+                'enabled': true
             },
             getConditionCollection: function() {
                 var conditions = new Models.EventFilterConditions();
