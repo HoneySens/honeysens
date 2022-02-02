@@ -110,11 +110,11 @@ function(HoneySens, Models, ModalServerError, UsersEditViewTpl) {
                 if(parseInt(domain) === Models.User.domain.LOCAL) {
                     $fields.removeClass('hide');
                     // Require a password for new models or if the current model doesn't use local authentication
-                    $fields.find('input').attr('required', this.model.id == null || this.model.get('domain') !== Models.User.domain.LOCAL);
+                    $fields.find('input[type="text"], input[type="password"]').attr('required', this.model.id == null || this.model.get('domain') !== Models.User.domain.LOCAL);
                 } else {
                     $fields.find('input').val('');
                     $fields.addClass('hide');
-                    $fields.find('input').attr('required', false);
+                    $fields.find('input[type="text"], input[type="password"]').attr('required', false);
                 }
             },
             getFormData: function() {
