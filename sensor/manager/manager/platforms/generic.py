@@ -157,7 +157,7 @@ class GenericPlatform(object):
             f.writelines(config)
 
     def configure_cntlm(self, proxy, user, password):
-        # Reconfigures the running cntlm daemon for the given proxy settings by performing the following steps:
+        # Reconfigures the cntlm daemon for the given proxy settings by performing the following steps:
         # - Extracts the domain portion from the given user, if available
         # - Runs "cntlm -H" to determine password hashes for the given credentials
         # - Updates the configuration file with the result
@@ -171,13 +171,14 @@ class GenericPlatform(object):
                 domain = userdomain[0]
                 username = userdomain[1]
             p = subprocess.Popen(['cntlm', '-H', '-u', username, '-d', domain], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            cntlm_cfg = p.communicate(input=b'{}'.format(password))[0].split('\n')
+            cntlm_stdout, _ = p.communicate(input=password.encode('utf-8'))
+            cntlm_cfg = cntlm_stdout.decode('utf-8').split('\n')
         else:
             cntlm_cfg = ['']
             domain = ''
             username = ''
         # Fill the list with the remaining cntlm config options
-        cntlm_cfg[0] = 'Listen 3128'
+        cntlm_cfg[0] = 'Listen 3128'  # First stdout line is always empty
         cntlm_cfg.append('NoProxy localhost, 127.0.0.*, 10.*, 192.168.*')
         cntlm_cfg.append('Proxy {}'.format(proxy))
         cntlm_cfg.append('Username {}'.format(username))
