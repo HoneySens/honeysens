@@ -8,7 +8,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt update
 
 # Basic dependencies
-apt -y install macchanger resolvconf tcpdump wpasupplicant
+apt -y install macchanger resolvconf screen tcpdump wpasupplicant
 
 # Install Docker CE (follows https://docs.docker.com/engine/installation/linux/docker-ce/debian)
 apt -y install apt-transport-https curl gnupg-agent software-properties-common
