@@ -56,9 +56,9 @@ def perform_https_request(config, config_dir, path, request_type, verify=True, p
 
     # Target output
     if file_descriptor is not None:
-        c.setopt(pycurl.WRITEFUNCTION, file_descriptor.write)
+        c.setopt(pycurl.WRITEDATA, file_descriptor)
     else:
-        c.setopt(pycurl.WRITEFUNCTION, content.write)
+        c.setopt(pycurl.WRITEDATA, content)
 
     c.setopt(pycurl.URL, 'https://{}:{}/{}'.format(config.get('server', 'name'), config.get('server', 'port_https'), path))
     c.setopt(pycurl.CAINFO, '{}/{}'.format(config_dir, config.get('server', 'certfile')))
