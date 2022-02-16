@@ -170,7 +170,7 @@ class Platform(GenericPlatform):
                     self.logger.info('Update: Current revision {} differs from target {}, attempting update'.format(current_revision, target_revision))
                     self.logger.info('Update: Downloading new firmware from {}'.format(target_uri))
                     fw_tempfile = '{}/firmware.tar.gz'.format(tempdir)
-                    with open(fw_tempfile, 'w') as f:
+                    with open(fw_tempfile, 'wb') as f:
                         communication.perform_https_request(config, self.config_dir, target_uri, communication.REQUEST_TYPE_GET, file_descriptor=f)
                     self.logger.info('Update: Firmware written to {}'.format(fw_tempfile))
                     self.logger.info('Update: Extracting firmware')
