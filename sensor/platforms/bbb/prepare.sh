@@ -42,6 +42,9 @@ mv /etc/dnsmasq.d /etc/dnsmasq.d.disabled
 # Disable ConnMan, a network manager that conflicts with our sensor manager
 systemctl disable connman
 
+# Disable the default wpa_supplicant D-Bus service, since we launch our own instances via ifup/ifdown
+systemctl disable wpa_supplicant
+
 # Fix /etc/resolv.conf symlink (occupied by connman)
 rm -v /etc/resolv.conf
 dpkg-reconfigure resolvconf
