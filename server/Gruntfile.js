@@ -28,7 +28,14 @@ module.exports = function(grunt) {
             srcPrefix + '/css/jquery.fileupload.css',
             srcPrefix + '/css/fonts.css',
             srcPrefix + '/css/honeysens.css'],
-        clean: [dstPrefix, srcPrefix + '/app/vendor', srcPrefix + '/app/composer.phar'],
+        clean: [srcPrefix + '/app/vendor',
+                srcPrefix + '/app/composer.phar',
+                dstPrefix + '/app',
+                dstPrefix + '/cache',
+                dstPrefix + '/data',
+                dstPrefix + '/docs',
+                dstPrefix + '/public',
+                dstPrefix + '/utils'],
         mkdir: {
             dist: {
                 options: { create: [
@@ -65,17 +72,11 @@ module.exports = function(grunt) {
                    { expand: true, cwd: srcPrefix + '/conf/', dest: dstPrefix + '/data/', src: 'config.clean.cfg' }
                ]
             },
-            tasks: {
-                expand: true,
-                cwd: srcPrefix + '/tasks/',
-                dest: dstPrefix + '/tasks/',
-                src: '**'
-            },
             requirejs: {
                 expand: true,
                 cwd: srcPrefix + '/js/',
                 dest: dstPrefix + '/public/js/',
-                src: 'lib/require.js'
+                src: 'lib/require.js',
             },
             js: {
                 expand: true,
@@ -101,6 +102,7 @@ module.exports = function(grunt) {
                 options: {
                     baseUrl: srcPrefix + '/js/lib',
                     mainConfigFile: srcPrefix + '/js/main.js',
+                    optimize: 'none',
                     out: dstPrefix + '/public/js/main.js',
                     name: 'app/main',
                     wrapShim: true
@@ -138,7 +140,9 @@ module.exports = function(grunt) {
                 options: {
                     mode: '755'
                 },
-                src: [dstPrefix + '/app/scripts/**', dstPrefix + '/utils/docker/my_init.d/*', dstPrefix + '/utils/docker/my_init.pre_shutdown.d/*', dstPrefix + '/utils/docker/services/*/run']
+                src: [dstPrefix + '/app/scripts/**',
+                      dstPrefix + '/utils/docker/startup.d/*',
+                      dstPrefix + '/utils/docker/run.sh']
             },
             data: {
                 options: {
@@ -174,17 +178,6 @@ module.exports = function(grunt) {
             },
             composer: {
                 command: 'cd ' + srcPrefix + '/app && /bin/sh composer.sh'
-            },
-            tasks_install: {
-                command: 'python setup.py develop',
-                options: {
-                    execOptions: {
-                        cwd: dstPrefix + '/tasks/'
-                    }
-                }
-            },
-            tasks_restart: {
-                command: 'sv restart tasks'
             }
         },
         watch: {
@@ -201,11 +194,6 @@ module.exports = function(grunt) {
             css: {
                 files: '<%= stylesheets %>',
                 tasks: ['concat:dist'],
-                options: { spawn: false }
-            },
-            tasks: {
-                files: [srcPrefix + '/tasks/**'],
-                tasks: ['copy:tasks', 'shell:tasks_restart'],
                 options: { spawn: false }
             }
         }
@@ -226,14 +214,9 @@ module.exports = function(grunt) {
             grunt.config('copy.js.src', Object.keys(changedJSFiles));
             changedJSFiles = Object.create(null);
         }, 200),
-        changedTasksFiles = Object.create(null),
-        onTasksChange = grunt.util._.debounce(function(path) {
-            grunt.config('copy.tasks.src', Object.keys(changedTasksFiles));
-            changedTasksFiles = Object.create(null);
-        }, 200),
         watchEvent = grunt.cli.tasks.indexOf('chokidar') > -1 ? 'chokidar' : 'watch';
     grunt.event.on(watchEvent, function(action, filepath) {
-        // Slice the source prefix from filepath so that the resulting path lies within copy.(app|js|tasks).cwd
+        // Slice the source prefix from filepath so that the resulting path lies within copy.(app|js).cwd
         filepath = filepath.slice(filepath.indexOf(srcPrefix) + srcPrefix.length + 1);
         if(grunt.file.isMatch('app/**', filepath)  ) {
             if(!grunt.file.isMatch('app/index.php', filepath)) {
@@ -244,10 +227,6 @@ module.exports = function(grunt) {
             // Slice 'js/' from filepath
             changedJSFiles[filepath.slice(3)] = action;
             onJSChange();
-        } else if(grunt.file.isMatch('tasks/**/*.py', filepath)) {
-            // Slice 'tasks/' from filepath
-            changedTasksFiles[filepath.slice(6)] = action;
-            onTasksChange();
         }
     });
 
@@ -264,11 +243,9 @@ module.exports = function(grunt) {
         'copy:app',
         'copy:public',
         'copy:data',
-        'copy:tasks',
         'copy:requirejs',
         'copy:js',
         'concat:dist',
-        'shell:tasks_install',
         'chmod'
     ]);
     grunt.registerTask('release', [
@@ -281,7 +258,6 @@ module.exports = function(grunt) {
         'copy:app',
         'copy:public',
         'copy:data',
-        'copy:tasks',
         'copy:requirejs',
         'requirejs',
         'cssmin:dist',

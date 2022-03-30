@@ -15,11 +15,19 @@ ENV CRON_ENABLED=false \
     HS_REGISTRY_HOST=registry \
     HS_REGISTRY_PORT=5000
 
-RUN apt-get -qq update && apt-get install -y cron bzip2 mariadb-client netcat && apt-get clean
+RUN set -ex; \
+    apt-get -qq update; \
+    apt-get install -y cron bzip2 mariadb-client netcat; \
+    apt-get clean; \
+    groupadd -g 1000 hs; \
+    useradd -m -u 1000 -g 1000 hs; \
+    mkdir -p /srv/backup /srv/data /srv/registry; \
+    chown -R hs:hs /srv
 
 COPY run.sh /opt/
 COPY backup.sh /usr/local/bin/backup
 COPY restore.sh /usr/local/bin/restore
 COPY reset.sh /usr/local/bin/reset
 
+USER 1000:1000
 CMD ["/opt/run.sh"]
