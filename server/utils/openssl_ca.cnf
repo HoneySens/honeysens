@@ -23,7 +23,7 @@ commonName = supplied
 emailAddress = optional
 
 [ req ]
-default_bits = 1024
+default_bits = 2048
 default_keyfile = key.pem
 default_md = sha256
 string_mask = nombstr

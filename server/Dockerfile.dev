@@ -1,4 +1,4 @@
-FROM phusion/baseimage:0.11
+FROM ubuntu:20.04
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
 # Defaults
@@ -16,12 +16,12 @@ ENV ACCESS_LOG=false \
     HS_REGISTRY_HOST=registry \
     HS_REGISTRY_PORT=5000
 
-COPY utils/docker/setup_prepare.sh utils/docker/setup_dev.sh /opt/
+COPY utils/docker/run.sh utils/docker/setup_prepare.sh utils/docker/setup_dev.sh /opt/
 RUN /bin/bash /opt/setup_prepare.sh
 RUN /bin/bash /opt/setup_dev.sh
 
-COPY utils/docker/my_init.d/00_init_dev_env.sh /etc/my_init.d/
+COPY utils/docker/startup.d/00_init_dev_env.sh /etc/startup.d/
 
+USER 1000:1000
 EXPOSE 80 443
-
-CMD ["/sbin/my_init"]
+CMD ["/opt/run.sh"]

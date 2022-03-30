@@ -1,4 +1,4 @@
-FROM phusion/baseimage:0.11
+FROM ubuntu:20.04
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
 # Defaults
@@ -22,7 +22,7 @@ RUN /bin/bash /opt/HoneySens/utils/docker/setup_release.sh
 HEALTHCHECK CMD /usr/bin/test $(/usr/bin/curl -sk https://localhost/api/system/identify) = 'HoneySens'
 
 VOLUME /opt/HoneySens/data
-VOLUME /var/lib/mysql
 
+USER 1000:1000
 EXPOSE 80 443
-CMD ["/sbin/my_init"]
+CMD ["/opt/run.sh"]

@@ -26,19 +26,24 @@ services:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
     restart: always
     environment:
+      - MARIADB_AUTO_UPGRADE=1
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_DATABASE=honeysens
       - MYSQL_USER=honeysens
       - MYSQL_PASSWORD=honeysens
-    image: mysql:8.0
+    image: mariadb:10
     networks:
       - honeysens
+    user: "999:999"
     volumes:
       - honeysens_db:/var/lib/mysql
 
   broker:
-    image: redis:5
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    image: ubuntu/redis:6.0-21.04_beta
     restart: always
+    user: "101:101"
     networks:
       - honeysens
 
