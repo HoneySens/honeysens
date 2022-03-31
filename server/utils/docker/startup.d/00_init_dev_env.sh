@@ -53,6 +53,7 @@ sed -i -e 's#/opt/HoneySens/#/srv/#g' /srv/startup.d/02_regen_honeysens_ca.sh /s
 #cp -v /srv/utils/docker/sudoers.conf /etc/sudoers.d/honeysens
 
 echo "Configuring Apache web server"
+cp -v /srv/utils/docker/apache.ports.conf /etc/apache2/ports.conf
 cp -v /srv/utils/docker/apache.http.conf /etc/apache2/sites-available/honeysens_http.conf
 cp -v /srv/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
 cp -v /srv/utils/docker/apache.public.conf /etc/apache2/conf/honeysens.public.conf
@@ -67,7 +68,7 @@ echo "Launching httpd"
 cp -v /srv/utils/docker/startup.d/06_launch_httpd.sh /srv/startup.d/
 /srv/startup.d/06_launch_httpd.sh &
 
-until curl -q -k https://127.0.0.1/api/system/identify
+until curl -q -k https://127.0.0.1:8443/api/system/identify
 do
 	echo "Waiting for the API..."
 	sleep 2

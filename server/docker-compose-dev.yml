@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - 443:443
+      - "443:8443"
     networks:
       - server
     environment:
