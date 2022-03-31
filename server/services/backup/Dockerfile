@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:bullseye
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
 # Defaults
@@ -16,7 +16,9 @@ ENV CRON_ENABLED=false \
     HS_REGISTRY_PORT=5000
 
 RUN set -ex; \
+    export DEBIAN_FRONTEND=noninteractive; \
     apt-get -qq update; \
+    apt-get upgrade -y; \
     apt-get install -y cron bzip2 mariadb-client netcat; \
     apt-get clean; \
     groupadd -g 1000 hs; \

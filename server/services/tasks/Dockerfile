@@ -1,4 +1,4 @@
-FROM alpine:3.11
+FROM alpine:3.15
 
 # Defaults
 ENV HS_BROKER_HOST=broker \

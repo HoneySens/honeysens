@@ -4,13 +4,14 @@ set -e
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get -qq update
+apt-get upgrade -y
 
 # Unprivileged user creation
 groupadd -g 1000 hs
 useradd -m -u 1000 -g 1000 hs
 
 # Basic dependencies
-apt-get install -y software-properties-common screen python3-openssl python3-pymysql curl openssl apache2 vim
+apt-get install -y software-properties-common screen python3-openssl python3-pymysql curl openssl apache2 vim iproute2 netcat
 
 # PHP 5
 add-apt-repository -y ppa:ondrej/php
