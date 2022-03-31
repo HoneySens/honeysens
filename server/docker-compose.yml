@@ -6,8 +6,8 @@ services:
     restart: always
     ports:
       # For security reasons, bind these ports to a specific IP (such as "- 192.168.1.1:443:443")
-      - 80:80
-      - 443:443
+      - "80:8080"
+      - "443:8443"
     networks:
       - honeysens
     environment:
