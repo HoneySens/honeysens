@@ -13,3 +13,6 @@ chown -R hs:hs /opt/HoneySens/data
 
 # Disable LDAP certificate verification within the dev environment
 echo -e "TLS_REQCERT\tnever" >> /etc/ldap/ldap.conf
+
+# Permit write access to startup scripts
+chown hs:hs /etc/startup.d

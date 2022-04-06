@@ -40,17 +40,17 @@ fi
 mkdir -p /srv/startup.d
 echo "Initializing volumes if necessary"
 cp -v /srv/utils/docker/startup.d/01_init_volumes.sh /srv/startup.d/
+ln -s /srv/startup.d/01_init_volumes.sh /etc/startup.d/01_init_volumes.sh
 /srv/startup.d/01_init_volumes.sh
 
 echo "Creating certificates if necessary"
 cp -v /srv/utils/docker/startup.d/02_regen_honeysens_ca.sh /srv/startup.d/
 cp -v /srv/utils/docker/startup.d/03_regen_https_cert.sh /srv/startup.d/
+ln -s /srv/startup.d/02_regen_honeysens_ca.sh /etc/startup.d/02_regen_honeysens_ca.sh
+ln -s /srv/startup.d/03_regen_https_cert.sh /etc/startup.d/03_regen_https_cert.sh
 sed -i -e 's#/opt/HoneySens/#/srv/#g' /srv/startup.d/02_regen_honeysens_ca.sh /srv/startup.d/03_regen_https_cert.sh
 /srv/startup.d/02_regen_honeysens_ca.sh
 /srv/startup.d/03_regen_https_cert.sh
-
-#echo TODO "Adjusting sudo configuration"
-#cp -v /srv/utils/docker/sudoers.conf /etc/sudoers.d/honeysens
 
 echo "Configuring Apache web server"
 cp -v /srv/utils/docker/apache.ports.conf /etc/apache2/ports.conf
@@ -59,6 +59,7 @@ cp -v /srv/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_s
 cp -v /srv/utils/docker/apache.public.conf /etc/apache2/conf/honeysens.public.conf
 sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/apache2/sites-available/*.conf
 cp -v /srv/utils/docker/startup.d/04_init_apache.sh /srv/startup.d/
+ln -s /srv/startup.d/04_init_apache.sh /etc/startup.d/04_init_apache.sh
 /srv/startup.d/04_init_apache.sh
 
 echo "Running grunt-watch (${DEV_WATCH_TASK}) to monitor filesystem for changes"
@@ -66,6 +67,7 @@ echo "Running grunt-watch (${DEV_WATCH_TASK}) to monitor filesystem for changes"
 
 echo "Launching httpd"
 cp -v /srv/utils/docker/startup.d/06_launch_httpd.sh /srv/startup.d/
+ln -s /srv/startup.d/06_launch_httpd.sh /etc/startup.d/06_launch_httpd.sh
 /srv/startup.d/06_launch_httpd.sh &
 
 until curl -q -k https://127.0.0.1:8443/api/system/identify
