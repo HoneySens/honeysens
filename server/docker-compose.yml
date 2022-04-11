@@ -61,6 +61,7 @@ services:
       - honeysens
     environment:
       - REGISTRY_STORAGE_DELETE_ENABLED=true
+    user: "1000:1000"
     volumes:
       - honeysens_registry:/var/lib/registry
 

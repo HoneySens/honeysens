@@ -32,7 +32,7 @@ if [[ ! -f /srv/data/config.cfg ]]; then
     echo "Adjusting HoneySens configuration"
     cp -v /srv/data/config.clean.cfg /srv/data/config.cfg
     sed -i -e 's/debug.*/debug = true/' /srv/data/config.cfg
-    chown www-data:www-data /srv/data/config.cfg
+    chown hs:hs /srv/data/config.cfg
     chmod a+w /srv/data/config.cfg
 fi
 
@@ -78,7 +78,7 @@ sed -i -e 's#/opt/HoneySens/#/srv/#g' /srv/my_init.d/02_regen_honeysens_ca.sh /s
 /srv/my_init.d/03_regen_https_cert.sh
 
 echo "Adjusting permissions so that /srv/data is writeable for the web server"
-chown -R www-data:www-data /srv/data
+chown -R hs:hs /srv/data
 chmod -R 777 /srv/data
 
 echo "Adjusting sudo configuration"

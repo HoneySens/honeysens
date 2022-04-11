@@ -55,6 +55,7 @@ services:
       - server
     environment:
       - REGISTRY_STORAGE_DELETE_ENABLED=true
+    user: "1000:1000"
     volumes:
       - honeysens_dev_registry:/var/lib/registry
 
@@ -69,7 +70,6 @@ services:
       - DB_PASSWORD=honeysens
     networks:
       - server
-    privileged: true
     volumes:
       - honeysens_dev_backup:/srv/backup
       - honeysens_dev_data:/srv/data

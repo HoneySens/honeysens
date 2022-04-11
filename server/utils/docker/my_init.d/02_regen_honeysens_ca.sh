@@ -21,7 +21,7 @@ fi
 
 # Update OpenSSL CA config
 if [[ -e /opt/HoneySens/templates/data/CA/openssl_ca.cnf ]]; then
-    cp -v /opt/HoneySens/templates/data/CA/openssl_ca.cnf /opt/HoneySens/data/CA/
+    cp -va /opt/HoneySens/templates/data/CA/openssl_ca.cnf /opt/HoneySens/data/CA/
 fi
 
 # Generate a new CA if none was found
@@ -36,3 +36,6 @@ elif [[ "$FORCE" = "force" ]]; then
   echo "Generating new CA certificate for existing key using CA subject ${CA_SUBJECT}"
   openssl req -nodes -new -x509 -extensions v3_ca -key /opt/HoneySens/data/CA/ca.key -out /opt/HoneySens/data/CA/ca.crt -days ${CA_EXPIRATION_DAYS} -config /opt/HoneySens/data/CA/openssl_ca.cnf -subj "${CA_SUBJECT}"
 fi
+
+# Adjust data ownership in preparation for unprivileged containers
+chown -R hs:hs /opt/HoneySens/data/CA

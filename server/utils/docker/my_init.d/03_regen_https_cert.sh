@@ -44,6 +44,7 @@ if [[ ! -s /opt/HoneySens/data/${TARGET}.key ]]; then
     openssl req -new -key /opt/HoneySens/data/${TARGET}.key -out /opt/HoneySens/data/${TARGET}.csr -subj "${SUBJECT}"
     openssl x509 -req -in /opt/HoneySens/data/${TARGET}.csr -CA /opt/HoneySens/data/CA/ca.crt -CAkey /opt/HoneySens/data/CA/ca.key -CAcreateserial -out /opt/HoneySens/data/${TARGET}.crt -days 365 -sha256 -extensions san -extfile <(printf "[san]\nsubjectAltName=DNS:${DOMAIN}")
     cat /opt/HoneySens/data/${TARGET}.crt /opt/HoneySens/data/CA/ca.crt > /opt/HoneySens/data/${TARGET}.chain.crt
+    chown hs:hs /opt/HoneySens/data/${TARGET}.key /opt/HoneySens/data/${TARGET}.csr /opt/HoneySens/data/${TARGET}.crt /opt/HoneySens/data/${TARGET}.chain.crt
 elif [[ "$FORCE" = "force" ]]; then
     echo "Generating new TLS certificate for existing key"
     # Use subject line of existing certificate if one exists
@@ -54,4 +55,5 @@ elif [[ "$FORCE" = "force" ]]; then
     openssl req -new -key /opt/HoneySens/data/${TARGET}.key -out /opt/HoneySens/data/${TARGET}.csr -subj "${SUBJECT}"
     openssl x509 -req -in /opt/HoneySens/data/${TARGET}.csr -CA /opt/HoneySens/data/CA/ca.crt -CAkey /opt/HoneySens/data/CA/ca.key -CAcreateserial -out /opt/HoneySens/data/${TARGET}.crt -days 365 -sha256 -extensions san -extfile <(printf "[san]\nsubjectAltName=DNS:${DOMAIN}")
     cat /opt/HoneySens/data/${TARGET}.crt /opt/HoneySens/data/CA/ca.crt > /opt/HoneySens/data/${TARGET}.chain.crt
+    chown hs:hs /opt/HoneySens/data/${TARGET}.csr /opt/HoneySens/data/${TARGET}.crt /opt/HoneySens/data/${TARGET}.chain.crt
 fi
