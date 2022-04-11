@@ -7,6 +7,7 @@ import pymysql
 import re
 import subprocess
 import time
+import uuid
 from OpenSSL import crypto
 
 
@@ -342,9 +343,19 @@ if config_version == '2.3.0':
         'CREATE TABLE archived_events (id INT AUTO_INCREMENT NOT NULL, division_id INT DEFAULT NULL, oid INT NOT NULL, timestamp DATETIME NOT NULL, sensor VARCHAR(255) NOT NULL, divisionName VARCHAR(255) DEFAULT NULL, service INT NOT NULL, classification INT NOT NULL, source VARCHAR(255) NOT NULL, summary VARCHAR(255) NOT NULL, status INT NOT NULL, comment VARCHAR(255) DEFAULT NULL, lastModificationTime DATETIME DEFAULT NULL, archiveTime DATETIME NOT NULL, details LONGTEXT NOT NULL, packets LONGTEXT NOT NULL, INDEX IDX_1F331E1D41859289 (division_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB',
         'ALTER TABLE archived_events ADD CONSTRAINT FK_1F331E1D41859289 FOREIGN KEY (division_id) REFERENCES divisions (id)',
         'ALTER TABLE events ADD lastModificationTime DATETIME DEFAULT NULL',
-        'ALTER TABLE sensors ADD networkDHCPHostname VARCHAR(255) DEFAULT NULL'
+        'ALTER TABLE sensors ADD networkDHCPHostname VARCHAR(255) DEFAULT NULL',
+        'ALTER TABLE sensors ADD secret VARCHAR(255) NOT NULL'
     ]
     execute_sql(db, db_statements)
+    db.commit()
+    # Generate secrets for existing sensors
+    cursor = pymysql.cursors.DictCursor(db)
+    cursor.execute('SELECT id FROM sensors s')
+    secret_updates = []
+    for row in cursor.fetchall():
+        secret = uuid.uuid4().hex + uuid.uuid4().hex
+        secret_updates.append(f'UPDATE sensors SET secret="{secret}" WHERE id={row["id"]}')
+    execute_sql(db, secret_updates)
     db.commit()
     subprocess.run(['/etc/my_init.d/03_regen_https_cert.sh', 'force'])
     config.set('misc', 'archive_move_days', '0')

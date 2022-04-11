@@ -132,10 +132,16 @@ def send_data(data):
     eapol_ca_crt_fp = data['eapol_ca_crt_fp']
     eapol_client_crt_fp = data['eapol_client_crt_fp']
     del data['crt_fp'], data['srv_crt_fp'], data['eapol_ca_crt_fp'], data['eapol_client_crt_fp']
-    post_data = {'sensor': _config.get('general', 'sensor_id'), 'crt_fp': crt_fp, 'srv_crt_fp': srv_crt_fp,
-                 'eapol_ca_crt_fp': eapol_ca_crt_fp, 'eapol_client_crt_fp': eapol_client_crt_fp,
+    post_data = {'sensor': _config.get('general', 'sensor_id'),
+                 'crt_fp': crt_fp,
+                 'srv_crt_fp': srv_crt_fp,
+                 'eapol_ca_crt_fp': eapol_ca_crt_fp,
+                 'eapol_client_crt_fp': eapol_client_crt_fp,
                  'status': communication.encode_data(json.dumps(data).encode('ascii')),
                  'signature': communication.sign_data(signing_key, data)}
+    if _config.get('general', 'secret') is None:
+        # Request secret in case we haven't received ours yet
+        post_data['req_secret'] = True
     return communication.perform_https_request(_config, _config_dir, 'api/sensors/status', communication.REQUEST_TYPE_POST, post_data=post_data)
 
 
@@ -154,6 +160,7 @@ def update_config(config_data):
     network_changed = False or update_config_param('server', 'host', config_data, 'server_endpoint_host', True)
     network_changed |= update_config_param('server', 'port_https', config_data, 'server_endpoint_port_https')
     network_changed |= update_config_param('server', 'interval', config_data, 'update_interval')
+    network_changed |= update_config_param('general', 'secret', config_data, 'secret')
     network_changed |= update_config_param('general', 'service_network', config_data, 'service_network')
     network_changed |= update_config_param('network', 'mode', config_data, 'network_ip_mode', True)
     network_changed |= update_config_param('network', 'address', config_data, 'network_ip_address', True)

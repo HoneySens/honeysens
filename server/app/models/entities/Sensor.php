@@ -50,6 +50,11 @@ class Sensor {
     protected $location;
 
     /**
+     * @Column(type="string")
+     */
+    protected $secret;
+
+    /**
      * @OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", cascade={"remove"})
      */
     protected $cert;
@@ -230,6 +235,7 @@ class Sensor {
     protected $EAPOLClientCertPassphrase;
 
     public function __construct() {
+        $this->secret = $this->generateSecret();
         $this->status = new ArrayCollection();
         $this->services = new ArrayCollection();
     }
@@ -290,6 +296,26 @@ class Sensor {
      */
     public function getLocation() {
         return $this->location;
+    }
+
+    /**
+     * Set secret/key
+     *
+     * @param string $secret
+     * @return Sensor
+     */
+    public function setSecret($secret) {
+        $this->secret = $secret;
+        return $this;
+    }
+
+    /**
+     * Get secret/key
+     *
+     * @return string
+     */
+    public function getSecret() {
+        return $this->secret;
     }
 
     /**
@@ -832,5 +858,9 @@ class Sensor {
             'services' => $services,
             'service_network' => $this->getServiceNetwork()
         );
+    }
+
+    private function generateSecret() {
+        return bin2hex(openssl_random_pseudo_bytes(32));
     }
 }
