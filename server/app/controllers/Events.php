@@ -38,8 +38,10 @@ class Events extends RESTResource {
             $controller = new Events($em, $services, $config);
             $request = $app->request()->getBody();
             V::json()->check($request);
-            $data = json_decode($request);
-            $controller->create($data, $config);
+            $eventData = json_decode($request);
+            $sensor = $controller->validateSensorRequest('create', $request);
+            $controller->create($sensor, $eventData, $config);
+            $controller->setMACHeaders($sensor, 'create');
         });
 
         $app->put('/api/events/:id', function($id) use ($app, $em, $services, $config, $messages) {
@@ -138,16 +140,13 @@ class Events extends RESTResource {
     }
 
     /**
-     * Verifies the given sensor data and creates new events on the server.
+     * Verifies the given event data and creates new events on the server.
      * Also applies matching filter rules and triggers notifications in case of critical events.
      * Classification is also done while creating the event, taking into consideration the submitted data.
      * The expected data structure is a JSON string. The JSON data has to be formatted as follows:
      * {
-     *   "sensor": <sensor_id>
-     *   "signature": <signature>
      *   "events": <events|base64>
      * }
-     * The signature has to be valid for the base64 encoded events string.
      *
      * The base64 encoded events data has to be another JSON string formatted as follows:
      * [{
@@ -173,38 +172,22 @@ class Events extends RESTResource {
      *
      * The method returns an array of all the Event objects that were created.
      *
+     * @param Sensor $sensor
      * @param \stdClass $data
      * @param ConfigParser $config
      * @return array
      * @throws BadRequestException
      */
-    public function create($data, ConfigParser $config) {
-        // No $this->assureAllowed() authentication here, because sensors don't authenticate via the API,
-        // but are using certificates instead.
-
+    public function create($sensor, $data, ConfigParser $config) {
         // Basic attribute validation
-        V::attribute('sensor', V::intVal())
-            ->attribute('signature', V::stringType())
-            ->attribute('events', V::stringType())
-            ->check($data);
+        V::attribute('events', V::stringType())->check($data);
         // Decode events data
         try {
             $eventsData = base64_decode($data->events);
         } catch(\Exception $e) {
             throw new BadRequestException();
         }
-        // Check sensor certificate validity
         $em = $this->getEntityManager();
-        $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($data->sensor);
-        V::objectType()->check($sensor);
-        $cert = $sensor->getCert();
-        $x509 = new X509();
-        $x509->loadCA(file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt'));
-        $x509->loadX509($cert->getContent());
-        if(!$x509->validateSignature()) throw new BadRequestException();
-        // Check signature
-        $check = openssl_verify($eventsData, base64_decode($data->signature), $cert->getContent());
-        if(!$check) throw new BadRequestException();
         // Create events
         try {
             $eventsData = json_decode($eventsData);

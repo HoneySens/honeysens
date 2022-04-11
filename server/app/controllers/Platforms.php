@@ -112,9 +112,11 @@ class Platforms extends RESTResource {
      * @throws ForbiddenException
      */
     public function downloadFirmware($id) {
-        // Authenticate with either a valid sensor certificate or session
-        $sensor = $this->checkSensorCert();
-        if(!V::objectType()->validate($sensor)) {
+        // Authenticate either as a sensor or with a user session
+        $sensor = null;
+        try {
+            $sensor = $this->validateSensorRequest('get');
+        } catch (ForbiddenException $e) {
             $this->assureAllowed('get');
         }
         $firmware = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
@@ -123,6 +125,7 @@ class Platforms extends RESTResource {
         $firmwarePath = $platform->obtainFirmware($firmware, $this->getConfig());
         // session_write_close(); Necessary?
         $downloadName = sprintf('%s-%s.tar.gz', preg_replace('/\s+/', '-', strtolower($firmware->getName())), preg_replace('/\s+/', '-', strtolower($firmware->getVersion())));
+        if($sensor != null) $this->setMACHeaders($sensor, 'get');
         if($firmwarePath != null) $this->offerFile($firmwarePath, $downloadName);
         else throw new BadRequestException();
     }

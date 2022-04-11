@@ -44,6 +44,11 @@ def update(config_archive, config_dir, config):
     if not config.has_option('network', 'dhcp_hostname'):
         # Starting with server 2.4.0, a dedicated desired hostname can be set when using DHCP
         config.set('network', 'dhcp_hostname')
+        update_applied = True
+    if not config.has_option('general', 'secret'):
+        # Starting with server 2.4.0, sensors switch to HMAC-based authentication, which requires a secret
+        config.set('general', 'secret')
+        update_applied = True
 
     # Rewrite the config if an update did happen
     if update_applied:

@@ -49,15 +49,15 @@ class Sensors extends RESTResource {
         });
 
         /**
-         * This resource is used by sensors to receive firmware download details.
-         * Sensors are authenticated with their respective client certificates.
+         * This resource is used by authenticated sensors to receive firmware download details.
          * The return value is an array with platform names as keys and their respective access URIs as value.
          */
         $app->get('/api/sensors/firmware', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Sensors($em, $services, $config);
-            $sensor = $controller->checkSensorCert();
-            if(!V::objectType()->validate($sensor)) throw new ForbiddenException();
-            echo json_encode($controller->getFirmwareURIs($sensor));
+            $sensor = $controller->validateSensorRequest('get', '');
+            $body = json_encode($controller->getFirmwareURIs($sensor));
+            $controller->setMACHeaders($sensor, 'get', $body);
+            echo $body;
         });
 
         $app->post('/api/sensors', function() use ($app, $em, $services, $config, $messages) {
@@ -69,101 +69,17 @@ class Sensors extends RESTResource {
             echo json_encode($controller->getSensorState($sensor));
         });
 
-        // Used by sensors to send their status data and receive current configuration
+        // Polling endpoint for sensors to send status data and receive their current configuration
         $app->post('/api/sensors/status', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Sensors($em, $services, $config);
-            $sensor = $controller->checkSensorCert();
-            if(!V::objectType()->validate($sensor)) throw new ForbiddenException();
             $request = $app->request()->getBody();
             V::json()->check($request);
             $statusData = json_decode($request);
-            V::objectType()
-                ->attribute('sensor', V::intVal())
-                ->check($statusData);
-            $status = $controller->createStatus($statusData);
-            $controller->reduce($statusData->sensor, 10);
-            // Collect sensor configuration and send it as response
-            $sensorData = $controller->getSensorState($status->getSensor());
-            if($status->getSensor()->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_DEFAULT) {
-                $sensorData['server_endpoint_host'] = $config['server']['host'];
-                $sensorData['server_endpoint_port_https'] = $config['server']['portHTTPS'];
-            }
-            $sensor = $status->getSensor();
-            // Replace the update interval with the global default if no custom value was set for the sensor
-            $sensorData['update_interval'] = $sensor->getUpdateInterval() != null ?
-                $sensor->getUpdateInterval() : $config['sensors']['update_interval'];
-            // Replace the service network with the global default if no custom value was set for the sensor
-            $sensorData['service_network'] = $sensor->getServiceNetwork() != null ?
-                $sensor->getServiceNetwork() : $config['sensors']['service_network'];
-            // Replace service assignments with elaborate service data
-            $services = array();
-            $serviceRepository = $em->getRepository('HoneySens\app\models\entities\Service');
-            $revisionRepository = $em->getRepository('HoneySens\app\models\entities\ServiceRevision');
-            foreach($sensorData['services'] as $serviceAssignment) {
-                $service = $serviceRepository->find($serviceAssignment['service']);
-                $revisions = $service->getDistinctRevisions();
-                // TODO getDefaultRevision() returns a string, $servieAssignment['revision'] returns int IDs (so far unused)
-                $targetRevision = $serviceAssignment['revision'] == null ? $service->getDefaultRevision() : $serviceAssignment['revision'];
-                $serviceData = array();
-                if(array_key_exists($targetRevision, $revisions)) {
-                    foreach($revisions[$targetRevision] as $arch => $r) {
-                        $serviceData[$arch] = array(
-                            'label' => $service->getLabel(),
-                            'uri' => sprintf('%s:%s-%s', $service->getRepository(), $r->getArchitecture(), $r->getRevision()),
-                            'rawNetworkAccess' => $r->getRawNetworkAccess(),
-                            'catchAll' => $r->getCatchAll(),
-                            'portAssignment' => $r->getPortAssignment()
-                        );
-                    }
-                }
-                // Clients expect an associative array here.
-                // StdClass instead of an empty associative array ensures a serialized '{}' instead of an '[]'.
-                $services[$service->getId()] = count($serviceData) > 0 ? $serviceData : new \StdClass;
-            }
-            // Clients expect an associative array here.
-            $sensorData['services'] = count($services) > 0 ? $services : new \StdClass;
-            // Send passwords exclusively to the sensors (they aren't shown inside of the web interface)
-            $sensorData['proxy_password'] = $status->getSensor()->getProxyPassword();
-            $sensorData['eapol_password'] = $status->getSensor()->getEAPOLPassword();
-            $sensorData['eapol_client_key_password'] = $status->getSensor()->getEAPOLClientCertPassphrase();
-            // Attach firmware versioning information for all platforms
-            $platformRepository = $em->getRepository('HoneySens\app\models\entities\Platform');
-            $firmware = array();
-            foreach($platformRepository->findAll() as $platform) {
-                if($platform->hasDefaultFirmwareRevision()) {
-                    $revision = $platform->getDefaultFirmwareRevision();
-                    $firmware[$platform->getName()] = array('revision' => $revision->getVersion(),
-                        'uri' => $platform->getFirmwareURI($revision));
-                }
-            }
-            // Sensor firmware overwrite
-            if($sensor->hasFirmware()) {
-                $f = $sensor->getFirmware();
-                $firmware[$f->getPlatform()->getName()] = array('revision' => $f->getVersion(),
-                    'uri' => $f->getPlatform()->getFirmwareURI($f));
-            }
-            $sensorData['firmware'] = $firmware;
-            // Unhandled event status data for physical LED indication
-            $sensorData['unhandledEvents'] = $sensorData['new_events'] != 0;
-            // If the sensor cert fingerprint was sent and differs from the current cert, include updated cert data
-            if(V::attribute('crt_fp', V::stringType())->validate($statusData) && $sensorData['crt_fp'] != $statusData->crt_fp)
-                $sensorData['sensor_crt'] = $sensor->getCert()->getContent();
-            // If the server cert fingerprint was sent and differs from the current (or soon-to-be) TLS cert, include updated cert data
-            $srvCert = $controller->getServerCert();
-            if(V::attribute('srv_crt_fp', V::stringType())->validate($statusData) && openssl_x509_fingerprint($srvCert, 'sha256') != $statusData->srv_crt_fp)
-                $sensorData['server_crt'] = $srvCert;
-            // If the EAPOL CA cert fingerprint was sent and differs, include updated cert
-            $caCertFP = $sensor->getEAPOLCACert() == null ? null : $sensor->getEAPOLCACert()->getFingerprint();
-            if(V::attribute('eapol_ca_crt_fp', V::optional(V::stringType()))->validate($statusData) && $caCertFP != $statusData->eapol_ca_crt_fp)
-                $sensorData['eapol_ca_cert'] = $sensor->getEAPOLCACert() == null ? null : $sensor->getEAPOLCACert()->getContent();
-            else unset($sensorData['eapol_ca_cert']);
-            // If the EAPOL TLS cert fingerprint was sent and differs, include updated cert and key
-            $clientCertFP = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getFingerprint();
-            if(V::attribute('eapol_client_crt_fp', V::optional(V::stringType()))->validate($statusData) && $clientCertFP != $statusData->eapol_client_crt_fp) {
-                $sensorData['eapol_client_cert'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getContent();
-                $sensorData['eapol_client_key'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getKey();
-            } else unset($sensorData['eapol_client_cert']);
-            echo json_encode($sensorData);
+            $sensor = $controller->validateSensorRequest('create', $request);
+            $sensorData = $controller->poll($sensor, $statusData);
+            $body = json_encode($sensorData);
+            $controller->setMACHeaders($sensor, 'create', $body);
+            echo $body;
         });
 
         $app->put('/api/sensors/:id', function($id) use ($app, $em, $services, $config, $messages) {
@@ -447,8 +363,6 @@ class Sensors extends RESTResource {
      * Registers new status data from a sensor.
      * The given data object should have the following attributes:
      * - status: The actual status data as JSON object, encoded in base64
-     * - sensor: Sensor id
-     * - signature: Base64 encoded signature of the 'status' value
      *
      * The status data JSON object has to consist of the following attributes:
      * - timestamp: UNIX timestamp of the current sensor time
@@ -465,12 +379,10 @@ class Sensors extends RESTResource {
      * @return SensorStatus
      * @throws BadRequestException
      */
-    public function createStatus($data) {
+    public function createStatus($sensor, $data) {
         // Validation
         V::objectType()
             ->attribute('status', V::stringType())
-            ->attribute('sensor', V::intVal())
-            ->attribute('signature', V::stringType())
             ->check($data);
         $statusDataDecoded = base64_decode($data->status);
         V::json()->check($statusDataDecoded);
@@ -485,28 +397,11 @@ class Sensors extends RESTResource {
             ->attribute('sw_version', V::stringType())
             ->attribute('service_status', V::objectType()->each(V::intVal()->between(0,2), V::stringType()), false)
             ->check($statusData);
-        $em = $this->getEntityManager();
-        $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($data->sensor);
-        V::objectType()->check($sensor);
         // Check timestamp validity: only accept timestamps that aren't older than two minutes
         $now = new \DateTime();
         if(($sensor->getLastStatus() != null && $statusData->timestamp < $sensor->getLastStatus()->getTimestamp()->format('U'))
             || $statusData->timestamp < ($now->format('U') - 120)) {
             // TODO Invalid timestamp return value
-            throw new BadRequestException();
-        }
-        // Check sensor cert validity
-        $cert = $sensor->getCert();
-        $x509 = new X509();
-        $x509->loadCA(file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt'));
-        $x509->loadX509($cert->getContent());
-        if(!$x509->validateSignature()) {
-            // TODO Invalid sensor cert return value
-            throw new BadRequestException();
-        }
-        // Check signature validity
-        if(!openssl_verify(base64_decode($data->status), base64_decode($data->signature), $cert->getContent())) {
-            // TODO Invalid signature return value
             throw new BadRequestException();
         }
         // Persistence
@@ -528,9 +423,97 @@ class Sensors extends RESTResource {
             ->setSWVersion($statusData->sw_version);
         $sensor->addStatus($status);
         if(property_exists($statusData, 'service_status')) $status->setServiceStatus($statusData->service_status);
+        $em = $this->getEntityManager();
         $em->persist($status);
         $em->flush();
         return $status;
+    }
+
+    public function poll($sensor, $statusData) {
+        $status = $this->createStatus($sensor, $statusData);
+        $this->reduce($statusData->sensor, 10);
+        // Collect sensor configuration and send it as response
+        $sensorData = $this->getSensorState($sensor);
+        if($status->getSensor()->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_DEFAULT) {
+            $sensorData['server_endpoint_host'] = $this->getConfig()['server']['host'];
+            $sensorData['server_endpoint_port_https'] = $this->getConfig()['server']['portHTTPS'];
+        }
+        // Replace the update interval with the global default if no custom value was set for the sensor
+        $sensorData['update_interval'] = $sensor->getUpdateInterval() != null ?
+            $sensor->getUpdateInterval() : $this->getConfig()['sensors']['update_interval'];
+        // Replace the service network with the global default if no custom value was set for the sensor
+        $sensorData['service_network'] = $sensor->getServiceNetwork() != null ?
+            $sensor->getServiceNetwork() : $this->getConfig()['sensors']['service_network'];
+        // Replace service assignments with elaborate service data
+        $services = array();
+        $serviceRepository = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Service');
+        foreach($sensorData['services'] as $serviceAssignment) {
+            $service = $serviceRepository->find($serviceAssignment['service']);
+            $revisions = $service->getDistinctRevisions();
+            // TODO getDefaultRevision() returns a string, $serviceAssignment['revision'] returns int IDs (so far unused)
+            $targetRevision = $serviceAssignment['revision'] == null ? $service->getDefaultRevision() : $serviceAssignment['revision'];
+            $serviceData = array();
+            if(array_key_exists($targetRevision, $revisions)) {
+                foreach($revisions[$targetRevision] as $arch => $r) {
+                    $serviceData[$arch] = array(
+                        'label' => $service->getLabel(),
+                        'uri' => sprintf('%s:%s-%s', $service->getRepository(), $r->getArchitecture(), $r->getRevision()),
+                        'rawNetworkAccess' => $r->getRawNetworkAccess(),
+                        'catchAll' => $r->getCatchAll(),
+                        'portAssignment' => $r->getPortAssignment()
+                    );
+                }
+            }
+            // Clients expect an associative array here.
+            // StdClass instead of an empty associative array ensures a serialized '{}' instead of an '[]'.
+            $services[$service->getId()] = count($serviceData) > 0 ? $serviceData : new \StdClass;
+        }
+        // Clients expect an associative array here.
+        $sensorData['services'] = count($services) > 0 ? $services : new \StdClass;
+        // Send passwords exclusively to the sensors (they aren't shown inside of the web interface)
+        $sensorData['proxy_password'] = $status->getSensor()->getProxyPassword();
+        $sensorData['eapol_password'] = $status->getSensor()->getEAPOLPassword();
+        $sensorData['eapol_client_key_password'] = $status->getSensor()->getEAPOLClientCertPassphrase();
+        // Attach firmware versioning information for all platforms
+        $platformRepository = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Platform');
+        $firmware = array();
+        foreach($platformRepository->findAll() as $platform) {
+            if($platform->hasDefaultFirmwareRevision()) {
+                $revision = $platform->getDefaultFirmwareRevision();
+                $firmware[$platform->getName()] = array('revision' => $revision->getVersion(),
+                    'uri' => $platform->getFirmwareURI($revision));
+            }
+        }
+        // Sensor firmware overwrite
+        if($sensor->hasFirmware()) {
+            $f = $sensor->getFirmware();
+            $firmware[$f->getPlatform()->getName()] = array('revision' => $f->getVersion(),
+                'uri' => $f->getPlatform()->getFirmwareURI($f));
+        }
+        $sensorData['firmware'] = $firmware;
+        // Unhandled event status data for physical LED indication
+        $sensorData['unhandledEvents'] = $sensorData['new_events'] != 0;
+        // If the sensor cert fingerprint was sent and differs from the current cert, include updated cert data
+        if(V::attribute('crt_fp', V::stringType())->validate($statusData) && $sensorData['crt_fp'] != $statusData->crt_fp)
+            $sensorData['sensor_crt'] = $sensor->getCert()->getContent();
+        // If the server cert fingerprint was sent and differs from the current (or soon-to-be) TLS cert, include updated cert data
+        $srvCert = $this->getServerCert();
+        if(V::attribute('srv_crt_fp', V::stringType())->validate($statusData) && openssl_x509_fingerprint($srvCert, 'sha256') != $statusData->srv_crt_fp)
+            $sensorData['server_crt'] = $srvCert;
+        // If the EAPOL CA cert fingerprint was sent and differs, include updated cert
+        $caCertFP = $sensor->getEAPOLCACert() == null ? null : $sensor->getEAPOLCACert()->getFingerprint();
+        if(V::attribute('eapol_ca_crt_fp', V::optional(V::stringType()))->validate($statusData) && $caCertFP != $statusData->eapol_ca_crt_fp)
+            $sensorData['eapol_ca_cert'] = $sensor->getEAPOLCACert() == null ? null : $sensor->getEAPOLCACert()->getContent();
+        else unset($sensorData['eapol_ca_cert']);
+        // If the EAPOL TLS cert fingerprint was sent and differs, include updated cert and key
+        $clientCertFP = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getFingerprint();
+        if(V::attribute('eapol_client_crt_fp', V::optional(V::stringType()))->validate($statusData) && $clientCertFP != $statusData->eapol_client_crt_fp) {
+            $sensorData['eapol_client_cert'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getContent();
+            $sensorData['eapol_client_key'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getKey();
+        } else unset($sensorData['eapol_client_cert']);
+        // Send sensor secret if requested
+        if(V::attribute('req_secret', V::trueVal())->validate($statusData)) $sensorData['secret'] = $sensor->getSecret();
+        return $sensorData;
     }
 
     /**
@@ -865,6 +848,7 @@ class Sensors extends RESTResource {
         V::objectType()->check($sensor);
         // Enqueue a new task and return it, it's the client's obligation to check that task's status and download the result
         $taskParams = $this->getSensorState($sensor);
+        $taskParams['secret'] = $sensor->getSecret();
         $taskParams['cert'] = $sensor->getCert()->getContent();
         $taskParams['key'] = $sensor->getCert()->getKey();
         // If this sensor doesn't have a custom service network defined, we rely on the system-wide configuration

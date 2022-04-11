@@ -157,7 +157,7 @@ class Platform(GenericPlatform):
         subprocess.call(['systemctl', 'stop', unit])
 
     def update_system_time(self, config, config_dir):
-        r = communication.perform_https_request(config, config_dir, '#', communication.REQUEST_TYPE_HEAD, verify=False)
+        r = communication.perform_https_request(config, config_dir, '#', communication.REQUEST_TYPE_HEAD, verify=False, sign=False)
         if 'date' not in r['headers']:
             return
         req_time = r['headers']['date']

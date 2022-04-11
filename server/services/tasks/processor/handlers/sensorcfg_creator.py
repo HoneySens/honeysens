@@ -62,6 +62,7 @@ class SensorConfigCreator(HandlerInterface):
         sensor_config.set('server', 'certfile', 'server-cert.pem')
         sensor_config.set('general', 'sensor_id', str(job_params['id']))
         sensor_config.set('general', 'hostname', job_params['hostname'])
+        sensor_config.set('general', 'secret', job_params['secret'])
         sensor_config.set('general', 'certfile', 'cert.pem')
         sensor_config.set('general', 'keyfile', 'key.pem')
         sensor_config.set('general', 'service_network', job_params['service_network'])

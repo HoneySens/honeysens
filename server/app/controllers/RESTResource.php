@@ -5,9 +5,15 @@ use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\ServiceManager;
+use Respect\Validation\Validator as V;
 use Slim\Slim;
 
 abstract class RESTResource {
+
+    const HEADER_HMAC = 'x-hs-auth';
+    const HEADER_HMAC_ALGO = 'x-hs-type';
+    const HEADER_SENSOR = 'x-hs-sensor';
+    const HEADER_TIMESTAMP = 'x-hs-ts';
 
     protected $entityManager;
     protected $services;
@@ -129,7 +135,7 @@ abstract class RESTResource {
      * and return that sensor instance, otherwise return null.
      *
      * Whether we trust HTTP_SSL_CLIENT_VERIFY set by a remote authenticating proxy or our local SSL_CLIENT_VERIFY
-     * is determined by the X-SSL-PROXY-AUTH controlled by our local apache configuration.
+     * is determined by the X-SSL-PROXY-AUTH header which is read from our local apache configuration.
      *
      * @return null|Sensor
      */
@@ -146,7 +152,92 @@ abstract class RESTResource {
             $sensorID = substr($cn, 1); // Remove first character (CN are currently 's' + sensor id)
             $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($sensorID);
             return $sensor;
-        } else return null;
+        } else throw new ForbiddenException();
+    }
+
+    /**
+     * Validates the given MAC for a specific key and request.
+     *
+     * @param $mac string The MAC to validate
+     * @param $key string
+     * @param $algo string Hashing algorithm to use
+     * @param $timestamp int
+     * @param $method string HTTP request type
+     * @param $body string HTTP body
+     * @return bool
+     */
+    protected function isValidMAC($mac, $key, $algo, $timestamp, $method, $body) {
+        if(!in_array($algo, array('sha256'))) return false;
+        $msg = sprintf('%u %s %s', $timestamp, $method, $body);
+        return $mac === hash_hmac($algo, $msg, $key, false);
+    }
+
+    /**
+     * Validates the headers of the current HTTP request against known sensors.
+     * We authenticate sensors either via TLS client certificates, which results in
+     * headers named SSL_CLIENT_* or HTTP_SSL_CLIENT_*, or via HMACs, which result in the following headers:
+     * X-HS-Type: HMAC algorithm to use
+     * X-HS-Auth: HMAC as received from the client in lowercase hexits
+     * X-HS-Sensor: Sensor ID
+     * X-HS-TS: Unix timestamp of this request
+     *
+     * Returns Sensor instance in case of successful authentication or throws an exception for invalid requests.
+     */
+    protected function validateSensorRequest($method, $body='') {
+        $headers = $this->getNormalizedRequestHeaders();
+        if(array_key_exists(self::HEADER_HMAC_ALGO, $headers) &&
+            array_key_exists(self::HEADER_HMAC, $headers) &&
+            array_key_exists(self::HEADER_SENSOR, $headers) &&
+            array_key_exists(self::HEADER_TIMESTAMP, $headers)) {
+            // Check MAC
+            V::key(self::HEADER_HMAC_ALGO, V::stringType())
+                ->key(self::HEADER_HMAC, V::stringType())
+                ->key(self::HEADER_TIMESTAMP, V::intVal())
+                ->key(self::HEADER_SENSOR, V::intVal())->check($headers);
+            $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($headers[self::HEADER_SENSOR]);
+            V::objectType()->check($sensor);
+            if(!$this->isValidMAC($headers[self::HEADER_HMAC],
+                $sensor->getSecret(),
+                $headers[self::HEADER_HMAC_ALGO],
+                intval($headers[self::HEADER_TIMESTAMP]),
+                $method,
+                $body)) throw new ForbiddenException();
+            // Verify timestamp, permit a 60 second window of time drift
+            $timestamp = intval($headers[self::HEADER_TIMESTAMP]);
+            if(abs(time() - $timestamp) > 60) throw new ForbiddenException();
+            return $sensor;
+        } else return $this->checkSensorCert();
+    }
+
+    /**
+     * Sets the required HMAC headers (see validateSensorRequest()) for a response sent to a specific sensor.
+     *
+     * @param $sensor Sensor to calculate the MAC for
+     * @param $method string HTTP request type
+     * @param $body string HTTP body (optional)
+     */
+    protected function setMACHeaders($sensor, $method, $body='') {
+        $algo = in_array($this::HEADER_HMAC_ALGO, $_SERVER) ? $_SERVER[$this::HEADER_HMAC_ALGO] : 'sha256';
+        $now = time();
+        $msg = sprintf('%u %s %s', $now, $method, $body);
+        $hmac = hash_hmac($algo, $msg, $sensor->getSecret(), false);
+        header(sprintf('%s: %s', self::HEADER_HMAC, $hmac));
+        header(sprintf('%s: %s', self::HEADER_HMAC_ALGO, $algo));
+        header(sprintf('%s: %s', self::HEADER_TIMESTAMP, $now));
+    }
+
+    /**
+     * Normalizes and returns HTTP request headers by converting their keys to lowercase and replacing _ with -.
+     *
+     * @return array
+     */
+    protected function getNormalizedRequestHeaders() {
+        $result = [];
+        foreach(getallheaders() as $key => $val) {
+            $nkey = str_replace('_', '-', strtolower($key));
+            $result[$nkey] = $val;
+        }
+        return $result;
     }
 
     /**
