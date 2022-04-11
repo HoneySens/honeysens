@@ -19,6 +19,9 @@ RUN set -ex; \
         ln -s /srv/data/https.chain.crt /srv/tls/https.crt; \
         ln -s /srv/data/https.key /srv/tls/https.key; \
         apk --no-cache add py3-cryptography py3-pip skopeo; \
-        pip3 install -e /opt
+        pip3 install -e /opt; \
+        addgroup -g 1000 hs; \
+        adduser -D -u 1000 -G hs hs
 
-CMD ["celery", "-A", "processor.processor", "worker", "-B", "-s", "/srv/data/tasks/celerybeat-schedule", "-l", "info", "-Q", "high,low", "-Ofair", "--uid", "33", "--prefetch-multiplier=1", "--hsconfig=/srv/data/config.cfg"]
+USER 1000:1000
+CMD ["celery", "-A", "processor.processor", "worker", "-B", "-s", "/srv/data/tasks/celerybeat-schedule", "-l", "info", "-Q", "high,low", "-Ofair", "--prefetch-multiplier=1", "--hsconfig=/srv/data/config.cfg"]
