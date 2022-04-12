@@ -13,7 +13,7 @@ services:
     environment:
       - ACCESS_LOG=false
       - API_LOG=false
-      - DB_PASSWORD=honeysens
+      - HS_DB_PASSWORD=honeysens
       - DOMAIN=server
       - TLS_FORCE_12=false
       #- TLS_AUTH_PROXY=172.0.0.1
@@ -46,7 +46,7 @@ services:
     image: honeysens/tasks:2.4.0
     restart: always
     environment:
-      - DB_PASSWORD=honeysens
+      - HS_DB_PASSWORD=honeysens
     networks:
       - honeysens
     volumes:
@@ -74,7 +74,7 @@ services:
       - CRON_DBONLY=false
       - CRON_KEEP=0
       - CRON_TEMPLATE=backup-%s
-      - DB_PASSWORD=honeysens
+      - HS_DB_PASSWORD=honeysens
     networks:
       - honeysens
     volumes:

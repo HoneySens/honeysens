@@ -3,17 +3,17 @@ MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
 # Defaults
 ENV ACCESS_LOG=false \
-    BROKER_HOST=broker \
-    BROKER_PORT=6379 \
-    DB_HOST=database \
-    DB_PORT=3306 \
-    DB_USER=honeysens \
-    DB_NAME=honeysens \
-    DB_PASSWORD=secret \
+    HS_BROKER_HOST=broker \
+    HS_BROKER_PORT=6379 \
+    HS_DB_HOST=database \
+    HS_DB_PORT=3306 \
+    HS_DB_USER=honeysens \
+    HS_DB_NAME=honeysens \
+    HS_DB_PASSWORD=secret \
     DOMAIN=server \
     TLS_FORCE_12=false \
-    REGISTRY_HOST=registry \
-    REGISTRY_PORT=5000
+    HS_REGISTRY_HOST=registry \
+    HS_REGISTRY_PORT=5000
 
 COPY out/web /opt/HoneySens/
 RUN /bin/bash /opt/HoneySens/utils/docker/setup_prepare.sh

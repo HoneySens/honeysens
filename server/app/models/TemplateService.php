@@ -23,8 +23,8 @@ class TemplateService {
         // Fetch default templates from broker
         $broker = new Predis\Client(array(
             'scheme' => 'tcp',
-            'host' => getenv('BROKER_HOST'),
-            'port' => getenv('BROKER_PORT')
+            'host' => getenv('HS_BROKER_HOST'),
+            'port' => getenv('HS_BROKER_PORT')
         ));
         foreach(json_decode($broker->get('templates'), true) as $type => $template)
             $this->templates[$type] = new Template(

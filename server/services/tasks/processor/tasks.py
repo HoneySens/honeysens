@@ -47,9 +47,9 @@ def connect_to_db():
     """Initialize and return database connection."""
     db = None
     try:
-        db = pymysql.connect(host=os.environ['DB_HOST'], port=int(os.environ['DB_PORT']),
-                             user=os.environ['DB_USER'], passwd=os.environ['DB_PASSWORD'],
-                             db=os.environ['DB_NAME'], cursorclass=pymysql.cursors.DictCursor)
+        db = pymysql.connect(host=os.environ['HS_DB_HOST'], port=int(os.environ['HS_DB_PORT']),
+                             user=os.environ['HS_DB_USER'], passwd=os.environ['HS_DB_PASSWORD'],
+                             db=os.environ['HS_DB_NAME'], cursorclass=pymysql.cursors.DictCursor)
     except Exception as e:
         logger.warning('Could not connect to database ({})'.format(e))
     while not processor.db_schema_initialized:

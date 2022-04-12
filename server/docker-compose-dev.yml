@@ -12,7 +12,7 @@ services:
     environment:
       - ACCESS_LOG=false
       - API_LOG=true
-      - DB_PASSWORD=honeysens
+      - HS_DB_PASSWORD=honeysens
       - DOMAIN=server
       - TLS_FORCE_12=false
     volumes:
@@ -42,7 +42,7 @@ services:
       context: services/tasks
       dockerfile: Dockerfile.dev
     environment:
-      - DB_PASSWORD=honeysens
+      - HS_DB_PASSWORD=honeysens
     networks:
       - server
     volumes:
@@ -67,7 +67,7 @@ services:
       - CRON_DBONLY=false
       - CRON_KEEP=0
       - CRON_TEMPLATE=backup-%s
-      - DB_PASSWORD=honeysens
+      - HS_DB_PASSWORD=honeysens
     networks:
       - server
     volumes:

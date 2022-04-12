@@ -11,14 +11,14 @@ else
     echo "  API: down (OK)"
 fi
 
-if nc -z "${REGISTRY_HOST}" "${REGISTRY_PORT}" 2>/dev/null; then
+if nc -z "${HS_REGISTRY_HOST}" "${HS_REGISTRY_PORT}" 2>/dev/null; then
     echo "  Can't perform restoration: Registry service is reachable, please shut it down first"
     exit 1
 else
     echo "  Registry: down (OK)"
 fi
 
-if mysql -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e '\q'; then
+if mysql -h "${HS_DB_HOST}" -P "${HS_DB_PORT}" -u "${HS_DB_USER}" -p"${HS_DB_PASSWORD}" "${HS_DB_NAME}" -e '\q'; then
     echo "  Database: up (OK)"
 else
     echo "  Can't perform restoration: Database is not accessible"
@@ -43,8 +43,8 @@ if [[ -d /tmp/restore/data && -d /tmp/restore/registry ]]; then
 fi
 
 echo "  Importing database"
-echo "DROP DATABASE ${DB_NAME}; CREATE DATABASE ${DB_NAME}" | mysql -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}"
-mysql -h "${DB_HOST}" -P "${DB_PORT}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" </tmp/restore/db.sql
+echo "DROP DATABASE ${HS_DB_NAME}; CREATE DATABASE ${HS_DB_NAME}" | mysql -h "${HS_DB_HOST}" -P "${HS_DB_PORT}" -u "${HS_DB_USER}" -p"${HS_DB_PASSWORD}" "${HS_DB_NAME}"
+mysql -h "${HS_DB_HOST}" -P "${HS_DB_PORT}" -u "${HS_DB_USER}" -p"${HS_DB_PASSWORD}" "${HS_DB_NAME}" </tmp/restore/db.sql
 
 echo "  Cleaning up"
 rm -rf /tmp/restore

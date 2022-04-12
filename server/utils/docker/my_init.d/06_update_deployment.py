@@ -74,7 +74,7 @@ else:
     print('Updater: Performing update from {} to {}'.format(config_version, server_version))
 
 # Check existence of required environment variables to connect to the database
-if not all(v in os.environ for v in ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME']):
+if not all(v in os.environ for v in ['HS_DB_HOST', 'HS_DB_PORT', 'HS_DB_USER', 'HS_DB_PASSWORD', 'HS_DB_NAME']):
     print('Updater: Error: Database connection environment variables are not set')
     exit(1)
 
@@ -83,9 +83,9 @@ print('Updater: Connecting to database...')
 while True:
     time.sleep(1)
     try:
-        db = pymysql.connect(host=os.environ['DB_HOST'], port=int(os.environ['DB_PORT']),
-                             user=os.environ['DB_USER'], passwd=os.environ['DB_PASSWORD'],
-                             db=os.environ['DB_NAME'])
+        db = pymysql.connect(host=os.environ['HS_DB_HOST'], port=int(os.environ['HS_DB_PORT']),
+                             user=os.environ['HS_DB_USER'], passwd=os.environ['HS_DB_PASSWORD'],
+                             db=os.environ['HS_DB_NAME'])
         c = db.cursor()
         if c.connection:
             break

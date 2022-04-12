@@ -64,7 +64,7 @@ folgender Befehl im Server-Container auszuführen (darauf achten, den korrekten 
 
 echo "GRANT ALL PRIVILEGES ON honeysens.* TO 'honeysens'@'%' IDENTIFIED BY '<passwort>';" | docker-compose exec -T honeysens mysql
 
-Das hier gesetzte Passwort muss identisch sein zum in docker-compose.yml gesetzten Datenbank-Passwort (DB_PASSWORD und MYSQL_PASSWORD).
+Das hier gesetzte Passwort muss identisch sein zum in docker-compose.yml gesetzten Datenbank-Passwort (HS_DB_PASSWORD und MYSQL_PASSWORD).
 Nur so ist sichergestellt, dass nach dem Update die Kommunikation mit der nun in einen separaten Container ausgelagerten Datenbank
 weiterhin möglich ist.
 
