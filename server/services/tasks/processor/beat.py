@@ -14,7 +14,7 @@ def perform_beat(task_type):
     try:
         db = tasks.connect_to_db()
     except Exception as e:
-        logger.warning('Could not connect to DB, skipping beat {}'.format(task_type))
+        logger.warning('Skipping beat: Could not connect to DB ({})'.format(str(e)))
         return
     try:
         # Beats receive no working directory and no additional job data

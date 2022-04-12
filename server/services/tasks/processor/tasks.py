@@ -45,13 +45,21 @@ logger = get_task_logger(__name__)
 
 def connect_to_db():
     """Initialize and return database connection."""
+    db = None
     try:
         db = pymysql.connect(host=os.environ['DB_HOST'], port=int(os.environ['DB_PORT']),
                              user=os.environ['DB_USER'], passwd=os.environ['DB_PASSWORD'],
                              db=os.environ['DB_NAME'], cursorclass=pymysql.cursors.DictCursor)
-        return db
     except Exception as e:
         logger.warning('Could not connect to database ({})'.format(e))
+    while not processor.db_schema_initialized:
+        with db.cursor() as cur:
+            cur.execute('SELECT * FROM information_schema.tables WHERE table_name = "sensors"')
+            if cur.fetchone() is None:
+                raise Exception('Database is uninitialized')
+            else:
+                processor.db_schema_initialized = True
+    return db
 
 
 def fetch_task_data(db, task_id):
