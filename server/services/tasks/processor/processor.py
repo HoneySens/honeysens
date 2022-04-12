@@ -16,6 +16,7 @@ import time
 
 # Global vars
 config_path = None
+db_schema_initialized = False
 storage_path = '{}/{}'.format(constants.STORAGE_PATH, constants.RESULT_PATH)
 
 # Local vars
@@ -38,6 +39,9 @@ class ConfigBootstep(bootsteps.Step):
                 except Exception:
                     _logger.info('Could not create storage directory, waiting for permission...')
                     time.sleep(10)
+            while not os.path.exists(config_path):
+                _logger.info('Data volume is uninitialized, waiting...')
+                time.sleep(10)
         except Exception as e:
             _logger.critical('Initialization error ({})'.format(str(e)))
             exit()
