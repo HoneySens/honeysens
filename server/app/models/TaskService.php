@@ -24,8 +24,8 @@ class TaskService {
 
     public function __construct($services, ConfigParser $config, EntityManager $em) {
         $this->services = $services;
-        $broker_host = getenv('BROKER_HOST');
-        $broker_port = getenv('BROKER_PORT');
+        $broker_host = getenv('HS_BROKER_HOST');
+        $broker_port = getenv('HS_BROKER_PORT');
         $this->queue_high = new Celery($broker_host, null, null, null, self::PRIORITY_HIGH, self::PRIORITY_HIGH, $broker_port, 'redis');
         $this->queue_low = new Celery($broker_host, null, null, null, self::PRIORITY_LOW, self::PRIORITY_LOW, $broker_port, 'redis');
         $this->config = $config;

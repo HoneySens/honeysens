@@ -1,15 +1,15 @@
 FROM alpine:3.11
 
 # Defaults
-ENV BROKER_HOST=broker \
-    BROKER_PORT=6379 \
-    DB_HOST=database \
-    DB_PORT=3306 \
-    DB_USER=honeysens \
-    DB_NAME=honeysens \
-    DB_PASSWORD=secret \
-    REGISTRY_HOST=registry \
-    REGISTRY_PORT=5000
+ENV HS_BROKER_HOST=broker \
+    HS_BROKER_PORT=6379 \
+    HS_DB_HOST=database \
+    HS_DB_PORT=3306 \
+    HS_DB_USER=honeysens \
+    HS_DB_NAME=honeysens \
+    HS_DB_PASSWORD=secret \
+    HS_REGISTRY_HOST=registry \
+    HS_REGISTRY_PORT=5000
 
 COPY processor /opt/processor/
 COPY setup.py /opt/

@@ -51,6 +51,6 @@ class RegistryService {
     }
 
     private function getRegistryURL() {
-        return sprintf('http://%s:%u/v2', getenv('REGISTRY_HOST'), getenv('REGISTRY_PORT'));
+        return sprintf('http://%s:%u/v2', getenv('HS_REGISTRY_HOST'), getenv('HS_REGISTRY_PORT'));
     }
 }

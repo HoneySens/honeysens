@@ -52,11 +52,11 @@ class NotificationTemplateInstaller(bootsteps.StartStopStep):
 
     def start(self, parent):
         _logger.info('Pushing default notification templates to broker')
-        r = redis.Redis(host=os.environ['BROKER_HOST'], port=os.environ['BROKER_PORT'])
+        r = redis.Redis(host=os.environ['HS_BROKER_HOST'], port=os.environ['HS_BROKER_PORT'])
         r.set('templates', json.dumps(SYSTEM_NOTIFICATION_TEMPLATES))
 
 
-app = Celery('processor', broker='redis://{}:{}'.format(os.environ['BROKER_HOST'], os.environ['BROKER_PORT']), include=['processor.tasks', 'processor.beat'])
+app = Celery('processor', broker='redis://{}:{}'.format(os.environ['HS_BROKER_HOST'], os.environ['HS_BROKER_PORT']), include=['processor.tasks', 'processor.beat'])
 app.user_options['worker'].add(Option(['--hsconfig'], required=True, help='HoneySens configuration file path'))
 app.steps['worker'].add(ConfigBootstep)
 app.steps['consumer'].add(NotificationTemplateInstaller)
