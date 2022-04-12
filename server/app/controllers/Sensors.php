@@ -414,13 +414,17 @@ class Sensors extends RESTResource {
             // Last status exists and wasn't a timeout: inherit its value
             $status->setRunningSince($lastStatus->getRunningSince());
         } else $status->setRunningSince($timestamp);
+        // Temporary: Add authentication headers indicator to software version field
+        $headers = $this->getNormalizedRequestHeaders();
+        $authHMAC = array_key_exists(self::HEADER_HMAC, $headers) ? 'M' : '';
+        $authTLS = array_key_exists('SSL_CLIENT_S_DN_CN', $_SERVER) || array_key_exists('HTTP_SSL_CLIENT_S_DN_CN', $_SERVER) ? 'T': '';
         $status->setTimestamp($timestamp)
             ->setStatus($statusData->status)
             ->setIP($statusData->ip)
             ->setFreeMem($statusData->free_mem)
             ->setDiskUsage($statusData->disk_usage)
             ->setDiskTotal($statusData->disk_total)
-            ->setSWVersion($statusData->sw_version);
+            ->setSWVersion(sprintf('%s [%s%s]', $statusData->sw_version, $authHMAC, $authTLS));
         $sensor->addStatus($status);
         if(property_exists($statusData, 'service_status')) $status->setServiceStatus($statusData->service_status);
         $em = $this->getEntityManager();
