@@ -214,13 +214,18 @@ class Platform(GenericPlatform):
                     shutil.rmtree(tempdir)
                     self.set_firmware_update_in_progress(False)
 
-    def get_container_id(self):
+    @staticmethod
+    def get_container_id():
         # Use /proc magic to figure out our own container ID
-        my_id = None
+        # cgroups v1: via /proc/self/cgroup
         with open('/proc/self/cgroup', 'r') as f:
             raw_cgroup = f.read()
         for cgroup in raw_cgroup.split('\n'):
             if 'docker' in cgroup:
-                my_id = cgroup.split('/')[-1]
-                break
-        return my_id
+                return cgroup.split('/')[-1]
+        # cgroups v2: via /proc/self/mountinfo
+        with open('/proc/self/mountinfo', 'r') as f:
+            for line in f:
+                if '/docker/containers/' in line:
+                    return line.strip().split('/docker/containers/')[-1].split('/')[0]
+        return None
