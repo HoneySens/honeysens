@@ -6,16 +6,12 @@ import json
 import pycurl
 import time
 
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Hash import SHA
-from Cryptodome.Signature import PKCS1_v1_5
-
 REQUEST_TYPE_HEAD = 0
 REQUEST_TYPE_GET = 1
 REQUEST_TYPE_POST = 2
 
 
-def perform_https_request(config, config_dir, path, request_type, verify=True, post_data=None, file_descriptor=None, sign=True, retry_with_client_cert=False):
+def perform_https_request(config, config_dir, path, request_type, verify=True, post_data=None, file_descriptor=None, sign=True):
     content = BytesIO()
     headers = {}
     c = pycurl.Curl()
@@ -52,22 +48,16 @@ def perform_https_request(config, config_dir, path, request_type, verify=True, p
         c.setopt(pycurl.SSL_VERIFYPEER, 0)
         c.setopt(pycurl.SSL_VERIFYHOST, 0)
 
-    # Request signature
+    # Sign request by adding HMAC headers
     if sign:
-        if config.get('general', 'secret') is None or retry_with_client_cert:
-            # Use TLS client certificate
-            c.setopt(pycurl.SSLCERT, '{}/{}'.format(config_dir, config.get('general', 'certfile')))
-            c.setopt(pycurl.SSLKEY, '{}/{}'.format(config_dir, config.get('general', 'keyfile')))
-        else:
-            # Add HMAC headers
-            now = int(time.time())
-            msg = f'{now} {request_method} {request_body}'
-            signature = hmac.new(config.get('general', 'secret').encode('utf-8'), msg.encode('utf-8'), hashlib.sha256).hexdigest()
-            mac_headers = [f'x-hs-auth: {signature}',
-                           f'x-hs-sensor: {config.get("general", "sensor_id")}',
-                           f'x-hs-ts: {now}',
-                           'x-hs-type: sha256']
-            c.setopt(pycurl.HTTPHEADER, mac_headers)
+        now = int(time.time())
+        msg = f'{now} {request_method} {request_body}'
+        signature = hmac.new(config.get('general', 'secret').encode('utf-8'), msg.encode('utf-8'), hashlib.sha256).hexdigest()
+        mac_headers = [f'x-hs-auth: {signature}',
+                       f'x-hs-sensor: {config.get("general", "sensor_id")}',
+                       f'x-hs-ts: {now}',
+                       'x-hs-type: sha256']
+        c.setopt(pycurl.HTTPHEADER, mac_headers)
 
     # Proxy configuration
     # Currently we only support NTLM through cntlm
@@ -90,12 +80,8 @@ def perform_https_request(config, config_dir, path, request_type, verify=True, p
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
 
-    # Safeguard: Fall back to TLS client cert in case a signed request with HMACs fails
-    if status_code != 200 and not retry_with_client_cert:
-        return perform_https_request(config, config_dir, path, request_type, verify, post_data, file_descriptor, sign, True)
-
     # Verify response signature
-    if sign and config.get('general', 'secret') is not None and not retry_with_client_cert:
+    if sign:
         try:
             if headers['x-hs-type'] not in ['sha256']:
                 raise ValueError(f'Unsupported algorithm {headers["x-hs-type"]}')
@@ -108,15 +94,6 @@ def perform_https_request(config, config_dir, path, request_type, verify=True, p
             raise Exception(f'Received no or invalid HMAC headers ({str(e)})')
 
     return {'status': status_code, 'headers': headers, 'content': content.getvalue()}
-
-
-def sign_data(key, data):
-    key = RSA.importKey(key)
-    signer = PKCS1_v1_5.new(key)
-    digest = SHA.new()
-    digest.update(json.dumps(data).encode('utf-8'))
-    sign = signer.sign(digest)
-    return encode_data(sign)
 
 
 def encode_data(data):

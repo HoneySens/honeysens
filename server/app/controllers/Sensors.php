@@ -349,9 +349,6 @@ class Sensors extends RESTResource {
             }
         }
         $em->persist($sensor);
-        // Flush early, because we need the sensor ID for the cert common name
-        $em->flush();
-        $this->regenerateCert($sensor);
         // TODO Config archive status is not necessary anymore
         $sensor->setConfigArchiveStatus(Sensor::CONFIG_ARCHIVE_STATUS_SCHEDULED);
         $em->flush();
@@ -435,7 +432,7 @@ class Sensors extends RESTResource {
 
     public function poll($sensor, $statusData) {
         $status = $this->createStatus($sensor, $statusData);
-        $this->reduce($statusData->sensor, 10);
+        $this->reduce($sensor, 10);
         // Collect sensor configuration and send it as response
         $sensorData = $this->getSensorState($sensor);
         if($status->getSensor()->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_DEFAULT) {
@@ -497,9 +494,6 @@ class Sensors extends RESTResource {
         $sensorData['firmware'] = $firmware;
         // Unhandled event status data for physical LED indication
         $sensorData['unhandledEvents'] = $sensorData['new_events'] != 0;
-        // If the sensor cert fingerprint was sent and differs from the current cert, include updated cert data
-        if(V::attribute('crt_fp', V::stringType())->validate($statusData) && $sensorData['crt_fp'] != $statusData->crt_fp)
-            $sensorData['sensor_crt'] = $sensor->getCert()->getContent();
         // If the server cert fingerprint was sent and differs from the current (or soon-to-be) TLS cert, include updated cert data
         $srvCert = $this->getServerCert();
         if(V::attribute('srv_crt_fp', V::stringType())->validate($statusData) && openssl_x509_fingerprint($srvCert, 'sha256') != $statusData->srv_crt_fp)
@@ -853,8 +847,6 @@ class Sensors extends RESTResource {
         // Enqueue a new task and return it, it's the client's obligation to check that task's status and download the result
         $taskParams = $this->getSensorState($sensor);
         $taskParams['secret'] = $sensor->getSecret();
-        $taskParams['cert'] = $sensor->getCert()->getContent();
-        $taskParams['key'] = $sensor->getCert()->getKey();
         // If this sensor doesn't have a custom service network defined, we rely on the system-wide configuration
         $taskParams['service_network'] = $sensor->getServiceNetwork() != null ? $sensor->getServiceNetwork() : $this->getConfig()['sensors']['service_network'];
         if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_DEFAULT) {
@@ -877,18 +869,15 @@ class Sensors extends RESTResource {
     /**
      * Removes the oldest status entries of a particular sensor
      *
-     * @param int $sensor_id The id of the sensor to clean up for
+     * @param Sensor $sensor The sensor to clean up for
      * @param int $keep The number of entries to keep
      */
-    public function reduce($sensor_id, $keep) {
+    public function reduce($sensor, $keep) {
         // Validation
-        V::intVal()->check($sensor_id);
         V::intVal()->check($keep);
         // Persistence
         $em = $this->getEntityManager();
         $statusSorted = array();
-        $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($sensor_id);
-        V::objectType()->check($sensor);
         $allStatus = $sensor->getStatus();
         foreach($allStatus as $key => $status) {
             $statusSorted[$key] = $status;
@@ -903,39 +892,6 @@ class Sensors extends RESTResource {
             }
             $em->flush();
         }
-    }
-
-    /**
-     * For the given sensor, regenerates a new private key (if none exists yet) and issues a new signed certificate.
-     *
-     * @param Sensor $sensor The sensor to regenerate a certificate for
-     * @param string $caCertPath Path to the CA certificate that is used to sign the certificates
-     */
-    public function regenerateCert($sensor, $caCertPath = APPLICATION_PATH . '/../data/CA/ca.crt') {
-        // Validation
-        V::objectType()->check($sensor);
-        $em = $this->getEntityManager();
-        // Generate new cert data
-        $config = array('config' => APPLICATION_PATH . '/../data/CA/openssl_ca.cnf');
-        $cacert = 'file://' . $caCertPath;
-        $cakey = array('file://' . APPLICATION_PATH . '/../data/CA/ca.key', 'asdf');
-        $dn = array('commonName' => $sensor->getHostname());
-        // Use a private key that probably already exists
-        if($sensor->getCert() != null) $privkey = $sensor->getCert()->getKey();
-        else $privkey = openssl_pkey_new($config);
-        $csr = openssl_csr_new($dn, $privkey, $config);
-        $usercert = openssl_csr_sign($csr, $cacert, $cakey, 365, $config);
-        openssl_x509_export($usercert, $certout);
-        openssl_pkey_export($privkey, $pkeyout);
-        $cert = new SSLCert();
-        $cert->setContent($certout);
-        $cert->setKey($pkeyout);
-        $oldCert = $sensor->getCert();
-        $sensor->setCert($cert);
-        // Remove an existing cert, in case there is one
-        if($oldCert != null) $em->remove($oldCert);
-        $em->persist($cert);
-        $em->flush();
     }
 
     /**

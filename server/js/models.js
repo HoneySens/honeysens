@@ -167,8 +167,6 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'name' : '',
                 'location': '',
                 'division': null,
-                'cert': null,
-                'cert_fp': '',
                 'eapol_mode': 0,
                 'eapol_identity': null,
                 'eapol_password': null,

@@ -129,33 +129,6 @@ abstract class RESTResource {
     }
 
     /**
-     * Determines if
-     * 1) a valid client certificate was provided
-     * 2) that belongs to a currently registered sensor (CN equals sensor ID)
-     * and return that sensor instance, otherwise return null.
-     *
-     * Whether we trust HTTP_SSL_CLIENT_VERIFY set by a remote authenticating proxy or our local SSL_CLIENT_VERIFY
-     * is determined by the X-SSL-PROXY-AUTH header which is read from our local apache configuration.
-     *
-     * @return null|Sensor
-     */
-    protected function checkSensorCert() {
-        $SSL_CLIENT_VERIFY = 'SSL_CLIENT_VERIFY';
-        $SSL_CLIENT_S_DN_CN = 'SSL_CLIENT_S_DN_CN';
-        if(isset($_SERVER['X-SSL-PROXY-AUTH']) && $_SERVER['X-SSL-PROXY-AUTH'] === 'true') {
-            $SSL_CLIENT_VERIFY = 'HTTP_SSL_CLIENT_VERIFY';
-            $SSL_CLIENT_S_DN_CN = 'HTTP_SSL_CLIENT_S_DN_CN';
-        }
-
-        if(isset($_SERVER[$SSL_CLIENT_VERIFY]) && $_SERVER[$SSL_CLIENT_VERIFY] === 'SUCCESS' && isset($_SERVER[$SSL_CLIENT_S_DN_CN])) {
-            $cn = $_SERVER[$SSL_CLIENT_S_DN_CN];
-            $sensorID = substr($cn, 1); // Remove first character (CN are currently 's' + sensor id)
-            $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($sensorID);
-            return $sensor;
-        } else throw new ForbiddenException();
-    }
-
-    /**
      * Validates the given MAC for a specific key and request.
      *
      * @param $mac string The MAC to validate
@@ -173,9 +146,8 @@ abstract class RESTResource {
     }
 
     /**
-     * Validates the headers of the current HTTP request against known sensors.
-     * We authenticate sensors either via TLS client certificates, which results in
-     * headers named SSL_CLIENT_* or HTTP_SSL_CLIENT_*, or via HMACs, which result in the following headers:
+     * Validates the current HTTP request against known sensors.
+     * We authenticate sensors via HMACs, which are provided via the following headers:
      * X-HS-Type: HMAC algorithm to use
      * X-HS-Auth: HMAC as received from the client in lowercase hexits
      * X-HS-Sensor: Sensor ID
@@ -185,28 +157,23 @@ abstract class RESTResource {
      */
     protected function validateSensorRequest($method, $body='') {
         $headers = $this->getNormalizedRequestHeaders();
-        if(array_key_exists(self::HEADER_HMAC_ALGO, $headers) &&
-            array_key_exists(self::HEADER_HMAC, $headers) &&
-            array_key_exists(self::HEADER_SENSOR, $headers) &&
-            array_key_exists(self::HEADER_TIMESTAMP, $headers)) {
-            // Check MAC
-            V::key(self::HEADER_HMAC_ALGO, V::stringType())
-                ->key(self::HEADER_HMAC, V::stringType())
-                ->key(self::HEADER_TIMESTAMP, V::intVal())
-                ->key(self::HEADER_SENSOR, V::intVal())->check($headers);
-            $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($headers[self::HEADER_SENSOR]);
-            V::objectType()->check($sensor);
-            if(!$this->isValidMAC($headers[self::HEADER_HMAC],
-                $sensor->getSecret(),
-                $headers[self::HEADER_HMAC_ALGO],
-                intval($headers[self::HEADER_TIMESTAMP]),
-                $method,
-                $body)) throw new ForbiddenException();
-            // Verify timestamp, permit a 60 second window of time drift
-            $timestamp = intval($headers[self::HEADER_TIMESTAMP]);
-            if(abs(time() - $timestamp) > 60) throw new ForbiddenException();
-            return $sensor;
-        } else return $this->checkSensorCert();
+        // Check MAC
+        V::key(self::HEADER_HMAC_ALGO, V::stringType())
+            ->key(self::HEADER_HMAC, V::stringType())
+            ->key(self::HEADER_TIMESTAMP, V::intVal())
+            ->key(self::HEADER_SENSOR, V::intVal())->check($headers);
+        $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($headers[self::HEADER_SENSOR]);
+        V::objectType()->check($sensor);
+        if(!$this->isValidMAC($headers[self::HEADER_HMAC],
+            $sensor->getSecret(),
+            $headers[self::HEADER_HMAC_ALGO],
+            intval($headers[self::HEADER_TIMESTAMP]),
+            $method,
+            $body)) throw new ForbiddenException();
+        // Verify timestamp, permit a 60 second window of time drift
+        $timestamp = intval($headers[self::HEADER_TIMESTAMP]);
+        if(abs(time() - $timestamp) > 60) throw new ForbiddenException();
+        return $sensor;
     }
 
     /**

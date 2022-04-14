@@ -89,7 +89,6 @@ def get_certificate_fp(path):
 
 def collect_data():
     # Collect certificate fingerprints
-    sensor_crt_fp = get_certificate_fp('{}/{}'.format(_config_dir, _config.get('general', 'certfile')))
     server_crt_fp = get_certificate_fp('{}/{}'.format(_config_dir, _config.get('server', 'certfile')))
     eapol_ca_cert_fp = get_certificate_fp('{}/{}'.format(_config_dir, _config.get('eapol', 'ca_cert')))
     eapol_client_cert_fp = get_certificate_fp('{}/{}'.format(_config_dir, _config.get('eapol', 'client_cert')))
@@ -111,8 +110,7 @@ def collect_data():
         service_status = {}
     else:
         service_status = services.get_status()
-    return {'crt_fp': sensor_crt_fp,
-            'disk_total': int(disk_total),
+    return {'disk_total': int(disk_total),
             'disk_usage': int(disk_usage),
             'eapol_ca_crt_fp': eapol_ca_cert_fp,
             'eapol_client_crt_fp': eapol_client_cert_fp,
@@ -126,19 +124,15 @@ def collect_data():
 
 
 def send_data(data):
-    signing_key = open('{}/{}'.format(_config_dir, _config.get('general', 'keyfile')), 'r').read()
-    crt_fp = data['crt_fp']
     srv_crt_fp = data['srv_crt_fp']
     eapol_ca_crt_fp = data['eapol_ca_crt_fp']
     eapol_client_crt_fp = data['eapol_client_crt_fp']
-    del data['crt_fp'], data['srv_crt_fp'], data['eapol_ca_crt_fp'], data['eapol_client_crt_fp']
+    del data['srv_crt_fp'], data['eapol_ca_crt_fp'], data['eapol_client_crt_fp']
     post_data = {'sensor': _config.get('general', 'sensor_id'),
-                 'crt_fp': crt_fp,
                  'srv_crt_fp': srv_crt_fp,
                  'eapol_ca_crt_fp': eapol_ca_crt_fp,
                  'eapol_client_crt_fp': eapol_client_crt_fp,
-                 'status': communication.encode_data(json.dumps(data).encode('ascii')),
-                 'signature': communication.sign_data(signing_key, data)}
+                 'status': communication.encode_data(json.dumps(data).encode('ascii'))}
     if _config.get('general', 'secret') is None:
         # Request secret in case we haven't received ours yet
         post_data['req_secret'] = True
@@ -180,11 +174,6 @@ def update_config(config_data):
     network_changed |= update_config_param('proxy', 'port', config_data, 'proxy_port', True)
     network_changed |= update_config_param('proxy', 'user', config_data, 'proxy_user', True)
     network_changed |= update_config_param('proxy', 'password', config_data, 'proxy_password', True)
-    # Client certificate update
-    if 'sensor_crt' in config_data:
-        _logger.info('New client certificate received, saving to disk')
-        with open('{}/{}'.format(_config_dir, _config.get('general', 'certfile')), 'w') as f:
-            f.write(str(config_data['sensor_crt']))
     # Server certificate update
     if 'server_crt' in config_data:
         _logger.info('New server certificate received, saving to disk')

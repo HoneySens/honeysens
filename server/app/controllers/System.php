@@ -230,11 +230,6 @@ class System extends RESTResource {
         exec('/etc/startup.d/02_regen_honeysens_ca.sh force');
         // Recreate TLS certificates
         exec('/etc/startup.d/03_regen_https_cert.sh force');
-        // Recreate sensor certs signed with the new CA cert
-        $sensorController = new Sensors($em, $this->getServiceManager(), $this->getConfig());
-        foreach($em->getRepository('HoneySens\app\models\entities\Sensor')->findAll() as $sensor) {
-            $sensorController->regenerateCert($sensor, $caCrtPath);
-        }
         $this->log('Certificates renewed', LogEntry::RESOURCE_SYSTEM);
         // Graceful httpd restart
         $pid = trim(file_get_contents('/var/run/apache2.pid'));

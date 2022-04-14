@@ -3,9 +3,6 @@ import json
 import logging
 import queue
 import threading
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Hash import SHA
-from Cryptodome.Signature import PKCS1_v1_5
 
 from . import hooks
 from . import polling
@@ -38,7 +35,6 @@ class EventProcessor(threading.Thread):
     def run(self):
         try:
             sensor_id = self.config.get('general', 'sensor_id')
-            key = RSA.importKey(open('{}/{}'.format(self.config_dir, self.config.get('general', 'keyfile'), 'r')).read())
         except Exception as e:
             self.logger.error('Event processor couldn\'t be started ({})'.format(str(e)))
             return
@@ -48,7 +44,7 @@ class EventProcessor(threading.Thread):
                 event = self.queue.get(True, 1)
             except queue.Empty:
                 # Submit events ASAP if there are no further queued events to process
-                self.submit_events(sensor_id, key)
+                self.submit_events(sensor_id)
                 continue
             self.events.append(event)
             self.logger.info('Event received, queue length: {}'.format(len(self.events)))
@@ -56,14 +52,14 @@ class EventProcessor(threading.Thread):
             # If the queue is full, attempt to submit events.
             # If this fails, further events will overwrite queued events in the cache.
             if len(self.events) == self.events.maxlen:
-                self.submit_events(sensor_id, key)
+                self.submit_events(sensor_id)
             hooks.execute_hook(constants.Hooks.ON_EVENT)
         self.logger.info('Stopping event processor')
 
     def stop(self):
         self.ev_stop.set()
 
-    def submit_events(self, sensor_id, key):
+    def submit_events(self, sensor_id):
         # Attempt to send queued events
         if polling.is_online() and len(self.events) > 0:
             send_cand = [e for e in self.events]
@@ -72,12 +68,6 @@ class EventProcessor(threading.Thread):
                 'sensor': sensor_id,
                 'events': communication.encode_data(json.dumps(send_cand).encode('ascii'))
             }
-            # Add message signature
-            signer = PKCS1_v1_5.new(key)
-            digest = SHA.new()
-            digest.update(json.dumps(send_cand).encode('utf-8'))
-            sign = signer.sign(digest)
-            event_data['signature'] = communication.encode_data(sign)
             # Submit events
             try:
                 result = communication.perform_https_request(self.config, self.config_dir, 'api/events',
