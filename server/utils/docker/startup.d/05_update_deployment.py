@@ -363,6 +363,18 @@ if config_version == '2.3.0':
     config.set('misc', 'archive_prefer', 'false')
     config.set('server', 'config_version', '2.4.0')
     config_version = '2.4.0'
+# 2.4.0 -> 2.5.0
+if config_version == '2.4.0':
+    print('Upgrading configuration 2.4.0 -> 2.5.0')
+    db_statements = [
+        'ALTER TABLE sensors DROP FOREIGN KEY FK_D0D3FA9081448FA9',
+        'DELETE FROM certs WHERE id IN (SELECT cert_id FROM sensors)',
+        'DROP INDEX UNIQ_D0D3FA9081448FA9 ON sensors',
+        'ALTER TABLE sensors DROP cert_id'
+    ]
+    execute_sql(db, db_statements)
+    db.commit()
+    config_version = '2.5.0'
 
 # Write new config file
 with open(config_file, 'w') as f:

@@ -16,7 +16,6 @@ services:
       - HS_DB_PASSWORD=honeysens
       - DOMAIN=server
       - TLS_FORCE_12=false
-      #- TLS_AUTH_PROXY=172.0.0.1
     volumes:
       - honeysens_data:/opt/HoneySens/data
       #- <path to server.chain.crt>:/srv/tls/server.crt

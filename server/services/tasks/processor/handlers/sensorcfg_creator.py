@@ -22,12 +22,6 @@ class SensorConfigCreator(HandlerInterface):
             raise Exception('Sensor {} not found in database'.format(job_params['id']))
         logger.info('Generating sensor configuration for sensor {}'.format(job_params['id']))
         logger.debug('Working directory: {}'.format(working_dir))
-        logger.debug('Writing sensor certificate to {}/cert.pem'.format(working_dir))
-        with open('{}/cert.pem'.format(working_dir), 'w') as f:
-            f.write(job_params['cert'])
-        logger.debug('Writing sensor key to {}/key.pem'.format(working_dir))
-        with open('{}/key.pem'.format(working_dir), 'w') as f:
-            f.write(job_params['key'])
         logger.debug('Copying server certificate bundle: {} -> {}/server-cert.pem'.format(constants.TLS_CERT_PATH, working_dir))
         shutil.copy(constants.TLS_CERT_PATH, '{}/server-cert.pem'.format(working_dir))
         if job_params['eapol_ca_cert'] is not None:
@@ -63,8 +57,6 @@ class SensorConfigCreator(HandlerInterface):
         sensor_config.set('general', 'sensor_id', str(job_params['id']))
         sensor_config.set('general', 'hostname', job_params['hostname'])
         sensor_config.set('general', 'secret', job_params['secret'])
-        sensor_config.set('general', 'certfile', 'cert.pem')
-        sensor_config.set('general', 'keyfile', 'key.pem')
         sensor_config.set('general', 'service_network', job_params['service_network'])
         sensor_config.set('network', 'mode', str(job_params['network_ip_mode']))
         sensor_config.set('network', 'address', job_params['network_ip_address'])
@@ -96,7 +88,7 @@ class SensorConfigCreator(HandlerInterface):
         logger.debug('Creating result directory {}'.format(result_dir))
         os.makedirs(result_dir)
         logger.debug('Packaging configuration archive into {}/{}.tar.gz'.format(result_dir, job_params['hostname']))
-        files = ['cert.pem', 'key.pem', 'server-cert.pem', 'honeysens.cfg']
+        files = ['server-cert.pem', 'honeysens.cfg']
         if job_params['eapol_ca_cert'] is not None:
             files.append(job_params['eapol_ca_cert'])
         if job_params['eapol_client_cert'] is not None:

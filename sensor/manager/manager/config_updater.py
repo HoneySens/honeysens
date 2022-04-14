@@ -49,7 +49,16 @@ def update(config_archive, config_dir, config):
         # Starting with server 2.4.0, sensors switch to HMAC-based authentication, which requires a secret
         config.set('general', 'secret')
         update_applied = True
-
+    if config.has_option('general', 'certfile'):
+        # Starting with server 2.5.0, TLS client authentication is unsupported
+        os.remove('{}/{}'.format(config_dir, config.get('general', 'certfile')))
+        config.remove_option('general', 'certfile')
+        update_applied = True
+    if config.has_option('general', 'keyfile'):
+        # Starting with server 2.5.0, TLS client authentication is unsupported
+        os.remove('{}/{}'.format(config_dir, config.get('general', 'keyfile')))
+        config.remove_option('general', 'keyfile')
+        update_applied = True
     # Rewrite the config if an update did happen
     if update_applied:
         _logger.info('Updating sensor configuration file')

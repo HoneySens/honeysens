@@ -25,12 +25,6 @@ class Contacts extends RESTResource {
             }
             echo json_encode($result);
         });
-
-        $app->delete('/api/contacts/:id', function($id) use ($app, $em, $services, $config, $messages) {
-            $controller = new Certs($em, $services, $config);
-            $controller->delete($id);
-            echo json_encode([]);
-        });
     }
 
     /**
@@ -62,17 +56,5 @@ class Contacts extends RESTResource {
             }
             return $contacts;
         }
-    }
-
-    public function delete($id) {
-        $this->assureAllowed('delete');
-        // Validation
-        V::intVal()->check($id);
-        // Persistence
-        $em = $this->getEntityManager();
-        $contact = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\IncidentContact')->find($id);
-        V::objectType()->check($contact);
-        $em->remove($contact);
-        $em->flush();
     }
 }

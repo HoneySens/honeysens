@@ -319,26 +319,6 @@ class Sensor {
     }
 
     /**
-     * Set cert
-     *
-     * @param \HoneySens\app\models\entities\SSLCert $cert
-     * @return Sensor
-     */
-    public function setCert(\HoneySens\app\models\entities\SSLCert $cert = null) {
-        $this->cert = $cert;
-        return $this;
-    }
-
-    /**
-     * Get cert
-     *
-     * @return \HoneySens\app\models\entities\SSLCert
-     */
-    public function getCert() {
-        return $this->cert;
-    }
-
-    /**
      * Add status info
      *
      * @param \HoneySens\app\models\entities\SensorStatus $status
@@ -798,8 +778,6 @@ class Sensor {
     }
 
     public function getState() {
-        $cert = $this->getCert() ? $this->getCert()->getId() : '';
-        $crt_fp = $this->getCert() ? $this->getCert()->getFingerprint() : '';
         $eapol_password = $this->getEAPOLPassword() ? '******' : null;
         $eapol_ca_cert = $this->getEAPOLCACert() ? $this->getEAPOLCACert()->getFingerprint() : null;
         $eapol_client_cert = $this->getEAPOLClientCert() ? $this->getEAPOLClientCert()->getFingerprint() : null;
@@ -822,8 +800,6 @@ class Sensor {
             'name' => $this->getName(),
             'location' => $this->getLocation(),
             'division' => $this->getDivision()->getId(),
-            'cert' => $cert,
-            'crt_fp' => $crt_fp,
             'eapol_mode' => $this->getEAPOLMode(),
             'eapol_identity' => $this->getEAPOLIdentity(),
             'eapol_password' => $eapol_password,
