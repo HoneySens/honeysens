@@ -27,7 +27,3 @@ chown -R hs:hs /opt/HoneySens/templates
 
 # Services
 cp -vr /opt/HoneySens/utils/docker/services/apache2 /etc/service
-
-# TLS key and certs
-ln -s /opt/HoneySens/data/https.chain.crt /srv/tls/https.crt
-ln -s /opt/HoneySens/data/https.key /srv/tls/https.key
