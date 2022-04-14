@@ -9,9 +9,6 @@ cp -v /opt/HoneySens/utils/docker/apache.ssl.conf /etc/apache2/sites-available/h
 cp -v /opt/HoneySens/utils/docker/apache.ssl_proxy_auth.conf /etc/apache2/sites-available/honeysens_ssl_proxy_auth.conf
 cp -v /opt/HoneySens/utils/docker/apache.public.conf /etc/apache2/conf/honeysens.public.conf
 
-# Cron configuration
-cp -v /opt/HoneySens/utils/docker/cron.conf /etc/cron.d/honeysens
-
 # Init scripts
 cp -v /opt/HoneySens/utils/docker/startup.d/01_init_volumes.sh /etc/startup.d/
 cp -v /opt/HoneySens/utils/docker/startup.d/02_regen_honeysens_ca.sh /etc/startup.d/
