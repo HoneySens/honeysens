@@ -19,8 +19,8 @@ services:
       #- TLS_AUTH_PROXY=172.0.0.1
     volumes:
       - honeysens_data:/opt/HoneySens/data
-      #- <path to https.chain.crt>:/srv/tls/https.crt
-      #- <path to https.key>:/srv/tls/https.key
+      #- <path to server.chain.crt>:/srv/tls/server.crt
+      #- <path to server.key>:/srv/tls/server.key
 
   database:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
@@ -51,8 +51,8 @@ services:
       - honeysens
     volumes:
       - honeysens_data:/srv/data
-      #- <path to https.chain.crt>:/srv/tls/https.crt
-      #- <path to https.key>:/srv/tls/https.key
+      #- <path to server.chain.crt>:/srv/tls/server.crt
+      #- <path to server.key>:/srv/tls/server.key
 
   registry:
     image: registry:2

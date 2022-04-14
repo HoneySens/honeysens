@@ -32,3 +32,4 @@ chmod 755 /var/run/screen # see https://github.com/stucki/docker-cyanogenmod/iss
 
 # TLS Directory
 mkdir -p /srv/tls
+chown hs:hs /srv/tls

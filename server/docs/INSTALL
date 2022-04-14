@@ -52,6 +52,8 @@ Auch hier ist darauf zu achten, alle Operationen mit demselben Projektnamen ausz
 * Laufende Instanz mittels 'docker-compose down' herunterfahren
 * Neue Revisionen der Images mit 'docker load -i <service>.tar' importieren
 * Die Projektdatei docker-compose.yml anpassen (nach dem Vorbild im Archiv der neueren Version)
+  Vergleichen Sie hierfür die bestehende Serverkonfiguration mit der neuen mitgelieferten mittels
+  diff -u <alt>/docker-compose.yml <neu>/docker-compose.yml
 * Instanz im Anschluss mittels 'docker-compose up -d' neu starten
 * Für die Nutzung des Webinterfaces empfiehlt es sich, nach Updates den Browser-Cache zu leeren
 
@@ -72,7 +74,10 @@ weiterhin möglich ist.
 Beginnend mit Server 2.4.0 haben sich die Einhängepunkte für TLS-Zertifikat und -key geändert. Beide werden
 nun in den Containern 'server' und 'tasks' innerhalb des Pfades /srv/tls/ eingehangen. In der mitgelieferten
 docker-compose.yml sind diese Beispielpfade auskommentiert:
-  #- <path to https.chain.crt>:/srv/tls/https.crt
-  #- <path to https.key>:/srv/tls/https.key
+  #- <path to server.chain.crt>:/srv/tls/server.crt
+  #- <path to server.key>:/srv/tls/server.key
 Bei einem Update einer älteren Version ist darauf zu achten, die Zielpfade (nach dem ":") im Composefile auf
-die hier angegebenen Pfade unterhalb von /srv/tls/ zu ändern.
+die hier angegebenen Pfade unterhalb von /srv/tls/ zu setzen.
+Beachten Sie zudem die folgenden weiteren Änderungen in docker-compose.yml zu vorherigen Versionen:
+* Umgebungsvariablen für die Kommunikation zwischen den Services tragen nun den Prefix HS_. Insbesondere wurde DB_PASSWORD zu HS_DB_PASSWORD umbenannt.
+* Der Service "registry" muss nun als unprivilegierter Nutzer starten (Option 'user: "1000:1000"')
