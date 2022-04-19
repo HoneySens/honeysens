@@ -13,8 +13,9 @@ services:
     environment:
       - ACCESS_LOG=false
       - API_LOG=false
-      - HS_DB_PASSWORD=honeysens
       - DOMAIN=server
+      - HS_DB_PASSWORD=honeysens
+      - PLAIN_HTTP_API=false
       - TLS_FORCE_12=false
     volumes:
       - honeysens_data:/opt/HoneySens/data

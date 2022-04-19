@@ -54,7 +54,8 @@ sed -i -e 's#/opt/HoneySens/#/srv/#g' /srv/startup.d/02_regen_honeysens_ca.sh /s
 
 echo "Configuring Apache web server"
 cp -v /srv/utils/docker/apache.ports.conf /etc/apache2/ports.conf
-cp -v /srv/utils/docker/apache.http.conf /etc/apache2/sites-available/honeysens_http.conf
+cp -v /srv/utils/docker/apache.http.api.conf /etc/apache2/sites-available/honeysens_http_api.conf
+cp -v /srv/utils/docker/apache.http.redirect.conf /etc/apache2/sites-available/honeysens_http_redirect.conf
 cp -v /srv/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
 cp -v /srv/utils/docker/apache.public.conf /etc/apache2/conf/honeysens.public.conf
 sed -i -e 's#/opt/HoneySens/#/srv/#g' /etc/apache2/sites-available/*.conf
