@@ -49,6 +49,7 @@
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong><br/>
                     <p>
                         <ul>
+                            <li><strong>Brücken-Release</strong>: Mindestvoraussetzung für Updates auf spätere Revisionen</li>
                             <li>Ereignisarchiv für die Langzeitaufbewahrung von Ereignisdaten</li>
                             <li>Individualisierbare E-Mail-Templates für alle automatisch versandten Systemnachrichten</li>
                             <li>Ereignisfilter können nun gezielt aktiviert/deaktiviert werden</li>
@@ -63,6 +64,7 @@
                             <li>Administrative E-Mail-Adresse als Pflichtfeld für Neuinstallationen eingefügt</li>
                             <li>Prozess zum Einbinden eigener TLS-Zertifikate für die Kompatibilität mit alternativen Container-Runtimes überarbeitet</li>
                             <li>Fehlerkorrekturen in Front- und Backend, speziell in den Bereichen Session-Handling, Caching und serverseitive Validierung</li>
+                            <li>Sensor-Authentifikation via HMAC</li>
                         </ul>
                     </p>
                     <hr />
