@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
-a2ensite honeysens_http
 a2ensite honeysens_ssl
+
+# HTTP endpoint selection: Either redirect to HTTPS or serve the API in plain HTTP depending on env PLAIN_HTTP_API
+if [[ "$PLAIN_HTTP_API" = "true" ]]; then
+    echo "Apache: Serving plain HTTP API requests"
+    a2dissite honeysens_http_redirect
+    a2ensite honeysens_http_api
+else
+    echo "Apache: Redirecting HTTP requests to HTTPS"
+    a2dissite honeysens_http_api
+    a2ensite honeysens_http_redirect
+fi
 
 # Enable or disable access logging to stdout depending on the environment variable ACCESS_LOG
 if [[ "$ACCESS_LOG" = "true" ]]; then

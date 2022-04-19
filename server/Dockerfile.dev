@@ -4,17 +4,19 @@ MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 # Defaults
 ENV ACCESS_LOG=false \
     BRANDING_ENABLED=no \
+    DEV_WATCH_TASK=chokidar \
+    DOMAIN=server \
     HS_BROKER_HOST=broker \
     HS_BROKER_PORT=6379 \
-    DEV_WATCH_TASK=chokidar \
     HS_DB_HOST=database \
     HS_DB_PORT=3306 \
     HS_DB_USER=honeysens \
     HS_DB_NAME=honeysens \
     HS_DB_PASSWORD=secret \
-    DOMAIN=server \
     HS_REGISTRY_HOST=registry \
     HS_REGISTRY_PORT=5000
+    PLAIN_HTTP_API=false \
+    TLS_FORCE_12=false
 
 COPY utils/docker/run.sh utils/docker/setup_prepare.sh utils/docker/setup_dev.sh /opt/
 RUN /bin/bash /opt/setup_prepare.sh
