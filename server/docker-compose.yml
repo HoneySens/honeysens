@@ -25,12 +25,11 @@ services:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
     restart: always
     environment:
-      - MARIADB_AUTO_UPGRADE=1
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_DATABASE=honeysens
       - MYSQL_USER=honeysens
       - MYSQL_PASSWORD=honeysens
-    image: mariadb:10
+    image: mysql:8-oracle
     networks:
       - honeysens
     user: "999:999"
