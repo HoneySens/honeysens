@@ -2,7 +2,7 @@
   "require": {
     "doctrine/orm": "2.3.0",
     "beberlei/doctrineextensions": "v1.0.21",
-    "gargron/fileupload": "v1.5.1",
+    "gargron/fileupload": "v1.4.5",
     "massivescale/celery-php": "2.1.2",
     "noiselabs/configparser": "dev-master",
     "phpseclib/phpseclib": "2.0.10",
