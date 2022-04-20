@@ -374,6 +374,7 @@ if config_version == '2.4.0':
     ]
     execute_sql(db, db_statements)
     db.commit()
+    config.set('server', 'config_version', '2.5.0')
     config_version = '2.5.0'
 
 # Write new config file
