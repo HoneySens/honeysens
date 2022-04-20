@@ -70,7 +70,7 @@ cp -v /srv/utils/docker/startup.d/06_launch_httpd.sh /srv/startup.d/
 ln -sf /srv/startup.d/06_launch_httpd.sh /etc/startup.d/06_launch_httpd.sh
 /srv/startup.d/06_launch_httpd.sh &
 
-until curl -q -k https://127.0.0.1:8443/api/system/identify
+until curl -s -k https://127.0.0.1:8443/api/system/identify
 do
 	echo "Waiting for the API..."
 	sleep 2
