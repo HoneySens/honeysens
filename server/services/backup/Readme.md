@@ -14,7 +14,7 @@ The available commands are:
 * **reset**: Performs a factory reset by removing all volume and database contents. All services except the database and backup containers have to be brought down manually beforehand.
 
 #### Scheduled backups
-The scheduling of periodic backups can be controlled via the `CRON_*` environment variables within `docker-compose.yml`. By default, scheduled backups are disabled. To enable that feature set `CRON_ENABLED` to `true` and `CRON_CONDITION` to a valid cron scheduling expression (such as `0 3 * * *` to schedule a backup for every night, 3am). Please be aware that the backup container is ignorant of the current timezone and uses UTC. The variable `CRON_TEMPLATE` defaults to `backup-%s` and denotes the file name of each newly created backup archive without a suffix (`%s` will be substituted with the current date and time).
+The scheduling of periodic backups can be controlled via the `CRON_*` environment variables within `docker-compose.yml`. By default, scheduled backups are disabled. To enable the feature set `CRON_ENABLED` to `true` and `CRON_CONDITION` to a valid cron scheduling expression (such as `0 3 * * *` to schedule a backup for every night, 3am). Please be aware that the backup container is ignorant of the current timezone and uses UTC. The variable `CRON_TEMPLATE` defaults to `backup-%s` and denotes the file name of each newly created backup archive without a suffix (`%s` will be substituted with the current date and time). If `DB_KEEP` is set to a value greater than zero, the old backups will be automatically deleted so that only ever `DB_KEEP` backups remain.
 
 Scheduled backups will be written to `/srv/backup/` within the container, which should be bound to an external storage volume in `docker-compose.yml`.
 
@@ -32,7 +32,7 @@ The `-T` switch is strictly required so that no interactive terminal session is 
 
 To restore a snapshot, first shut down all services besides the backup and database containers:
 
-`docker-compose stop server registry`
+`docker-compose stop server tasks broker registry`
 
 then simply pipe a backup archive into the restoration script:
 
@@ -40,7 +40,7 @@ then simply pipe a backup archive into the restoration script:
 
 That script will first make sure that all services besides the databases are offline, verify the archive contents and finally restore the given snapshot. Afterwards the remaining services have to be started again:
 
-`docker-compose start server registry`
+`docker-compose start server tasks broker registry`
 
 The procedure for doing a factory reset are similar to the restoration case, the only difference being the restoration command:
 
