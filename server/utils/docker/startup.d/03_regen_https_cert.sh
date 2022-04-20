@@ -6,27 +6,6 @@ SUBJECT="/CN=$DOMAIN"
 # If "force" is given as additional parameter, certificate generation is forced
 FORCE=${1:-no}
 
-# Server versions < 0.9.0 were using /opt/HoneySens/data/ssl-cert.key and /opt/HoneySens/data/ssl-cert.pem
-if [[ -e /opt/HoneySens/data/ssl-cert.key ]] && [[ -e /opt/HoneySens/data/ssl-cert.pem ]]; then
-    echo "TLS certificate from server < 0.9.0 present, attempting import..."
-    # If an old certificate pair exists and actually contains data, import it. Otherwise, remove the leftover files.
-    # Zero-size dummy files remain if files were bind mounted as volumes into an container previously.
-    if [[ -s /opt/HoneySens/data/ssl-cert.key ]] && [[ -s /opt/HoneySens/data/ssl-cert.pem ]]; then
-        echo "Importing TLS certificate from server < 0.9.0"
-        # Add another fallback layer: if importing the key fails, https.key is currently mounted as a volume and can't be overwritten.
-        # In that case the import process is skipped.
-        if mv -v /opt/HoneySens/data/ssl-cert.key /opt/HoneySens/data/https.key; then
-            mv -v /opt/HoneySens/data/ssl-cert.pem /opt/HoneySens/data/https.crt
-            cat /opt/HoneySens/data/https.crt /opt/HoneySens/data/CA/ca.crt > /opt/HoneySens/data/https.chain.crt
-        else
-            echo "Skipping import, custom certificate mounted"
-        fi
-    else
-        echo "No import required, removing leftover certificate dummys"
-        rm -v /opt/HoneySens/data/ssl-cert.key /opt/HoneySens/data/ssl-cert.pem
-    fi
-fi
-
 # Create links to either mounted or self-signed TLS certificate/key.
 # Starting with server 2.4.0, custom certificates are mounted into /srv/tls, so that links point to either
 #   /srv/tls/https* -> /opt/HoneySens/data/https*
