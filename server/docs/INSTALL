@@ -60,31 +60,9 @@ Auch hier ist darauf zu achten, alle Operationen mit demselben Projektnamen ausz
 ----------------------------
 VERSIONSSPEZIFISCHE HINWEISE
 ----------------------------
-1. Update von Server 2.1.0 oder früher
-Beim Update von Server 2.1.0 oder früher ist VOR DEM UPDATE unbedingt in der laufenden alten Instanz
-folgender Befehl im Server-Container auszuführen (darauf achten, den korrekten Projektnamen zu verwenden - siehe Installation, Punkt 3):
-
-echo "GRANT ALL PRIVILEGES ON honeysens.* TO 'honeysens'@'%' IDENTIFIED BY '<passwort>';" | docker-compose exec -T honeysens mysql
-
-Das hier gesetzte Passwort muss identisch sein zum in docker-compose.yml gesetzten Datenbank-Passwort (HS_DB_PASSWORD und MYSQL_PASSWORD).
-Nur so ist sichergestellt, dass nach dem Update die Kommunikation mit der nun in einen separaten Container ausgelagerten Datenbank
-weiterhin möglich ist.
-
-2. Update von Server 2.3.0 oder früher
-Beginnend mit Server 2.4.0 haben sich die Einhängepunkte für TLS-Zertifikat und -key geändert. Beide werden
-nun in den Containern 'server' und 'tasks' innerhalb des Pfades /srv/tls/ eingehangen. In der mitgelieferten
-docker-compose.yml sind diese Beispielpfade auskommentiert:
-  #- <path to server.chain.crt>:/srv/tls/server.crt
-  #- <path to server.key>:/srv/tls/server.key
-Bei einem Update einer älteren Version ist darauf zu achten, die Zielpfade (nach dem ":") im Composefile auf
-die hier angegebenen Pfade unterhalb von /srv/tls/ zu setzen.
-Beachten Sie zudem die folgenden weiteren Änderungen in docker-compose.yml zu vorherigen Versionen:
-* Umgebungsvariablen für die Kommunikation zwischen den Services tragen nun den Prefix HS_. Insbesondere wurde DB_PASSWORD zu HS_DB_PASSWORD umbenannt.
-* Der Service "registry" muss nun als unprivilegierter Nutzer starten (Option 'user: "1000:1000"')
-
-3. Update von Server 2.4.0
+* Updates von Server <= 2.3.0
 Beginnend mit Version 2.4.0 nutzen Sensoren ein neues Verfahren zur Authentifizierung mit dem Server. Revision 2.4.0 ist
-hierbei die einzige, die sowohl die alte TLS-basierte Authentifizierung als auch das neue HMAC-Verfahren unterstützt, dies
+hierbei die einzige, die sowohl die alte TLS-basierte Authentifizierung als auch das neue HMAC-Verfahren unterstützt. Dies
 betrifft sowohl Sensor-Firmware als auch den Server selbst. Spätere Releases bieten ausschließlich das neue HMAC-Verfahren an.
 Deshalb ist es bei Updates älterer Revision zwingend notwendig, zunächst ein Update auf Server 2.4.0 vorzunehmen und
 alle Sensoren mit diesem Server kommunizieren zu lassen. Sobald in der Firmware-Spalte der Sensorübersicht alle Sensoren
