@@ -33,7 +33,6 @@ if [[ ! -f /srv/data/config.cfg ]]; then
     echo "Adjusting HoneySens configuration"
     cp -v /srv/data/config.clean.cfg /srv/data/config.cfg
     sed -i -e 's/debug.*/debug = true/' /srv/data/config.cfg
-    chown hs:hs /srv/data/config.cfg
     chmod a+w /srv/data/config.cfg
 fi
 
