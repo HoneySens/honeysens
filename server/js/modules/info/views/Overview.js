@@ -4,7 +4,12 @@ function(HoneySens, OverviewTpl) {
     HoneySens.module('Info.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
         Views.Overview = Marionette.ItemView.extend({
             template: OverviewTpl,
-            className: 'row'
+            className: 'row',
+            templateHelpers: {
+                showBuildID: function() {
+                    return HoneySens.data.system.get('build_id');
+                }
+            }
         });
     });
 

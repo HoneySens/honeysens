@@ -1,7 +1,9 @@
 FROM alpine:3.15
 
+ARG BID
 # Defaults
-ENV HS_BROKER_HOST=broker \
+ENV BUILD_ID=$BID \
+    HS_BROKER_HOST=broker \
     HS_BROKER_PORT=6379 \
     HS_DB_HOST=database \
     HS_DB_PORT=3306 \

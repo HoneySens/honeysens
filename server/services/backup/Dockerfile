@@ -1,8 +1,10 @@
 FROM debian:bullseye
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
+ARG BID
 # Defaults
-ENV CRON_ENABLED=false \
+ENV BUILD_ID=$BID \
+    CRON_ENABLED=false \
     CRON_CONDITION="0 3 * * *" \
     CRON_DBONLY=false \
     CRON_KEEP=0 \

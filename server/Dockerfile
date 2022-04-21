@@ -1,8 +1,10 @@
 FROM ubuntu:20.04
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
+ARG BID
 # Defaults
 ENV ACCESS_LOG=false \
+    BUILD_ID=$BID \
     DOMAIN=server \
     HS_BROKER_HOST=broker \
     HS_BROKER_PORT=6379 \

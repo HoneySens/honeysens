@@ -88,7 +88,7 @@ class System extends RESTResource {
     }
 
     /**
-     * Returns data that is relevant for the setup process
+     * Returns metadata about the server, some of it relevant specifically for the setup process.
      */
     public function get() {
         $config = $this->getConfig();
@@ -113,6 +113,7 @@ class System extends RESTResource {
             $commonName = null;
         }
         return array(
+            'build_id' => getenv('BUILD_ID'),
             'version' => $this::VERSION,
             'cert_cn' => $commonName,
             'setup' => $this::installRequired($config));

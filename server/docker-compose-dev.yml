@@ -3,6 +3,8 @@ services:
 
   server:
     build:
+      args:
+        BID: dev
       context: .
       dockerfile: Dockerfile.dev
     ports:
@@ -44,6 +46,8 @@ services:
 
   tasks:
     build:
+      args:
+        BID: dev
       context: services/tasks
       dockerfile: Dockerfile.dev
     environment:
@@ -65,7 +69,10 @@ services:
       - honeysens_dev_registry:/var/lib/registry
 
   backup:
-    build: services/backup
+    build:
+      args:
+        BID: dev
+      context: services/backup
     environment:
       - CRON_ENABLED=false
       - CRON_CONDITION=0 3 * * *
