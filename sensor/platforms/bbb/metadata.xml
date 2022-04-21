@@ -6,8 +6,12 @@
   <description>Debian-based firmware that runs dockerized services</description>
   <changelog>
     <entry>
+      <version>2.5.0</version>
+      <desc>TLS authentication removed</desc>
+    </entry>
+    <entry>
       <version>2.4.0</version>
-      <desc>Custom DHCP hostname support</desc>
+      <desc>HMAC authentication and custom DHCP hostname support</desc>
     </entry>
     <entry>
       <version>2.3.0</version>
