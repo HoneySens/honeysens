@@ -1,5 +1,6 @@
 PREFIX := HoneySens-Server
-REVISION := 2.5.0
+BUILD_ID := $(shell date +%Y%m%d)
+REVISION := 2.5.0-${BUILD_ID}
 OUTDIR := out
 # (watch|simple-watch|chokidar)
 export DEV_WATCH_TASK := chokidar
@@ -12,7 +13,7 @@ DEV_ENV_SYSLOG := no
 dist: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 
 clean: ${OUTDIR}/dev/docker-compose reset
-	docker rmi honeysens_dev_server:latest honeysens_dev_backup:latest honeysens_dev_tasks:latest
+	docker rmi honeysens_dev_server:latest honeysens_dev_backup:latest honeysens_dev_tasks:latest 2>/dev/null || true
 	rm -rf utils/dev_services/proxy/ca/ca* utils/dev_services/proxy/ca/client* utils/dev_services/proxy/ca/server*
 	rm -rf ${OUTDIR}
 
@@ -32,16 +33,16 @@ ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/${PREFIX}-${REVISIO
 	tar -czf $@ -C ${OUTDIR}/build/ ${PREFIX}-${REVISION}/
 
 ${OUTDIR}/build/${PREFIX}-${REVISION}/tasks-${REVISION}.tar: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
-	docker build --no-cache -t honeysens/tasks:${REVISION} services/tasks/
+	docker build --no-cache --build-arg BID=${BUILD_ID} -t honeysens/tasks:${REVISION} services/tasks/
 	docker save -o $@ honeysens/tasks:${REVISION}
 
 ${OUTDIR}/build/${PREFIX}-${REVISION}/backup-${REVISION}.tar: export DOCKER_CONTENT_TRUST := 1
 ${OUTDIR}/build/${PREFIX}-${REVISION}/backup-${REVISION}.tar: | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
-	docker build --no-cache -t honeysens/backup:${REVISION} services/backup/
+	docker build --no-cache --build-arg BID=${BUILD_ID} -t honeysens/backup:${REVISION} services/backup/
 	docker save -o $@ honeysens/backup:${REVISION}
 
 ${OUTDIR}/build/${PREFIX}-${REVISION}/server-${REVISION}.tar: ${OUTDIR}/web/data/config.cfg | DIR.${OUTDIR}/build/${PREFIX}-${REVISION}
-	docker build --no-cache -t honeysens/server:${REVISION} .
+	docker build --no-cache --build-arg BID=${BUILD_ID} -t honeysens/server:${REVISION} .
 	docker save -o $@ honeysens/server:${REVISION}
 
 ${OUTDIR}/web/data/config.cfg: | DIR.$(OUTDIR)/web

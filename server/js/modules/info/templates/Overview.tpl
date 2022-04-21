@@ -5,6 +5,8 @@
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
         <dd>2.5.0</dd>
+        <dt>Build-ID</dt>
+        <dd><%- showBuildID() %></dd>
         <dt>Lizenz</dt>
         <dd><a href="https://www.apache.org/licenses/LICENSE-2.0.html" target="_blank">Apache 2.0 Software License</a></dd>
         <dt>Entwicklung</dt>
@@ -49,8 +51,8 @@
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong><br/>
                     <p>
                         <ul>
-                            <li>Unprivilegierter Betrieb aller Server-Komponenten für den sicheren Betrieb als orchestrierter Microservice</li>
-                            <li>TLS-Authentifizierung für Sensoren entfernt und durch HMAC als Standardverfahren ersetzt</li>
+                            <li>Unprivilegierte Server-Container für den sicheren Betrieb als orchestrierter Microservice</li>
+                            <li>TLS-Client-Authentifizierung für Sensoren entfernt und durch HMAC als Standardverfahren ersetzt</li>
                             <li>Unterstützung für TLS 1.3</li>
                         </ul>
                     </p>

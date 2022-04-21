@@ -2,7 +2,7 @@ version: "3"
 services:
 
   server:
-    image: honeysens/server:2.5.0
+    image: honeysens/server:$REVISION
     restart: always
     ports:
       # For security reasons, bind these ports to a specific IP (such as "- 192.168.1.1:443:443")
@@ -47,7 +47,7 @@ services:
       - honeysens
 
   tasks:
-    image: honeysens/tasks:2.5.0
+    image: honeysens/tasks:$REVISION
     restart: always
     environment:
       - HS_DB_PASSWORD=honeysens
@@ -70,7 +70,7 @@ services:
       - honeysens_registry:/var/lib/registry
 
   backup:
-    image: honeysens/backup:2.5.0
+    image: honeysens/backup:$REVISION
     restart: always
     environment:
       - CRON_ENABLED=false
