@@ -55,11 +55,6 @@ class Sensor {
     protected $secret;
 
     /**
-     * @OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", cascade={"remove"})
-     */
-    protected $cert;
-
-    /**
      * @OneToMany(targetEntity="HoneySens\app\models\entities\SensorStatus", mappedBy="sensor", cascade={"remove"})
      */
     protected $status;
