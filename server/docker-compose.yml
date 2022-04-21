@@ -3,7 +3,7 @@ services:
 
   server:
     image: honeysens/server:$REVISION
-    restart: always
+    restart: unless-stopped
     ports:
       # For security reasons, bind these ports to a specific IP (such as "- 192.168.1.1:443:443")
       - "80:8080"
@@ -24,7 +24,7 @@ services:
 
   database:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
-    restart: always
+    restart: unless-stopped
     environment:
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_DATABASE=honeysens
@@ -41,14 +41,14 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     image: ubuntu/redis:6.0-21.04_beta
-    restart: always
+    restart: unless-stopped
     user: "101:101"
     networks:
       - honeysens
 
   tasks:
     image: honeysens/tasks:$REVISION
-    restart: always
+    restart: unless-stopped
     environment:
       - HS_DB_PASSWORD=honeysens
     networks:
@@ -60,7 +60,7 @@ services:
 
   registry:
     image: registry:2
-    restart: always
+    restart: unless-stopped
     networks:
       - honeysens
     environment:
@@ -71,7 +71,7 @@ services:
 
   backup:
     image: honeysens/backup:$REVISION
-    restart: always
+    restart: unless-stopped
     environment:
       - CRON_ENABLED=false
       - CRON_CONDITION=0 3 * * *
