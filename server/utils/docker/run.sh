@@ -2,4 +2,4 @@
 set -e
 
 # Execute startup scripts in alphabetical order
-find /etc/startup.d/* -type f -executable -exec {} \;
+for s in /etc/startup.d/*; do $s; done
