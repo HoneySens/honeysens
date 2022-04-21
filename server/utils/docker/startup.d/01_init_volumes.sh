@@ -2,8 +2,8 @@
 set -e
 
 # Refuse startup if files that don't belong to uid 1000 are found on the data volume (indicates a version <= 2.3.0)
-if find /opt/HoneySens/data ! -uid 1000 | grep . >/dev/null 2>&1; then
-  echo -e 'Error: Files not owned by uid 1000 found on data volume!\nIf these volumes belong to a server running revision 2.3.0 or earlier, please update to revision 2.4.0 first.'
+if find /opt/HoneySens/data/* ! -uid 1000 | grep . >/dev/null 2>&1; then
+  echo -e 'Error: Files not owned by uid 1000 found on data volume!\nIf these volumes belong to a server running revision 2.3.0 or earlier, please update to revision 2.4.0 first.\nIn case this is an update from revision 2.4.0, please restart the server with revision 2.4.0 once prior to updating.'
   exit 1
 fi
 
