@@ -505,8 +505,6 @@ class Sensors extends RESTResource {
             $sensorData['eapol_client_cert'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getContent();
             $sensorData['eapol_client_key'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getKey();
         } else unset($sensorData['eapol_client_cert']);
-        // Send sensor secret if requested
-        if(V::attribute('req_secret', V::trueVal())->validate($statusData)) $sensorData['secret'] = $sensor->getSecret();
         return $sensorData;
     }
 
