@@ -6,21 +6,30 @@ SUBJECT="/CN=$DOMAIN"
 # If "force" is given as additional parameter, certificate generation is forced
 FORCE=${1:-no}
 
-# Create links to either mounted or self-signed TLS certificate/key.
+# Create links to either mounted or self-signed TLS certificates/keys that should be used for this deployment.
 # Starting with server 2.4.0, custom certificates are mounted into /srv/tls, so that links point to either
-#   /srv/tls/https* -> /opt/HoneySens/data/https*
-# for self-signed certificate/key or
-#   /srv/tls/https* -> /srv/tls/server*
-# for custom certificate/key mounted at /srv/tls/server.crt and /srv/tls/server.key.
-rm -f /srv/tls/https.crt /srv/tls/https.key
+#   /srv/tls/https.crt -> /opt/HoneySens/data/https.crt
+#   /srv/tls/https.key -> /opt/HoneySens/data/https.key
+# for a self-signed certificate/key pair or
+#   /srv/tls/https.crt -> /srv/tls/server.crt
+#   /srv/tls/https.key -> /srv/tls/server.key
+# for a custom certificate/key pair mounted at /srv/tls/server.crt and /srv/tls/server.key or JUST
+#   /srv/tls/https.crt -> /srv/tls/server.crt
+# for a custom certificate pair mounted at /srv/tls/server.crt without a key, e.g. when running just the plain HTTP API
+# behind a TLS proxy, in which case we just require the certificate for distribution to sensors.
+rm -f /srv/tls/https.crt /srv/tls/https.key  # Remove links from last execution
 if [[ -s /srv/tls/server.crt && -s /srv/tls/server.key ]]; then
-  # Mounted
-  echo "Using mounted TLS cert/key"
+  # Mounted cert/key pair
+  echo "Using mounted TLS cert/key pair"
   ln -s /srv/tls/server.crt /srv/tls/https.crt
   ln -s /srv/tls/server.key /srv/tls/https.key
+elif [[ -s /srv/tls/server.crt && ! -s /srv/tls/server.key ]]; then
+  # Mounted cert without key
+  echo "Using mounted TLS certificate without key"
+  ln -s /srv/tls/server.crt /srv/tls/https.crt
 else
-  # Self-signed
-  echo "Using self-signed TLS cert/key"
+  # Self-signed cert/key pair
+  echo "Using self-signed TLS cert/key pair"
   ln -s /opt/HoneySens/data/${TARGET}.chain.crt /srv/tls/https.crt
   ln -s /opt/HoneySens/data/${TARGET}.key /srv/tls/https.key
 fi
