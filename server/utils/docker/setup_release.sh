@@ -3,7 +3,6 @@ set -e
 
 # Apache
 chown -R hs:hs /opt/HoneySens/cache/ /opt/HoneySens/data/
-cp -v /opt/HoneySens/utils/docker/apache.ports.conf /etc/apache2/ports.conf
 cp -v /opt/HoneySens/utils/docker/apache.http.api.conf /etc/apache2/sites-available/honeysens_http_api.conf
 cp -v /opt/HoneySens/utils/docker/apache.http.redirect.conf /etc/apache2/sites-available/honeysens_http_redirect.conf
 cp -v /opt/HoneySens/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
