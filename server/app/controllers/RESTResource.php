@@ -158,10 +158,11 @@ abstract class RESTResource {
     protected function validateSensorRequest($method, $body='') {
         $headers = $this->getNormalizedRequestHeaders();
         // Check MAC
-        V::key(self::HEADER_HMAC_ALGO, V::stringType())
+        if(!V::key(self::HEADER_HMAC_ALGO, V::stringType())
             ->key(self::HEADER_HMAC, V::stringType())
             ->key(self::HEADER_TIMESTAMP, V::intVal())
-            ->key(self::HEADER_SENSOR, V::intVal())->check($headers);
+            ->key(self::HEADER_SENSOR, V::intVal())->validate($headers))
+            throw new ForbiddenException();
         $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($headers[self::HEADER_SENSOR]);
         V::objectType()->check($sensor);
         if(!$this->isValidMAC($headers[self::HEADER_HMAC],
