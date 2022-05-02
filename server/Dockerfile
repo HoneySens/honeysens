@@ -27,5 +27,5 @@ HEALTHCHECK CMD /usr/bin/test $(/usr/bin/curl -sk https://localhost/api/system/i
 VOLUME /opt/HoneySens/data
 
 USER 1000:1000
-EXPOSE 80 443
+EXPOSE 8080 8443
 CMD ["/opt/run.sh"]

@@ -27,5 +27,5 @@ RUN /bin/bash /opt/setup_dev.sh
 COPY utils/docker/startup.d/00_init_dev_env.sh /etc/startup.d/
 
 USER 1000:1000
-EXPOSE 80 443
+EXPOSE 8080 8443
 CMD ["/opt/run.sh"]
