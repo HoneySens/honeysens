@@ -18,7 +18,7 @@ if [[ -e /opt/HoneySens/data/CA/ca.key ]]; then
   if [[ ! "$CA_KEY_SIZE" =~ "2048 bit" ]]; then
     echo "Size of existing CA key too small, recreating certificate chain"
     rm -vf /opt/HoneySens/data/CA/ca.key /opt/HoneySens/data/CA/ca.crt /opt/HoneySens/data/CA/ca.srl /opt/HoneySens/data/https.chain.crt /opt/HoneySens/data/https.crt /opt/HoneySens/data/https.csr /opt/HoneySens/data/https.key
-    if [[ ! -s /srv/tls/server.crt && ! -s /srv/tls/server.key ]]; then
+    if [[ ! -s /srv/tls/server.crt && ! -s /srv/tls/server.key && ! -s /srv/tls/server/tls.crt && ! -s /srv/tls/server/tls.key ]]; then
       echo "Self-signed TLS certificates are active, ALL sensors need to be reinstalled after this update!"
     fi
   fi
