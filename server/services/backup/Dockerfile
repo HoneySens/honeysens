@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM ubuntu:20.04
 MAINTAINER Pascal Brueckner <pascal.brueckner@sylence.cc>
 
 ARG BID
