@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: honeysens
+  creationTimestamp: null
+  labels:
+    io.kompose.service: honeysens-backup
+  name: honeysens-backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: {}

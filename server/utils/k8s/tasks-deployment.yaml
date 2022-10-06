@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: honeysens
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (a9d05d509)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: tasks
+  name: tasks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: tasks
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.1 (a9d05d509)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/honeysens: "true"
+        io.kompose.service: tasks
+    spec:
+      containers:
+        - env:
+            - name: HS_DB_PASSWORD
+              value: honeysens
+          image: localhost:5000/honeysens/tasks:2.5.0-20220421
+          name: tasks
+          resources: {}
+          volumeMounts:
+            - mountPath: /srv/data
+              name: honeysens-data
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: true
+      volumes:
+        - name: honeysens-data
+          persistentVolumeClaim:
+            claimName: honeysens-data
+status: {}

@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  namespace: honeysens
+  name: honeysens
+spec:
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              io.kompose.network/honeysens: "true"
+  podSelector:
+    matchLabels:
+      io.kompose.network/honeysens: "true"
