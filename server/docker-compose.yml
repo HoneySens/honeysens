@@ -40,7 +40,7 @@ services:
   broker:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
-    image: ubuntu/redis:6.2-22.04_beta
+    image: ubuntu/redis:6.0-22.04_beta
     restart: unless-stopped
     user: "101:101"
     networks:

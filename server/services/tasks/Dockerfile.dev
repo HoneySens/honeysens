@@ -14,11 +14,12 @@ ENV BUILD_ID=$BID \
     HS_REGISTRY_PORT=5000
 
 RUN set -ex; \
-        apk --no-cache add py3-cryptography py3-watchdog py3-pip skopeo; \
-        addgroup -g 1000 hs; \
-        adduser -D -u 1000 -G hs hs; \
-        mkdir -p /srv/tls; \
-        chown hs:hs /srv/tls
+    apk --no-cache upgrade; \
+    apk --no-cache add py3-cryptography py3-watchdog py3-pip skopeo; \
+    addgroup -g 1000 hs; \
+    adduser -D -u 1000 -G hs hs; \
+    mkdir -p /srv/tls; \
+    chown hs:hs /srv/tls
 
 COPY run-dev.sh /opt/run.sh
 
