@@ -23,8 +23,8 @@ RUN set -ex; \
     apt-get upgrade -y; \
     apt-get install -y curl bzip2 mariadb-client netcat; \
     apt-get clean; \
-    curl -fsSLO "https://github.com/aptible/supercronic/releases/download/v0.1.12/supercronic-linux-amd64"; \
-    echo "048b95b48b708983effb2e5c935a1ef8483d9e3e  supercronic-linux-amd64" | sha1sum -c -;  \
+    curl -fsSLO "https://github.com/aptible/supercronic/releases/download/v0.2.1/supercronic-linux-amd64"; \
+    echo "d7f4c0886eb85249ad05ed592902fa6865bb9d70  supercronic-linux-amd64" | sha1sum -c -;  \
     chmod +x supercronic-linux-amd64; \
     mv supercronic-linux-amd64 /usr/local/bin/supercronic-linux-amd64; \
     ln -s /usr/local/bin/supercronic-linux-amd64 /usr/local/bin/supercronic; \

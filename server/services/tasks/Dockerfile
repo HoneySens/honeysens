@@ -17,12 +17,13 @@ COPY processor /opt/processor/
 COPY run.sh setup.py /opt/
 
 RUN set -ex; \
-        apk --no-cache add py3-cryptography py3-pip skopeo; \
-        pip3 install -e /opt; \
-        addgroup -g 1000 hs; \
-        adduser -D -u 1000 -G hs hs; \
-        mkdir -p /srv/tls; \
-        chown hs:hs /srv/tls
+    apk --no-cache upgrade; \
+    apk --no-cache add py3-cryptography py3-pip skopeo; \
+    pip3 install -e /opt; \
+    addgroup -g 1000 hs; \
+    adduser -D -u 1000 -G hs hs; \
+    mkdir -p /srv/tls; \
+    chown hs:hs /srv/tls
 
 USER 1000:1000
 CMD ["/opt/run.sh"]
