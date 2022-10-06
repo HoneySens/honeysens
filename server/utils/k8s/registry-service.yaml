@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: honeysens
+  labels:
+    io.kompose.service: registry
+  name: registry
+spec:
+  ports:
+    - name: registry
+      port: 5000
+  selector:
+    io.kompose.service: registry
