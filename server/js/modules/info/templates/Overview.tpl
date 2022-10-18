@@ -48,7 +48,7 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong> - Mai 2022<br/>
                     <p>
                         <ul>
                             <li>Unprivilegierte Server-Container für den sicheren Betrieb als orchestrierter Microservice</li>
@@ -57,7 +57,7 @@
                         </ul>
                     </p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong> - April 2022<br/>
                     <p>
                         <ul>
                             <li><strong>Brücken-Release</strong>: Mindestvoraussetzung für Updates auf spätere Revisionen</li>
@@ -79,7 +79,7 @@
                         </ul>
                     </p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong> - Juni 2021<br/>
                     <p>
                         <ul>
                             <li>Serverseitiges Tracking des Sensor-Zustands, Darstellung von Up-/Downtime entsprechend angepasst</li>
@@ -93,7 +93,7 @@
                         </ul>
                     </p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong> - August 2020<br/>
                     <p>
                         <ul>
                             <li>Umfassendes und bei Bedarf vollautomatisches Backupkonzept integriert</li>
@@ -105,7 +105,7 @@
                         </ul>
                     </p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.1.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.1.0</strong> - August 2019<br/>
                     <p>
                         <ul>
                             <li>Ereignisse k&ouml;nnen im CSV-Format exportiert werden</li>
@@ -119,7 +119,7 @@
                         </ul>
                     </p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong> - Mai 2019<br/>
                     <p>
                         <ul>
                             <li>Zus&auml;tzliche Such-, Filter und Sortierfunktionen f&uuml;r die Ereignis&uuml;bersicht</li>
@@ -132,7 +132,7 @@
                         </ul>
                     </p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong> - M&auml;rz 2019<br/>
                     <p>
                         <ul>
                             <li>Dienste-Refkonfiguration in der Sensor&uuml;bersicht ist jetzt global sperrbar</li>
@@ -140,10 +140,10 @@
                         </ul>
                     </p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong> - Februar 2019<br/>
                     <p>Anpassung des Impressums</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong> - Januar 2019<br/>
                     <p>
                         <ul>
                             <li>Verfahren zur Verl&auml;ngerung der Zertifikatinfrastruktur hinzugef&uuml;gt</li>
@@ -185,37 +185,37 @@
             </div>
             <div id="releasenotesBBB" class="panel-collapse collapse">
                 <div class="panel-body">
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong> - Mai 2022<br/>
                     <p>TLS authentication removed</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong> - April 2022<br/>
                     <p>HMAC authentication and custom DHCP hostname support</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong> - Juni 2021<br/>
                     <p>Fixed rare network address conflicts</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.2</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.2</strong> - Oktober 2020<br/>
                     <p>Networking fixes</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.1</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.1</strong> - Oktober 2020<br/>
                     <p>Enforcement of HTTP/1.1 communication</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong> - August 2020<br/>
                     <p>EAPOL support</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong> - Mai 2019<br/>
                     <p>Support for event caching, an adjustable service network range, new LED notification modes and USB auditing</p>
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.5</strong><br/>
                     <p>Fixed a bug that prevented service downloads through proxies</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong> - März 2019<br/>
                     <p>Support for remote server certificate updates</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong> - Februar 2019<br/>
                     <p>Support for remote certificate updates</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong> - Januar 2019<br/>
                     <p>Static DNS servers are now properly recognized, local USB dnsmasq disabled to close port 53</p>
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.1</strong><br/>
@@ -234,37 +234,37 @@
             </div>
             <div id="releasenotesDocker" class="panel-collapse collapse">
                 <div class="panel-body">
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong> - Mai 2022<br/>
                     <p>TLS authentication removed</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.4.0</strong> - April 2022<br/>
                     <p>HMAC authentication and custom DHCP hostname support</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.3.0</strong> - Juni 2021<br/>
                     <p>Fixed rare network address conflicts</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.2</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.2</strong> - Oktober 2020<br/>
                     <p>Internal dependency update</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.1</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.1</strong> - Oktober 2020<br/>
                     <p>Enforcement of HTTP/1.1 communication</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.2.0</strong> - August 2020<br/>
                     <p>EAPOL support</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.0.0</strong> - Mai 2019<br/>
                     <p>Fully reworked networking and logging as well as support for event caching, an adjustable service network range and deployment/update with Docker Compose</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.1.0</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.1.0</strong> - März 2019<br/>
                     <p>Deployment is now done with Docker Compose, also supports custom service network ranges</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.4</strong> - März 2019<br/>
                     <p>Fixed a bug that prevented service download through proxies</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.3</strong> - Februar 2019<br/>
                     <p>Support for remote server certificate updates</p>
                     <hr />
-                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong><br/>
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.2</strong> - Januar 2019<br/>
                     <p>Support for remote certificate updates</p>
                     <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 1.0.1</strong><br/>
