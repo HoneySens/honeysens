@@ -99,6 +99,13 @@ function(HoneySens, Models, ModalServerError, UsersEditViewTpl) {
             templateHelpers: {
                 isEdit: function() {
                     return typeof this.id !== 'undefined';
+                },
+                getDivisionList: function() {
+                    var result = "";
+                    _.each(this.divisions, function(dId) {
+                        result += "<li>" + HoneySens.data.models.divisions.get(dId).get("name") + "</li>";
+                    });
+                    return result;
                 }
             },
             /**

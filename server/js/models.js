@@ -364,7 +364,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 // TODO move to Users collection, so this no longer depends on global state
                 // returns a new collection of user objects that belong to this division
                 var users = new Models.Users();
-                _.each(this.get('users'), function(u) {
+                _.each(this.get('users'), function(u) {
                     users.add(HoneySens.data.models.users.get(u));
                 });
                 return users;
