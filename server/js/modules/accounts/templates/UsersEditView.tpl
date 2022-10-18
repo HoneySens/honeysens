@@ -70,15 +70,26 @@
         </div>
         <fieldset>
             <legend>Benachrichtigungsoptionen</legend>
-                <p>Das Aktivieren der Optionen in diesem Abschnitt zieht den Versand von E-Mails über diesen Server nach sich.
-                   Damit dies wie erwartet funktioniert, muss für diesen Nutzer eine gültige E-Mail-Adresse hinterlegt und
-                    der Versand von E-Mails in den globalen Einstellungen aktiviert werden.</p>
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" name="notifyOnCAExpiration" <% if(notify_on_ca_expiration) { %>checked<% } %>>
-                        Über den Ablauf des internen CA-Zertifikats informieren
-                    </label>
-                </div>
+            <p>Das Aktivieren der Optionen in diesem Abschnitt zieht den Versand von E-Mails über diesen Server nach sich.
+               Damit dies wie erwartet funktioniert, muss für diesen Nutzer eine gültige E-Mail-Adresse hinterlegt und
+                der Versand von E-Mails in den globalen Einstellungen aktiviert werden.</p>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="notifyOnCAExpiration" <% if(notify_on_ca_expiration) { %>checked<% } %>>
+                    Über den Ablauf des internen CA-Zertifikats informieren
+                </label>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Gruppen</legend>
+            <% if(divisions.length == 0) { %>
+            <p>Dieser Benutzer gehört derzeit keinen Gruppen an. Das Hinzuf&uuml;gen zu bestehenden Gruppen erfolgt
+            mittels der Gruppenverwaltung.</p>
+            <% } else { %>
+                <p>Dieser Benutzer gehört derzeit den folgenden Gruppen an:</p>
+                <ul><%= getDivisionList() %></ul>
+                <p>Die Gruppenzugeh&ouml;rigkeit kann durch das Bearbeiten der betreffenden Gruppen ge&auml;ndert werden.</p>
+            <% } %>
         </fieldset>
     </form>
 </div>
