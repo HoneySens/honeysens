@@ -1,5 +1,6 @@
 <td><%- id %></td>
 <td><%- name %></td>
+<td><%- email %></td>
 <td><%- showRole() %></td>
 <% if(_.templateHelpers.isAllowed('users', 'update')) { %>
 <td>
