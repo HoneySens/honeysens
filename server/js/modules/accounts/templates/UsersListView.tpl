@@ -13,6 +13,7 @@
         <thead>
         <th>ID</th>
         <th>Name</th>
+        <th>E-Mail</th>
         <th>Rolle</th>
         <% if(_.templateHelpers.isAllowed('users', 'update')) { %><th>Aktionen</th><% } %>
         </thead>
