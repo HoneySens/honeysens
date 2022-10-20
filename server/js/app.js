@@ -93,56 +93,6 @@ function(RootLayout, Marionette, Backbone, $, JSON, _) {
             return app.rootView.modal;
         });
 
-        app.commands.setHandler('fetchUpdates', function() {
-            let stats = app.data.models.stats,
-                url = 'api/state?ts=' + app.data.lastUpdateTimestamp + '&last_id=' + app.data.lastEventID + '&stats_year=' + stats.get('year') + '&stats_month='+ stats.get('month') + '&stats_division=' + stats.get('division');
-            $.ajax({
-                type: 'GET',
-                url: url,
-                success: function(data) {
-                    data = JSON.parse(data);
-                    app.data.lastUpdateTimestamp = data.timestamp;
-                    app.data.lastEventID = data.lastEventID;
-                    if(data.new_events.length > 0) {
-                        app.data.models.new_events.add(data.new_events);
-                        app.vent.trigger('models:events:new', _.pluck(data.new_events.items, 'id'));
-                    }
-                    if(_.has(data, 'event_filters')) app.data.models.eventfilters.fullCollection.reset(data.event_filters);
-                    if(_.has(data, 'sensors')) app.data.models.sensors.fullCollection.reset(data.sensors);
-                    if(_.has(data, 'users')) app.data.models.users.set(data.users);
-                    if(_.has(data, 'divisions')) app.data.models.divisions.set(data.divisions);
-                    if(_.has(data, 'settings')) app.data.settings.set(data.settings);
-                    if(_.has(data, 'system')) app.data.system.set(data.system);
-                    if(_.has(data, 'contacts')) app.data.models.contacts.set(data.contacts);
-                    if(_.has(data, 'services')) app.data.models.services.set(data.services);
-                    if(_.has(data, 'platforms')) app.data.models.platforms.set(data.platforms);
-                    if(_.has(data, 'stats')) app.data.models.stats.set(data.stats);
-                    if(_.has(data, 'tasks')) app.data.models.tasks.set(data.tasks);
-                    app.vent.trigger('models:updated');
-                }
-            });
-        });
-
-        app.commands.setHandler('counter:start', function() {
-            var counter = 10,
-                stopCounter = function() {
-                    app.vent.off('logout:success', stopCounter);
-                    clearInterval(eventCounter);
-                },
-                eventCounter = setInterval(function() {
-                    counter--;
-                    app.vent.trigger('counter:updated', counter);
-                    if(counter <= 0) {
-                        app.execute('fetchUpdates');
-                        clearInterval(eventCounter);
-                        app.vent.off('logout:success', stopCounter);
-                        app.execute('counter:start');
-                    }
-                }, 1000);
-            app.vent.trigger('counter:started');
-            app.vent.on('logout:success', stopCounter);
-        });
-
         var settings = new Backbone.Model();
         settings.url = function() {return 'api/settings';};
         var system = new Backbone.Model();
