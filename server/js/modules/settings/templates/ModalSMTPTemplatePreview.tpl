@@ -7,7 +7,7 @@
             <pre class="prewrap"><%- preview %></pre>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal" autofocus>Ok</button>
         </div>
     </div>
 </div>

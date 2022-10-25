@@ -30,7 +30,9 @@
         </div>
         <hr />
         <div class="form-group">
-            <button type="button" class="btn btn-block btn-default"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Schlie&szlig;en</button>
+            <button type="button" class="btn btn-block btn-default" autofocus>
+                <span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Schlie&szlig;en
+            </button>
         </div>
     </div>
 </div>
