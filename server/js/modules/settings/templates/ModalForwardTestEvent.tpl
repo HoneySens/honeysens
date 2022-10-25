@@ -18,7 +18,7 @@
             </dl>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Schlie&szlig;en</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal" autofocus>Schlie&szlig;en</button>
         </div>
     </div>
 </div>

@@ -7,7 +7,7 @@
         <div class="form-group">
             <div class="btn-group btn-group-justified">
                 <div class="btn-group">
-                    <button type="button" class="cancel btn btn-default">&nbsp;&nbsp;Schlie&szlig;en</button>
+                    <button type="button" class="cancel btn btn-default" autofocus>&nbsp;&nbsp;Schlie&szlig;en</button>
                 </div>
             </div>
         </div>

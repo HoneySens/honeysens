@@ -3,10 +3,14 @@ define(['marionette', 'bootstrap'], function(Marionette) {
 
     Regions.ModalRegion = Marionette.Region.extend({
         constructor: function() {
+            var region = this;
             Marionette.Region.prototype.constructor.apply(this, arguments);
             this._ensureElement();
             this.$el.on('hidden.bs.modal', { region: this }, function(e) {
                 e.data.region.empty();
+            });
+            this.$el.on('shown.bs.modal', function() {
+                region.$el.find(':button[autofocus]').focus();
             });
         },
         onShow: function() {
@@ -274,6 +278,7 @@ define(['marionette', 'bootstrap'], function(Marionette) {
                 duration: 400,
                 complete: function() {
                     view.$el.css('left', 'auto');
+                    view.$el.find(':input[autofocus]').focus();
                 }
             });
             // callback: adjust overlay size on viewport changes

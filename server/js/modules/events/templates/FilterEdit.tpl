@@ -6,7 +6,7 @@
                 <div class="col-sm-6">
                     <div class="form-group has-feedback">
                         <label for="filtername" class="control-label">Name</label>
-                        <input pattern="^[a-zA-Z0-9._\- ]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben, Zahlen und Sonderzeichen (_, -, .) sind erlaubt" data-maxlength-error="Der Filtername muss zwischen 1 und 255 Zeichen lang sein" maxlength="255" minlength="1" type="text" class="form-control" name="filtername" placeholder="Filtername" value="<%- name %>" required />
+                        <input pattern="^[a-zA-Z0-9._\- ]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben, Zahlen und Sonderzeichen (_, -, .) sind erlaubt" data-maxlength-error="Der Filtername muss zwischen 1 und 255 Zeichen lang sein" maxlength="255" minlength="1" type="text" class="form-control" name="filtername" placeholder="Filtername" value="<%- name %>" required autofocus />
                         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                         <div class="help-block with-errors"></div>
                     </div>

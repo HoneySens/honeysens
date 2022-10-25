@@ -16,7 +16,9 @@
             </table>
         </div>
         <div class="modal-footer" style="clear: both">
-            <button type="button" class="btn btn-primary" data-dismiss="modal"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Schlie&szlig;en</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal" autofocus>
+                <span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Schlie&szlig;en
+            </button>
         </div>
     </div>
 </div>
