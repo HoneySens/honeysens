@@ -290,10 +290,15 @@ define(['marionette', 'bootstrap'], function(Marionette) {
             this.listenTo(Backbone.history, 'route', function() {
                 region.empty();
             });
+            // callback: close overlay when pressing ESC
+            $(document).on('keyup', function(e) {
+                if(e.key === "Escape") region.empty();
+            });
         },
         empty: function() {
             var region = this,
                 view = this.currentView;
+            $(document).off('keyup');
             if(view) {
                 var $backdrop = view.$el.parent().find('div.overlay-backdrop');
                 view.$el.css({left: $(window).width() - $('#main').width()});
