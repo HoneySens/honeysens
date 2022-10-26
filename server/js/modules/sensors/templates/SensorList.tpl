@@ -15,5 +15,5 @@
             <div class="groupFilter" style="display: inline-block;"></div>
         </div>
     </div>
-    <div class="table-responsive"></div>
+    <div class="table-responsive overflowable"></div>
 </div>

@@ -2,8 +2,10 @@ define(['app/app', 'app/routing', 'app/models',
         'app/modules/sensors/views/Layout',
         'app/modules/sensors/views/SensorList',
         'app/modules/sensors/views/SensorEdit',
-        'app/modules/sensors/views/ModalSensorRemove'],
-function(HoneySens, Routing, Models, LayoutView, SensorListView, SensorEditView, ModalSensorRemoveView) {
+        'app/modules/sensors/views/ModalSensorRemove',
+        'app/modules/tasks/views/ModalAwaitTask',
+        'app/common/views/ModalServerError'],
+function(HoneySens, Routing, Models, LayoutView, SensorListView, SensorEditView, ModalSensorRemoveView, ModalAwaitTaskView, ModalServerError) {
     var SensorsModule = Routing.extend({
         name: 'sensors',
         startWithParent: false,
@@ -34,6 +36,38 @@ function(HoneySens, Routing, Models, LayoutView, SensorListView, SensorEditView,
             });
             HoneySens.reqres.setHandler('sensors:remove', function(model) {
                 HoneySens.request('view:modal').show(new ModalSensorRemoveView({model: model}));
+            });
+            HoneySens.reqres.setHandler('sensors:config:download', function(model) {
+                $.ajax({
+                    type: 'GET',
+                    url: 'api/sensors/config/' + model.id,
+                    dataType: 'json',
+                    success: function(resp) {
+                        var task = HoneySens.data.models.tasks.add(new Models.Task(resp)),
+                            awaitTaskView = new ModalAwaitTaskView({model: task});
+                        HoneySens.request('view:modal').show(awaitTaskView);
+                        HoneySens.Views.waitForTask(task, {
+                            done: function(task) {
+                                if(!awaitTaskView.isDestroyed) {
+                                    // Close modal view and start download, then remove the task
+                                    task.downloadResult(true);
+                                    awaitTaskView.destroy();
+                                }
+                            },
+                            error: function(task) {
+                                if(!awaitTaskView.isDestroyed) {
+                                    // In case there was an error, remove the task immediately
+                                    task.destroy({wait: true});
+                                }
+                            }
+                        });
+                    },
+                    error: function() {
+                        HoneySens.request('view:modal').show(new ModalServerError({
+                            model: new Backbone.Model({msg: 'Serverfehler beim Erzeugen der Sensorkonfiguration'})
+                        }));
+                    }
+                })
             });
         },
         stop: function() {

@@ -12,6 +12,7 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
         Views.SensorList = Marionette.LayoutView.extend({
             template: SensorListTpl,
             className: 'row',
+            actionsDropdownVisibleFor: null,
             servicesEditable: false,
             regions: {
                 groupFilter: 'div.groupFilter',
@@ -134,8 +135,8 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                                     this.model.save({services: services}, {wait: true});
                                 }
                             },
-                            initialize: function(options) {
-                                // Re-render this cell on model changes
+                            initialize: function() {
+                                // Re-render this cell on model changes (caused by toggling a service checkbox)
                                 this.listenTo(this.model, 'change', function() {
                                     this.render();
                                 });
@@ -202,6 +203,12 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                     sortable: false,
                     cell: Backgrid.Cell.extend({
                         template: SensorListStatusCellTpl,
+                        initialize: function() {
+                            // Refresh the view after model updates to recalculate status cell timers
+                            this.listenTo(HoneySens.vent, 'models:updated', function() {
+                                this.render();
+                            });
+                        },
                         render: function() {
                             // Mix template helpers into template data
                             var templateData = this.model.attributes;
@@ -251,16 +258,30 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
                                 e.preventDefault();
                                 HoneySens.request('sensors:edit', this.model);
                             },
-                            'click button.showStatus': function(e) {
+                            'show.bs.dropdown div.dropdown': function(e) {
+                                view.actionsDropdownVisibleFor = this.model.id;
+                            },
+                            'hide.bs.dropdown div.dropdown': function(e) {
+                                view.actionsDropdownVisibleFor = null;
+                            },
+                            'click a.showStatus': function(e) {
                                 e.preventDefault();
                                 var collection = this.model.status;
                                 collection.fetch({reset: true});
                                 HoneySens.request('view:modal').show(new ModalSensorStatusListView({collection: collection}));
+                            },
+                            'click a.downloadConfig': function(e) {
+                                e.preventDefault();
+                                HoneySens.request('sensors:config:download', this.model);
                             }
                         },
                         render: function() {
                             this.$el.html(this.template(this.model.attributes));
                             this.$el.find('button').tooltip();
+                            if(view.actionsDropdownVisibleFor === this.model.id) {
+                                // Redraw dropdown in case it was previously visible
+                                this.$el.find('div.dropdown').addClass('open');
+                            }
                             return this;
                         }
                     })
@@ -289,12 +310,6 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
             onShow: function() {
                 // Readjust table margin so that all service labels are visible
                 this.$el.find('table.table').css('margin-top', Math.max(this.$el.find('span.serviceLabel').outerWidth() - 45, 0));
-                // Refresh the view upon model updates to recalculate status cell timers ("online/offline since")
-                this.listenTo(HoneySens.vent, 'models:updated', function() {
-                    // The sensor list is a PageableCollection. This only triggers a reset on the "frontend collection",
-                    // which is the currently visible page. The backend collection (fullCollection) is unaffected.
-                    this.collection.trigger('reset', null, {});
-                })
             },
             displayServiceCheckboxes: function($anchor) {
                 if(this.servicesEditable) {
