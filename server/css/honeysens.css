@@ -1,6 +1,7 @@
 /* Common styles */
 .clear {clear: both}
 .nooverflow {overflow: hidden}
+.overflowable {overflow: visible}
 .prewrap {white-space: pre-wrap; word-break: keep-all; word-wrap: break-word}  /* Break on spaces, but preserve words */
 
 /* Set global height */
