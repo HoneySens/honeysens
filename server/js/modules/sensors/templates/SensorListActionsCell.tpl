@@ -14,6 +14,8 @@
     </button>
     <ul class="dropdown-menu dropdown-menu-right">
         <li><a class="showStatus"><span class="glyphicon glyphicon-list"></span>&nbsp;Letzte Statusmeldungen</a></li>
-        <li><a class="downloadConfig"><span class="glyphicon glyphicon-download"></span>&nbsp;Konfiguration herunterladen</a></li>
+        <% if(_.templateHelpers.isAllowed('sensors', 'downloadConfig')) { %>
+            <li><a class="downloadConfig"><span class="glyphicon glyphicon-download"></span>&nbsp;Konfiguration herunterladen</a></li>
+        <% } %>
     </ul>
 </div>
