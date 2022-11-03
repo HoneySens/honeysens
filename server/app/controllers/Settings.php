@@ -62,7 +62,9 @@ class Settings extends RESTResource {
             'caExpire' => openssl_x509_parse($caCert)['validTo_time_t'],
             'requireEventComment' => $config->getBoolean('misc', 'require_event_comment'),
             'requireFilterDescription' => $config->getBoolean('misc', 'require_filter_description'),
-            'archivePrefer' => $config->getBoolean('misc', 'archive_prefer')
+            'archivePrefer' => $config->getBoolean('misc', 'archive_prefer'),
+            'preventEventDeletionByManagers' => $config->getBoolean('misc', 'prevent_event_deletion_by_managers'),
+            'preventSensorDeletionByManagers' => $config->getBoolean('misc', 'prevent_sensor_deletion_by_managers')
         );
         // Settings only relevant to admins
         if($this->getSessionUserID() == null) {
@@ -89,7 +91,6 @@ class Settings extends RESTResource {
             $settings['syslogPriority'] = $config['syslog']['priority'];
             // Misc
             $settings['apiLogKeepDays'] = $config['misc']['api_log_keep_days'];
-            $settings['restrictManagerRole'] = $config->getBoolean('misc', 'restrict_manager_role');
             $settings['archiveMoveDays'] = $config['misc']['archive_move_days'];
             $settings['archiveKeepDays'] = $config['misc']['archive_keep_days'];
         }
@@ -108,7 +109,8 @@ class Settings extends RESTResource {
      * - sensorsServiceNetwork: The internal network range that sensors should use for service containers
      * - sensorsTimeoutThreshold: Period (in minutes) that needs to pass after the last contact until a sensor is declared as 'offline'
      * - apiLogKeepDays: Specifies how many days the API log should be kept (if API log is enabled)
-     * - restrictManagerRole: Enables or disable permission restrictions for managers
+     * - preventEventDeletionByManagers: If true, manager can move events to the archive, but not delete them
+     * - preventSensorDeletionByManagers: If true, managers are not permitted to delete sensors
      * - requireEventComment: Forces users to enter a comment when editing events
      * - requireFilterDescription: Forces users to enter a description when creating or updating event filters
      * - archivePrefer: Instructs the client to preselect the "archive" checkbox by default when deleting events
@@ -150,7 +152,8 @@ class Settings extends RESTResource {
             ->attribute('sensorsServiceNetwork', V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/'))
             ->attribute('sensorsTimeoutThreshold', V::intVal()->between(1, 1440))
             ->attribute('apiLogKeepDays', V::intVal()->between(0, 65535))
-            ->attribute('restrictManagerRole', V::boolType())
+            ->attribute('preventEventDeletionByManagers', V::boolType())
+            ->attribute('preventSensorDeletionByManagers', V::boolType())
             ->attribute('requireEventComment', V::boolType())
             ->attribute('requireFilterDescription', V::boolType())
             ->attribute('archivePrefer', V::boolType())
@@ -228,7 +231,8 @@ class Settings extends RESTResource {
         $config->set('sensors', 'service_network', $data->sensorsServiceNetwork);
         $config->set('sensors', 'timeout_threshold', $data->sensorsTimeoutThreshold);
         $config->set('misc', 'api_log_keep_days', $data->apiLogKeepDays);
-        $config->set('misc', 'restrict_manager_role', $data->restrictManagerRole ? 'true' : 'false');
+        $config->set('misc', 'prevent_event_deletion_by_managers', $data->preventEventDeletionByManagers ? 'true' : 'false');
+        $config->set('misc', 'prevent_sensor_deletion_by_managers', $data->preventSensorDeletionByManagers ? 'true' : 'false');
         $config->set('misc', 'require_event_comment', $data->requireEventComment ? 'true' : 'false');
         $config->set('misc', 'require_filter_description', $data->requireFilterDescription ? 'true' : 'false');
         $config->set('misc', 'archive_prefer', $data->archivePrefer ? 'true' : 'false');
@@ -263,7 +267,8 @@ class Settings extends RESTResource {
             'sensorsServiceNetwork' => $config['sensors']['service_network'],
             'sensorsTimeoutThreshold' => $config['sensors']['timeout_threshold'],
             'apiLogKeepDays' => $config['misc']['api_log_keep_days'],
-            'restrictManagerRole' => $config->getBoolean('misc', 'restrict_manager_role'),
+            'preventEventDeletionByManagers' => $config->getBoolean('misc', 'prevent_event_deletion_by_managers'),
+            'preventSensorDeletionByManagers' => $config->getBoolean('misc', 'prevent_sensor_deletion_by_managers'),
             'requireEventComment' => $config->getBoolean('misc', 'require_event_comment'),
             'requireFilterDescription' => $config->getBoolean('misc', 'require_filter_description'),
             'archivePrefer' => $config->getBoolean('misc', 'archive_prefer'),

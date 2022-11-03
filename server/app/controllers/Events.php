@@ -393,9 +393,15 @@ class Events extends RESTResource {
      * @throws ForbiddenException
      */
     public function delete($criteria) {
-        $this->assureAllowed('delete');
         $em = $this->getEntityManager();
-        $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
+        // In case the current user can't delete events, force archiving
+        try {
+            $this->assureAllowed('delete');
+            $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
+        } catch (\Exception $e) {
+            $this->assureAllowed('archive');
+            $archive = true;
+        }
         $archived = V::key('archived', V::boolType())->validate($criteria) && $criteria['archived'];
         // We can't archive already archived events
         if($archive && $archived) throw new BadRequestException();

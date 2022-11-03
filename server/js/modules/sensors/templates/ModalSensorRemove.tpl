@@ -8,7 +8,7 @@
             <p>Alle von diesem aufgezeichneten Ereignisse werden gel&ouml;scht.</p>
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" name="archive" <% if(archivePrefer()) { %>checked<% } %>>Ereignisse zuvor in Archiv verschieben
+                    <input type="checkbox" name="archive" <% if(!_.templateHelpers.isAllowed('events', 'delete')) { %>disabled="disabled"<% } %><% if(archivePrefer() || !_.templateHelpers.isAllowed('events', 'delete')) { %>checked<% } %>>Ereignisse zuvor in Archiv verschieben
                 </label>
             </div>
         </div>

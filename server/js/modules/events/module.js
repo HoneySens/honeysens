@@ -171,7 +171,7 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 HoneySens.request('view:modal').show(dialog);
             });
             HoneySens.reqres.setHandler('events:remove:some', function(selection, fullCollection) {
-                if(!HoneySens.assureAllowed('events', 'delete') || selection.length === 0) return false;
+                if(selection.length === 0) return false;
                 let archived = fullCollection.queryParams.hasOwnProperty('archived') && fullCollection.queryParams.archived,
                     dialog = new ModalEventRemoveView({model: new Backbone.Model({archived: archived, total: selection.length})});
                 dialog.listenTo(dialog, 'confirm', function(archive) {

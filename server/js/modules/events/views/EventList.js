@@ -396,6 +396,8 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                         $sensorFilter.prop('disabled', switchingToArchive);
                         // Edit buttons
                         view.$el.find('button.massEdit').prop('disabled', switchingToArchive);
+                        view.$el.find('button.massDelete').prop('disabled', !(_.templateHelpers.isAllowed('events', 'delete')
+                            || (!switchingToArchive && _.templateHelpers.isAllowed('events', 'archive'))));
                         let $groupEditElements = view.$el.find('.groupEditElement');
                         if(switchingToArchive) $groupEditElements.addClass('hidden')
                         else $groupEditElements.removeClass('hidden');

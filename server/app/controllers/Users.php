@@ -105,11 +105,13 @@ class Users extends RESTResource {
     public function getStateWithPermissionConfig($user) {
         $state = $user->getState();
         // Incorporate role restrictions
-        if($user->getRole() == User::ROLE_MANAGER && $this->getConfig()->getBoolean('misc', 'restrict_manager_role')) {
-            $state['permissions']['events'] = array_values(array_diff($state['permissions']['events'], ['delete']));
-            $state['permissions']['sensors'] = array_values(array_diff($state['permissions']['sensors'], ['delete']));
+        if($user->getRole() == User::ROLE_MANAGER) {
+            if($this->getConfig()->getBoolean('misc', 'prevent_event_deletion_by_managers'))
+                $state['permissions']['events'] = array_values(array_diff($state['permissions']['events'], ['delete']));
+            if($this->getConfig()->getBoolean('misc', 'prevent_sensor_deletion_by_managers'))
+                $state['permissions']['sensors'] = array_values(array_diff($state['permissions']['sensors'], ['delete']));
         }
-        // Enable API logging if the module is enabled and this user is an administrator
+        // Enable API logging if the module is enabled and $user is an administrator
         if($user->getRole() == User::ROLE_ADMIN &&
             $this->getServiceManager()->get(ServiceManager::SERVICE_LOG)->isEnabled()) {
             $state['permissions']['logs'] = array('get');

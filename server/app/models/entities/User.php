@@ -390,7 +390,7 @@ class User {
                 array_push($permissions['services'], 'create', 'update', 'delete');
             case $this::ROLE_MANAGER:
                 array_push($permissions['certs'], 'create', 'delete');
-                array_push($permissions['events'], 'update', 'delete');
+                array_push($permissions['events'], 'update', 'archive', 'delete');
                 array_push($permissions['eventfilters'], 'create', 'update', 'delete');
                 array_push($permissions['platforms'], 'download');
                 array_push($permissions['sensors'], 'create', 'update', 'delete', 'downloadConfig');

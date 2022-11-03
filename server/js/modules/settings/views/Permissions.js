@@ -6,11 +6,11 @@ function(HoneySens, PermissionsTpl) {
             template: PermissionsTpl,
             className: 'panel-body',
             events: {
-                'change input[type="checkbox"][name="restrictManagers"]': function(e) {
-                    this.model.save({restrictManagerRole: e.target.checked});
+                'change input[type="checkbox"][name="preventEventDeletionByManagers"]': function(e) {
+                    this.model.save({preventEventDeletionByManagers: e.target.checked});
                 },
-                'change input[type="checkbox"][name="requireEventComment"]': function(e) {
-                    this.model.save({requireEventComment: e.target.checked});
+                'change input[type="checkbox"][name="preventSensorDeletionByManagers"]': function(e) {
+                    this.model.save({preventSensorDeletionByManagers: e.target.checked});
                 },
                 'change input[type="checkbox"][name="requireFilterDescription"]': function(e) {
                     this.model.save({requireFilterDescription: e.target.checked});

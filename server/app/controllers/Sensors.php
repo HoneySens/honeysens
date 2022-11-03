@@ -805,8 +805,15 @@ class Sensors extends RESTResource {
      */
     public function delete($id, $criteria) {
         $this->assureAllowed('delete');
+        try {
+            // In case the current user can't delete events, force archiving
+            $this->assureAllowed('delete', 'events');
+            $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
+        } catch(\Exception $e) {
+            $this->assureAllowed('archive', 'events');
+            $archive = true;
+        }
         // Validation
-        $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
         V::intVal()->check($id);
         $em = $this->getEntityManager();
         $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
