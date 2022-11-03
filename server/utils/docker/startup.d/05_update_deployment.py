@@ -101,6 +101,16 @@ if config_version == '2.4.0':
     config.set('server', 'config_version', '2.5.0')
     config_version = '2.5.0'
 
+# 2.5.0 -> 2.6.0
+if config_version == '2.5.0':
+    print('Upgrading configuration 2.5.0 -> 2.6.0')
+    config.set('misc', 'prevent_event_deletion_by_managers', config.get('misc', 'restrict_manager_role'))
+    config.set('misc', 'prevent_sensor_deletion_by_managers', config.get('misc', 'restrict_manager_role'))
+    config.remove_option('misc', 'restrict_manager_role')
+    config.set('server', 'config_version', '2.6.0')
+    config_version = '2.6.0'
+
+
 # Write new config file
 with open(config_file, 'w') as f:
     config.write(f)

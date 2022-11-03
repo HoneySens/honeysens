@@ -60,7 +60,7 @@
     <% if(_.templateHelpers.isAllowed('events', 'update')) { %>
         <button type="button" class="massEdit btn btn-default btn-xs" data-toggle="tooltip" title="Bearbeiten"><span class="glyphicon glyphicon-pencil"></span></button>
     <% } %>
-    <% if(_.templateHelpers.isAllowed('events', 'delete')) { %>
+    <% if(_.templateHelpers.isAllowed('events', 'delete') || _.templateHelpers.isAllowed('events', 'archive')) { %>
         <button type="button" class="massDelete btn btn-default btn-xs" data-toggle="tooltip" title="Entfernen"><span class="glyphicon glyphicon-remove"></span></button>
     <% } %>
 </div>
