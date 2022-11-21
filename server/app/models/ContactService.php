@@ -55,7 +55,7 @@ class ContactService {
 
     private function createEventSummary(Event $event) {
         $result = 'Datum: ' . $event->getTimestamp()->format('d.m.Y') . "\n";
-        $result .= 'Zeit: ' . $event->getTimestamp()->format('H:i:s') . "\n";
+        $result .= 'Zeit: ' . $event->getTimestamp()->format('H:i:s') . " (UTC)\n";
         $result .= 'Sensor: ' . $event->getSensor()->getName() . "\n";
         $result .= 'Klassifikation: ' . $this->getEventClassificationText($event) . "\n";
         $result .= 'Quelle: ' . $event->getSource() . "\n";
