@@ -309,7 +309,8 @@ function(HoneySens, Models, Backgrid, ModalSensorStatusListView, SensorListTpl, 
             },
             onShow: function() {
                 // Readjust table margin so that all service labels are visible
-                this.$el.find('table.table').css('margin-top', Math.max(this.$el.find('span.serviceLabel').outerWidth() - 45, 0));
+                var $serviceLabels = this.$el.find('span.serviceLabel');
+                this.$el.find('table.table').css('margin-top', Math.max(...$.map($serviceLabels, (e) => $(e).outerWidth() - 45), 0));
             },
             displayServiceCheckboxes: function($anchor) {
                 if(this.servicesEditable) {
