@@ -46,7 +46,7 @@
         </div>
         <div class="col-sm-4">
             <button type="button" class="reset btn btn-block btn-default btn-sm">
-                <span class="glyphicon glyphicon-repeat"></span>&nbsp;&nbsp;Zur&uuml;cksetzen
+                <span class="glyphicon glyphicon-repeat"></span>&nbsp;&nbsp;&Auml;nderungen zur&uuml;cksetzen
             </button>
         </div>
     </div>
