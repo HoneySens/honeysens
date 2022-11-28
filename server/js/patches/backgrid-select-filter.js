@@ -30,8 +30,36 @@ function() {
     prototype.defaults.beforeChange = undefined;
     let _onChange = prototype.onChange;
     prototype.onChange = function(e) {
+        // Call beforeChange() in case that function was given
         if(this.beforeChange !== undefined) this.beforeChange.call(this, e);
-        _onChange.call(this, e);
+
+        var col = this.collection,
+            field = this.field,
+            value = this.currentValue(),
+            matcher = _.bind(this.makeMatcher(value), this);
+
+        if (this.serverSide) {
+            if (value !== this.clearValue) {
+                if (Object.prototype.toString.call(value) === '[object Array]') {
+                    value = value.join(","); // Send the query parameter as an array of concatenated strings if needed
+                }
+                col.queryParams[field] = value;
+            } else { // Don't send the query parameter if null (or this.clearValue)
+                delete col.queryParams[field];
+            }
+            // Force collection reset (remaining function is IDENTICAL to upstream/vendor)
+            col.getFirstPage({reset: true});
+        } else {
+            if (col instanceof Backbone.PageableCollection)
+                col.getFirstPage({silent: true});
+
+            if (value !== this.clearValue)
+                col.reset(this.shadowCollection.filter(matcher), {reindex: false});
+            else
+                col.reset(this.shadowCollection.models, {reindex: false});
+        }
+
+        // Call afterChange() in case that function was given
         if(this.afterChange !== undefined) this.afterChange.call(this, e);
     }
 });
