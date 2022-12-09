@@ -27,12 +27,12 @@ SYSTEM_NOTIFICATION_TEMPLATES = {
         'preview': {
             'ID': '12345',
             'SUMMARY': '''Datum: 12.08.2020
-Zeit: 13:26:00
+Zeit: 13:26:00 (UTC)
 Sensor: Zentrale
 Klassifikation: Honeypot-Verbindung
 Quelle: 192.168.1.2
 Details: SSH''',
-            'DETAILS': '''Sensorinteraktion:
+            'DETAILS': '''Sensorinteraktion (Zeiten in UTC):
 --------------------------
 13:26:00: SSH: Connection from 192.168.1.2:48102 
 13:26:02: SSH: Invalid login attempt (root/1234)
