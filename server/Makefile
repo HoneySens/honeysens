@@ -1,6 +1,6 @@
 PREFIX := HoneySens-Server
 BUILD_ID := $(shell date +%Y%m%d)
-REVISION := 2.5.0-${BUILD_ID}
+REVISION := 2.6.0-${BUILD_ID}
 OUTDIR := out
 # (watch|simple-watch|chokidar)
 export DEV_WATCH_TASK := chokidar
