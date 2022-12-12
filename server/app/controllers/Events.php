@@ -525,11 +525,11 @@ class Events extends RESTResource {
                 ->setParameter('lastid', $criteria['lastID']);
         }
         if(V::key('filter', V::stringType())->validate($criteria)) {
+            $filters = $qb->expr()->orX();
             // Parse both source and comment fields against the filter string
-            $qb->orWhere('e.source LIKE :source')
-                ->setParameter('source', '%'. $criteria['filter'] . '%');
-            $qb->orWhere('e.comment LIKE :comment')
-                ->setParameter('comment', '%'. $criteria['filter'] . '%');
+            $filters->add($qb->expr()->like('e.source', ':filter'));
+            $filters->add($qb->expr()->like('e.comment', ':filter'));
+            $qb->setParameter('filter', '%'. $criteria['filter'] . '%');
             // Also try to parse the filter string into a date
             $date = false;
             try {
@@ -537,9 +537,10 @@ class Events extends RESTResource {
             } catch (\Exception $e) {}
             if ($date) {
                 $timestamp = $date->format('Y-m-d');
-                $qb->orWhere('e.timestamp LIKE :timestamp')
-                    ->setParameter('timestamp', $timestamp . '%');
+                $filters->add($qb->expr()->like('e.timestamp', ':timestamp'));
+                $qb->setParameter('timestamp', $timestamp . '%');
             }
+            $qb->andWhere($filters);
         }
         if(V::key('sort_by', V::in(['id', 'sensor', 'timestamp', 'classification', 'source', 'summary', 'status', 'comment']))
             ->key('order', V::in(['asc', 'desc']))
