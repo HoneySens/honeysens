@@ -33,7 +33,7 @@ Klassifikation: Honeypot-Verbindung
 Quelle: 192.168.1.2
 Details: SSH''',
             'DETAILS': '''Sensorinteraktion (Zeiten in UTC):
---------------------------
+----------------------------------
 13:26:00: SSH: Connection from 192.168.1.2:48102 
 13:26:02: SSH: Invalid login attempt (root/1234)
 13:26:03: SSH: Connection closed'''
