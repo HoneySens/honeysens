@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>2.5.0</dd>
+        <dd>2.6.0</dd>
         <dt>Build-ID</dt>
         <dd><%- showBuildID() %></dd>
         <dt>Lizenz</dt>
@@ -48,6 +48,17 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.6.0</strong> - Dezember 2022<br/>
+                    <p>
+                        <ul>
+                            <li>Download der Sensorkonfiguration aus der Sensorübersicht heraus</li>
+                            <li>Automatische Detektion von abgelaufenen Nutzer-Sessions oder Verlust der Verbindung zum Sever</li>
+                            <li>Optionale Rechte-Einschränkungen der Manager-Rolle überarbeitet</li>
+                            <li>Benutzerdetails um Gruppenzugehörigkeiten und E-Mail-Adressen ergänzt</li>
+                            <li>Zahlreiche UI-Bugfixes, insbesondere bei der Darstellung von Tooltips und Dienste-Labels</li>
+                        </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong> - Mai 2022<br/>
                     <p>
                         <ul>
