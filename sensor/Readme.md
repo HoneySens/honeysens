@@ -18,3 +18,4 @@ has to provide the means to run docker containers.
 * `manager/`: Manager daemon sources
 * `platforms/`: Platform-specific code and build scripts (firmware)
 * `services/`: Containerized honeypot services
+* `utils/`: Utilities for deployment, testing and demonstration
