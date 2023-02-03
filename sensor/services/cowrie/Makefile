@@ -1,11 +1,11 @@
 PREFIX := HoneySens-cowrie
-REVISION := 2.3.0
+REVISION := 2.6.0
 OUTDIR := out
 METADATA := metadata.xml
 
 default: all
 
-clean: 
+clean:
 	rm -rf ${OUTDIR}
 
 all: ${OUTDIR}/dist/${PREFIX}-amd64-${REVISION}.tar.gz ${OUTDIR}/dist/${PREFIX}-armhf-${REVISION}.tar.gz
@@ -18,11 +18,11 @@ ${OUTDIR}/dist/${PREFIX}-amd64-${REVISION}.tar.gz: ${OUTDIR}/images/amd64/servic
 ${OUTDIR}/dist/${PREFIX}-armhf-${REVISION}.tar.gz: ${OUTDIR}/images/armhf/service.tar ${OUTDIR}/images/armhf/metadata.xml | ${OUTDIR}/dist
 	tar -czf $@ -C ${OUTDIR}/images/armhf/ service.tar metadata.xml
 
-${OUTDIR}/images/amd64/service.tar: cowrie.cfg Dockerfile dont_daemonize.patch honeysens.py prepare.sh | ${OUTDIR}/images/amd64
+${OUTDIR}/images/amd64/service.tar: cowrie.cfg Dockerfile honeysens.py prepare.sh | ${OUTDIR}/images/amd64
 	docker build --no-cache -t honeysens/cowrie:amd64-${REVISION} .
 	docker save -o $@ honeysens/cowrie:amd64-${REVISION}
 
-${OUTDIR}/images/armhf/service.tar: cowrie.cfg dont_daemonize.patch honeysens.py prepare.sh | ${OUTDIR}/images/armhf
+${OUTDIR}/images/armhf/service.tar: cowrie.cfg honeysens.py prepare.sh | ${OUTDIR}/images/armhf
 	docker run --rm --privileged multiarch/qemu-user-static:register || true
 	docker build --no-cache -t honeysens/cowrie:armhf-${REVISION} --build-arg ARCH=armhf .
 	docker run --rm --privileged multiarch/qemu-user-static:register --reset
