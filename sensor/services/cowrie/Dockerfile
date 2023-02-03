@@ -1,7 +1,7 @@
 ARG ARCH=amd64
-FROM multiarch/alpine:${ARCH}-v3.10
+FROM multiarch/alpine:${ARCH}-v3.14
 
-COPY prepare.sh run.sh dont_daemonize.patch honeysens.py cowrie.cfg /root/
+COPY prepare.sh run.sh honeysens.py cowrie.cfg /root/
 RUN /bin/sh /root/prepare.sh
 
 USER cowrie
