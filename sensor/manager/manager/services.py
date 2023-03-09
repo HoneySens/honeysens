@@ -88,13 +88,13 @@ def adjust_firewall(config, server_response, reset_network):
         if reset_network:
             # On network changes, ensure that each of these rules is at the top or bottom of their respective chains
             # by removing the existing rules
-            if subprocess.call([IPTABLES_PATH, '-C', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) == 0:
+            if subprocess.call([IPTABLES_PATH, '-C', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull, stdout=devnull) == 0:
                 subprocess.call([IPTABLES_PATH, '-D', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
-            if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) == 0:
+            if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull, stdout=devnull) == 0:
                 subprocess.call([IPTABLES_PATH, '-t', 'nat', '-D', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
-        if subprocess.call([IPTABLES_PATH, '-C', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) != 0:
+        if subprocess.call([IPTABLES_PATH, '-C', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull, stdout=devnull) != 0:
             subprocess.call([IPTABLES_PATH, '-I', 'FORWARD', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
-        if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull) != 0:
+        if subprocess.call([IPTABLES_PATH, '-t', 'nat', '-C', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL], stderr=devnull, stdout=devnull) != 0:
             subprocess.call([IPTABLES_PATH, '-t', 'nat', '-A', 'PREROUTING', '-i', _interface, '-j', IPTABLES_CHAIN_LABEL])
 
 
