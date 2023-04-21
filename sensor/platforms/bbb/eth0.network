@@ -1,0 +1,6 @@
+[Match]
+Name=eth0
+Type=ether
+
+[Link]
+Unmanaged = yes
