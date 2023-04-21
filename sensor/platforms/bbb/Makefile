@@ -1,7 +1,7 @@
 PREFIX := HoneySens-Firmware-BBB
 # Either '2gb' (older models) or '4gb' (retail models)
 IMG_SIZE := 4gb
-REVISION := ${IMG_SIZE}-2.5.0
+REVISION := ${IMG_SIZE}-2.6.0
 TIME := $(shell date +%Y-%m-%d)
 ARCH := $(shell uname -m)
 OUTDIR := out
@@ -11,22 +11,22 @@ default: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 clean:
 	rm -rf ${OUTDIR}
 
-${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/omap-image-builder/deploy/debian-10.11-console-armhf-${TIME}/firmware-${IMG_SIZE}.img ${OUTDIR}/build/metadata.xml | DIR.${OUTDIR}/dist
-	tar -czf $@ --transform 's|firmware-${IMG_SIZE}.img|firmware.img|' -C ${OUTDIR}/build/ metadata.xml -C omap-image-builder/deploy/debian-10.11-console-armhf-${TIME}/ firmware-${IMG_SIZE}.img
+${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/omap-image-builder/deploy/debian-11.6-minimal-armhf-${TIME}/firmware-${IMG_SIZE}.img ${OUTDIR}/build/metadata.xml | DIR.${OUTDIR}/dist
+	tar -czf $@ --transform 's|firmware-${IMG_SIZE}.img|firmware.img|' -C ${OUTDIR}/build/ metadata.xml -C omap-image-builder/deploy/debian-11.6-minimal-armhf-${TIME}/ firmware-${IMG_SIZE}.img
 
-${OUTDIR}/build/omap-image-builder/deploy/debian-10.11-console-armhf-${TIME}/firmware-${IMG_SIZE}.img: ${OUTDIR}/build/omap-image-builder/deploy/debian-10.11-console-armhf-${TIME}/armhf-rootfs-debian-buster.tar
-	cd ${OUTDIR}/build/omap-image-builder/deploy/debian-10.11-console-armhf-${TIME}/ && ./setup_sdcard.sh --img-${IMG_SIZE} firmware --dtb beaglebone --hostname sensor --enable-cape-universal --enable-fat-partition --emmc-flasher
+${OUTDIR}/build/omap-image-builder/deploy/debian-11.6-minimal-armhf-${TIME}/firmware-${IMG_SIZE}.img: ${OUTDIR}/build/omap-image-builder/deploy/debian-11.6-minimal-armhf-${TIME}/armhf-rootfs-debian-bullseye.tar
+	cd ${OUTDIR}/build/omap-image-builder/deploy/debian-11.6-minimal-armhf-${TIME}/ && ./setup_sdcard.sh --img-${IMG_SIZE} firmware --dtb beaglebone --hostname sensor --enable-cape-universal --enable-fat-partition --emmc-flasher
 
-${OUTDIR}/build/omap-image-builder/deploy/debian-10.11-console-armhf-${TIME}/armhf-rootfs-debian-buster.tar: ${OUTDIR}/build/omap-image-builder | DIR.${OUTDIR}/build/image-root
-	cd ${OUTDIR}/build/omap-image-builder && ./RootStock-NG.sh -c bb.org-debian-buster-console-v5.4
-	patch -d ${OUTDIR}/build/omap-image-builder/deploy/debian-10.11-console-armhf-${TIME} -p1 < setup_sdcard.patch
+${OUTDIR}/build/omap-image-builder/deploy/debian-11.6-minimal-armhf-${TIME}/armhf-rootfs-debian-bullseye.tar: ${OUTDIR}/build/omap-image-builder | DIR.${OUTDIR}/build/image-root
+	cd ${OUTDIR}/build/omap-image-builder && ./RootStock-NG.sh -c bb.org-debian-bullseye-minimal-v5.10-ti-armhf.conf
+	patch -d ${OUTDIR}/build/omap-image-builder/deploy/debian-11.6-minimal-armhf-${TIME} -p1 < setup_sdcard.patch
 	tar -xf $@ -C ${OUTDIR}/build/image-root
-	patch -d ${OUTDIR}/build/image-root -p1 < ssh-over-usb-fix.patch
-	cp -v bbb-flasher.patch ${OUTDIR}/build/omap-image-builder/deploy/debian-10.11-console-armhf-${TIME}/
+	cp -v bbb-flasher.patch ${OUTDIR}/build/omap-image-builder/deploy/debian-11.6-minimal-armhf-${TIME}/
 	cp -vr ../../manager usb_audit/usb_audit.sh ${OUTDIR}/build/image-root/opt/
-	cp -v prepare.sh ${OUTDIR}/build/image-root/root/
+	cp -v prepare.sh usb_gadget_down.sh usb_gadget_up.sh ${OUTDIR}/build/image-root/root/
 	cp -v manager.service usb_audit/usb-audit@.service ${OUTDIR}/build/image-root/etc/systemd/system/
 	cp -v usb_audit/90-usb-audit.rules ${OUTDIR}/build/image-root/etc/udev/rules.d/
+	cp -v eth0.network ${OUTDIR}/build/image-root/etc/systemd/network/
 	mkdir -p ${OUTDIR}/build/image-root/etc/docker
 	cp -v daemon.json ${OUTDIR}/build/image-root/etc/docker/
 	mount -t proc proc ${OUTDIR}/build/image-root/proc/
@@ -42,7 +42,8 @@ ${OUTDIR}/build/omap-image-builder/deploy/debian-10.11-console-armhf-${TIME}/arm
 ${OUTDIR}/build/omap-image-builder: | DIR.${OUTDIR}/build
 	test ${ARCH} = "armv7l" || { echo "Error: This firmware can only be built on ARMv7 architectures"; exit 1; }
 	git clone https://github.com/RobertCNelson/omap-image-builder $@
-	cd $@ && git reset --hard eaa6b7f15683a2f4330dc2a15780bc8e35becf39
+	cd $@ && git reset --hard bfcab3b9fa2abbac81b5f7e4a1bd7c132e72edb6
+	patch -d ${OUTDIR}/build/omap-image-builder -p1 < hwpack.patch
 
 ${OUTDIR}/build/metadata.xml: | DIR.${OUTDIR}/build
 	sed 's/$$REVISION/${REVISION}/' metadata.xml > $@

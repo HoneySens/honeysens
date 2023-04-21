@@ -12,7 +12,7 @@ import time
 from .utils import constants
 
 
-IPTABLES_PATH = '/sbin/iptables'
+IPTABLES_PATH = 'iptables'
 # Name of the iptables sensor chain managed by this process
 IPTABLES_CHAIN_LABEL = 'SENSOR'
 # Label of the docker user-defined network that we designate for services

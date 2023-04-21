@@ -1,0 +1,8 @@
+diff -ru a/tools/hwpack/beaglebone.conf b/tools/hwpack/beaglebone.conf
+--- a/tools/hwpack/beaglebone.conf	2023-02-21 12:44:47.462014805 +0000
++++ b/tools/hwpack/beaglebone.conf	2023-02-21 12:45:17.516482459 +0000
+@@ -41,3 +41,4 @@
+ uboot_cape_overlays="enable"
+ 
+ conf_eeprom_compare="335"
++conf_boot_fstype="fat32"
