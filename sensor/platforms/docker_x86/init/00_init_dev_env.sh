@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Initializes this container based on a HoneySens sensor repository mounted under /mnt
+set -e
+PATH=$PATH:/usr/local/bin  # npm installs its stuff to /usr/local
 
 if [[ ! -f /mnt/platforms/docker_x86/Gruntfile.js ]]; then
     echo "Error: /mnt/platforms/docker_x86/Gruntfile.js not found, please mount the sensor sources under /mnt"
@@ -28,6 +30,6 @@ mkdir -p /etc/services.d/grunt-watch
 cat > /etc/services.d/grunt-watch/run << DELIMITER
 #!/usr/bin/with-contenv bash
 echo "Grunt watch task: \$DEV_WATCH_TASK"
-exec /usr/bin/grunt \$DEV_WATCH_TASK --base /srv --gruntfile /srv/Gruntfile.js --force
+exec /usr/local/bin/grunt \$DEV_WATCH_TASK --base /srv --gruntfile /srv/Gruntfile.js --force
 DELIMITER
 chmod +x /etc/services.d/grunt-watch/run

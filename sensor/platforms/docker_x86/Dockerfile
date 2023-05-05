@@ -1,5 +1,5 @@
 # Execute docker build for this Dockerfile from the sensor root directory
-FROM alpine:3.13
+FROM alpine:3.17
 
 MAINTAINER Pascal Brueckner pascal.brueckner@sylence.cc
 

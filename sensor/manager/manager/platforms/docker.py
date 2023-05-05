@@ -185,7 +185,7 @@ class Platform(GenericPlatform):
                     self.logger.info('Update: Launching new sensor container within compose prefix {}'.format(next_project))
                     # Update compose file with the new image version
                     with open('{}/docker-compose.yml'.format(COMPOSEFILE_DIR)) as f:
-                        compose_content = yaml.load(f)
+                        compose_content = yaml.safe_load(f)
                     compose_content['services']['sensor']['image'] = 'honeysens/sensorx86:{}'.format(target_revision)
                     with open('{}/docker-compose.yml'.format(COMPOSEFILE_DIR), 'w') as f:
                         yaml.dump(compose_content, f, default_flow_style=False)
@@ -211,6 +211,8 @@ class Platform(GenericPlatform):
                                     env=os.environ.copy())
                 except Exception as e:
                     self.logger.error('Error during update process ({})'.format(str(e)))
+                    import traceback
+                    traceback.print_exc()
                     shutil.rmtree(tempdir)
                     self.set_firmware_update_in_progress(False)
 

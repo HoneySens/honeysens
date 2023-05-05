@@ -6,6 +6,10 @@
   <description>Dockerized sensor platform to be used on generic x86 systems</description>
   <changelog>
     <entry>
+      <version>2.6.0</version>
+      <desc>Base system update</desc>
+    </entry>
+    <entry>
       <version>2.5.0</version>
       <desc>TLS authentication removed</desc>
     </entry>

@@ -3,8 +3,7 @@ set -e
 
 # Build sensor manager
 mkdir /etc/manager
-cd /opt/manager
-python3 setup.py install
+pip3 install /opt/manager
 
 # Clean up
 apk del build-dependencies
