@@ -11,7 +11,8 @@ ENV BUILD_ID=$BID \
     HS_DB_NAME=honeysens \
     HS_DB_PASSWORD=secret \
     HS_REGISTRY_HOST=registry \
-    HS_REGISTRY_PORT=5000
+    HS_REGISTRY_PORT=5000 \
+    HS_WORKER_COUNT=auto
 
 COPY processor /opt/processor/
 COPY run.sh setup.py /opt/

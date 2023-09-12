@@ -51,6 +51,7 @@ services:
     restart: unless-stopped
     environment:
       - HS_DB_PASSWORD=honeysens
+      - HS_WORKER_COUNT=auto
     networks:
       - honeysens
     volumes:
