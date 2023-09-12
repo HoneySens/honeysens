@@ -37,7 +37,7 @@ rm -v /opt/dionaea/etc/dionaea/services-enabled/sip.yaml
 rm -v /opt/dionaea/etc/dionaea/services-enabled/tftp.yaml
 rm -v /opt/dionaea/etc/dionaea/services-enabled/upnp.yaml
 # Update main configuration
-#patch -d /opt/dionaea -p1 < /root/config.patch
+patch -d /opt/dionaea -p1 < /root/config.patch
 ln -vs ../ihandlers-available/log_honeysens.yaml /opt/dionaea/etc/dionaea/ihandlers-enabled/log_honeysens.yaml
 
 # Cleanup
