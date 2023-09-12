@@ -110,6 +110,11 @@ if config_version == '2.5.0':
     config.set('server', 'config_version', '2.6.0')
     config_version = '2.6.0'
 
+# 2.6.0 -> 2.6.1
+if config_version == '2.6.0':
+    print('Upgrading configuration 2.6.0 -> 2.6.1')
+    config.set('server', 'config_version', '2.6.1')
+    config_version = '2.6.1'
 
 # Write new config file
 with open(config_file, 'w') as f:
