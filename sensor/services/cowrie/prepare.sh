@@ -1,8 +1,11 @@
 #!/usr/bin/env sh
 set -e
 
+# Force usage of the git binary (fixes "Failed to mmap" errors when building cryptography crate)
+export CARGO_NET_GIT_FETCH_WITH_CLI=true
+
 # Install requirements
-apk --update --no-cache add --virtual build-dependencies cargo curl gcc g++ libffi-dev openssl-dev python3-dev rust
+apk --update --no-cache add --virtual build-dependencies cargo curl gcc g++ git libffi-dev openssl-dev python3-dev rust
 apk --update add bash py3-pip py3-pyzmq
 
 # Install cowrie from git

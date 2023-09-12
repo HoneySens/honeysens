@@ -1,5 +1,4 @@
-ARG ARCH=amd64
-FROM multiarch/alpine:${ARCH}-v3.14
+FROM alpine:3.17
 
 COPY prepare.sh run.sh honeysens.py cowrie.cfg /root/
 RUN /bin/sh /root/prepare.sh
