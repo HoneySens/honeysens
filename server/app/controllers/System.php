@@ -14,7 +14,7 @@ use Respect\Validation\Validator as V;
 
 class System extends RESTResource {
 
-    const VERSION = '2.6.0';
+    const VERSION = '2.6.1';
     const ERR_UNKNOWN = 0;
     const ERR_CONFIG_WRITE = 1;
 

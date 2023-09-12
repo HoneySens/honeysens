@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>2.6.0</dd>
+        <dd>2.6.1</dd>
         <dt>Build-ID</dt>
         <dd><%- showBuildID() %></dd>
         <dt>Lizenz</dt>
@@ -48,6 +48,13 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.6.1</strong> - Mai 2023<br/>
+                    <p>
+                        <ul>
+                            <li>Konfigurationsoption zur Limitierung von Task-Worker-Prozessen hinzugefügt</li>
+                        </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.6.0</strong> - Dezember 2022<br/>
                     <p>
                         <ul>
