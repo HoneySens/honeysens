@@ -22,4 +22,12 @@ else
   ln -s /srv/data/https.key /srv/tls/https.key
 fi
 
-celery -A processor.processor worker -B -s /srv/data/tasks/celerybeat-schedule -l info -Q high,low -Ofair --prefetch-multiplier=1 --hsconfig=/srv/data/config.cfg
+if [[ "${HS_WORKER_COUNT}" == "auto" ]]; then
+  echo "Workers: auto (# of CPU cores)"
+  WORKERS=""
+else
+  echo "Workers: ${HS_WORKER_COUNT}"
+  WORKERS="-c ${HS_WORKER_COUNT}"
+fi
+
+celery -A processor.processor worker ${WORKERS} -B -s /srv/data/tasks/celerybeat-schedule -l info -Q high,low -Ofair --prefetch-multiplier=1 --hsconfig=/srv/data/config.cfg

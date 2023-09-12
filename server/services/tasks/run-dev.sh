@@ -13,8 +13,16 @@ else
   ln -s /srv/data/https.key /srv/tls/https.key
 fi
 
+if [[ "${HS_WORKER_COUNT}" == "auto" ]]; then
+  echo "Workers: auto (# of CPU cores)"
+  WORKERS=""
+else
+  echo "Workers: ${HS_WORKER_COUNT}"
+  WORKERS="-c ${HS_WORKER_COUNT}"
+fi
+
 # Install and run task processor
 export PYTHONDONTWRITEBYTECODE=1
 pip3 install -e /mnt
 rm -vr /mnt/*.egg-info
-watchmedo auto-restart --recursive --pattern="*.py" --directory="/mnt" -- /home/hs/.local/bin/celery -A processor.processor worker -B -s /srv/data/tasks/celerybeat-schedule -l debug -Q high,low -Ofair --prefetch-multiplier=1 --hsconfig=/srv/data/config.cfg
+watchmedo auto-restart --recursive --pattern="*.py" --directory="/mnt" -- /home/hs/.local/bin/celery -A processor.processor worker ${WORKERS} -B -s /srv/data/tasks/celerybeat-schedule -l debug -Q high,low -Ofair --prefetch-multiplier=1 --hsconfig=/srv/data/config.cfg
