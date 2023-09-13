@@ -59,8 +59,8 @@ class LogHoneySensHandler(ihandler):
         socket.close()
 
     def handle_incident(self, icd):
-        #if self._disabled:
-            #return
+        if self._disabled:
+            return
 
         icd.dump()
         if icd.origin == "dionaea.connection.link":
