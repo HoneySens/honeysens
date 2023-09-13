@@ -2,10 +2,10 @@
 set -e
 
 apt-get update
-apt-get install -y git build-essential cmake check cython3 libcurl4-openssl-dev libemu-dev libev-dev libglib2.0-dev libloudmouth1-dev libnetfilter-queue-dev libnl-3-dev libpcap-dev libssl-dev libtool libudns-dev python3 python3-dev python3-bson python3-yaml fonts-liberation python3-zmq
+apt-get install -y git build-essential cmake check cython3 libcurl4-openssl-dev libemu-dev libev-dev libglib2.0-dev libloudmouth1-dev libnetfilter-queue-dev libnl-3-dev libnl-route-3-dev libpcap-dev libssl-dev libtool libudns-dev python3 python3-dev python3-bson python3-yaml fonts-liberation python3-zmq
 
 git clone https://github.com/DinoTools/dionaea.git /root/dionaea
-(cd /root/dionaea; git checkout 1426750b9fd09c5bfeae74d506237333cd8505e2)
+(cd /root/dionaea; git checkout 4e459f1b672a5b4c1e8335c0bff1b93738019215)
 
 # Patch sources
 mv -v /root/log_honeysens.yaml.in /root/dionaea/conf/ihandlers/
@@ -33,6 +33,7 @@ rm -v /opt/dionaea/etc/dionaea/services-enabled/mqtt.yaml
 rm -v /opt/dionaea/etc/dionaea/services-enabled/mssql.yaml
 rm -v /opt/dionaea/etc/dionaea/services-enabled/mysql.yaml
 rm -v /opt/dionaea/etc/dionaea/services-enabled/pptp.yaml
+rm -v /opt/dionaea/etc/dionaea/services-enabled/printer.yaml
 rm -v /opt/dionaea/etc/dionaea/services-enabled/sip.yaml
 rm -v /opt/dionaea/etc/dionaea/services-enabled/tftp.yaml
 rm -v /opt/dionaea/etc/dionaea/services-enabled/upnp.yaml
