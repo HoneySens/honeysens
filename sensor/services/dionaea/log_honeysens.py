@@ -160,13 +160,13 @@ class LogHoneySensHandler(ihandler):
         elif origin == 'dionaea.modules.python.smb.dcerpc.bind':
             icd_desc = 'DCE/RPC bind: {} (UUID {})'.format(icd.transfersyntax, icd.uuid)
 
-        self._connection_ids.get(v).get('messages').append({'timestamp': int(time.time()), 'data': icd_desc, 'type': 1})
+        self._connection_ids.get(icd.con).get('messages').append({'timestamp': int(time.time()), 'data': icd_desc, 'type': 1})
 
         if icd.origin == "dionaea.connection.free":
             con = icd.con
             if con in self._connection_ids:
                 logger.debug("Remove connection ID '%s' from list.", self._connection_ids.get(con).get('id'))
-                self.submit(self._connection_ids.get(v))
+                self.submit(self._connection_ids.get(con))
                 del self._connection_ids[con]
                 # Clean up locally saved binaries to not waste any space
                 for f in glob.glob('/opt/dionaea/var/lib/dionaea/binaries/*'):
