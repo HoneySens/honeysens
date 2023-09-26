@@ -1,5 +1,5 @@
 PREFIX := HoneySens-dionaea
-REVISION := 2.2.0
+REVISION := 2.7.0
 OUTDIR := out
 METADATA := metadata.xml
 
@@ -23,9 +23,9 @@ ${OUTDIR}/images/amd64/service.tar: | ${OUTDIR}/images/amd64
 	docker save -o $@ honeysens/dionaea:amd64-${REVISION}
 
 ${OUTDIR}/images/armhf/service.tar: | ${OUTDIR}/images/armhf
-	docker run --rm --privileged multiarch/qemu-user-static:register || true
-	docker build --no-cache -t honeysens/dionaea:armhf-${REVISION} -f Dockerfile.armhf .
-	docker run --rm --privileged multiarch/qemu-user-static:register --reset
+	docker run --rm --privileged tonistiigi/binfmt --install linux/arm
+	docker build --no-cache -t honeysens/dionaea:armhf-${REVISION} --platform linux/arm/v7 .
+	docker run --rm --privileged tonistiigi/binfmt --uninstall linux/arm
 	docker save -o $@ honeysens/dionaea:armhf-${REVISION}
 
 ${OUTDIR}/images/amd64/metadata.xml: | ${OUTDIR}/images/amd64
