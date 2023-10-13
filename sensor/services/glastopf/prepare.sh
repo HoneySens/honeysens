@@ -1,9 +1,9 @@
-#cython !/usr/bin/env sh
-# Based on https://hub.docker.com/r/dtagdevsec/glastopf/~/dockerfile/
+#!/usr/bin/env sh
 set -e
 
 # Install requirements
-apk --no-cache add autoconf bind-tools build-base git libffi libffi-dev libpcap libxslt-dev make php7 php7-dev openssl-dev py-mysqldb py-openssl py-pip py-setuptools python python-dev
+apk --update --no-cache add --virtual build-dependencies build-base git libffi-dev libxslt-dev php7-dev openssl-dev python2-dev
+apk --update add libstdc++ libxslt make php7 py-mysqldb py-openssl py2-pip
 
 # ZMQ
 pip install pyzmq
@@ -16,19 +16,15 @@ phpize7
 ./configure --with-php-config=/usr/bin/php-config7 --enable-bfr
 make
 make install
-cd /
-rm -rf /opt/BFR /tmp/* /var/tmp/*
 echo "zend_extension = "$(find /usr -name bfr.so) >> /etc/php7/php.ini
 
 # Install glastopf from git
 git clone https://github.com/mushorg/glastopf.git /opt/glastopf
 cd /opt/glastopf
-git checkout f9ac53e685991ffe2402f9cb3eb5ccdc2d0b198c
+git checkout d17fcb6d8d5fb082af7ea3ef1abbe173895568d9
 mv /root/requirements.txt /opt/glastopf/
 mv /root/log_honeysens.py /opt/glastopf/glastopf/modules/reporting/auxiliary/
-pip install --no-cache-dir .
-cd /
-rm -rf /opt/glastopf /tmp/* /var/tmp/*
+pip2 install --no-cache-dir .
 mv /root/run.sh /opt/
 
 # Setup user, groups and configs
@@ -38,6 +34,5 @@ mkdir -p /etc/glastopf
 mv /root/glastopf.cfg /etc/glastopf/
 
 # Clean up
-apk del autoconf build-base file git libffi-dev php7-dev python-dev py-pip
-rm -rf /root/*
-rm -rf /var/cache/apk/*
+apk del build-dependencies
+rm -rf /root/* /opt/BFR /opt/glastopf /var/cache/apk/* /tmp/* /var/tmp/*
