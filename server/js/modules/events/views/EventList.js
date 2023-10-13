@@ -80,6 +80,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                 delete HoneySens.data.models.events.queryParams.sensor;
                 delete HoneySens.data.models.events.queryParams.division;
                 delete HoneySens.data.models.events.queryParams.archived;
+                delete HoneySens.data.models.events.queryParams.filter;
                 this.collection.state.order = 1;
                 this.collection.state.sortKey = 'timestamp';
 

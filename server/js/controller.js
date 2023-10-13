@@ -43,6 +43,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                         // clear models
                         HoneySens.data.models.certs.reset();
                         HoneySens.data.models.events.reset();
+                        delete HoneySens.data.models.events.queryParams.filter;  // don't leak search strings
                         HoneySens.data.models.new_events.reset();
                         HoneySens.data.models.eventfilters.fullCollection.reset();
                         HoneySens.data.models.sensors.fullCollection.reset();
