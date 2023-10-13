@@ -8,5 +8,5 @@
     <catchAll>false</catchAll>
     <portAssignment>{"80/tcp":80}</portAssignment>
     <revision>$REVISION</revision>
-    <revisionDescription>Based on git revision f9ac53e685991ffe2402f9cb3eb5ccdc2d0b198c</revisionDescription>
+    <revisionDescription>Based on git revision d17fcb6d8d5fb082af7ea3ef1abbe173895568d9</revisionDescription>
 </service>
