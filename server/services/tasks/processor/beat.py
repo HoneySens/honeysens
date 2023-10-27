@@ -27,10 +27,10 @@ def perform_beat(task_type):
 
 @processor.app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(60.0, check_sensor_timeout.s(), queue='low')
+    sender.add_periodic_task(60.0, check_sensor_timeout.s(), queue='high')
     sender.add_periodic_task(crontab(minute=1, hour=0), clean_api_log.s(), queue='low')
     sender.add_periodic_task(crontab(minute=0, hour=9, day_of_week='mon'), summarize_week.s(), queue='low')
-    sender.add_periodic_task(crontab(minute=0, hour=9), check_ca_expiration.s(), queue='low')
+    sender.add_periodic_task(crontab(minute=0, hour=9), check_ca_expiration.s(), queue='high')
     sender.add_periodic_task(crontab(minute=0, hour=3), archive_caretaker.s(), queue='low')
 
 
