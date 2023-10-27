@@ -24,10 +24,10 @@ fi
 
 if [[ "${HS_WORKER_COUNT}" == "auto" ]]; then
   echo "Workers: auto (# of CPU cores)"
-  WORKERS=""
+  export WORKERS=""
 else
   echo "Workers: ${HS_WORKER_COUNT}"
-  WORKERS="-c ${HS_WORKER_COUNT}"
+  export WORKERS="-c ${HS_WORKER_COUNT}"
 fi
 
-celery -A processor.processor worker ${WORKERS} -B -s /srv/data/tasks/celerybeat-schedule -l info -Q high,low -Ofair --prefetch-multiplier=1 --hsconfig=/srv/data/config.cfg
+exec supervisord

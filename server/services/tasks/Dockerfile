@@ -1,4 +1,4 @@
-FROM alpine:3.16
+FROM alpine:3.17
 
 ARG BID
 # Defaults
@@ -16,10 +16,11 @@ ENV BUILD_ID=$BID \
 
 COPY processor /opt/processor/
 COPY run.sh setup.py /opt/
+COPY supervisord.conf /etc/supervisord.conf
 
 RUN set -ex; \
     apk --no-cache upgrade; \
-    apk --no-cache add py3-cryptography py3-pip skopeo; \
+    apk --no-cache add py3-cryptography py3-pip skopeo supervisor; \
     pip3 install -e /opt; \
     addgroup -g 1000 hs; \
     adduser -D -u 1000 -G hs hs; \

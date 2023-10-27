@@ -15,14 +15,14 @@ fi
 
 if [[ "${HS_WORKER_COUNT}" == "auto" ]]; then
   echo "Workers: auto (# of CPU cores)"
-  WORKERS=""
+  export WORKERS=""
 else
   echo "Workers: ${HS_WORKER_COUNT}"
-  WORKERS="-c ${HS_WORKER_COUNT}"
+  export WORKERS="-c ${HS_WORKER_COUNT}"
 fi
 
-# Install and run task processor
+# Install and run task processor via supervisord
 export PYTHONDONTWRITEBYTECODE=1
 pip3 install -e /mnt
 rm -vr /mnt/*.egg-info
-watchmedo auto-restart --recursive --pattern="*.py" --directory="/mnt" -- /home/hs/.local/bin/celery -A processor.processor worker ${WORKERS} -B -s /srv/data/tasks/celerybeat-schedule -l debug -Q high,low -Ofair --prefetch-multiplier=1 --hsconfig=/srv/data/config.cfg
+exec supervisord
