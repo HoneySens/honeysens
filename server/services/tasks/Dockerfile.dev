@@ -25,6 +25,6 @@ RUN set -ex; \
 COPY run-dev.sh /opt/run.sh
 COPY supervisord.dev.conf /etc/supervisord.conf
 
-WORKDIR /mnt
 USER 1000:1000
+WORKDIR /tmp
 CMD ["/opt/run.sh"]

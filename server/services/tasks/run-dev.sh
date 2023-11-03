@@ -25,4 +25,4 @@ fi
 export PYTHONDONTWRITEBYTECODE=1
 pip3 install -e /mnt
 rm -vr /mnt/*.egg-info
-exec supervisord
+exec supervisord -c /etc/supervisord.conf
