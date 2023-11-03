@@ -116,6 +116,17 @@ if config_version == '2.6.0':
     config.set('server', 'config_version', '2.6.1')
     config_version = '2.6.1'
 
+# 2.6.1 -> 2.7.0
+if config_version == '2.6.1':
+    print('Upgrading configuration 2.6.1 -> 2.7.0')
+    db_statements = [
+        'ALTER TABLE users CHANGE notifyoncaexpiration notifyOnSystemState TINYINT(1) NOT NULL'
+    ]
+    execute_sql(db, db_statements)
+    db.commit()
+    config.set('server', 'config_version', '2.7.0')
+    config_version = '2.7.0'
+
 # Write new config file
 with open(config_file, 'w') as f:
     config.write(f)

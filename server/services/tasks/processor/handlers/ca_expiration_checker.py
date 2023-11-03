@@ -26,7 +26,7 @@ class CAExpirationChecker(HandlerInterface):
             config.read_file(open(config_path))
             # Find users who want to be notified
             with db.cursor() as cur:
-                cur.execute('SELECT email FROM users WHERE notifyOnCAExpiration = 1')
+                cur.execute('SELECT email FROM users WHERE notifyOnSystemState = 1')
                 for row in cur.fetchall():
                     recipient = row['email']
                     logger.info('Sending expiration notice to {}'.format(recipient))

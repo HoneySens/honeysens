@@ -126,7 +126,7 @@ class Users extends RESTResource {
      * - email: E-Mail address
      * - password: User password
      * - role: User role, determining his permissions (0 to 3)
-     * - notifyOnCAExpiration: Whether this user should receive CA expiration notifications (bool)
+     * - notifyOnSystemState: Whether this user should receive system state notifications (bool)
      *
      * @param stdClass $data
      * @return User
@@ -141,7 +141,7 @@ class Users extends RESTResource {
             ->attribute('fullName', V::stringType()->length(1, 255), false)
             ->attribute('email', Utils::emailValidator())
             ->attribute('role', V::intVal()->between(1, 3))
-            ->attribute('notifyOnCAExpiration', V::boolVal())
+            ->attribute('notifyOnSystemState', V::boolVal())
             ->attribute('requirePasswordChange', V::boolVal())
             ->check($data);
         // Password is optional if another domain than the local one is used
@@ -155,7 +155,7 @@ class Users extends RESTResource {
             ->setDomain($data->domain)
             ->setEmail($data->email)
             ->setRole($data->role)
-            ->setNotifyOnCAExpiration($data->notifyOnCAExpiration)
+            ->setNotifyOnSystemState($data->notifyOnSystemState)
             ->setRequirePasswordChange($data->requirePasswordChange);
         if(V::attribute('password')->validate($data))
             $user->setPassword($data->password);
@@ -174,7 +174,7 @@ class Users extends RESTResource {
      * - email: E-Mail address
      * - password: User password
      * - role: User role, determining his permissions (0 to 3)
-     * - notifyOnCAExpiration: Whether this user should receive CA expiration notifications (bool)
+     * - notifyOnSystemState: Whether this user should receive system state notifications (bool)     *
      *
      * @param int $id
      * @param stdClass $data
@@ -191,7 +191,7 @@ class Users extends RESTResource {
             ->attribute('fullName', V::stringType()->length(1, 255), false)
             ->attribute('email', Utils::emailValidator())
             ->attribute('role', V::intVal()->between(1, 3))
-            ->attribute('notifyOnCAExpiration', V::boolVal())
+            ->attribute('notifyOnSystemState', V::boolVal())
             ->attribute('requirePasswordChange', V::boolVal())
             ->check($data);
         $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($id);
@@ -208,7 +208,7 @@ class Users extends RESTResource {
         $user->setName($data->name)
             ->setDomain($data->domain)
             ->setEmail($data->email)
-            ->setNotifyOnCAExpiration($data->notifyOnCAExpiration)
+            ->setNotifyOnSystemState($data->notifyOnSystemState)
             ->setRequirePasswordChange($data->requirePasswordChange);
         // Set role, but force the first user to be an admin
         if($user->getId() != 1) $user->setRole($data->role);

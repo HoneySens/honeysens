@@ -132,7 +132,7 @@ function(HoneySens, Models, ModalServerError, UsersEditViewTpl) {
                         domain: parseInt(this.$el.find('select[name="domain"]').val()),
                         email: this.$el.find('input[name="email"]').val(),
                         role: this.$el.find('select[name="role"]').val(),
-                        notifyOnCAExpiration: this.$el.find('input[name="notifyOnCAExpiration"]').is(':checked'),
+                        notifyOnSystemState: this.$el.find('input[name="notifyOnSystemState"]').is(':checked'),
                         requirePasswordChange: this.$el.find('input[name="requirePasswordChange"]').is(':checked')
                     };
                 if($password.val().length !== 0) data.password = $password.val();

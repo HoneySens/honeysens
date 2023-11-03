@@ -26,6 +26,7 @@ from .handlers.upload_verifier import UploadVerifier
 from .handlers.ca_expiration_checker import CAExpirationChecker
 from .handlers.api_log_cleaner import APILogCleaner
 from .handlers.archive_caretaker import ArchiveCaretaker
+from .handlers.system_health_monitor import SystemHealthMonitor
 
 handlers = {
     constants.TaskType.EMAIL_EMITTER: EMailEmitter(),
@@ -38,7 +39,8 @@ handlers = {
     constants.TaskType.WEEKLY_SUMMARIZER: WeeklySummarizer(),
     constants.TaskType.CA_EXPIRATION_CHECKER: CAExpirationChecker(),
     constants.TaskType.API_LOG_CLEANER: APILogCleaner(),
-    constants.TaskType.ARCHIVE_CARETAKER: ArchiveCaretaker()
+    constants.TaskType.ARCHIVE_CARETAKER: ArchiveCaretaker(),
+    constants.TaskType.SYSTEM_HEALTH_MONITOR: SystemHealthMonitor()
 }
 logger = get_task_logger(__name__)
 

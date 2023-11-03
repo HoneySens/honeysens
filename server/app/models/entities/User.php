@@ -101,11 +101,11 @@ class User {
     protected $tasks;
 
     /**
-     * Whether to send CA expiration warnings to the E-Mail address of this user.
+     * Whether to send system state notifications (e.g. high load, CA expiration) to the E-Mail address of this user.
      *
      * @Column(type="boolean")
      */
-    protected $notifyOnCAExpiration = false;
+    protected $notifyOnSystemState = false;
 
     public function __construct() {
         $this->divisions = new ArrayCollection();
@@ -115,12 +115,12 @@ class User {
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId() {
         return $this->id;
     }
-    
+
     /**
      * Set name
      *
@@ -339,23 +339,23 @@ class User {
     }
 
     /**
-     * Enable or disable notifications in case of CA expiration for this user.
+     * Enable or disable notifications in case of CA expiration or high system load for this user.
      *
      * @param boolean $notify
      * @return $this
      */
-    public function setNotifyOnCAExpiration($notify) {
-        $this->notifyOnCAExpiration = $notify;
+    public function setNotifyOnSystemState($notify) {
+        $this->notifyOnSystemState = $notify;
         return $this;
     }
 
     /**
-     * Whether this user receives notifications in case of CA expiration.
+     * Whether this user receives notifications about the system state.
      *
      * @return boolean
      */
-    public function getNotifyOnCAExpiration() {
-        return $this->notifyOnCAExpiration;
+    public function getNotifyOnSystemState() {
+        return $this->notifyOnSystemState;
     }
 
     /**
@@ -433,7 +433,7 @@ class User {
             'role' => $this->getRole(),
             'permissions' => $this->getPermissions(),
             'divisions' => $divisions,
-            'notify_on_ca_expiration' => $this->getNotifyOnCAExpiration()
+            'notify_on_system_state' => $this->getNotifyOnSystemState()
         );
     }
 }
