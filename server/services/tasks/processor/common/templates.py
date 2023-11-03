@@ -7,6 +7,7 @@ class TemplateType(IntEnum):
     EMAIL_SENSOR_TIMEOUT = 1
     EMAIL_SUMMARY = 2
     EMAIL_CA_EXPIRATION = 3
+    EMAIL_HIGH_SYSTEM_LOAD = 4
 
 
 SYSTEM_NOTIFICATION_TEMPLATES = {
@@ -97,6 +98,22 @@ Nach Ablauf des Zertifikats ohne rechtzeitige Verlängerung können die bestehen
         'preview': {
             'SERVER_NAME': 'honeysens.company.tld',
             'EXPIRATION_TIME': '3'
+        }
+    },
+    TemplateType.EMAIL_HIGH_SYSTEM_LOAD: {
+        'name': 'Hohe Systemlast auf Server',
+        'template': '''Dies ist eine automatisch generierte Hinweismail des HoneySens-Servers {{SERVER_NAME}}.
+
+Der Server ist stark ausgelastet, es befinden sich derzeit {{QUEUE_LENGTH}} unbearbeitete Aufgaben in der Warteschlange. Diese Warnung wurde versendet, da die Warteschlangenlänge den Grenzwert von {{QUEUE_THRESHOLD}} überschritten hat.''',
+        'variables': {
+            'SERVER_NAME': 'Hostname dieses HoneySens-Servers',
+            'QUEUE_LENGTH': 'Warteschlangenlänge zum Zeitpunkt des Alarms',
+            'QUEUE_THRESHOLD': 'Schwellwert der Warteschlangenlänge'
+        },
+        'preview': {
+            'SERVER_NAME': 'honeysens.company.tld',
+            'QUEUE_LENGTH': '100',
+            'QUEUE_THRESHOLD': '32'
         }
     }
 }

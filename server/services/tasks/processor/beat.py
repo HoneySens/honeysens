@@ -31,6 +31,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute=1, hour=0), clean_api_log.s(), queue='low')
     sender.add_periodic_task(crontab(minute=0, hour=9, day_of_week='mon'), summarize_week.s(), queue='low')
     sender.add_periodic_task(crontab(minute=0, hour=9), check_ca_expiration.s(), queue='high')
+    sender.add_periodic_task(crontab(minute=0, hour='*/4'), system_health_monitor.s(), queue='high')
     sender.add_periodic_task(crontab(minute=0, hour=3), archive_caretaker.s(), queue='low')
 
 
@@ -47,6 +48,11 @@ def summarize_week():
 @processor.app.task
 def check_ca_expiration():
     perform_beat(constants.TaskType.CA_EXPIRATION_CHECKER)
+
+
+@processor.app.task
+def system_health_monitor():
+    perform_beat(constants.TaskType.SYSTEM_HEALTH_MONITOR)
 
 
 @processor.app.task

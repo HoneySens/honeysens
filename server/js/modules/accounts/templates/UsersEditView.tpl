@@ -75,8 +75,8 @@
                 der Versand von E-Mails in den globalen Einstellungen aktiviert werden.</p>
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" name="notifyOnCAExpiration" <% if(notify_on_ca_expiration) { %>checked<% } %>>
-                    Über den Ablauf des internen CA-Zertifikats informieren
+                    <input type="checkbox" name="notifyOnSystemState" <% if(notify_on_system_state) { %>checked<% } %>>
+                    Systemnachrichten senden (z.B. bei hoher Auslastung oder bevorstehendem Ablauf des CA-Zertifikats)
                 </label>
             </div>
         </fieldset>
