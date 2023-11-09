@@ -40,8 +40,11 @@ class Tasks extends RESTResource {
 
         $app->get('/api/tasks/status', function() use ($app, $em, $services, $config, $messages) {
             $controller = new Tasks($em, $services, $config);
-            if($controller->getWorkerStatus()) echo json_encode([]);
-            else throw new NotFoundException();
+            try {
+                echo json_encode(array('queue_length' => $controller->getBrokerQueueLength()));
+            } catch(Exception $e) {
+                throw new NotFoundException();
+            }
         });
 
         // Generic endpoint to upload files, returns the ID of the associated verification task.
@@ -126,9 +129,9 @@ class Tasks extends RESTResource {
      * @return bool
      * @throws ForbiddenException
      */
-    public function getWorkerStatus() {
+    public function getBrokerQueueLength() {
         $this->assureAllowed('get');
-        return $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->isAvailable();
+        return $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->getQueueLength();
     }
 
     /**

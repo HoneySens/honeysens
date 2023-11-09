@@ -446,6 +446,13 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             url: 'api/stats'
         });
 
+        Models.TaskWorkerStatus = Backbone.Model.extend({
+            defaults: {
+                queue_length: 0
+            },
+            url: 'api/tasks/status'
+        });
+
         Models.Task = Backbone.Model.extend({
             urlRoot: 'api/tasks',
             defaults: {

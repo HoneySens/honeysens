@@ -6,7 +6,10 @@
     <div class="headerBar form-inline clearfix">
         <div class="form-group">
             <label>Status:&nbsp;</label>
-            <span class="help-block" style="display: inline-block;">Abfrage l&auml;ft...</span>
+            <span id="taskWorkerStatus" class="help-block" style="display: inline-block;">Abfrage l&auml;ft...</span>
+            <span id="taskWorkerQueue" class="hidden">
+                (<span id="taskWorkerQueueLength"></span> Jobs in der Warteschlange)
+            </span>
         </div>
     </div>
     <div class="table-responsive"></div>
