@@ -103,15 +103,16 @@ function(HoneySens, Models, Backgrid, TaskListTpl, TaskListTypeCellTpl, TaskList
             },
             updateWorkerStatus: function() {
                 // Queries task worker status and displays the result
-                var view = this;
-                $.ajax({
-                    type: 'GET',
-                    url: 'api/tasks/status',
-                    success: function() {
-                        view.$el.find('div.headerBar span.help-block').removeClass('statusOffline').addClass('statusOnline').text('Online');
+                var status = new Models.TaskWorkerStatus(),
+                    view = this;
+                status.fetch({
+                    success: function(model) {
+                        view.$el.find('#taskWorkerStatus').removeClass('statusOffline').addClass('statusOnline').text('Online');
+                        view.$el.find('#taskWorkerQueueLength').text(model.get('queue_length'));
+                        view.$el.find('#taskWorkerQueue').removeClass('hidden');
                     },
                     error: function() {
-                        view.$el.find('div.headerBar span.help-block').removeClass('statusOnline').addClass('statusOffline').text('Offline');
+                        view.$el.find('#taskWorkerStatus').removeClass('statusOnline').addClass('statusOffline').text('Offline');
                     }
                 });
             }

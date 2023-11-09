@@ -10,12 +10,15 @@ use Exception;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
+use Predis;
 
 class TaskService {
 
     const PRIORITY_LOW = 'low';
     const PRIORITY_HIGH = 'high';
 
+    private $broker_host;
+    private $broker_port;
     private $config;
     private $em;
     private $queue_high;
@@ -24,17 +27,12 @@ class TaskService {
 
     public function __construct($services, ConfigParser $config, EntityManager $em) {
         $this->services = $services;
-        $broker_host = getenv('HS_BROKER_HOST');
-        $broker_port = getenv('HS_BROKER_PORT');
-        $this->queue_high = new Celery($broker_host, null, null, null, self::PRIORITY_HIGH, self::PRIORITY_HIGH, $broker_port, 'redis');
-        $this->queue_low = new Celery($broker_host, null, null, null, self::PRIORITY_LOW, self::PRIORITY_LOW, $broker_port, 'redis');
+        $this->broker_host = getenv('HS_BROKER_HOST');
+        $this->broker_port = getenv('HS_BROKER_PORT');
+        $this->queue_high = new Celery($this->broker_host, null, null, null, self::PRIORITY_HIGH, self::PRIORITY_HIGH, $this->broker_port, 'redis');
+        $this->queue_low = new Celery($this->broker_host, null, null, null, self::PRIORITY_LOW, self::PRIORITY_LOW, $this->broker_port, 'redis');
         $this->config = $config;
         $this->em = $em;
-    }
-
-    public function isAvailable() {
-        # TODO celery-php doesn't support a ping natively, have a look into predis
-        return true;
     }
 
     /**
@@ -80,5 +78,19 @@ class TaskService {
                 throw new Exception('Unknown task type ' . $task->getType());
         }
         return $task;
+    }
+
+    /**
+     * Queries the broker and returns the aggregated length of the low and high priority queues.
+     *
+     * @return int
+     */
+    public function getQueueLength() {
+        $broker = new Predis\Client([
+            'scheme' => 'tcp',
+            'host' => $this->broker_host,
+            'port' => $this->broker_port
+        ]);
+        return $broker->llen("low") + $broker->llen("high");
     }
 }
