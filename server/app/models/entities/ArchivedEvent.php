@@ -6,7 +6,7 @@ namespace HoneySens\app\models\entities;
  * Attributes match the one of Event, except for relationships: Those are replaced with static values.
  *
  * @Entity
- * @Table(name="archived_events")
+ * @Table(name="archived_events",indexes={@Index(name="timestamp_idx", columns={"timestamp"})})
  */
 class ArchivedEvent {
 

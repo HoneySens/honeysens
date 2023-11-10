@@ -120,7 +120,9 @@ if config_version == '2.6.0':
 if config_version == '2.6.1':
     print('Upgrading configuration 2.6.1 -> 2.7.0')
     db_statements = [
-        'ALTER TABLE users CHANGE notifyoncaexpiration notifyOnSystemState TINYINT(1) NOT NULL'
+        'ALTER TABLE users CHANGE notifyoncaexpiration notifyOnSystemState TINYINT(1) NOT NULL',
+        'CREATE INDEX timestamp_idx ON events (timestamp)',
+        'CREATE INDEX timestamp_idx ON archived_events (timestamp)'
     ]
     execute_sql(db, db_statements)
     db.commit()

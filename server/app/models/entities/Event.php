@@ -4,7 +4,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @Entity
- * @Table(name="events")
+ * @Table(name="events",indexes={@Index(name="timestamp_idx", columns={"timestamp"})})
  */
 class Event {
 
@@ -131,7 +131,7 @@ class Event {
     /**
      * Get timestamp
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getTimestamp() {
         return $this->timestamp;
@@ -191,7 +191,7 @@ class Event {
     /**
      * Get classification
      *
-     * @return integer 
+     * @return integer
      */
     public function getClassification() {
         return $this->classification;
@@ -211,7 +211,7 @@ class Event {
     /**
      * Get source
      *
-     * @return string 
+     * @return string
      */
     public function getSource() {
         return $this->source;
@@ -231,7 +231,7 @@ class Event {
     /**
      * Get summary
      *
-     * @return string 
+     * @return string
      */
     public function getSummary() {
         return $this->summary;
