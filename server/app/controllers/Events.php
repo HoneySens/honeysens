@@ -74,13 +74,6 @@ class Events extends RESTResource {
             $controller->delete($criteria);
             echo json_encode([]);
         });
-
-        $app->get('/api/test', function() use ($app, $em, $services, $config, $messages) {
-            $r = $em->createQueryBuilder()
-                ->select('e')->from('HoneySens\app\models\entities\ArchivedEvent', 'e')->join('e.division', 'd')
-                ->getQuery()->getResult();
-            echo sizeof($r);
-        });
     }
 
     /**
