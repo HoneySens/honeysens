@@ -15,7 +15,6 @@ use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
-use phpseclib\File\X509;
 use Respect\Validation\Validator as V;
 
 class Events extends RESTResource {
@@ -40,7 +39,7 @@ class Events extends RESTResource {
             V::json()->check($request);
             $eventData = json_decode($request);
             $sensor = $controller->validateSensorRequest('create', $request);
-            $controller->create($sensor, $eventData, $config);
+            $controller->create($sensor, $eventData, $config, $app->log);
             $controller->setMACHeaders($sensor, 'create');
         });
 
@@ -168,10 +167,11 @@ class Events extends RESTResource {
      * @param Sensor $sensor
      * @param \stdClass $data
      * @param ConfigParser $config
+     * @param \Slim\Log $log
      * @return array
      * @throws BadRequestException
      */
-    public function create($sensor, $data, ConfigParser $config) {
+    public function create($sensor, $data, ConfigParser $config, \Slim\Log $log) {
         // Basic attribute validation
         V::attribute('events', V::stringType())->check($data);
         // Decode events data
@@ -285,18 +285,24 @@ class Events extends RESTResource {
         $em->flush();
         // New events should also refresh the sensors repo so that dependent UI data (e.g. new event cnt) can be updated
         if($em->getUnitOfWork()->size() > 0) $this->updateSensorRepo($em);
-        // Event forwarding
-        if($config->getBoolean('syslog', 'enabled')) {
-            $taskService = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK);
-            foreach($events as $event) {
-                if($em->contains($event))
-                    $taskService->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('id' => $event->getId()));
+        try {
+            // Event forwarding
+            if ($config->getBoolean('syslog', 'enabled')) {
+                $taskService = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK);
+                foreach ($events as $event) {
+                    if ($em->contains($event))
+                        $taskService->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('id' => $event->getId()));
+                }
             }
-        }
-        // Send mails for each incident
-        $mailService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
-        foreach($events as $event) {
-            if($em->contains($event)) $mailService->sendIncident($config, $em, $event);
+            // Send mails for each incident
+            $mailService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
+            foreach ($events as $event) {
+                if ($em->contains($event)) $mailService->sendIncident($config, $em, $event);
+            }
+        } catch(\Exception $e) {
+            // If subsequent event handlers cause exceptions, fail gracefully and signal successful event creation to sensor
+            $log->error('Exception during post-event handling');
+            $log->error($e);
         }
         return $events;
     }
