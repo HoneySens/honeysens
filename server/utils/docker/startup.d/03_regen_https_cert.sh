@@ -50,11 +50,6 @@ if [[ ! -s /opt/HoneySens/data/${TARGET}.key ]]; then
     cat /opt/HoneySens/data/${TARGET}.crt /opt/HoneySens/data/CA/ca.crt > /opt/HoneySens/data/${TARGET}.chain.crt
 elif [[ "$FORCE" = "force" ]]; then
     echo "Generating new self-signed TLS certificate for existing key"
-    # Use subject line of existing certificate if one exists
-    if [[ -e /opt/HoneySens/data/${TARGET}.crt ]]; then
-      SUBJECT=$(openssl x509 -noout -subject -nameopt compat -in /opt/HoneySens/data/${TARGET}.crt | sed -e "s/subject=\(.*\)/\1/" | awk '{$1=$1};1')
-      echo "  Re-using subject of existing certificate: ${SUBJECT}"
-    fi
     openssl req -new -key /opt/HoneySens/data/${TARGET}.key -out /opt/HoneySens/data/${TARGET}.csr -subj "${SUBJECT}"
     openssl x509 -req -in /opt/HoneySens/data/${TARGET}.csr -CA /opt/HoneySens/data/CA/ca.crt -CAkey /opt/HoneySens/data/CA/ca.key -CAcreateserial -out /opt/HoneySens/data/${TARGET}.crt -days 365 -sha256 -extensions san -extfile <(printf "[san]\nsubjectAltName=DNS:${DOMAIN}")
     cat /opt/HoneySens/data/${TARGET}.crt /opt/HoneySens/data/CA/ca.crt > /opt/HoneySens/data/${TARGET}.chain.crt
