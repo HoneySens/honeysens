@@ -1,7 +1,7 @@
 <form class="form-group">
     <div class="form-group has-feedback">
         <label for="serverHost" class="control-label">Host</label>
-        <input type="text" name="serverHost" class="form-control" placeholder="Hostname oder IP-Adresse" value="<%- serverHost %>" required/>
+        <input type="text" name="serverHost" class="form-control" disabled="disabled" placeholder="Hostname oder IP-Adresse" value="<%- serverHost %>" required/>
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>
