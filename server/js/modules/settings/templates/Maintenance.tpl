@@ -40,15 +40,15 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4 class="panel-title">
-                <a class="collapsed" data-toggle="collapse" data-parent="#maintenance" href="#caupdate">Certificate Authority</a>
+                <a class="collapsed" data-toggle="collapse" data-parent="#maintenance" href="#caupdate">Interne Certificate Authority</a>
             </h4>
         </div>
         <div id="caupdate" class="panel-collapse collapse">
             <div class="panel-body">
-                <p>Mit dieser Funktion wird ein neues CA-Zertifikat generiert, was eine Aktualisierung aller Zertifikate
-                    dieser HoneySens-Installation nach sich zieht. Dies wird erforderlich, wenn sich das derzeit genutzte
-                    Zertifikat seinem Ablaufdatum annähert. Nach dem Start des Prozesses wird die Webanwendung automatisch
-                    neu geladen.
+                <p>Mit dieser Funktion wird ein neues internes CA-Zertifikat generiert, was eine Aktualisierung des
+                    selbstsignierten TLS-Zertifikats dieser HoneySens-Installation nach sich zieht. Dies wird erforderlich,
+                    wenn sich das derzeit genutzte Zertifikat seinem Ablaufdatum annähert.
+                    Nach dem Start des Prozesses wird die Webanwendung automatisch neu geladen.
                 </p>
                 <hr />
                 <p>
