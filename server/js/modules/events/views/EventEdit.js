@@ -30,14 +30,16 @@ function(HoneySens, Models, EventEditTpl) {
                     if(valid) {
                         let isSingleEdit = !this.model.has('total');
 
-                        // Set status/comment depending on whether a single or multiple events are edited
+                        // Set comment and status depending on whether a single or multiple events are edited
                         if(isSingleEdit) {
-                            // For single edits we can simply compare to the model to spot differences
+                            // For single edits we can simply compare to the model to spot a new status
                             if(parseInt(status) !== model.get('status')) data.new_status = status;
-                            if(comment !== model.get('comment')) data.new_comment = comment;
+                            // Backend always requires the comment to be set
+                            data.new_comment = comment;
                         } else {
-                            // When editing multiple events, user's have to explicitly select or enter new values
+                            // When editing multiple events, users have to explicitly select or enter new values
                             if(parseInt(status) >= 0) data.new_status = status;
+                            // If the comment field is left empty, existing comments will be preserved
                             if(comment.length > 0) data.new_comment = comment;
                         }
                         this.trigger('confirm', data);
