@@ -12,6 +12,9 @@ function(HoneySens, PermissionsTpl) {
                 'change input[type="checkbox"][name="preventSensorDeletionByManagers"]': function(e) {
                     this.model.save({preventSensorDeletionByManagers: e.target.checked});
                 },
+                'change input[type="checkbox"][name="requireEventComment"]': function(e) {
+                    this.model.save({requireEventComment: e.target.checked});
+                },
                 'change input[type="checkbox"][name="requireFilterDescription"]': function(e) {
                     this.model.save({requireFilterDescription: e.target.checked});
                 }
