@@ -23,7 +23,7 @@ services:
       - .:/mnt
 
   database:
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password --log-error-verbosity=1
     environment:
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_DATABASE=honeysens
