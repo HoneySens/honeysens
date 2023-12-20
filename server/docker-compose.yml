@@ -23,7 +23,7 @@ services:
       #- <path to server.key>:/srv/tls/server.key
 
   database:
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default_authentication_plugin=mysql_native_password --log-error-verbosity=1
     restart: unless-stopped
     environment:
       - MYSQL_ROOT_PASSWORD=secret
