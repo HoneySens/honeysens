@@ -4,7 +4,6 @@ namespace HoneySens\app\controllers;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Exception;
-use FileUpload\FileSystem\Simple;
 use FileUpload\FileUpload;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
@@ -12,6 +11,7 @@ use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
+use HoneySens\app\patches\SimpleFileNameGenerator;
 use Respect\Validation\Validator as V;
 
 class Tasks extends RESTResource {
@@ -146,10 +146,11 @@ class Tasks extends RESTResource {
         V::objectType()->check($this->getSessionUser());
         $uploadPath = realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH));
         $pathResolver = new \FileUpload\PathResolver\Simple(realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH)));
-        $fs = new Simple();
+        $fs = new \FileUpload\FileSystem\Simple();
         $fileUpload = new FileUpload($data, $_SERVER);
         $fileUpload->setPathResolver($pathResolver);
         $fileUpload->setFileSystem($fs);
+        $fileUpload->setFileNameGenerator(new SimpleFileNameGenerator());
         list($files, $headers) = $fileUpload->processAll();
         $result = array('files' => $files);
         foreach($files as $file) {

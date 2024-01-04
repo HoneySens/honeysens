@@ -1,13 +1,14 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Class TemplateOverlay
  *
  * User-defined template overlay.
  *
- * @Entity
- * @Table(name="template_overlays")
+ * @ORM\Entity
+ * @ORM\Table(name="template_overlays")
  * @package HoneySens\app\models\entities
  */
 class TemplateOverlay {
@@ -16,15 +17,15 @@ class TemplateOverlay {
      * For each template, only one overlay can exist.
      * Therefore, template overlays use the 'type' of system templates as their primary key.
      *
-     * @Id
-     * @Column(type="integer")
+     * @ORM\Id
+     * @ORM\Column(type="integer")
      */
     protected $type;
 
     /**
      * Overridden user-defined template content.
      *
-     * @Column(type="text")
+     * @ORM\Column(type="text")
      */
     protected $template;
 

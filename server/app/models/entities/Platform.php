@@ -1,17 +1,18 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 use HoneySens\app\models\exceptions\NotFoundException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
 /**
  * Hardware platform abstraction.
  *
- * @Entity
- * @InheritanceType("SINGLE_TABLE")
- * @Table(name="platforms")
- * @DiscriminatorColumn(name="discr", type="string")
- * @DiscriminatorMap({
+ * @ORM\Entity
+ * @ORM\InheritanceType("SINGLE_TABLE")
+ * @ORM\Table(name="platforms")
+ * @ORM\DiscriminatorColumn(name="discr", type="string")
+ * @ORM\DiscriminatorMap({
  *     "bbb" = "HoneySens\app\models\platforms\BeagleBoneBlack",
  *     "docker_x86" = "HoneySens\app\models\platforms\DockerX86"
  * })
@@ -21,42 +22,42 @@ abstract class Platform {
     const FIRMWARE_PATH = 'firmware';
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
      * Unique, lower-case name for this platform (also used as a reference by external parties, e.g. services).
      *
-     * @Column(type="string", nullable=false)
+     * @ORM\Column(type="string", nullable=false)
      */
     protected $name;
 
     /**
      * Informal name of this platform.
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $title;
 
     /**
      * General description of this platform.
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $description;
 
     /**
      * References the firmware revisions that are registered for this platform.
      *
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\Firmware", mappedBy="platform", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\Firmware", mappedBy="platform", cascade={"remove"})
      */
     protected $firmwareRevisions;
 
     /**
-     * @OneToOne(targetEntity="HoneySens\app\models\entities\Firmware")
+     * @ORM\OneToOne(targetEntity="HoneySens\app\models\entities\Firmware")
      */
     protected $defaultFirmwareRevision;
 

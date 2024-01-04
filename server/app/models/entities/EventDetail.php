@@ -1,9 +1,10 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @Entity
- * @Table(name="event_details")
+ * @ORM\Entity
+ * @ORM\Table(name="event_details")
  */
 class EventDetail {
 
@@ -11,33 +12,33 @@ class EventDetail {
     const TYPE_INTERACTION = 1;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Event", inversedBy="details")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Event", inversedBy="details")
      */
     protected $event;
 
     /**
      * An optional timestamp to track the attacker-sensor interaction
      *
-     * @Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true)
      */
     protected $timestamp;
 
     /**
      * The type of data of these event details
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $type;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $data;
 

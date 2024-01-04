@@ -1,37 +1,38 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @entity
- * @Table(name="service_revisions")
+ * @ORM\Entity
+ * @ORM\Table(name="service_revisions")
  */
 class ServiceRevision {
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
      * Revision string of this service, equals the "tag" of this particular docker image.
      *
-     * @Column(type="string", nullable=false)
+     * @ORM\Column(type="string", nullable=false)
      */
     protected $revision;
 
     /**
      * The CPU architecture this service revision relies on.
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $architecture;
 
     /**
      * Whether this revision requires raw network access (handled by the sensor).
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $rawNetworkAccess;
 
@@ -39,7 +40,7 @@ class ServiceRevision {
      * Whether this revision acts as an catch-all service for packets that haven't been handled
      * by other services.
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $catchAll;
 
@@ -49,19 +50,19 @@ class ServiceRevision {
      * Example: "{2222: 22}"
      * TODO This should be specific to service assignments
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $portAssignment;
 
     /**
      * Description of this particular revision, mainly used to distinguish it from others.
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $description;
 
     /**
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Service", inversedBy="revisions")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Service", inversedBy="revisions")
      */
     protected $service;
 

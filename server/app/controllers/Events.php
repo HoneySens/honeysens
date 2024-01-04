@@ -327,7 +327,7 @@ class Events extends RESTResource {
     public function update($criteria) {
         $this->assureAllowed('update');
         $em = $this->getEntityManager();
-        V::oneOf(V::key('new_status'), V::key('new_comment'))->check($criteria);
+        V::anyOf(V::key('new_status'), V::key('new_comment'))->check($criteria);
         // Prevent modification of archived events
         if(V::key('archived', V::trueVal())->validate($criteria)) throw new BadRequestException();
         // If the key 'id' or 'ids' is present, just update those individual IDs

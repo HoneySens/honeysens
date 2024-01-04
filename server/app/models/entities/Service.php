@@ -1,59 +1,60 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Abstraction class for dockerized honeypot services.
  *
- * @Entity
- * @Table(name="services")
+ * @ORM\Entity
+ * @ORM\Table(name="services")
  */
 class Service {
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
      * Informal title of this service.
      *
-     * @Column(type="string", nullable=false)
+     * @ORM\Column(type="string", nullable=false)
      */
     protected $name;
 
     /**
      * General description of this service.
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $description;
 
     /**
      * Docker repository that relates to this service, e.g. "honeysens/cowrie"
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $repository;
 
     /**
      * References the docker image tags for this service
      *
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\ServiceRevision", mappedBy="service", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\ServiceRevision", mappedBy="service", cascade={"remove"})
      */
     protected $revisions;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $defaultRevision;
 
     /**
      * The service assignment that this service is associated with.
      *
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\ServiceAssignment", mappedBy="service", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\ServiceAssignment", mappedBy="service", cascade={"remove"})
      */
     protected $assignments;
 

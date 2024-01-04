@@ -1,12 +1,13 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * A filter condition that belongs to a certain filter.
  * Conditions always belong to a single event attribute and store a regular expression that is used to check the condition.
  *
- * @Entity
- * @Table(name="event_filter_conditions")
+ * @ORM\Entity
+ * @ORM\Table(name="event_filter_conditions")
  */
 class EventFilterCondition {
 
@@ -21,35 +22,35 @@ class EventFilterCondition {
     const TYPE_TARGET_PORT = 3;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\EventFilter", inversedBy="conditions")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\EventFilter", inversedBy="conditions")
      */
     protected $filter;
 
     /**
      * Specifies the event attribute that should be tested by this condition
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $field;
 
     /**
      * The condition type specifies the way the value should be interpreted
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $type;
 
     /**
      * The filter value of this condition, e.g. an regular expression or a string
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $value;
 

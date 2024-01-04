@@ -1,62 +1,63 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @Entity
- * @Table(name="event_filters")
+ * @ORM\Entity
+ * @ORM\Table(name="event_filters")
  */
 class EventFilter {
 
     const TYPE_WHITELIST = 0;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="eventFilters")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="eventFilters")
      */
     protected $division;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $name;
 
     /**
      * The type of this filter
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $type;
 
     /**
      * Free-form text field describing this filter.
      *
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $description;
 
     /**
      * Counts the collected packages that were collected by this filter
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $count = 0;
 
     /**
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\EventFilterCondition", mappedBy="filter", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\EventFilterCondition", mappedBy="filter", cascade={"remove"})
      */
     protected $conditions;
 
     /**
      * Whether this filter is currently evaluated when processing incoming events.
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $enabled = true;
 

@@ -1,13 +1,13 @@
 <?php
 namespace HoneySens\app\models\entities;
-
+use Doctrine\ORM\Mapping as ORM;
 use HoneySens\app\models\Utils;
 
 /**
  * An IP packet that belongs to a certain event.
  *
- * @Entity
- * @Table(name="event_packets")
+ * @ORM\Entity
+ * @ORM\Table(name="event_packets")
  */
 class EventPacket {
 
@@ -16,49 +16,49 @@ class EventPacket {
     const PROTOCOL_UDP = 2;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Event", inversedBy="packets")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Event", inversedBy="packets")
      */
     protected $event;
 
     /**
      * When this event took place/packet was received
      *
-     * @Column(type="datetime")
+     * @ORM\Column(type="datetime")
      */
     protected $timestamp;
 
     /**
      * The layer-4 protocol of this packet, currently TCP and UDP are supported.
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $protocol;
 
     /**
      * IP port number of this packet
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $port;
 
     /**
      * Relevant header fields of this packet, stored as a serialized JSON string.
      *
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $headers;
 
     /**
      * The packet binary payload, encoded in base64.
      *
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $payload;
 

@@ -129,6 +129,20 @@ if config_version == '2.6.1':
     config.set('server', 'config_version', '2.7.0')
     config_version = '2.7.0'
 
+# 2.7.0 -> 2.8.0
+if config_version == '2.7.0':
+    print('Upgrading configuration 2.7.0 -> 2.8.0')
+    db_statements = [
+        # TODO Delete preexisting tasks, conversion from LONGTEXT to JSON might fail
+        'ALTER TABLE tasks MODIFY params LONGTEXT, MODIFY result LONGTEXT',
+        'ALTER TABLE tasks CHANGE params params JSON DEFAULT NULL, CHANGE result result JSON DEFAULT NULL'
+    ]
+    execute_sql(db, db_statements)
+    db.commit()
+    config.set('server', 'config_version', '2.7.0')
+    config_version = '2.7.0'
+
+
 # Write new config file
 with open(config_file, 'w') as f:
     config.write(f)

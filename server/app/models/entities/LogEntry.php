@@ -1,5 +1,6 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Class LogEntry
@@ -8,8 +9,8 @@ namespace HoneySens\app\models\entities;
  * Due to this being just a log entry, we don't keep direct references in this class, bus instead save IDs of
  * associated entities directly.
  *
- * @Entity
- * @Table(name="logs")
+ * @ORM\Entity
+ * @ORM\Table(name="logs")
  * @package HoneySens\app\models\entities
  */
 class LogEntry {
@@ -29,21 +30,21 @@ class LogEntry {
     const RESOURCE_SESSIONS = 12;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @Column(type="datetime")
+     * @ORM\Column(type="datetime")
      */
     protected $timestamp;
 
     /**
      * ID of the user that performed this action.
      *
-     * @Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     protected $userID;
 
@@ -51,21 +52,21 @@ class LogEntry {
      * ID of the resource that was subject to this action.
      * If a resource with this ID doesn't exist anymore, this log entry references historic data.
      *
-     * @Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     protected $resourceID;
 
     /**
      * The type of resource that was subject to this action.
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $resourceType = self::RESOURCE_GENERIC;
 
     /**
      * The actual log message, e.g. what happened.
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $message;
 
