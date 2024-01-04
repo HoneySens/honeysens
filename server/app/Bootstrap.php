@@ -1,6 +1,5 @@
 <?php
 
-use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\controllers\Certs;
@@ -29,6 +28,7 @@ use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use \Respect\Validation\Exceptions\ValidationException;
 use Slim\Route;
 use Slim\Slim;
+use \Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 
 // Global paths
 define('BASE_PATH', realpath(sprintf('%s/../', dirname(__FILE__))));
@@ -78,10 +78,10 @@ function initConfig() {
 
 function initDoctrine() {
     $config = new Configuration();
-    $cache = new ArrayCache();
-    $config->setMetadataCacheImpl($cache);
-    $config->setQueryCacheImpl($cache);
-    $config->setMetadataDriverImpl($config->newDefaultAnnotationDriver(APPLICATION_PATH . '/models/entities'));
+    $config->setMetadataCache(new PhpFilesAdapter('doctrine_metadata'));
+    $config->setQueryCache(new PhpFilesAdapter('doctrine_queries'));
+    $config->setResultCache(new PhpFilesAdapter('doctrine_results'));
+    $config->setMetadataDriverImpl($config->newDefaultAnnotationDriver(APPLICATION_PATH . '/models/entities', false));
     $config->setProxyDir(APPLICATION_PATH . '/../cache');
     $config->setAutoGenerateProxyClasses(true);
     $config->setProxyNamespace('HoneySens\Cache\Proxies');

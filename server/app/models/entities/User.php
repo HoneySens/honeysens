@@ -1,11 +1,11 @@
 <?php
 namespace HoneySens\app\models\entities;
-
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @Entity
- * @Table(name="users")
+ * @ORM\Entity
+ * @ORM\Table(name="users")
  */
 class User {
 
@@ -18,28 +18,28 @@ class User {
     const DOMAIN_LDAP = 1;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $name;
 
     /**
      * The E-Mail address that belongs to this user
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $email;
 
     /**
      * Hashed password of this user (using bcrypt).
      *
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $password;
 
@@ -49,39 +49,39 @@ class User {
      * This attribute will be removed in future versions.
      *
      * @deprecated
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $legacyPassword;
 
     /**
      * If true, this user will be prompted for a password change after the next login.
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $requirePasswordChange = false;
 
     /**
      * The domain that this user is authenticated against
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $domain = self::DOMAIN_LOCAL;
 
     /**
      * Full name or description of this user
      *
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $fullName;
 
     /**
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $role;
 
     /**
-     * @ManyToMany(targetEntity="HoneySens\app\models\entities\Division", inversedBy="users")
-     * @JoinTable(name="users_divisions")
+     * @ORM\ManyToMany(targetEntity="HoneySens\app\models\entities\Division", inversedBy="users")
+     * @ORM\JoinTable(name="users_divisions")
      */
     protected $divisions;
 
@@ -89,21 +89,21 @@ class User {
      * This reference is only made to ensure cascading events in case a user is removed.
      * It's not made public as an attribute of the entity.
      *
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\IncidentContact", mappedBy="user", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\IncidentContact", mappedBy="user", cascade={"remove"})
      */
     protected $incidentContacts;
 
     /**
      * References the tasks this user has submitted.
      *
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\Task", mappedBy="user", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\Task", mappedBy="user", cascade={"remove"})
      */
     protected $tasks;
 
     /**
      * Whether to send system state notifications (e.g. high load, CA expiration) to the E-Mail address of this user.
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $notifyOnSystemState = false;
 

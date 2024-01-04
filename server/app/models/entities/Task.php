@@ -1,5 +1,6 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Class Task
@@ -7,8 +8,8 @@ namespace HoneySens\app\models\entities;
  * This class represents a specific task that is performed by an external task queue, such as celery.
  * Tasks are owned and fully controlled by a user, although administrators can request and modify all tasks.
  *
- * @Entity
- * @Table(name="tasks")
+ * @ORM\Entity
+ * @ORM\Table(name="tasks")
  * @package HoneySens\app\models\entities
  */
 class Task {
@@ -26,42 +27,42 @@ class Task {
     const TYPE_EMAIL_EMITTER = 6;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
      * The user who submitted this task.
      *
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\User", inversedBy="tasks")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\User", inversedBy="tasks")
      */
     protected $user;
 
     /**
      * The type of task that should be executed, currently amongst a set of hardcoded values.
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $type;
 
     /**
      * The status flag determines whether this task is currently scheduled, running or completed.
      *
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $status = self::STATUS_SCHEDULED;
 
     /**
-     * @Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
-    protected $params;
+    protected ?array $params = array();
 
     /**
-     * @Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
-    protected $result;
+    protected ?array $result = array();
 
     /**
      * @return integer
@@ -119,7 +120,7 @@ class Task {
     }
 
     /**
-     * @param array $params
+     * @param ?array $params
      * @return $this
      */
     public function setParams($params) {
@@ -128,14 +129,14 @@ class Task {
     }
 
     /**
-     * @return array
+     * @return ?array
      */
     public function getParams() {
         return $this->params;
     }
 
     /**
-     * @param $result
+     * @param ?array $result
      * @return $this
      */
     public function setResult($result) {
@@ -144,7 +145,7 @@ class Task {
     }
 
     /**
-     * @return mixed
+     * @return ?array
      */
     public function getResult() {
         return $this->result;

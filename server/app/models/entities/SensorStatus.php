@@ -1,11 +1,11 @@
 <?php
 namespace HoneySens\app\models\entities;
-
+use Doctrine\ORM\Mapping as ORM;
 use stdClass;
 
 /**
- * @Entity
- * @Table(name="statuslogs")
+ * @ORM\Entity
+ * @ORM\Table(name="statuslogs")
  */
 class SensorStatus {
 
@@ -19,53 +19,53 @@ class SensorStatus {
     const SERVICE_STATUS_ERROR = 2;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Sensor", inversedBy="status")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Sensor", inversedBy="status")
      */
     protected $sensor;
 
     /**
-     * @Column(type="datetime")
+     * @ORM\Column(type="datetime")
      */
     protected $timestamp;
 
     /**
-     * @Column(type="integer")
+     * @ORM\Column(type="integer")
      */
     protected $status;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $ip;
 
     /**
-     * @Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     protected $freeMem;
 
     /**
      * Disk usage in Megabytes.
      *
-     * @Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     protected $diskUsage;
 
     /**
      * Total disk size in Megabytes.
      *
-     * @Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     protected $diskTotal;
 
     /**
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $swVersion;
 
@@ -73,7 +73,7 @@ class SensorStatus {
      * JSON-serialized stdClass object that stores service status data as
      * reported by the sensor: {service_name: service_status, ...}.
      *
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $serviceStatus;
 
@@ -81,7 +81,7 @@ class SensorStatus {
      * Timestamp that depicts when this sensor originally went "online" (after its last disconnection).
      * This timestamp is copied over from one SensorStatus to the next as long as the sensor is online without interruption.
      *
-     * @Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true)
      */
     protected $runningSince;
 

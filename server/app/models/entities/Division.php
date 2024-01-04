@@ -1,42 +1,43 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @Entity
- * @Table(name="divisions")
+ * @ORM\Entity
+ * @ORM\Table(name="divisions")
  */
 class Division {
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $name;
 
     /**
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\Sensor", mappedBy="division")
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\Sensor", mappedBy="division")
      */
     protected $sensors;
 
     /**
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\IncidentContact", mappedBy="division", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\IncidentContact", mappedBy="division", cascade={"remove"})
      */
     protected $incidentContacts;
 
     /**
-     * @ManyToMany(targetEntity="User", mappedBy="divisions")
+     * @ORM\ManyToMany(targetEntity="User", mappedBy="divisions")
      */
     protected $users;
 
     /**
-     * @OneToMany(targetEntity="HoneySens\app\models\entities\EventFilter", mappedBy="division", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\EventFilter", mappedBy="division", cascade={"remove"})
      */
     protected $eventFilters;
 

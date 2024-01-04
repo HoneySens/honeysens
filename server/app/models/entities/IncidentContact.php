@@ -1,10 +1,11 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 
 /**
- * @Entity
- * @Table(name="contacts")
+ * @ORM\Entity
+ * @ORM\Table(name="contacts")
  */
 class IncidentContact {
 
@@ -12,16 +13,16 @@ class IncidentContact {
     const TYPE_USER = 1;
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
      * The E-Mail address to send messages to
      *
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $email;
 
@@ -29,40 +30,40 @@ class IncidentContact {
      * The user that is acting as the contact for a particular division. This association is represented by this entity.
      * Messages will be sent to the E-Mail address that belongs to this user.
      *
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\User", inversedBy="incidentContacts")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\User", inversedBy="incidentContacts")
      */
     protected $user;
 
     /**
      * Whether to send weekly summaries to this contact
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $sendWeeklySummary;
 
     /**
      * Whether to send instant critical event notifications to this contact
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $sendCriticalEvents;
 
     /**
      * Whether to send notifications about ALL events to this contact
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $sendAllEvents;
 
     /**
      * Whether to send a notification whenever a sensor in this division exceeds its timeout interval.
      *
-     * @Column(type="boolean")
+     * @ORM\Column(type="boolean")
      */
     protected $sendSensorTimeouts;
 
     /**
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="incidentContacts")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="incidentContacts")
      */
     protected $division;
 

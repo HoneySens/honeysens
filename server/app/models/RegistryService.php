@@ -3,6 +3,7 @@ namespace HoneySens\app\models;
 
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
+use WpOrg\Requests\Requests;
 
 class RegistryService {
 
@@ -16,7 +17,7 @@ class RegistryService {
 
     public function isAvailable() {
         try {
-            $response = \Requests::get(sprintf('%s/', $this->getRegistryURL()));
+            $response = Requests::get(sprintf('%s/', $this->getRegistryURL()));
         } catch(\Exception $e)  {
             return false;
         }
@@ -24,12 +25,12 @@ class RegistryService {
     }
 
     public function getRepositories() {
-        $response = \Requests::get(sprintf('%s/_catalog', $this->getRegistryURL()));
+        $response = Requests::get(sprintf('%s/_catalog', $this->getRegistryURL()));
         return json_decode($response->body);
     }
 
     public function getTags($repository) {
-        $response = \Requests::get(sprintf('%s/%s/tags/list', $this->getRegistryURL(), $repository));
+        $response = Requests::get(sprintf('%s/%s/tags/list', $this->getRegistryURL(), $repository));
         if(!$response->success) throw new NotFoundException();
         return json_decode($response->body)->tags;
     }
@@ -40,13 +41,13 @@ class RegistryService {
 
     public function removeTag($repository, $tag) {
         if(!$this->isAvailable()) throw new \Exception('Registry offline');
-        $response = \Requests::get(sprintf('%s/%s/manifests/%s', $this->getRegistryURL(), $repository, $tag),
+        $response = Requests::get(sprintf('%s/%s/manifests/%s', $this->getRegistryURL(), $repository, $tag),
             array('Accept' => 'application/vnd.docker.distribution.manifest.v2+json'),
             array());
         if(!isset($response->headers['Docker-Content-Digest']))
             throw new NotFoundException();
         $digest = $response->headers['Docker-Content-Digest'];
-        $response = \Requests::delete(sprintf('%s/%s/manifests/%s', $this->getRegistryURL(), $repository, $digest));
+        $response = Requests::delete(sprintf('%s/%s/manifests/%s', $this->getRegistryURL(), $repository, $digest));
         if(!$response->success) throw new BadRequestException();
     }
 

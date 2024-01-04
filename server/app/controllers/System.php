@@ -9,7 +9,7 @@ use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\Exception\NoOptionException;
-use phpseclib\File\X509;
+use phpseclib3\File\X509;
 use Respect\Validation\Validator as V;
 
 class System extends RESTResource {

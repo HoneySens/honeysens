@@ -1,44 +1,45 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @Entity
- * @Table(name="firmware")
+ * @ORM\Entity
+ * @ORM\Table(name="firmware")
  */
 class Firmware {
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
      * The name of this sensor image
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $name;
 
     /**
      * Version string of this image
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $version;
 
     /**
      * A short description of this image
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $description;
 
     /**
      * The long description of changes that occured within this version
      *
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     protected $changelog;
 
@@ -47,14 +48,14 @@ class Firmware {
      * If set to null, getSource() will return a named based on the ID of this firmware.
      * This property is still there to support older server versions that used a different naming scheme.
      *
-     * @Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $source;
 
     /**
      * The platform this firmware revision belongs to.
      *
-     * @ManyToOne(targetEntity="HoneySens\app\models\entities\Platform", inversedBy="firmwareRevisions")
+     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Platform", inversedBy="firmwareRevisions")
      */
     protected $platform;
 

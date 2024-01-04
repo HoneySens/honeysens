@@ -1,26 +1,27 @@
 <?php
 namespace HoneySens\app\models\entities;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @Entity
- * @Table(name="certs")
+ * @ORM\Entity
+ * @ORM\Table(name="certs")
  */
 class SSLCert{
 
     /**
-     * @Id
-     * @Column(type="integer")
-     * @GeneratedValue
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @Column(type="text")
+     * @ORM\Column(type="text")
      */
     protected $content;
 
     /**
-     * @Column(type="text", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     protected $privateKey;
 

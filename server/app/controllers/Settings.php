@@ -202,7 +202,7 @@ class Settings extends RESTResource {
                 ->attribute('syslogPort', V::optional(V::intVal()->between(0, 65535)))
                 ->attribute('syslogTransport', V::optional(V::intVal()->between(0, 1)))
                 ->attribute('syslogFacility', V::optional(V::oneOf(V::intVal()->between(0, 11), V::intVal()->between(16, 23))))
-                ->attribute('syslogPriority', V::optional(V::intVal()->between(0, 7)))
+                ->attribute('syslogPriority', V::optional(V::oneOf(V::intVal()->between(2, 4), V::intVal()->between(6, 7))))
                 ->check($data);
         }
         // Persistence

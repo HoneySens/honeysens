@@ -1,15 +1,17 @@
 {
   "require": {
-    "doctrine/orm": "2.4.8",
-    "beberlei/doctrineextensions": "v1.0.21",
-    "gargron/fileupload": "v1.4.5",
+    "doctrine/orm": "2.17.1",
+    "doctrine/annotations": "2.0.1",
+    "beberlei/doctrineextensions": "v1.3.0",
+    "gargron/fileupload": "v1.5.1",
     "massivescale/celery-php": "2.1.2",
     "noiselabs/configparser": "dev-master",
-    "phpseclib/phpseclib": "2.0.31",
-    "predis/predis": "v1.1.1",
-    "rmccue/requests": "v1.8.0",
-    "respect/validation": "1.1.30",
-    "slim/slim": "2.6.3"
+    "phpseclib/phpseclib": "3.0.34",
+    "predis/predis": "v2.2.2",
+    "rmccue/requests": "v2.0.9",
+    "respect/validation": "2.2.4",
+    "slim/slim": "2.6.3",
+    "symfony/cache": "v5.4.32"
   },
   "autoload": {
     "psr-4": {"HoneySens\\": "../"}
