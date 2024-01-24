@@ -57,6 +57,7 @@ class NotificationTemplateInstaller(bootsteps.StartStopStep):
 
 
 app = Celery('processor', broker='redis://{}:{}'.format(os.environ['HS_BROKER_HOST'], os.environ['HS_BROKER_PORT']), include=['processor.tasks', 'processor.beat'])
+app.conf.broker_connection_retry_on_startup = True
 app.user_options['worker'].add(Option(['--hsconfig'], required=True, help='HoneySens configuration file path'))
 app.steps['worker'].add(ConfigBootstep)
 app.steps['consumer'].add(NotificationTemplateInstaller)
