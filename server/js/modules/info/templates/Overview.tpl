@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>2.6.1</dd>
+        <dd>2.7.0</dd>
         <dt>Build-ID</dt>
         <dd><%- showBuildID() %></dd>
         <dt>Lizenz</dt>
@@ -48,6 +48,17 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.7.0</strong> - Januar 2024<br/>
+                    <p>
+                    <ul>
+                        <li>Rudimentäres System-Last-Monitoring zur Vorbeugung von Problemen bei hoher Auslastung</li>
+                        <li>Versand von E-Mail-Benachrichtigungen bei kritischer Auslastung</li>
+                        <li>Gesteigerte Performance beim Abrufen von Ereignisdaten</li>
+                        <li>Verschiedene Bugs im Kontext der Rechteverwaltung behoben</li>
+                        <li>Probleme bei der Verlängerung von selbstsignierten TLS-Zertifikaten behoben</li>
+                    </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.6.1</strong> - Mai 2023<br/>
                     <p>
                         <ul>
