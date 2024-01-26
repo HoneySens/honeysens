@@ -28,4 +28,5 @@ RUN set -ex; \
     chown hs:hs /srv/tls
 
 USER 1000:1000
+WORKDIR /tmp
 CMD ["/opt/run.sh"]
