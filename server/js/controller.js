@@ -69,6 +69,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                     type: 'POST',
                     url: 'api/sessions',
                     data: JSON.stringify(credentials),
+                    contentType: 'application/json',
                     success: function(data) {
                         HoneySens.vent.trigger('login:success');
                         data = JSON.parse(data);

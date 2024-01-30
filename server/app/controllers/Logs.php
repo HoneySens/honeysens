@@ -1,16 +1,18 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Logs extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/logs/', function() use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/logs/', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Logs($em, $services, $config);
-            $criteria = $app->request->get();
-            $result = $controller->get($criteria);
-            echo json_encode($result);
+            $logs = $controller->get($request->getQueryParams());
+            $response->getBody()->write(json_encode($logs));
+            return $response;
         });
     }
 

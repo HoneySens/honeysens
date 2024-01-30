@@ -63,6 +63,7 @@ function(HoneySens, Models, ModalServerError, UsersEditViewTpl) {
                                 type: 'PUT',
                                 url: 'api/users/' + model.id,
                                 data: JSON.stringify(modelData),
+                                contentType: 'application/json',
                                 error: function(xhr) {
                                     HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
                                     view.$el.find('button').prop('disabled', false);
@@ -80,6 +81,7 @@ function(HoneySens, Models, ModalServerError, UsersEditViewTpl) {
                                 type: 'POST',
                                 url: 'api/users',
                                 data: JSON.stringify(modelData),
+                                contentType: "application/json",
                                 error: function(xhr) {
                                     HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
                                     view.$el.find('button').prop('disabled', false);

@@ -12,6 +12,8 @@ use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
 use HoneySens\app\patches\SimpleFileNameGenerator;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Tasks extends RESTResource {
@@ -21,42 +23,49 @@ class Tasks extends RESTResource {
     const UPLOAD_TYPE_SERVICE_ARCHIVE = 0;
     const UPLOAD_TYPE_PLATFORM_ARCHIVE = 1;
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/tasks(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/tasks[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
-            $criteria = array('userID' => $controller->getSessionUserID(), 'id' => $id);
+            $criteria = array('userID' => $controller->getSessionUserID(), 'id' => $args['id'] ?? null);
             try {
                 $result = $controller->get($criteria);
             } catch(Exception $e) {
                 throw new NotFoundException();
             }
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->get('/api/tasks/:id/result(/:delete)', function($id, $delete = null) use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/tasks/{id:\d+}/result[/{delete:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
-            $controller->downloadResult($id, boolval($delete));
+            $delete = $args['id'] ?? null;
+            $controller->downloadResult($args['id'], boolval($delete));
         });
 
-        $app->get('/api/tasks/status', function() use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/tasks/status', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
             try {
-                echo json_encode(array('queue_length' => $controller->getBrokerQueueLength()));
+                $result = array('queue_length' => $controller->getBrokerQueueLength());
+                $response->getBody()->write(json_encode($result));
+                return $response;
             } catch(Exception $e) {
                 throw new NotFoundException();
             }
         });
 
         // Generic endpoint to upload files, returns the ID of the associated verification task.
-        $app->post('/api/tasks/upload', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/tasks/upload', function(Request $requset, Response $response) use ($app, $em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
-            echo json_encode($controller->upload($_FILES['upload']));
+            $state = $controller->upload($_FILES['upload']);
+            $response->getBody()->write(json_encode($state));
+            return $response;
         });
 
-        $app->delete('/api/tasks/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/tasks/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
-            $controller->delete($id);
-            echo json_encode([]);
+            $controller->delete($args['id']);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
     }
 

@@ -10,6 +10,8 @@ use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Services extends RESTResource {
@@ -18,53 +20,59 @@ class Services extends RESTResource {
     const CREATE_ERROR_REGISTRY_OFFLINE = 1;
     const CREATE_ERROR_DUPLICATE = 2;
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/services(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/services[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Services($em, $services, $config);
-            $criteria = array();
-            $criteria['id'] = $id;
-            $result = $controller->get($criteria);
-            echo json_encode($result);
+            $criteria = array('id' => $args['id'] ?? null);
+            try {
+                $result = $controller->get($criteria);
+            } catch(\Exception $e) {
+                throw new NotFoundException();
+            }
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->get('/api/services/status', function() use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/services/status', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Services($em, $services, $config);
-            echo json_encode($controller->getStatusSummary());
+            $response->getBody()->write(json_encode($controller->getStatusSummary()));
+            return $response;
         });
 
-        $app->get('/api/services/:id/status', function($id = null) use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/services/{id:\d+}/status', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Services($em, $services, $config);
-            $result = $controller->getStatus($id);
-            echo json_encode($result);
+            $result = $controller->getStatus($args['id']);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
         // Requires a reference to a successfully completed verification task.
-        $app->post('/api/services', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/services', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Services($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            echo json_encode($controller->create(json_decode($request)));
+            $service = $controller->create($request->getParsedBody());
+            $response->getBody()->write(json_encode($service->getState()));
+            return $response;
         });
 
-        $app->put('/api/services/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/services/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Services($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $serviceData = json_decode($request);
-            $service = $controller->update($id, $serviceData);
-            echo json_encode($service->getState());
+            $service = $controller->update($args['id'], $request->getParsedBody());
+            $response->getBody()->write(json_encode($service->getState()));
+            return $response;
         });
 
-        $app->delete('/api/services/revisions/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/services/revisions/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Services($em, $services, $config);
-            $controller->deleteRevision($id);
-            echo json_encode([]);
+            $controller->deleteRevision($args['id']);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
 
-        $app->delete('/api/services/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/services/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Services($em, $services, $config);
-            $controller->delete($id);
-            echo json_encode([]);
+            $controller->delete($args['id']);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
     }
 
@@ -143,8 +151,8 @@ class Services extends RESTResource {
      * Creates and persists a new service (or revision).
      * A successfully completed upload verification task (id) is expected as input.
      *
-     * @param $data
-     * @return array
+     * @param array $data
+     * @return Task
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws \Doctrine\ORM\OptimisticLockException
@@ -153,11 +161,11 @@ class Services extends RESTResource {
         $this->assureAllowed('create');
         $em = $this->getEntityManager();
         // Validation, we just expect a task id here
-        V::objectType()
-            ->attribute('task', V::intVal())
+        V::arrayType()
+            ->key('task', V::intVal())
             ->check($data);
         // Validate the given task
-        $task = $em->getRepository('HoneySens\app\models\entities\Task')->find($data->task);
+        $task = $em->getRepository('HoneySens\app\models\entities\Task')->find($data['task']);
         V::objectType()->check($task);
         if($task->getUser() !== $this->getSessionUser()) throw new ForbiddenException();
         if($task->getType() != Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() != Task::STATUS_DONE) throw new BadRequestException();
@@ -210,7 +218,7 @@ class Services extends RESTResource {
         $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_REGISTRY_MANAGER, $taskResult);
         $this->log(sprintf('Service %s:%s (%s) added', $service->getName(), $serviceRevision->getRevision(),
             $serviceRevision->getArchitecture()), LogEntry::RESOURCE_SERVICES, $service->getId());
-        return $task->getState();
+        return $task;
     }
 
     /**
@@ -220,24 +228,24 @@ class Services extends RESTResource {
      * - default_revision: A division this service defaults to
      *
      * @param int $id
-     * @param \stdClass $data
+     * @param array $data
      * @return Service
      */
     public function update($id, $data) {
         $this->assureAllowed('update');
         // Validation
         V::intVal()->check($id);
-        V::objectType()
-            ->attribute('default_revision', V::stringType())
+        V::arrayType()
+            ->key('default_revision', V::stringType())
             ->check($data);
         // Persistence
         $em = $this->getEntityManager();
         $service = $em->getRepository('HoneySens\app\models\entities\Service')->find($id);
         V::objectType()->check($service);
         $defaultRevision = $em->getRepository('HoneySens\app\models\entities\ServiceRevision')
-            ->findOneBy(array('revision' => $data->default_revision));
+            ->findOneBy(array('revision' => $data['default_revision']));
         V::objectType()->check($defaultRevision);
-        $service->setDefaultRevision($data->default_revision);
+        $service->setDefaultRevision($data['default_revision']);
         $em->flush();
         $this->log(sprintf('Default revision for service %s set to %s', $service->getName(), $defaultRevision->getRevision()), LogEntry::RESOURCE_SERVICES, $service->getId());
         return $service;

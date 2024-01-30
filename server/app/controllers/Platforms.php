@@ -1,10 +1,15 @@
 <?php
 namespace HoneySens\app\controllers;
+
 use HoneySens\app\models\entities\Firmware;
 use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\entities\Platform;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
+use HoneySens\app\models\exceptions\NotFoundException;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Platforms extends RESTResource {
@@ -13,51 +18,56 @@ class Platforms extends RESTResource {
     const CREATE_ERROR_UNKNOWN_PLATFORM = 1;
     const CREATE_ERROR_DUPLICATE = 2;
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/platforms(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/platforms[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
-            $criteria = array();
-            $criteria['id'] = $id;
-            $result = $controller->get($criteria);
-            echo json_encode($result);
+            $criteria = array('id' => $args['id'] ?? null);
+            try {
+                $result = $controller->get($criteria);
+            } catch(\Exception $e) {
+                throw new NotFoundException();
+            }
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->get('/api/platforms/:id/firmware/current', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/platforms/{id:\d+}/firmware/current', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
-            $controller->downloadCurrentFirmwareForPlatform($id);
+            $controller->downloadCurrentFirmwareForPlatform($args['id']);
         });
 
-        $app->get('/api/platforms/firmware/:id/raw', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/platforms/firmware/{id:\d+}/raw', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
-            $controller->downloadFirmware($id);
+            $controller->downloadFirmware($args['id']);
         });
 
-        $app->get('/api/platforms/firmware/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/platforms/firmware/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
-            echo json_encode($controller->getFirmware($id));
+            $firmware = $controller->getFirmware($args['id']);
+            $response->getBody()->write(json_encode($firmware->getState()));
+            return $response;
         });
 
         // Requires a successfully completed verification task
-        $app->post('/api/platforms/firmware', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/platforms/firmware', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            echo json_encode($controller->create(json_decode($request)));
+            $firmware = $controller->create($request->getParsedBody());
+            $response->getBody()->write(json_encode($firmware->getState()));
+            return $response;
         });
 
-        $app->put('/api/platforms/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/platforms/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $platformData = json_decode($request);
-            $image = $controller->update($id, $platformData);
-            echo json_encode($image->getState());
+            $platform = $controller->update($args['id'], $request->getParsedBody());
+            $response->getBody()->write(json_encode($platform->getState()));
+            return $response;
         });
 
-        $app->delete('/api/platforms/firmware/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/platforms/firmware/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
-            $controller->delete($id);
-            echo json_encode([]);
+            $controller->delete($args['id']);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
     }
 
@@ -93,14 +103,14 @@ class Platforms extends RESTResource {
      * Fetches the firmware with the given id.
      *
      * @param $id
-     * @return array
+     * @return Firmware
      * @throws ForbiddenException
      */
     public function getFirmware($id) {
         $this->assureAllowed('get');
         $firmware = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
         V::objectType()->check($firmware);
-        return $firmware->getState();
+        return $firmware;
     }
 
     /**
@@ -112,7 +122,7 @@ class Platforms extends RESTResource {
      * @throws ForbiddenException
      */
     public function downloadFirmware($id) {
-        // Authenticate either as a sensor or with a user session
+        // Authenticate either as sensor or with a user session
         $sensor = null;
         try {
             $sensor = $this->validateSensorRequest('get');
@@ -150,8 +160,8 @@ class Platforms extends RESTResource {
      * Creates and persists a new firmware revision.
      * It expects binary file data as parameter and supports chunked uploads.
      *
-     * @param $data
-     * @return array
+     * @param array $data
+     * @return Firmware
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws \Doctrine\ORM\OptimisticLockException
@@ -160,11 +170,11 @@ class Platforms extends RESTResource {
         $this->assureAllowed('create');
         $em = $this->getEntityManager();
         // Validation, we just expect a task id here
-        V::objectType()
-            ->attribute('task', V::intVal())
+        V::arrayType()
+            ->key('task', V::intVal())
             ->check($data);
         // Validate the given task
-        $task = $em->getRepository('HoneySens\app\models\entities\Task')->find($data->task);
+        $task = $em->getRepository('HoneySens\app\models\entities\Task')->find($data['task']);
         V::objectType()->check($task);
         if($task->getUser() !== $this->getSessionUser()) throw new ForbiddenException();
         if($task->getType() != Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() != Task::STATUS_DONE) throw new BadRequestException();
@@ -203,7 +213,7 @@ class Platforms extends RESTResource {
         $taskController = new Tasks($em, $this->getServiceManager(), $this->getConfig());
         $taskController->delete($task->getId());
         $this->log(sprintf('Firmware revision %s for platform %s added', $firmware->getVersion(), $platform->getName()), LogEntry::RESOURCE_PLATFORMS, $platform->getId());
-        return $firmware->getState();
+        return $firmware;
     }
 
     /**
@@ -211,8 +221,8 @@ class Platforms extends RESTResource {
      * Only the default firmware revision can be changed.
      *
      * @param int $id
-     * @param \stdClass $data
-     * @return Firmware
+     * @param array $data
+     * @return Platform
      * @throws ForbiddenException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
@@ -220,14 +230,14 @@ class Platforms extends RESTResource {
         $this->assureAllowed('update');
         // Validation
         V::intVal()->check($id);
-        V::objectType()
-            ->attribute('default_firmware_revision', V::intVal())
+        V::arrayType()
+            ->key('default_firmware_revision', V::intVal())
             ->check($data);
         // Persistence
         $em = $this->getEntityManager();
         $platform = $em->getRepository('HoneySens\app\models\entities\Platform')->find($id);
         V::objectType()->check($platform);
-        $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data->default_firmware_revision);
+        $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data['default_firmware_revision']);
         V::objectType()->check($firmware);
         $platform->setDefaultFirmwareRevision($firmware);
         $em->flush();

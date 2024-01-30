@@ -2,20 +2,23 @@
 namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\ServiceManager;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class State extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
         // Returns an array containing full current application state information (e.g. all entities)
         // that is accessible for the given user.
-        $app->get('/api/state', function() use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/state', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new State($em, $services, $config);
             // Set $userID to null for global admin users to avoid user-specific filtering
             $userID = $controller->getSessionUserID();
-            $ts = $app->request()->get('ts');
-            $lastEventId = $app->request()->get('last_id');
-            $stateParams = $app->request()->get();
+            $queryParams = $request->getQueryParams();
+            $ts = $queryParams['ts'] ?? null;
+            $lastEventId = $queryParams['last_id'] ?? null;
+            $stateParams = $queryParams;
             $stateParams['userID'] = $userID;
             V::optional(V::intVal())->check($ts);
             V::optional(V::oneOf(V::intVal(), V::equals('null')))->check($lastEventId);
@@ -37,18 +40,20 @@ class State extends RESTResource {
             }
             try {
                 // The lastEventID is only returned if a user is logged in, otherwise this will throw a ForbiddenException
-                $state['lastEventID'] = $eventsController->get(array(
+                $lastEvents = $eventsController->get(array(
                     'userID' => $userID,
                     'sort_by' => 'id',
                     'order' => 'desc',
                     'page' => 0,
                     'per_page' => 1
-                ))['items'][0]['id'];
+                ))['items'];
+                $state['lastEventID'] = count($lastEvents) > 0 ? $lastEvents[0]['id'] : null;
             } catch(\Exception $e) {
                 $state['lastEventID'] = null;
             }
             $state['timestamp'] = $now->format('U');
-            echo json_encode($state);
+            $response->getBody()->write(json_encode($state));
+            return $response;
         });
     }
 

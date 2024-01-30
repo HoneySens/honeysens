@@ -119,6 +119,7 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                         type: 'PUT',
                         url: 'api/events/' + model.id,
                         data: JSON.stringify(data),
+                        contentType: 'application/json',
                         success: function() {
                             HoneySens.data.models.events.fetch();
                             HoneySens.request('view:content').overlay.empty();
@@ -149,6 +150,7 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                             type: 'PUT',
                             url: 'api/events',
                             data: JSON.stringify(data),
+                            contentType: 'application/json',
                             success: function() {
                                 HoneySens.data.models.events.fetch();
                                 HoneySens.request('view:content').overlay.empty();
@@ -186,6 +188,7 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                         type: 'DELETE',
                         url: 'api/events',
                         data: JSON.stringify({ids: selection.pluck('id'), archived: archived, archive: archive}),
+                        contentType: 'application/json',
                         success: function() {
                             HoneySens.data.models.events.fetch();
                             HoneySens.request('view:modal').empty();
@@ -251,6 +254,7 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                     type: 'PUT',
                     url: 'api/events',
                     data: JSON.stringify(Object.assign(calculateEventQueryParams(queryParams), eventData)),
+                    contentType: 'application/json',
                     dataType: 'json',
                     success: success
                 });
@@ -261,6 +265,7 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 type: 'DELETE',
                 url: 'api/events',
                 data: JSON.stringify(Object.assign(calculateEventQueryParams(queryParams), {archived: queryParams.hasOwnProperty('archived') && queryParams.archived, archive: archive})),
+                contentType: 'application/json',
                 dataType: 'json',
                 success: success
             });

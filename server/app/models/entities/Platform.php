@@ -134,7 +134,7 @@ abstract class Platform {
      * @return string
      */
     public function getFirmwareURI(Firmware $firmware) {
-        return '/api/platforms/firmware/' . $firmware->getId() . '/raw';
+        return 'api/platforms/firmware/' . $firmware->getId() . '/raw';
     }
 
     /**

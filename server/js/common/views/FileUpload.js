@@ -56,6 +56,7 @@ function(HoneySens, Models, FileUploadTpl) {
                         type: 'POST',
                         url: 'api/platforms/firmware',
                         data: JSON.stringify({task: this.model.id}),
+                        contentType: 'application/json',
                         success: function() {
                             // Clear model
                             view.model = null;

@@ -14,6 +14,7 @@ function(HoneySens, JSON, ModalRemoveDivisionTpl) {
                         url: 'api/divisions/' + this.model.id,
                         data: JSON.stringify({archive: archive}),
                         success: function() {
+                            HoneySens.data.models.divisions.fetch();
                             HoneySens.request('view:modal').empty();
                         }
                     });

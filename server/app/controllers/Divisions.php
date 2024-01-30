@@ -8,54 +8,48 @@ use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\Utils;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Divisions extends RESTResource {
 
     const ERROR_DUPLICATE = 1;
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/divisions(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/divisions[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Divisions($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();
-            $criteria['id'] = $id;
+            $criteria['id'] = $args['id'] ?? null;
             try {
                 $result = $controller->get($criteria);
             } catch(\Exception $e) {
                 throw new NotFoundException();
             }
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->post('/api/divisions', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/divisions', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Divisions($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $divisionData = json_decode($request);
-            $division = $controller->create($divisionData);
-            echo json_encode($division->getState());
+            $division = $controller->create($request->getParsedBody());
+            $response->getBody()->write(json_encode($division->getState()));
+            return $response;
         });
 
-        $app->put('/api/divisions/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/divisions/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Divisions($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $divisionData = json_decode($request);
-            $division = $controller->update($id, $divisionData);
-            echo json_encode($division->getState());
+            $division = $controller->update($args['id'], $request->getParsedBody());
+            $response->getBody()->write(json_encode($division->getState()));
+            return $response;
         });
 
-        $app->delete('/api/divisions/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/divisions/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Divisions($em, $services, $config);
-            $request = $app->request->getBody();
-            $criteria =array();
-            if(strlen($request) > 0) {
-                V::json()->check($request);
-                $criteria = json_decode($request, true);
-            }
-            $controller->delete($id, $criteria);
-            echo json_encode([]);
+            $controller->delete($args['id'], $request->getParsedBody());
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
     }
 
@@ -70,34 +64,34 @@ class Divisions extends RESTResource {
      * - sendAllEvents: A boolean value that determines if this contact should receive mails for all events
      * - sendSensorTimeouts: A boolean value that determines if this contact should receive mails when sensors time out
      *
-     * @param stdClass $contactData
+     * @param array $contactData
      * @return IncidentContact
      * @throws BadRequestException
      */
     private function createContact($contactData) {
         // Validation
-        V::attribute('email')
-            ->attribute('user')
-            ->attribute('type', V::intType()->between(0, 1))
-            ->attribute('sendWeeklySummary', V::boolVal())
-            ->attribute('sendCriticalEvents', V::boolVal())
-            ->attribute('sendAllEvents', V::boolVal())
-            ->attribute('sendSensorTimeouts', V::boolVal())
+        V::key('email')
+            ->key('user')
+            ->key('type', V::intType()->between(0, 1))
+            ->key('sendWeeklySummary', V::boolVal())
+            ->key('sendCriticalEvents', V::boolVal())
+            ->key('sendAllEvents', V::boolVal())
+            ->key('sendSensorTimeouts', V::boolVal())
             ->check($contactData);
         $contact = new IncidentContact();
-        if($contactData->type === IncidentContact::TYPE_MAIL) {
-            V::attribute('email', Utils::emailValidator())->check($contactData);
-            $contact->setEMail($contactData->email);
+        if($contactData['type'] === IncidentContact::TYPE_MAIL) {
+            V::key('email', Utils::emailValidator())->check($contactData);
+            $contact->setEMail($contactData['email']);
         } else {
-            V::attribute('user', V::intVal())->check($contactData);
-            $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($contactData->user);
+            V::key('user', V::intVal())->check($contactData);
+            $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($contactData['user']);
             V::objectType()->check($user);
             $contact->setUser($user);
         }
-        $contact->setSendWeeklySummary($contactData->sendWeeklySummary)
-            ->setSendCriticalEvents($contactData->sendCriticalEvents)
-            ->setSendAllEvents($contactData->sendAllEvents)
-            ->setSendSensorTimeouts($contactData->sendSensorTimeouts);
+        $contact->setSendWeeklySummary($contactData['sendWeeklySummary'])
+            ->setSendCriticalEvents($contactData['sendCriticalEvents'])
+            ->setSendAllEvents($contactData['sendAllEvents'])
+            ->setSendSensorTimeouts($contactData['sendSensorTimeouts']);
         return $contact;
     }
 
@@ -113,33 +107,33 @@ class Divisions extends RESTResource {
      * - sendSensorTimeouts: A boolean value that determines if this contact should receive mails when sensors time out
      *
      * @param IncidentContact $contact
-     * @param stdClass $contactData
+     * @param array $contactData
      */
     private function updateContact(IncidentContact $contact, $contactData) {
         // Validation
-        V::attribute('email')
-            ->attribute('user')
-            ->attribute('type', V::intType()->between(0, 1))
-            ->attribute('sendWeeklySummary', V::boolVal())
-            ->attribute('sendCriticalEvents', V::boolVal())
-            ->attribute('sendAllEvents', V::boolVal())
-            ->attribute('sendSensorTimeouts', V::boolVal())
+        V::key('email')
+            ->key('user')
+            ->key('type', V::intType()->between(0, 1))
+            ->key('sendWeeklySummary', V::boolVal())
+            ->key('sendCriticalEvents', V::boolVal())
+            ->key('sendAllEvents', V::boolVal())
+            ->key('sendSensorTimeouts', V::boolVal())
             ->check($contactData);
-        if($contactData->type === IncidentContact::TYPE_MAIL) {
-            V::attribute('email', Utils::emailValidator())->check($contactData);
-            $contact->setEMail($contactData->email);
+        if($contactData['type'] === IncidentContact::TYPE_MAIL) {
+            V::key('email', Utils::emailValidator())->check($contactData);
+            $contact->setEMail($contactData['email']);
             $contact->setUser();
         } else {
-            V::attribute('user', V::intVal())->check($contactData);
-            $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($contactData->user);
+            V::key('user', V::intVal())->check($contactData);
+            $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($contactData['user']);
             V::objectType()->check($user);
             $contact->setUser($user);
             $contact->setEMail(null);
         }
-        $contact->setSendWeeklySummary($contactData->sendWeeklySummary)
-            ->setSendCriticalEvents($contactData->sendCriticalEvents)
-            ->setSendAllEvents($contactData->sendAllEvents)
-            ->setSendSensorTimeouts($contactData->sendSensorTimeouts);
+        $contact->setSendWeeklySummary($contactData['sendWeeklySummary'])
+            ->setSendCriticalEvents($contactData['sendCriticalEvents'])
+            ->setSendAllEvents($contactData['sendAllEvents'])
+            ->setSendSensorTimeouts($contactData['sendSensorTimeouts']);
     }
 
     /**
@@ -179,30 +173,30 @@ class Divisions extends RESTResource {
      * - users: Array specifying a list of user IDs that are part of the division
      * - contacts: Array specifying a list of contacts to add. Each item is another array specifying contact data.
      *
-     * @param stdClass $data
+     * @param array $data
      * @return Division
      */
     public function create($data) {
         $this->assureAllowed('create');
         // Validation
-        V::objectType()
-            ->attribute('name', V::alnum()->length(1, 255))
-            ->attribute('users', V::arrayVal()->each(V::intType()))
-            ->attribute('contacts', V::arrayVal()->each(V::objectType()))
+        V::arrayType()
+            ->key('name', V::alnum()->length(1, 255))
+            ->key('users', V::arrayVal()->each(V::intType()))
+            ->key('contacts', V::arrayVal()->each(V::arrayType()))
             ->check($data);
         // Name duplication check
-        if($this->getDivisionByName($data->name) != null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
+        if($this->getDivisionByName($data['name']) != null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
         // Persistence
         $division = new Division();
-        $division->setName($data->name);
+        $division->setName($data['name']);
         $em = $this->getEntityManager();
         $userRepository = $em->getRepository('HoneySens\app\models\entities\User');
-        foreach($data->users as $userId) {
+        foreach($data['users'] as $userId) {
             $user = $userRepository->find($userId);
             V::objectType()->check($user);
             $user->addToDivision($division);
         }
-        foreach($data->contacts as $contactData) {
+        foreach($data['contacts'] as $contactData) {
             $contact = $this->createContact($contactData);
             $division->addIncidentContact($contact);
             $em->persist($contact);
@@ -223,44 +217,44 @@ class Divisions extends RESTResource {
      * - contacts: Array specifying a list of contacts to add. Each item is another array specifying contact data.
      *
      * @param int $id
-     * @param stdClass $data
+     * @param array $data
      * @return Division
      */
     public function update($id, $data) {
         $this->assureAllowed('update');
         // Validation
         V::intVal()->check($id);
-        V::objectType()
-            ->attribute('name', V::alnum()->length(1, 255))
-            ->attribute('users', V::arrayVal()->each(V::intType()))
-            ->attribute('contacts', V::arrayVal()->each(V::objectType()))
+        V::arrayType()
+            ->key('name', V::alnum()->length(1, 255))
+            ->key('users', V::arrayVal()->each(V::intType()))
+            ->key('contacts', V::arrayVal()->each(V::arrayType()))
             ->check($data);
         $em = $this->getEntityManager();
         $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($id);
         V::objectType()->check($division);
         // Name duplication check
-        $duplicate = $this->getDivisionByName($data->name);
+        $duplicate = $this->getDivisionByName($data['name']);
         if($duplicate != null && $duplicate->getId() != $division->getId())
             throw new BadRequestException(Divisions::ERROR_DUPLICATE);
         // Persistence
-        $division->setName($data->name);
+        $division->setName($data['name']);
         // Process user association
         $userRepository = $em->getRepository('HoneySens\app\models\entities\User');
-        $tasks = $this->updateCollection($division->getUsers(), $data->users, $userRepository);
+        $tasks = $this->updateCollection($division->getUsers(), $data['users'], $userRepository);
         foreach($tasks['add'] as $user) $user->addToDivision($division);
         foreach($tasks['remove'] as $user) $user->removeFromDivision($division);
         // Process contact association
         $contactRepository = $em->getRepository('HoneySens\app\models\entities\IncidentContact');
         $forUpdate = array();
         $toAdd = array();
-        foreach($data->contacts as $contactData) {
-            if(V::attribute('id')->validate($contactData)) $forUpdate[] = $contactData->id;
+        foreach($data['contacts'] as $contactData) {
+            if(V::key('id')->validate($contactData)) $forUpdate[] = $contactData['id'];
             else $toAdd[] = $contactData;
         }
         $tasks = $this->updateCollection($division->getIncidentContacts(), $forUpdate, $contactRepository);
         foreach($tasks['update'] as $contact)
-            foreach($data->contacts as $contactData)
-                if(V::attribute('id')->validate($contactData) && $contactData->id == $contact->getId())
+            foreach($data['contacts'] as $contactData)
+                if(V::key('id')->validate($contactData) && $contactData['id'] == $contact->getId())
                     $this->updateContact($contact, $contactData);
         foreach($tasks['remove'] as $contact) {
             $division->removeIncidentContact($contact);

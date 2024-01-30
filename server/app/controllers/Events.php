@@ -15,63 +15,63 @@ use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Events extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/events(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/events[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Events($em, $services, $config);
-            $criteria = $app->request->get();
+            $criteria = $request->getQueryParams();
             $criteria['userID'] = $controller->getSessionUserID();
-            $criteria['id'] = $id;
+            $criteria['id'] = $args['id'] ?? null;
             try {
                 $result = $controller->get($criteria);
             } catch(\Exception $e) {
                 throw new NotFoundException();
             }
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->post('/api/events', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Events($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $eventData = json_decode($request);
-            $sensor = $controller->validateSensorRequest('create', $request);
-            $controller->create($sensor, $eventData, $config, $app->log);
+            $requestBody = $request->getBody()->getContents();
+            $sensor = $controller->validateSensorRequest('create', $requestBody);
+            // Parse sensor request as JSON even if no correct Content-Type header is set
+            $controller->create($sensor, json_decode($requestBody, true), $config);
             $controller->setMACHeaders($sensor, 'create');
+            return $response;
         });
 
-        $app->put('/api/events/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/events/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Events($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $eventData = json_decode($request, true);
-            $eventData['id'] = $id;
+            $eventData = $request->getParsedBody();
+            $eventData['id'] = $args['id'];
             $eventData['userID'] = $controller->getSessionUserID();
             $controller->update($eventData);
-            echo json_encode([]);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
 
-        $app->put('/api/events', function() use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Events($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $eventData = json_decode($request, true);
+            $eventData = $request->getParsedBody();
             $eventData['userID'] = $controller->getSessionUserID();
             $controller->update($eventData);
-            echo json_encode([]);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
 
-        $app->delete('/api/events', function() use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Events($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $criteria = json_decode($request, true);
+            $criteria = $request->getParsedBody();
             $criteria['userID'] = $controller->getSessionUserID();
             $controller->delete($criteria);
-            echo json_encode([]);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
     }
 
@@ -95,6 +95,7 @@ class Events extends RESTResource {
      */
     public function get($criteria) {
         $this->assureAllowed('get');
+        V::arrayType()->check($criteria);
         $qb = $this->fetchEvents($criteria);
         if(V::key('id', V::intVal())->validate($criteria)) {
             // Single event output, ignores the format parameter
@@ -165,83 +166,83 @@ class Events extends RESTResource {
      * The method returns an array of all the Event objects that were created.
      *
      * @param Sensor $sensor
-     * @param \stdClass $data
+     * @param array $data
      * @param ConfigParser $config
-     * @param \Slim\Log $log
      * @return array
      * @throws BadRequestException
      */
-    public function create($sensor, $data, ConfigParser $config, \Slim\Log $log) {
+    public function create($sensor, $data, ConfigParser $config) {
         // Basic attribute validation
-        V::attribute('events', V::stringType())->check($data);
+        V::arrayType()
+            ->key('events', V::stringType())->check($data);
         // Decode events data
         try {
-            $eventsData = base64_decode($data->events);
+            $eventsData = base64_decode($data['events']);
         } catch(\Exception $e) {
             throw new BadRequestException();
         }
         $em = $this->getEntityManager();
         // Create events
         try {
-            $eventsData = json_decode($eventsData);
+            $eventsData = json_decode($eventsData, true);
         } catch(\Exception $e) {
             throw new BadRequestException();
         }
         // Data segment validation
         V::arrayVal()
-            ->each(V::objectType()
-                ->attribute('timestamp', V::intVal())
-                ->attribute('details', V::arrayVal()->each(
-                    V::objectType()
-                    ->attribute('timestamp', V::intVal())
-                    ->attribute('type', V::intVal()->between(0, 1))
-                    ->attribute('data', V::stringType())))
-                ->attribute('packets', V::arrayVal()->each(
-                    V::objectType()
-                    ->attribute('timestamp', V::intVal())
-                    ->attribute('protocol', V::intVal()->between(0, 2))
-                    ->attribute('port', V::intVal()->between(0, 65535))
-                    ->attribute('payload', V::optional(V::stringType()))
-                    ->attribute('headers', V::arrayVal())))
-                ->attribute('service', V::intVal())
-                ->attribute('source', V::stringType())
-                ->attribute('summary', V::stringType()))
+            ->each(V::arrayType()
+                ->key('timestamp', V::intVal())
+                ->key('details', V::arrayVal()->each(
+                    V::arrayType()
+                    ->key('timestamp', V::intVal())
+                    ->key('type', V::intVal()->between(0, 1))
+                    ->key('data', V::stringType())))
+                ->key('packets', V::arrayVal()->each(
+                    V::arrayType()
+                    ->key('timestamp', V::intVal())
+                    ->key('protocol', V::intVal()->between(0, 2))
+                    ->key('port', V::intVal()->between(0, 65535))
+                    ->key('payload', V::optional(V::stringType()))
+                    ->key('headers', V::arrayVal())))
+                ->key('service', V::intVal())
+                ->key('source', V::stringType())
+                ->key('summary', V::stringType()))
             ->check($eventsData);
         // Persistence
         $events = array();
         foreach($eventsData as $eventData) {
             // TODO make optional fields optional (e.g. packets and details)
-            $timestamp = new \DateTime('@' . $eventData->timestamp);
+            $timestamp = new \DateTime('@' . $eventData['timestamp']);
             $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
             $event = new Event();
             // Save event details
             $details = array();
-            foreach($eventData->details as $detailData) {
-                if($detailData->timestamp === null) {
+            foreach($eventData['details'] as $detailData) {
+                if($detailData['timestamp'] === null) {
                     $detailTimestamp = null;
                 } else {
-                    $detailTimestamp = new \DateTime('@' . $detailData->timestamp);
+                    $detailTimestamp = new \DateTime('@' . $detailData['timestamp']);
                     $detailTimestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
                 }
                 $eventDetail = new EventDetail();
                 $eventDetail->setTimestamp($detailTimestamp)
-                    ->setType($detailData->type)
-                    ->setData($detailData->data);
+                    ->setType($detailData['type'])
+                    ->setData($detailData['data']);
                 $event->addDetails($eventDetail);
                 $em->persist($eventDetail);
                 $details[] = $eventDetail;
             }
             // Save event packets
             $packets = array();
-            foreach($eventData->packets as $packetData) {
+            foreach($eventData['packets'] as $packetData) {
                 $eventPacket = new EventPacket();
-                $timestamp = new \DateTime('@' . $packetData->timestamp);
+                $timestamp = new \DateTime('@' . $packetData['timestamp']);
                 $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
                 $eventPacket->setTimestamp($timestamp)
-                    ->setProtocol($packetData->protocol)
-                    ->setPort($packetData->port)
-                    ->setPayload($packetData->payload);
-                foreach($packetData->headers as $field => $value) {
+                    ->setProtocol($packetData['protocol'])
+                    ->setPort($packetData['port'])
+                    ->setPayload($packetData['payload']);
+                foreach($packetData['headers'] as $field => $value) {
                     $eventPacket->addHeader($field, $value);
                 }
                 $event->addPacket($eventPacket);
@@ -250,9 +251,9 @@ class Events extends RESTResource {
             }
             // Save remaining event data
             $event->setTimestamp($timestamp)
-                ->setService($eventData->service)
-                ->setSource($eventData->source)
-                ->setSummary($eventData->summary)
+                ->setService($eventData['service'])
+                ->setSource($eventData['source'])
+                ->setSummary($eventData['summary'])
                 ->setSensor($sensor);
             // Do classification
             // TODO be more sophisticated here than simply matching service and classification
@@ -301,8 +302,8 @@ class Events extends RESTResource {
             }
         } catch(\Exception $e) {
             // If subsequent event handlers cause exceptions, fail gracefully and signal successful event creation to sensor
-            $log->error('Exception during post-event handling');
-            $log->error($e);
+            error_log('Exception during post-event handling');
+            error_log($e);
         }
         return $events;
     }
@@ -327,7 +328,11 @@ class Events extends RESTResource {
     public function update($criteria) {
         $this->assureAllowed('update');
         $em = $this->getEntityManager();
-        V::anyOf(V::key('new_status'), V::key('new_comment'))->check($criteria);
+        V::arrayType()
+            ->anyOf(
+                V::key('new_status'),
+                V::key('new_comment')
+            )->check($criteria);
         // Prevent modification of archived events
         if(V::key('archived', V::trueVal())->validate($criteria)) throw new BadRequestException();
         // If the key 'id' or 'ids' is present, just update those individual IDs
@@ -501,6 +506,7 @@ class Events extends RESTResource {
      * @throws \Exception
      */
     private function fetchEvents($criteria) {
+        V::arrayType()->check($criteria);
         $qb = $this->getEntityManager()->createQueryBuilder();
         $archived = V::key('archived', V::trueVal())->validate($criteria) && $criteria['archived'];
         if($archived) {

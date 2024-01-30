@@ -1,17 +1,19 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Stats extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/stats', function() use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/stats', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Stats($em, $services, $config);
-            $criteria = $app->request->get();
+            $criteria = $request->getQueryParams();
             $criteria['userID'] = $controller->getSessionUserID();
-            $result = $controller->get($criteria);
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($controller->get($criteria)));
+            return $response;
         });
     }
 

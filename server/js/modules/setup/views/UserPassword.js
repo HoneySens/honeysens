@@ -29,6 +29,7 @@ function(HoneySens, ModalServerError, UserPasswordTpl) {
                             method: 'PUT',
                             dataType: 'json',
                             data: JSON.stringify({password: view.$el.find('input[name="userPassword"]').val()}),
+                            contentType: 'application/json',
                             url: 'api/users/session',
                             success: function() {
                                 HoneySens.execute('logout');
