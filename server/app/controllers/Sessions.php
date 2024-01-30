@@ -5,6 +5,8 @@ use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Sessions extends RESTResource {
@@ -12,27 +14,26 @@ class Sessions extends RESTResource {
     const SESSION_TIMEOUT_DEFAULT = 1200;  # Seconds of inactivity until a regular session expires
     const SESSION_TIMEOUT_CHANGEPW = 600;  # Seconds until the "change password on first login" session expires
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->post('/api/sessions', function() use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->post('/api/sessions', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Sessions($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $authData = json_decode($request);
-            $user = $controller->create($authData);
-            echo json_encode($user);
+            $userState = $controller->create($request->getParsedBody());
+            $response->getBody()->write(json_encode($userState));
+            return $response;
         });
 
-        $app->delete('/api/sessions', function() use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/sessions', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Sessions($em, $services, $config);
             $user = $controller->destroy();
-            echo json_encode($user->getState());
+            $response->getBody()->write(json_encode($user->getState()));
+            return $response;
         });
     }
 
     /**
      * Authenticates a user.
      *
-     * @param stdClass $data
+     * @param array $data
      * @return array
      * @throws ForbiddenException
      * @throws BadRequestException
@@ -46,27 +47,27 @@ class Sessions extends RESTResource {
             throw new ForbiddenException();
         }
         // Validation
-        V::objectType()
-            ->attribute('username', V::stringType())
-            ->attribute('password', V::stringType())
+        V::arrayType()
+            ->key('username', V::stringType())
+            ->key('password', V::stringType())
             ->check($data);
         $em = $this->getEntityManager();
-        $user = $em->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $data->username));
+        $user = $em->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $data['username']));
         if(!V::objectType()->validate($user)) throw new ForbiddenException();
         // The validation procedure heavily depends on the user's domain
         switch($user->getDomain()) {
             case User::DOMAIN_LOCAL:
                 // Update password in case this user still relies on the deprecated hashing scheme
                 if($user->getLegacyPassword() != null) {
-                    if($user->getLegacyPassword() == sha1($data->password)) {
+                    if($user->getLegacyPassword() == sha1($data['password'])) {
                         // Password match - update scheme
-                        $user->setPassword($data->password);
+                        $user->setPassword($data['password']);
                         $user->setLegacyPassword(null);
                         $em->flush();
                     } else throw new ForbiddenException();
                 }
                 // Check password
-                if($user->getPassword() != null && password_verify($data->password, $user->getPassword())) {
+                if($user->getPassword() != null && password_verify($data['password'], $user->getPassword())) {
                     if($user->getRequirePasswordChange()) {
                         // User is not permitted to do anything except change his/her password
                         $guestUser = new User();
@@ -97,7 +98,7 @@ class Sessions extends RESTResource {
                         ldap_set_option($ldapHandle, LDAP_OPT_REFERRALS, 0);
                         try {
                             if($config['ldap']['encryption'] == '1') ldap_start_tls($ldapHandle);
-                            if(ldap_bind($ldapHandle, str_replace('%s', $data->username, $config['ldap']['template']), $data->password))  {
+                            if(ldap_bind($ldapHandle, str_replace('%s', $data['username'], $config['ldap']['template']), $data['password']))  {
                                 $userState = $userController->getStateWithPermissionConfig($user);
                                 session_regenerate_id(true);
                                 $_SESSION['user'] = $userState;

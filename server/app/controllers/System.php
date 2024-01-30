@@ -10,6 +10,8 @@ use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\Exception\NoOptionException;
 use phpseclib3\File\X509;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class System extends RESTResource {
@@ -18,57 +20,45 @@ class System extends RESTResource {
     const ERR_UNKNOWN = 0;
     const ERR_CONFIG_WRITE = 1;
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/system', function() use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/system', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new System($em, $services, $config);
-            $systemData = $controller->get();
-            echo json_encode($systemData);
+            $response->getBody()->write(json_encode($controller->get()));
+            return $response;
         });
 
-        $app->get('/api/system/identify', function() use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/system/identify', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             // Predictable endpoint used to test the server connection (useful to figure out if a proxy actually works)
-            echo 'HoneySens';
+            $response->getBody()->write("HoneySens");
+            return $response;
         });
 
-        $app->delete('/api/system/events', function() use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/system/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new System($em, $services, $config);
             try {
                 $controller->removeAllEvents();
-                echo json_encode([]);
             } catch(\Exception $e) {
                 throw new BadRequestException();
             }
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
 
-        /*
-         * TODO This does clear the platforms table and doesn't add them again, thus breaking the system
-         * (amongst potential other issues).
-         *
-        $app->delete('/api/system/db', function() use ($app, $em, $services, $config, $messages) {
-            $controller = new System($em, $services, $config);
-            $messages = array();
-            try {
-                $controller->initDBSchema($messages, $em, false, true);
-                echo json_encode(array('messages' => $messages));
-            } catch(\Exception $e) {
-                throw new BadRequestException();
-            }
-        });
-        */
-
-        $app->put('/api/system/ca', function() use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/system/ca', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new System($em, $services, $config);
             $controller->refreshCertificates($em);
-            echo json_encode([]);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
 
-        $app->post('/api/system/install', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/system/install', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new System($em, $services, $config);
-            $request = $app->request()->getBody();
+            $request = $request->getBody()->getContents();
             V::json()->check($request);
             $installData = json_decode($request);
             $systemData = $controller->install($installData);
-            echo json_encode($systemData);
+            $response->getBody()->write(json_encode($systemData));
+            return $response;
         });
     }
 
@@ -144,13 +134,12 @@ class System extends RESTResource {
     /**
      * Checks existence of parts of the DB schema and triggers the setup process if necessary.
      *
-     * @param &$messages List of notification messages that is passed on between bootstrap functions
      * @param $em Doctrine entity manager
      * @param $skipPermissionCheck Boolean that determines if the permission checks are skipped (useful to reset the DB during bootstrap)
      * @param $forceReset Boolean that forces the removal of all data, even if the DB is in a clean shape
      * @throws \Exception
      */
-    function initDBSchema(&$messages, $em, $skipPermissionCheck=false, $forceReset=false) {
+    function initDBSchema($em, $skipPermissionCheck=false, $forceReset=false) {
         // This can only be invoked from an admin session
         if(!$skipPermissionCheck && $_SESSION['user']['role'] != User::ROLE_ADMIN) {
             throw new ForbiddenException();
@@ -180,31 +169,7 @@ class System extends RESTResource {
             $em->flush();
             // Remove old data files
             exec(realpath(APPLICATION_PATH . '/scripts/clear_data.py') . ' ' . escapeshellarg(realpath(APPLICATION_PATH . '/../data')) . ' 2>&1', $output);
-            $messages[] = array('severity' => 'info', 'msg' => 'Die Datenbank wurde neu initialisiert.');
         }
-    }
-
-    /**
-     * Currently unused legacy function that performs a schema update on the DB.
-     * That's identical to using the doctrine CLI and issuing a schema update there.
-     * Left here for potential debugging purposes.
-     *
-     * @deprecated
-     * @param $messages
-     * @param $em
-     * @throws ForbiddenException
-     */
-    function updateDBSchema(&$messages, $em) {
-        // This can only be invoked from an admin session
-        if($_SESSION['user']['role'] != User::ROLE_ADMIN) {
-            throw new ForbiddenException();
-        }
-        $classes = $em->getMetadataFactory()->getAllMetadata();
-        $schemaTool = new Schematool($em);
-        $sqls = $schemaTool->getUpdateSchemaSql($classes);
-        $messages[] = array('severity' => 'info', 'msg' => 'Datenbankschema: ' + count($sqls) + ' Updates');
-        $schemaTool->updateSchema($classes);
-        $this->addLastUpdatesTable($em);
     }
 
     /**

@@ -6,46 +6,46 @@ use HoneySens\app\models\entities\EventFilterCondition;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Eventfilters extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/eventfilters(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/eventfilters[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Eventfilters($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();
-            $criteria['id'] = $id;
+            $criteria['id'] = $args['id'] ?? null;
             try {
                 $result = $controller->get($criteria);
             } catch(\Exception $e) {
                 throw new NotFoundException();
             }
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->post('/api/eventfilters', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/eventfilters', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Eventfilters($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $filterData = json_decode($request);
-            $filter = $controller->create($filterData);
-            echo json_encode($filter->getState());
+            $filter = $controller->create($request->getParsedBody());
+            $response->getBody()->write(json_encode($filter->getState()));
+            return $response;
         });
 
-        $app->put('/api/eventfilters/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/eventfilters/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Eventfilters($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $filterData = json_decode($request);
-            $filter = $controller->update($id, $filterData);
-            echo json_encode($filter->getState());
+            $filter = $controller->update($args['id'], $request->getParsedBody());
+            $response->getBody()->write(json_encode($filter->getState()));
+            return $response;
         });
 
-        $app->delete('/api/eventfilters/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/eventfilters/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Eventfilters($em, $services, $config);
-            $controller->delete($id);
-            echo json_encode([]);
+            $controller->delete($args['id']);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
     }
 
@@ -172,31 +172,31 @@ class Eventfilters extends RESTResource {
      * - conditions: Array specifying a list of filter conditions to add. Each item is another array
      *               specifying condition data.
      *
-     * @param stdClass $data
+     * @param array $data
      * @return EventFilter
      */
     public function create($data) {
         $this->assureAllowed('create');
         // Validation
-        V::objectType()
-            ->attribute('name', V::alnum('._-')->length(1, 255))
-            ->attribute('type', V::intVal()->equals(0))
-            ->attribute('division', V::intVal())
-            ->attribute('conditions', V::arrayVal()->each(V::objectType()))
+        V::arrayType()
+            ->key('name', V::alnum('._-')->length(1, 255))
+            ->key('type', V::intVal()->equals(0))
+            ->key('division', V::intVal())
+            ->key('conditions', V::arrayVal()->each(V::objectType()))
             ->check($data);
         if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
-            V::attribute('description', V::stringType()->length(1, 65535))->check($data);
-        else V::attribute('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
+            V::key('description', V::stringType()->length(1, 65535))->check($data);
+        else V::key('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
         // Persistence
         $filter = new EventFilter();
         $em = $this->getEntityManager();
-        $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data->division);
+        $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data['division']);
         V::objectType()->check($division);
-        $filter->setName($data->name)
-            ->setType($data->type)
-            ->setDescription($data->description)
+        $filter->setName($data['name'])
+            ->setType($data['type'])
+            ->setDescription($data['description'])
             ->setDivision($division);
-        foreach($data->conditions as $conditionData) {
+        foreach($data['conditions'] as $conditionData) {
             $condition = $this->createCondition($conditionData);
             $filter->addCondition($condition);
             $em->persist($condition);
@@ -219,45 +219,45 @@ class Eventfilters extends RESTResource {
      * - enabled: Whether this filter should be evaluated when processing events.
      *
      * @param int $id
-     * @param stdClass $data
+     * @param array $data
      * @return EventFilter
      */
     public function update($id, $data) {
         $this->assureAllowed('update');
         // Validation
         V::intVal()->check($id);
-        V::objectType()
-            ->attribute('name', V::alnum('._-')->length(1, 255))
-            ->attribute('type', V::intVal()->equals(0))
-            ->attribute('division', V::intVal())
-            ->attribute('conditions', V::arrayVal()->each(V::objectType()))
-            ->attribute('enabled', V::boolType())
+        V::arrayType()
+            ->key('name', V::alnum('._-')->length(1, 255))
+            ->key('type', V::intVal()->equals(0))
+            ->key('division', V::intVal())
+            ->key('conditions', V::arrayVal()->each(V::objectType()))
+            ->key('enabled', V::boolType())
             ->check($data);
         if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
-            V::attribute('description', V::stringType()->length(1, 65535))->check($data);
-        else V::attribute('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
+            V::key('description', V::stringType()->length(1, 65535))->check($data);
+        else V::key('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
         // Persistence
         $em = $this->getEntityManager();
         $filter = $em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         V::objectType()->check($filter);
-        $filter->setName($data->name);
-        $filter->setType($data->type);
-        $filter->setDescription($data->description);
-        $filter->setEnabled($data->enabled);
-        $division = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Division')->find($data->division);
+        $filter->setName($data['name']);
+        $filter->setType($data['type']);
+        $filter->setDescription($data['description']);
+        $filter->setEnabled($data['enabled']);
+        $division = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Division')->find($data['division']);
         V::objectType()->check($division);
         $filter->setDivision($division);
         // Process condition association
         $conditionRepository = $em->getRepository('HoneySens\app\models\entities\EventFilterCondition');
         $forUpdate = array();
         $toAdd = array();
-        foreach($data->conditions as $conditionData) {
+        foreach($data['conditions'] as $conditionData) {
             if(V::attribute('id')->validate($conditionData)) $forUpdate[] = $conditionData->id;
             else $toAdd[] = $conditionData;
         }
         $tasks = $this->updateCollection($filter->getConditions(), $forUpdate, $conditionRepository);
         foreach($tasks['update'] as $condition) {
-            foreach($data->conditions as $conditionData) {
+            foreach($data['conditions'] as $conditionData) {
                 if(V::attribute('id')->validate($conditionData) && $conditionData->id == $condition->getId())
                     $this->updateCondition($condition, $conditionData);
             }

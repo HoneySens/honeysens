@@ -1,7 +1,9 @@
 <?php
-
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
+use GuzzleHttp\Psr7\LazyOpenStream;
+use HoneySens\app\adapters\JsonBodyParserMiddleware;
+use HoneySens\app\adapters\SessionMiddleware;
 use HoneySens\app\controllers\Certs;
 use HoneySens\app\controllers\Contacts;
 use HoneySens\app\controllers\Divisions;
@@ -20,14 +22,16 @@ use HoneySens\app\controllers\System;
 use HoneySens\app\controllers\Tasks;
 use HoneySens\app\controllers\Templates;
 use HoneySens\app\controllers\Users;
-use HoneySens\app\models\entities\User;
 use HoneySens\app\models\EntityUpdateSubscriber;
 use HoneySens\app\models\exceptions;
 use HoneySens\app\models\ServiceManager;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Log\LoggerInterface;
 use \Respect\Validation\Exceptions\ValidationException;
-use Slim\Route;
-use Slim\Slim;
+use \Slim\Factory\AppFactory;
 use \Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 
 // Global paths
@@ -38,31 +42,37 @@ set_include_path(implode(PATH_SEPARATOR, array(realpath(APPLICATION_PATH . '/ven
 
 function initSlim($appConfig) {
     $debug = $appConfig->getBoolean('server', 'debug');
-    $app = new Slim(array('templates.path' => APPLICATION_PATH . '/templates', 'debug' => $debug));
-    // Set global error handler that translates exceptions into HTTP status codes
-    $app->error(function(\Exception $e) use ($app) {
-        switch(true) {
-            case $e instanceof exceptions\ForbiddenException:
-                $app->response->setStatus(403);
-                echo json_encode(array('code' => $e->getCode()));
-                break;
-            case $e instanceof exceptions\NotFoundException:
-                $app->response->setStatus(404);
-                echo json_encode(array('code' => $e->getCode()));
-                break;
-            case $e instanceof exceptions\BadRequestException:
-            case $e instanceof ValidationException:
-                $app->response->setStatus(400);
-                echo json_encode(array('code' => $e->getCode()));
-                break;
-            default:
-                $app->response->setStatus(500);
-                echo json_encode(array('error' => $e->getMessage()));
-                break;
-        }
-    });
-    // Global route conditions
-    Route::setDefaultConditions(array('id' => '\d+'));
+    $app = AppFactory::create();
+    $app->addRoutingMiddleware();
+    $app->add(new JsonBodyParserMiddleware());
+    $app->add(new SessionMiddleware());
+    $errorMiddleware = $app->addErrorMiddleware($debug, true, true);
+    if(!$debug) {
+        $errorMiddleware->setDefaultErrorHandler(function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails, ?LoggerInterface $logger = null) use ($app) {
+            switch (true) {
+                case $exception instanceof exceptions\ForbiddenException:
+                    $status = 403;
+                    $result = array('code' => $exception->getCode());
+                    break;
+                case $exception instanceof exceptions\NotFoundException:
+                    $status = 404;
+                    $result = array('code' => $exception->getCode());
+                    break;
+                case $exception instanceof exceptions\BadRequestException:
+                case $exception instanceof ValidationException:
+                    $status = 400;
+                    $result = array('code' => $exception->getCode());
+                    break;
+                default:
+                    $status = 500;
+                    $result = array('error' => $exception->getMessage());
+                    break;
+            }
+            $response = $app->getResponseFactory()->createResponse()->withStatus($status);
+            $response->getBody()->write(json_encode($result));
+            return $response;
+        });
+    }
     return $app;
 }
 
@@ -99,9 +109,9 @@ function initDoctrine() {
     return EntityManager::create($connectionParams, $config);
 }
 
-function initDBSchema(&$messages, $em) {
+function initDBSchema($em) {
     $systemController = new System($em, null, null);
-    $systemController->initDBSchema($messages, $em, true);
+    $systemController->initDBSchema($em, true);
 }
 
 function initDBEventManager($em) {
@@ -119,64 +129,31 @@ function initServiceManager($config, $em) {
  * @param $em Doctrine\ORM\EntityManager
  * @param $services ServiceManager
  * @param $config ConfigParser
- * @param $messages array of events that happened during initialization of the form array( array( 'severity' => 'info|warn', 'msg' => $msg ), ... )
  */
-function initRoutes($app, $em, $services, $config, $messages) {
+function initRoutes($app, $em, $services, $config) {
     // Deliver the web application
-    $app->get('/', function() use ($app, $em, $services, $config, $messages) {
-        // Render system messages encountered during initialization
-        if(count($messages) > 0) {
-            $infoMsg = '';
-            $warnMsg = '';
-            foreach($messages as $message) {
-                if($message['severity'] == 'info') $infoMsg .= $message['msg'] . '<br />';
-                if($message['severity'] == 'warn') $warnMsg .= $message['msg'] . '<br />';
-            }
-            if($infoMsg) $app->flashNow('info', $infoMsg);
-            if($warnMsg) $app->flashNow('warn', $warnMsg);
-        }
-        $app->render('layout.php');
+    $app->get('/', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $template = new LazyOpenStream(APPLICATION_PATH . '/templates/index.html', 'r');
+        return $response->withBody($template);
     });
 
     // Initialize API
-    Certs::registerRoutes($app, $em, $services, $config, $messages);
-    Contacts::registerRoutes($app, $em, $services, $config, $messages);
-    Divisions::registerRoutes($app, $em, $services, $config, $messages);
-    Eventdetails::registerRoutes($app, $em, $services, $config, $messages);
-    Eventfilters::registerRoutes($app, $em, $services, $config, $messages);
-    Events::registerRoutes($app, $em, $services, $config, $messages);
-    Logs::registerRoutes($app, $em, $services, $config, $messages);
-    Platforms::registerRoutes($app, $em, $services, $config, $messages);
-    Sensors::registerRoutes($app, $em, $services, $config, $messages);
-    Services::registerRoutes($app, $em, $services, $config, $messages);
-    Sessions::registerRoutes($app, $em, $services, $config, $messages);
-    Settings::registerRoutes($app, $em, $services, $config, $messages);
-    State::registerRoutes($app, $em, $services, $config, $messages);
-    Stats::registerRoutes($app, $em, $services, $config, $messages);
-    System::registerRoutes($app, $em, $services, $config, $messages);
-    Tasks::registerRoutes($app ,$em, $services, $config, $messages);
-    Templates::registerRoutes($app ,$em, $services, $config, $messages);
-    Users::registerRoutes($app, $em, $services, $config, $messages);
-}
-
-function initSession($app) {
-    session_start();
-    if(isset($_SESSION['last_activity'])) {
-        // Handle session activity timeout
-        if(time() - $_SESSION['last_activity'] > $_SESSION['timeout']) {
-            session_unset();
-            session_destroy();
-            // 403 forbidden for API requests, '/' will be rendered regularly
-            if(strpos($app->request->getPathInfo(), '/api/') === 0) {
-                http_response_code(403);
-                exit();
-            }
-        } else $_SESSION['last_activity'] = time();
-    }
-    if(!isset($_SESSION['authenticated']) || !isset($_SESSION['user'])) {
-        $guestUser = new User();
-        $guestUser->setRole(User::ROLE_GUEST);
-        $_SESSION['authenticated'] = false;
-        $_SESSION['user'] = $guestUser->getState();
-    }
+    Certs::registerRoutes($app, $em, $services, $config);
+    Contacts::registerRoutes($app, $em, $services, $config);
+    Divisions::registerRoutes($app, $em, $services, $config);
+    Eventdetails::registerRoutes($app, $em, $services, $config);
+    Eventfilters::registerRoutes($app, $em, $services, $config);
+    Events::registerRoutes($app, $em, $services, $config);
+    Logs::registerRoutes($app, $em, $services, $config);
+    Platforms::registerRoutes($app, $em, $services, $config);
+    Sensors::registerRoutes($app, $em, $services, $config);
+    Services::registerRoutes($app, $em, $services, $config);
+    Sessions::registerRoutes($app, $em, $services, $config);
+    Settings::registerRoutes($app, $em, $services, $config);
+    State::registerRoutes($app, $em, $services, $config);
+    Stats::registerRoutes($app, $em, $services, $config);
+    System::registerRoutes($app, $em, $services, $config);
+    Tasks::registerRoutes($app ,$em, $services, $config);
+    Templates::registerRoutes($app ,$em, $services, $config);
+    Users::registerRoutes($app, $em, $services, $config);
 }

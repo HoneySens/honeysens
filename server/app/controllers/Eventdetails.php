@@ -1,22 +1,28 @@
 <?php
 namespace HoneySens\app\controllers;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 use Respect\Validation\Validator as V;
 
 class Eventdetails extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
         // Returns details (including packets) that belong to a certain event
-        $app->get('/api/eventdetails/by-event/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/eventdetails/by-event/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Eventdetails($em, $services, $config);
-            $details = $controller->get(array('userID' => $controller->getSessionUserID(), 'eventID' => $id, 'type' => 0));
-            $packets = $controller->get(array('userID' => $controller->getSessionUserID(), 'eventID' => $id, 'type' => 1));
-            echo json_encode(array('details' => $details, 'packets' => $packets));
+            $details = $controller->get(array('userID' => $controller->getSessionUserID(), 'eventID' => $args['id'], 'type' => 0));
+            $packets = $controller->get(array('userID' => $controller->getSessionUserID(), 'eventID' => $args['id'], 'type' => 1));
+            $result = array('details' => $details, 'packets' => $packets);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->get('/api/eventdetails/by-archived-event/:id', function($id) use($app, $em, $services, $config, $messages) {
+        $app->get('/api/eventdetails/by-archived-event/{id:\d+}', function(Request $request, Response $response, array $args) use($app, $em, $services, $config) {
             $controller = new Eventdetails($em, $services, $config);
-            echo json_encode($controller->getArchivedDetails($id, $controller->getSessionUserID()));
+            $result = $controller->getArchivedDetails($args['id'], $controller->getSessionUserID());
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
     }
 

@@ -8,6 +8,8 @@ use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Users extends RESTResource {
@@ -15,51 +17,47 @@ class Users extends RESTResource {
     const ERROR_DUPLICATE = 1;
     const ERROR_REQUIRE_PASSWORD_CHANGE = 2;
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/users(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/users[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Users($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();
-            $criteria['id'] = $id;
+            $criteria['id'] = $args['id'] ?? null;
             try {
                 $result = $controller->get($criteria);
             } catch(\Exception $e) {
                 throw new NotFoundException();
             }
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->post('/api/users', function() use ($app, $em, $services, $config) {
+        $app->post('/api/users', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Users($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $userData = json_decode($request);
-            $user = $controller->create($userData);
-            echo json_encode($user->getState());
+            $user = $controller->create($request->getParsedBody());
+            $response->getBody()->write(json_encode($user->getState()));
+            return $response;
         });
 
-        $app->put('/api/users/:id', function($id) use ($app, $em, $services, $config) {
+        $app->put('/api/users/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Users($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $userData = json_decode($request);
-            $user = $controller->update($id, $userData);
-            echo json_encode($user->getState());
+            $user = $controller->update($args['id'], $request->getParsedBody());
+            $response->getBody()->write(json_encode($user->getState()));
+            return $response;
         });
 
-        $app->put('/api/users/session', function() use ($app, $em, $services, $config) {
+        $app->put('/api/users/session', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Users($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $userData = json_decode($request);
-            $user = $controller->updateSelf($userData);
-            echo json_encode($user->getState());
+            $user = $controller->updateSelf($request->getParsedBody());
+            $response->getBody()->write(json_encode($user->getState()));
+            return $response;
         });
 
-        $app->delete('/api/users/:id', function($id) use ($app, $em, $services, $config) {
+        $app->delete('/api/users/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Users($em, $services, $config);
-            $controller->delete($id);
-            echo json_encode([]);
+            $controller->delete($args['id']);
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
     }
 
@@ -128,38 +126,38 @@ class Users extends RESTResource {
      * - role: User role, determining his permissions (0 to 3)
      * - notifyOnSystemState: Whether this user should receive system state notifications (bool)
      *
-     * @param stdClass $data
+     * @param array $data
      * @return User
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
     public function create($data) {
         $this->assureAllowed('create');
         // Validation
-        V::objectType()
-            ->attribute('name', V::alnum()->length(1, 255))
-            ->attribute('domain', V::intVal()->between(0, 1))
-            ->attribute('fullName', V::stringType()->length(1, 255), false)
-            ->attribute('email', Utils::emailValidator())
-            ->attribute('role', V::intVal()->between(1, 3))
-            ->attribute('notifyOnSystemState', V::boolVal())
-            ->attribute('requirePasswordChange', V::boolVal())
+        V::arrayType()
+            ->key('name', V::alnum()->length(1, 255))
+            ->key('domain', V::intVal()->between(0, 1))
+            ->key('fullName', V::stringType()->length(1, 255), false)
+            ->key('email', Utils::emailValidator())
+            ->key('role', V::intVal()->between(1, 3))
+            ->key('notifyOnSystemState', V::boolVal())
+            ->key('requirePasswordChange', V::boolVal())
             ->check($data);
         // Password is optional if another domain than the local one is used
-        V::attribute('password', V::stringType()->length(6, 255), $data->domain == User::DOMAIN_LOCAL)
+        V::key('password', V::stringType()->length(6, 255), $data['domain'] == User::DOMAIN_LOCAL)
             ->check($data);
         // Name duplication check
-        if($this->getUserByName($data->name) != null) throw new BadRequestException(Users::ERROR_DUPLICATE);
+        if($this->getUserByName($data['name']) != null) throw new BadRequestException(Users::ERROR_DUPLICATE);
         // Persistence
         $user = new User();
-        $user->setName($data->name)
-            ->setDomain($data->domain)
-            ->setEmail($data->email)
-            ->setRole($data->role)
-            ->setNotifyOnSystemState($data->notifyOnSystemState)
-            ->setRequirePasswordChange($data->requirePasswordChange);
-        if(V::attribute('password')->validate($data))
-            $user->setPassword($data->password);
-        if(V::attribute('fullName')->validate($data)) $user->setFullName($data->fullName);
+        $user->setName($data['name'])
+            ->setDomain($data['domain'])
+            ->setEmail($data['email'])
+            ->setRole($data['role'])
+            ->setNotifyOnSystemState($data['notifyOnSystemState'])
+            ->setRequirePasswordChange($data['requirePasswordChange']);
+        if(V::key('password')->validate($data))
+            $user->setPassword($data['password']);
+        if(V::key('fullName')->validate($data)) $user->setFullName($data['fullName']);
         $em = $this->getEntityManager();
         $em->persist($user);
         $em->flush();
@@ -177,7 +175,7 @@ class Users extends RESTResource {
      * - notifyOnSystemState: Whether this user should receive system state notifications (bool)     *
      *
      * @param int $id
-     * @param stdClass $data
+     * @param array $data
      * @return User
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
@@ -185,40 +183,40 @@ class Users extends RESTResource {
         $this->assureAllowed('update');
         // Validation
         V::intVal()->check($id);
-        V::objectType()
-            ->attribute('name', V::alnum()->length(1, 255))
-            ->attribute('domain', V::intVal()->between(0, 1))
-            ->attribute('fullName', V::stringType()->length(1, 255), false)
-            ->attribute('email', Utils::emailValidator())
-            ->attribute('role', V::intVal()->between(1, 3))
-            ->attribute('notifyOnSystemState', V::boolVal())
-            ->attribute('requirePasswordChange', V::boolVal())
+        V::arrayType()
+            ->key('name', V::alnum()->length(1, 255))
+            ->key('domain', V::intVal()->between(0, 1))
+            ->key('fullName', V::stringType()->length(1, 255), false)
+            ->key('email', Utils::emailValidator())
+            ->key('role', V::intVal()->between(1, 3))
+            ->key('notifyOnSystemState', V::boolVal())
+            ->key('requirePasswordChange', V::boolVal())
             ->check($data);
         $user = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\User')->find($id);
         V::objectType()->check($user);
         // Only require a password if the user didn't have one previously (e.g. due to it being created as an LDAP account)
-        $requirePassword = $data->domain == User::DOMAIN_LOCAL && $user->getPassword() == null && $user->getLegacyPassword() == null;
-        V::attribute('password', V::stringType()->length(6, 255), $requirePassword)
+        $requirePassword = $data['domain'] == User::DOMAIN_LOCAL && $user->getPassword() == null && $user->getLegacyPassword() == null;
+        V::key('password', V::stringType()->length(6, 255), $requirePassword)
             ->check($data);
         // Name duplication check
-        $duplicate = $this->getUserByName($data->name);
+        $duplicate = $this->getUserByName($data['name']);
         if($duplicate != null && $duplicate->getId() != $user->getId())
             throw new BadRequestException(Users::ERROR_DUPLICATE);
         // Persistence
-        $user->setName($data->name)
-            ->setDomain($data->domain)
-            ->setEmail($data->email)
-            ->setNotifyOnSystemState($data->notifyOnSystemState)
-            ->setRequirePasswordChange($data->requirePasswordChange);
+        $user->setName($data['name'])
+            ->setDomain($data['domain'])
+            ->setEmail($data['email'])
+            ->setNotifyOnSystemState($data['notifyOnSystemState'])
+            ->setRequirePasswordChange($data['requirePasswordChange']);
         // Set role, but force the first user to be an admin
-        if($user->getId() != 1) $user->setRole($data->role);
+        if($user->getId() != 1) $user->setRole($data['role']);
         // Set optional password
-        if(V::attribute('password')->validate($data)) {
-            $user->setPassword($data->password)
+        if(V::key('password')->validate($data)) {
+            $user->setPassword($data['password'])
                 ->setLegacyPassword(null);
         };
         // Set optional full name
-        if(V::attribute('fullName')->validate($data)) $user->setFullName($data->fullName);
+        if(V::key('fullName')->validate($data)) $user->setFullName($data['fullName']);
         else $user->setFullName(null);
         $this->getEntityManager()->flush();
         $this->log(sprintf('User %s (ID %d) updated', $user->getName(), $user->getId()), LogEntry::RESOURCE_USERS, $user->getId());
@@ -228,7 +226,7 @@ class Users extends RESTResource {
     /**
      * Updates the user the current session belongs to, e.g. allows logged-in users to change their own password.
      *
-     * @param stdClass $data
+     * @param array $data
      * @return User
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
@@ -238,10 +236,10 @@ class Users extends RESTResource {
         $sessionUser = $em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
         if($sessionUser == null || !$sessionUser->getRequirePasswordChange()) throw new ForbiddenException();
         // Validation
-        V::objectType()->attribute('password', V::stringType()->length(6, 255))->check($data);
-        if($sessionUser->getPassword() != null && password_verify($data->password, $sessionUser->getPassword())) throw new BadRequestException(Users::ERROR_REQUIRE_PASSWORD_CHANGE);
+        V::arrayType()->key('password', V::stringType()->length(6, 255))->check($data);
+        if($sessionUser->getPassword() != null && password_verify($data['password'], $sessionUser->getPassword())) throw new BadRequestException(Users::ERROR_REQUIRE_PASSWORD_CHANGE);
         // Persistence
-        $sessionUser->setPassword($data->password)
+        $sessionUser->setPassword($data['password'])
             ->setLegacyPassword(null)
             ->setRequirePasswordChange(false);
         $em->flush();

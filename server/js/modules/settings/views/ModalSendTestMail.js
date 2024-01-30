@@ -49,6 +49,7 @@ function(HoneySens, Models, ModalSendTestMailTpl) {
                             url: 'api/settings/testmail',
                             dataType: 'json',
                             data: JSON.stringify(view.model),
+                            contentType: 'application/json',
                             success: function(resp, code, xhr) {
                                 HoneySens.Views.waitForTask(new Models.Task(xhr.responseJSON), {
                                     done: function(task) {

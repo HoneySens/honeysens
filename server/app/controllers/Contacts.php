@@ -1,6 +1,9 @@
 <?php
 namespace HoneySens\app\controllers;
+
 use HoneySens\app\models\exceptions\NotFoundException;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 /**
@@ -12,18 +15,19 @@ use Respect\Validation\Validator as V;
  */
 class Contacts extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/contacts(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/contacts[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Contacts($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();
-            $criteria['id'] = $id;
+            $criteria['id'] = $args['id'] ?? null;
             try {
                 $result = $controller->get($criteria);
             } catch(\Exception $e) {
                 throw new NotFoundException();
             }
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
     }
 

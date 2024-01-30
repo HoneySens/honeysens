@@ -5,38 +5,38 @@ use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Settings extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/settings', function() use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/settings', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Settings($em, $services, $config);
             $settings = $controller->get();
-            echo json_encode($settings);
+            $response->getBody()->write(json_encode($settings));
+            return $response;
         });
 
-        $app->put('/api/settings', function() use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/settings', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Settings($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $settingsData = json_decode($request);
-            $settings = $controller->update($settingsData);
-            echo json_encode($settings);
+            $settings = $controller->update($request->getParsedBody());
+            $response->getBody()->write(json_encode($settings));
+            return $response;
         });
 
-        $app->post('/api/settings/testmail', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/settings/testmail', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Settings($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $data = json_decode($request);
-            $task = $controller->sendTestMail($data);
-            echo json_encode($task->getState());
+            $task = $controller->sendTestMail($request->getParsedBody());
+            $response->getBody()->write(json_encode($task->getState()));
+            return $response;
         });
 
-        $app->post('/api/settings/testevent', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/settings/testevent', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Settings($em, $services, $config);
-            echo json_encode($controller->sendTestEvent());
+            $response->getBody()->write(json_encode($controller->sendTestEvent()));
+            return $response;
         });
     }
 
@@ -134,7 +134,7 @@ class Settings extends RESTResource {
      * - syslogFacility: Facility according to syslog protocol (between 0 and 23)
      * - syslogPriority: Priority according to syslog protocol (2, 3, 4, 6, 7)
      *
-     * @param \stdClass $data
+     * @param array $data
      * @return array
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      * @throws \Doctrine\DBAL\DBALException
@@ -142,102 +142,102 @@ class Settings extends RESTResource {
     public function update($data) {
         $this->assureAllowed('update');
         // Validation
-        V::objectType()
-            ->attribute('serverHost', V::stringType())
-            ->attribute('serverPortHTTPS', V::intVal()->between(0, 65535))
-            ->attribute('smtpEnabled', V::boolType())
-            ->attribute('ldapEnabled', V::boolType())
-            ->attribute('syslogEnabled', V::boolType())
-            ->attribute('sensorsUpdateInterval', V::intVal()->between(1, 60))
-            ->attribute('sensorsServiceNetwork', V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/'))
-            ->attribute('sensorsTimeoutThreshold', V::intVal()->between(1, 1440))
-            ->attribute('apiLogKeepDays', V::intVal()->between(0, 65535))
-            ->attribute('preventEventDeletionByManagers', V::boolType())
-            ->attribute('preventSensorDeletionByManagers', V::boolType())
-            ->attribute('requireEventComment', V::boolType())
-            ->attribute('requireFilterDescription', V::boolType())
-            ->attribute('archivePrefer', V::boolType())
-            ->attribute('archiveMoveDays', V::intVal()->between(0, 65535))
-            ->attribute('archiveKeepDays', V::intVal()->between(0, 65535))
+        V::arrayType()
+            ->key('serverHost', V::stringType())
+            ->key('serverPortHTTPS', V::intVal()->between(0, 65535))
+            ->key('smtpEnabled', V::boolType())
+            ->key('ldapEnabled', V::boolType())
+            ->key('syslogEnabled', V::boolType())
+            ->key('sensorsUpdateInterval', V::intVal()->between(1, 60))
+            ->key('sensorsServiceNetwork', V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/'))
+            ->key('sensorsTimeoutThreshold', V::intVal()->between(1, 1440))
+            ->key('apiLogKeepDays', V::intVal()->between(0, 65535))
+            ->key('preventEventDeletionByManagers', V::boolType())
+            ->key('preventSensorDeletionByManagers', V::boolType())
+            ->key('requireEventComment', V::boolType())
+            ->key('requireFilterDescription', V::boolType())
+            ->key('archivePrefer', V::boolType())
+            ->key('archiveMoveDays', V::intVal()->between(0, 65535))
+            ->key('archiveKeepDays', V::intVal()->between(0, 65535))
             ->check($data);
-        if($data->smtpEnabled) {
-           V::attribute('smtpServer', V::stringType())
-               ->attribute('smtpPort', V::intVal()->between(0, 65535))
-               ->attribute('smtpEncryption', V::intVal()->between(0, 2))
-               ->attribute('smtpFrom', Utils::emailValidator())
-               ->attribute('smtpUser', V::stringType())
-               ->attribute('smtpPassword', V::stringType())
+        if($data['smtpEnabled']) {
+           V::key('smtpServer', V::stringType())
+               ->key('smtpPort', V::intVal()->between(0, 65535))
+               ->key('smtpEncryption', V::intVal()->between(0, 2))
+               ->key('smtpFrom', Utils::emailValidator())
+               ->key('smtpUser', V::stringType())
+               ->key('smtpPassword', V::stringType())
                ->check($data);
         } else {
-           V::attribute('smtpServer', V::optional(V::stringType()))
-               ->attribute('smtpPort', V::optional(V::intVal()->between(0, 65535)))
-               ->attribute('smtpEncryption', V::optional(V::intVal()->between(0, 2)))
-               ->attribute('smtpFrom', V::optional(Utils::emailValidator()))
-               ->attribute('smtpUser', V::optional(V::stringType()))
-               ->attribute('smtpPassword', V::optional(V::stringType()))
+           V::key('smtpServer', V::optional(V::stringType()))
+               ->key('smtpPort', V::optional(V::intVal()->between(0, 65535)))
+               ->key('smtpEncryption', V::optional(V::intVal()->between(0, 2)))
+               ->key('smtpFrom', V::optional(Utils::emailValidator()))
+               ->key('smtpUser', V::optional(V::stringType()))
+               ->key('smtpPassword', V::optional(V::stringType()))
                ->check($data);
         }
-        if($data->ldapEnabled) {
-            V::attribute('ldapServer', V::stringType())
-                ->attribute('ldapPort', V::intVal()->between(0, 65535))
-                ->attribute('ldapEncryption', V::intVal()->between(0, 2))
-                ->attribute('ldapTemplate', V::stringType())
+        if($data['ldapEnabled']) {
+            V::key('ldapServer', V::stringType())
+                ->key('ldapPort', V::intVal()->between(0, 65535))
+                ->key('ldapEncryption', V::intVal()->between(0, 2))
+                ->key('ldapTemplate', V::stringType())
                 ->check($data);
         } else {
-            V::attribute('ldapServer', V::optional(V::stringType()))
-                ->attribute('ldapPort', V::optional(V::intVal()->between(0, 65535)))
-                ->attribute('ldapEncryption', V::optional(V::intVal()->between(0, 2)))
-                ->attribute('ldapTemplate', V::optional(V::stringType()))
+            V::key('ldapServer', V::optional(V::stringType()))
+                ->key('ldapPort', V::optional(V::intVal()->between(0, 65535)))
+                ->key('ldapEncryption', V::optional(V::intVal()->between(0, 2)))
+                ->key('ldapTemplate', V::optional(V::stringType()))
                 ->check($data);
         }
-        if($data->syslogEnabled) {
-            V::attribute('syslogServer', V::stringType())
-                ->attribute('syslogPort', V::intVal()->between(0, 65535))
-                ->attribute('syslogTransport', V::intVal()->between(0, 1))
-                ->attribute('syslogFacility', V::oneOf(V::intVal()->between(0, 11), V::intVal()->between(16, 23)))
-                ->attribute('syslogPriority', V::oneOf(V::intVal()->between(2, 4), V::intVal()->between(6, 7)))
+        if($data['syslogEnabled']) {
+            V::key('syslogServer', V::stringType())
+                ->key('syslogPort', V::intVal()->between(0, 65535))
+                ->key('syslogTransport', V::intVal()->between(0, 1))
+                ->key('syslogFacility', V::oneOf(V::intVal()->between(0, 11), V::intVal()->between(16, 23)))
+                ->key('syslogPriority', V::oneOf(V::intVal()->between(2, 4), V::intVal()->between(6, 7)))
                 ->check($data);
         } else {
-            V::attribute('syslogServer', V::optional(V::stringType()))
-                ->attribute('syslogPort', V::optional(V::intVal()->between(0, 65535)))
-                ->attribute('syslogTransport', V::optional(V::intVal()->between(0, 1)))
-                ->attribute('syslogFacility', V::optional(V::oneOf(V::intVal()->between(0, 11), V::intVal()->between(16, 23))))
-                ->attribute('syslogPriority', V::optional(V::oneOf(V::intVal()->between(2, 4), V::intVal()->between(6, 7))))
+            V::key('syslogServer', V::optional(V::stringType()))
+                ->key('syslogPort', V::optional(V::intVal()->between(0, 65535)))
+                ->key('syslogTransport', V::optional(V::intVal()->between(0, 1)))
+                ->key('syslogFacility', V::optional(V::oneOf(V::intVal()->between(0, 11), V::intVal()->between(16, 23))))
+                ->key('syslogPriority', V::optional(V::oneOf(V::intVal()->between(2, 4), V::intVal()->between(6, 7))))
                 ->check($data);
         }
         // Persistence
         $config = $this->getConfig();
-        $config->set('server', 'host', $data->serverHost);
-        $config->set('server', 'portHTTPS', $data->serverPortHTTPS);
-        $config->set('smtp', 'enabled', $data->smtpEnabled ? 'true' : 'false');
-        $config->set('smtp', 'server', $data->smtpServer);
-        $config->set('smtp', 'port', $data->smtpPort);
-        $config->set('smtp', 'encryption', $data->smtpEncryption);
-        $config->set('smtp', 'from', $data->smtpFrom);
-        $config->set('smtp', 'user', $data->smtpUser);
-        $config->set('smtp', 'password', $data->smtpPassword);
-        $config->set('ldap', 'enabled', $data->ldapEnabled ? 'true' : 'false');
-        $config->set('ldap', 'server', $data->ldapServer);
-        $config->set('ldap', 'port', $data->ldapPort);
-        $config->set('ldap', 'encryption', $data->ldapEncryption);
-        $config->set('ldap', 'template', $data->ldapTemplate);
-        $config->set('syslog', 'enabled', $data->syslogEnabled ? 'true' : 'false');
-        $config->set('syslog', 'server', $data->syslogServer);
-        $config->set('syslog', 'port', $data->syslogPort);
-        $config->set('syslog', 'transport', $data->syslogTransport);
-        $config->set('syslog', 'facility', $data->syslogFacility);
-        $config->set('syslog', 'priority', $data->syslogPriority);
-        $config->set('sensors', 'update_interval', $data->sensorsUpdateInterval);
-        $config->set('sensors', 'service_network', $data->sensorsServiceNetwork);
-        $config->set('sensors', 'timeout_threshold', $data->sensorsTimeoutThreshold);
-        $config->set('misc', 'api_log_keep_days', $data->apiLogKeepDays);
-        $config->set('misc', 'prevent_event_deletion_by_managers', $data->preventEventDeletionByManagers ? 'true' : 'false');
-        $config->set('misc', 'prevent_sensor_deletion_by_managers', $data->preventSensorDeletionByManagers ? 'true' : 'false');
-        $config->set('misc', 'require_event_comment', $data->requireEventComment ? 'true' : 'false');
-        $config->set('misc', 'require_filter_description', $data->requireFilterDescription ? 'true' : 'false');
-        $config->set('misc', 'archive_prefer', $data->archivePrefer ? 'true' : 'false');
-        $config->set('misc', 'archive_move_days', $data->archiveMoveDays);
-        $config->set('misc', 'archive_keep_days', $data->archiveKeepDays);
+        $config->set('server', 'host', $data['serverHost']);
+        $config->set('server', 'portHTTPS', $data['serverPortHTTPS']);
+        $config->set('smtp', 'enabled', $data['smtpEnabled'] ? 'true' : 'false');
+        $config->set('smtp', 'server', $data['smtpServer']);
+        $config->set('smtp', 'port', $data['smtpPort']);
+        $config->set('smtp', 'encryption', $data['smtpEncryption']);
+        $config->set('smtp', 'from', $data['smtpFrom']);
+        $config->set('smtp', 'user', $data['smtpUser']);
+        $config->set('smtp', 'password', $data['smtpPassword']);
+        $config->set('ldap', 'enabled', $data['ldapEnabled'] ? 'true' : 'false');
+        $config->set('ldap', 'server', $data['ldapServer']);
+        $config->set('ldap', 'port', $data['ldapPort']);
+        $config->set('ldap', 'encryption', $data['ldapEncryption']);
+        $config->set('ldap', 'template', $data['ldapTemplate']);
+        $config->set('syslog', 'enabled', $data['syslogEnabled'] ? 'true' : 'false');
+        $config->set('syslog', 'server', $data['syslogServer']);
+        $config->set('syslog', 'port', $data['syslogPort']);
+        $config->set('syslog', 'transport', $data['syslogTransport']);
+        $config->set('syslog', 'facility', $data['syslogFacility']);
+        $config->set('syslog', 'priority', $data['syslogPriority']);
+        $config->set('sensors', 'update_interval', $data['sensorsUpdateInterval']);
+        $config->set('sensors', 'service_network', $data['sensorsServiceNetwork']);
+        $config->set('sensors', 'timeout_threshold', $data['sensorsTimeoutThreshold']);
+        $config->set('misc', 'api_log_keep_days', $data['apiLogKeepDays']);
+        $config->set('misc', 'prevent_event_deletion_by_managers', $data['preventEventDeletionByManagers'] ? 'true' : 'false');
+        $config->set('misc', 'prevent_sensor_deletion_by_managers', $data['preventSensorDeletionByManagers'] ? 'true' : 'false');
+        $config->set('misc', 'require_event_comment', $data['requireEventComment'] ? 'true' : 'false');
+        $config->set('misc', 'require_filter_description', $data['requireFilterDescription'] ? 'true' : 'false');
+        $config->set('misc', 'archive_prefer', $data['archivePrefer'] ? 'true' : 'false');
+        $config->set('misc', 'archive_move_days', $data['archiveMoveDays']);
+        $config->set('misc', 'archive_keep_days', $data['archiveKeepDays']);
         $config->save();
         $this->getEntityManager()->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
         $this->log('System settings updated', LogEntry::RESOURCE_SETTINGS);
@@ -277,22 +277,29 @@ class Settings extends RESTResource {
         );
     }
 
+    /**
+     * Sends a test e-email via a given SMTP server.
+     *
+     * @param array $data
+     * @return Task
+     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     */
     public function sendTestMail($data) {
         $this->assureAllowed('update');
         // Validation
-        V::objectType()
-            ->attribute('recipient', Utils::emailValidator())
-            ->attribute('smtpServer', V::stringType())
-            ->attribute('smtpPort', V::intVal()->between(0, 65535))
-            ->attribute('smtpEncryption', V::intVal()->between(0, 2))
-            ->attribute('smtpUser', V::stringType())
-            ->attribute('smtpFrom', Utils::emailValidator())
-            ->attribute('smtpPassword', V::stringType())
+        V::arrayType()
+            ->key('recipient', Utils::emailValidator())
+            ->key('smtpServer', V::stringType())
+            ->key('smtpPort', V::intVal()->between(0, 65535))
+            ->key('smtpEncryption', V::intVal()->between(0, 2))
+            ->key('smtpUser', V::stringType())
+            ->key('smtpFrom', Utils::emailValidator())
+            ->key('smtpPassword', V::stringType())
             ->check($data);
         // Send mail
         $contactService = $this->getServiceManager()->get(ServiceManager::SERVICE_CONTACT);
-        $this->log(sprintf('Test E-Mail sent to %s', $data->recipient), LogEntry::RESOURCE_SETTINGS);
-        return $contactService->sendTestMail($this->getSessionUser(), $data->smtpFrom, $data->recipient, $data->smtpServer, $data->smtpPort, $data->smtpEncryption, $data->smtpUser, $data->smtpPassword);
+        $this->log(sprintf('Test E-Mail sent to %s', $data['recipient']), LogEntry::RESOURCE_SETTINGS);
+        return $contactService->sendTestMail($this->getSessionUser(), $data['smtpFrom'], $data['recipient'], $data['smtpServer'], $data['smtpPort'], $data['smtpEncryption'], $data['smtpUser'], $data['smtpPassword']);
     }
 
     public function sendTestEvent() {

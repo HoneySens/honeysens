@@ -228,6 +228,7 @@ function(HoneySens, Models, Backgrid, EventDetailsView, ModalEventRemoveView, Ba
                                         type: 'DELETE',
                                         url: 'api/events',
                                         data: JSON.stringify({id: this.model.id, archived: this.model.get('archived'), archive: archive}),
+                                        contentType: 'application/json',
                                         success: function() {
                                             HoneySens.data.models.events.fetch();
                                             HoneySens.request('view:modal').empty();

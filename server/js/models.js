@@ -43,9 +43,9 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             mode: 'server',
             url: function() {
                 if(this.length > 0) {
-                    return 'api/events/?last_id=' + (this.last().get('id'));
+                    return 'api/events?last_id=' + (this.last().get('id'));
                 } else {
-                    return 'api/events/';
+                    return 'api/events';
                 }
             },
             state: {
@@ -410,7 +410,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
 
         Models.Users = Backbone.Collection.extend({
             model: Models.User,
-            url: 'api/users/'
+            url: 'api/users'
         });
 
         Models.IncidentContact = Backbone.Model.extend({
@@ -558,7 +558,7 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
 
         Models.Templates = Backbone.Collection.extend({
             model: Models.Template,
-            url: 'api/templates/'
+            url: 'api/templates'
         });
 
         // Initialize runtime models

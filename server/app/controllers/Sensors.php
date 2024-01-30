@@ -11,96 +11,93 @@ use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
-use phpseclib\File\X509;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class Sensors extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config, $messages) {
-        $app->get('/api/sensors(/:id)/', function($id = null) use ($app, $em, $services, $config, $messages) {
+    static function registerRoutes($app, $em, $services, $config) {
+        $app->get('/api/sensors[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
-            $criteria = array();
-            $criteria['userID'] = $controller->getSessionUserID();
-            $criteria['id'] = $id;
+            $criteria = array('userID' => $controller->getSessionUserID(), 'id' => $args['id'] ?? null);
             try {
                 $result = $controller->get($criteria);
             } catch(\Exception $e) {
                 throw new NotFoundException();
             }
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($result));
+            return $response;
        });
 
-        $app->get('/api/sensors/config/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/sensors/config/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
-            echo json_encode($controller->requestConfigDownload($id));
+            $task = $controller->requestConfigDownload($args['id']);
+            $response->getBody()->write(json_encode($task->getState()));
+            return $response;
         });
 
-        $app->get('/api/sensors/status/by-sensor/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/sensors/status/by-sensor/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
-            $criteria = array();
-            $criteria['userID'] = $controller->getSessionUserID();
-            $criteria['sensorID'] = $id;
+            $criteria = array('userID' => $controller->getSessionUserID(), 'sensorID' => $args['id']);
             try {
                 $result = $controller->getStatus($criteria);
             } catch(\Exception $e) {
                 throw new NotFoundException();
             }
-            echo json_encode($result);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
         /**
          * This resource is used by authenticated sensors to receive firmware download details.
          * The return value is an array with platform names as keys and their respective access URIs as value.
          */
-        $app->get('/api/sensors/firmware', function() use ($app, $em, $services, $config, $messages) {
+        $app->get('/api/sensors/firmware', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $sensor = $controller->validateSensorRequest('get', '');
             $body = json_encode($controller->getFirmwareURIs($sensor));
             $controller->setMACHeaders($sensor, 'get', $body);
-            echo $body;
+            $response->getBody()->write($body);
+            return $response;
         });
 
-        $app->post('/api/sensors', function() use ($app, $em, $services, $config, $messages) {
+        $app->post('/api/sensors', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $sensorData = json_decode($request);
-            $sensor = $controller->create($sensorData);
-            echo json_encode($controller->getSensorState($sensor));
+            $sensor = $controller->create($request->getParsedBody());
+            $result = $controller->getSensorState($sensor);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        // Polling endpoint for sensors to send status data and receive their current configuration
-        $app->post('/api/sensors/status', function() use ($app, $em, $services, $config, $messages) {
+        /**
+         * Polling endpoint for sensors to send status data and receive their current configuration.
+         */
+        $app->post('/api/sensors/status', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $statusData = json_decode($request);
-            $sensor = $controller->validateSensorRequest('create', $request);
-            $sensorData = $controller->poll($sensor, $statusData);
+            $requestBody = $request->getBody()->getContents();
+            $sensor = $controller->validateSensorRequest('create', $requestBody);
+            // Parse sensor request as JSON even if no correct Content-Type header is set
+            $sensorData = $controller->poll($sensor, json_decode($requestBody, true));
             $body = json_encode($sensorData);
             $controller->setMACHeaders($sensor, 'create', $body);
-            echo $body;
+            $response->getBody()->write($body);
+            return $response;
         });
 
-        $app->put('/api/sensors/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->put('/api/sensors/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
-            $request = $app->request()->getBody();
-            V::json()->check($request);
-            $sensorData = json_decode($request);
-            $sensor = $controller->update($id, $sensorData);
-            echo json_encode($controller->getSensorState($sensor));
+            $sensor = $controller->update($args['id'], $request->getParsedBody());
+            $result = $controller->getSensorState($sensor);
+            $response->getBody()->write(json_encode($result));
+            return $response;
         });
 
-        $app->delete('/api/sensors/:id', function($id) use ($app, $em, $services, $config, $messages) {
+        $app->delete('/api/sensors/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
-            $request = $app->request->getBody();
-            $criteria = array();
-            if(strlen($request) > 0) {
-                V::json()->check($request);
-                $criteria = json_decode($request, true);
-            }
-            $controller->delete($id, $criteria);
-            echo json_encode([]);
+            $controller->delete($args['id'], $request->getParsedBody());
+            $response->getBody()->write(json_encode([]));
+            return $response;
         });
     }
 
@@ -171,10 +168,10 @@ class Sensors extends RESTResource {
      * Returns an associative array with firmware download URIs for all platforms.
      * If the given sensor overrides one of those with a specific revision, that one is returned here.
      *
-     * @param $sensor
+     * @param Sensor $sensor
      * @return array
      */
-    public function getFirmwareURIs($sensor) {
+    public function getFirmwareURIs(Sensor $sensor) {
         $platforms = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Platform')->findAll();
         $result = array();
         foreach($platforms as $platform) {
@@ -226,125 +223,125 @@ class Sensors extends RESTResource {
      * - eapol_client_key: Client key for EAPOL in TLS mode
      * - eapol_client_key_password: Client key passphrase for EAPOL in TLS mode
      *
-     * @param \stdClass $data
+     * @param array $data
      * @return Sensor
      * @throws ForbiddenException
      */
     public function create($data) {
         $this->assureAllowed('create');
         // Validation
-        V::objectType()
-            ->attribute('name', V::alnum('_-.')->length(1, 50))
-            ->attribute('location', V::stringType()->length(0, 255))
-            ->attribute('division', V::intVal())
-            ->attribute('eapol_mode', V::intVal()->between(0, 4))
-            ->attribute('server_endpoint_mode', V::intVal()->between(0, 1))
-            ->attribute('network_ip_mode', V::intVal()->between(0, 2))
-            ->attribute('network_mac_mode', V::intVal()->between(0, 1))
-            ->attribute('proxy_mode', V::intVal()->between(0, 1))
-            ->attribute('update_interval', V::optional(V::intVal()->between(1, 60)))
-            ->attribute('service_network', V::optional(V::stringType()->length(9, 18)))
-            ->attribute('firmware', V::optional(V::intVal()))
+        V::arrayType()
+            ->key('name', V::alnum('_-.')->length(1, 50))
+            ->key('location', V::stringType()->length(0, 255))
+            ->key('division', V::intVal())
+            ->key('eapol_mode', V::intVal()->between(0, 4))
+            ->key('server_endpoint_mode', V::intVal()->between(0, 1))
+            ->key('network_ip_mode', V::intVal()->between(0, 2))
+            ->key('network_mac_mode', V::intVal()->between(0, 1))
+            ->key('proxy_mode', V::intVal()->between(0, 1))
+            ->key('update_interval', V::optional(V::intVal()->between(1, 60)))
+            ->key('service_network', V::optional(V::stringType()->length(9, 18)))
+            ->key('firmware', V::optional(V::intVal()))
             ->check($data);
         $em = $this->getEntityManager();
-        $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data->division);
+        $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data['division']);
         V::objectType()->check($division);
         $firmware = null;
-        if($data->firmware != null) {
-            $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data->firmware);
+        if($data['firmware'] != null) {
+            $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data['firmware']);
             V::objectType()->check($firmware);
         }
         // Persistence
         $sensor = new Sensor();
-        $sensor->setName($data->name)
-            ->setLocation($data->location)
+        $sensor->setName($data['name'])
+            ->setLocation($data['location'])
             ->setDivision($division)
-            ->setEAPOLMode($data->eapol_mode)
-            ->setServerEndpointMode($data->server_endpoint_mode)
-            ->setNetworkIPMode($data->network_ip_mode)
-            ->setNetworkMACMode($data->network_mac_mode)
-            ->setProxyMode($data->proxy_mode)
-            ->setUpdateInterval($data->update_interval)
-            ->setServiceNetwork($data->service_network)
+            ->setEAPOLMode($data['eapol_mode'])
+            ->setServerEndpointMode($data['server_endpoint_mode'])
+            ->setNetworkIPMode($data['network_ip_mode'])
+            ->setNetworkMACMode($data['network_mac_mode'])
+            ->setProxyMode($data['proxy_mode'])
+            ->setUpdateInterval($data['update_interval'])
+            ->setServiceNetwork($data['service_network'])
             ->setFirmware($firmware);
         // Validate and persist additional attributes depending on the previous ones
         if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_CUSTOM) {
-            V::attribute('server_endpoint_host', V::stringType()->ip())
-                ->attribute('server_endpoint_port_https', V::intVal()->between(1, 65535))
+            V::key('server_endpoint_host', V::stringType()->ip())
+                ->key('server_endpoint_port_https', V::intVal()->between(1, 65535))
                 ->check($data);
-            $sensor->setServerEndpointHost($data->server_endpoint_host)
-                ->setServerEndpointPortHTTPS($data->server_endpoint_port_https);
+            $sensor->setServerEndpointHost($data['server_endpoint_host'])
+                ->setServerEndpointPortHTTPS($data['server_endpoint_port_https']);
         }
         if($sensor->getNetworkIPMode() == Sensor::NETWORK_IP_MODE_STATIC) {
-            V::attribute('network_ip_address', V::stringType()->ip())
-                ->attribute('network_ip_netmask', V::stringType()->ip())
-                ->attribute('network_ip_gateway', V::optional(V::stringType()->ip()))
-                ->attribute('network_ip_dns', V::optional(V::stringType()->ip()))
+            V::key('network_ip_address', V::stringType()->ip())
+                ->key('network_ip_netmask', V::stringType()->ip())
+                ->key('network_ip_gateway', V::optional(V::stringType()->ip()))
+                ->key('network_ip_dns', V::optional(V::stringType()->ip()))
                 ->check($data);
-            $sensor->setNetworkIPAddress($data->network_ip_address)
-                ->setNetworkIPNetmask($data->network_ip_netmask)
-                ->setNetworkIPGateway($data->network_ip_gateway)
-                ->setNetworkIPDNS($data->network_ip_dns);
+            $sensor->setNetworkIPAddress($data['network_ip_address'])
+                ->setNetworkIPNetmask($data['network_ip_netmask'])
+                ->setNetworkIPGateway($data['network_ip_gateway'])
+                ->setNetworkIPDNS($data['network_ip_dns']);
         } elseif ($sensor->getNetworkIPMode() == Sensor::NETWORK_IP_MODE_DHCP) {
-            V::attribute('network_dhcp_hostname', V::optional(V::alnum('-.')->lowercase()->length(1, 253)))->check($data);
-            $sensor->setNetworkDHCPHostname($data->network_dhcp_hostname == '' ? null : $data->network_dhcp_hostname);
+            V::key('network_dhcp_hostname', V::optional(V::alnum('-.')->lowercase()->length(1, 253)))->check($data);
+            $sensor->setNetworkDHCPHostname($data['network_dhcp_hostname'] == '' ? null : $data['network_dhcp_hostname']);
         }
         if($sensor->getNetworkMACMode() == Sensor::NETWORK_MAC_MODE_CUSTOM) {
-            V::attribute('network_mac_address', V::stringType()->macAddress())
+            V::key('network_mac_address', V::stringType()->macAddress())
                 ->check($data);
-            $sensor->setNetworkMACAddress($data->network_mac_address);
+            $sensor->setNetworkMACAddress($data['network_mac_address']);
         }
         if($sensor->getProxyMode() == Sensor::PROXY_MODE_ENABLED) {
-            V::attribute('proxy_host', V::stringType())
-                ->attribute('proxy_port', V::intVal()->between(0, 65535))
-                ->attribute('proxy_user', V::optional(V::stringType()))
+            V::key('proxy_host', V::stringType())
+                ->key('proxy_port', V::intVal()->between(0, 65535))
+                ->key('proxy_user', V::optional(V::stringType()))
                 ->check($data);
-            $sensor->setProxyHost($data->proxy_host)
-                ->setProxyPort($data->proxy_port);
-            if(strlen($data->proxy_user) > 0) {
-                $sensor->setProxyUser($data->proxy_user);
+            $sensor->setProxyHost($data['proxy_host'])
+                ->setProxyPort($data['proxy_port']);
+            if(strlen($data['proxy_user']) > 0) {
+                $sensor->setProxyUser($data['proxy_user']);
                 // Only set a password if one was provided by the client
-                if(V::attribute('proxy_password', V::stringType())->validate($data)) {
-                    $sensor->setProxyPassword($data->proxy_password);
+                if(V::key('proxy_password', V::stringType())->validate($data)) {
+                    $sensor->setProxyPassword($data['proxy_password']);
                 }
             }
             else $sensor->setProxyUser(null);
         }
         if($sensor->getEAPOLMode() != Sensor::EAPOL_MODE_DISABLED) {
-            V::attribute('eapol_identity', V::stringType()->length(1, 512))->check($data);
-            $sensor->setEAPOLIdentity($data->eapol_identity);
+            V::key('eapol_identity', V::stringType()->length(1, 512))->check($data);
+            $sensor->setEAPOLIdentity($data['eapol_identity']);
             if($sensor->getEAPOLMode() == Sensor::EAPOL_MODE_MD5) {
-                V::attribute('eapol_password', V::optional(V::stringType()->length(1, 512)))->check($data);
-                $sensor->setEAPOLPassword($data->eapol_password);
+                V::key('eapol_password', V::optional(V::stringType()->length(1, 512)))->check($data);
+                $sensor->setEAPOLPassword($data['eapol_password']);
             } else {
                 // For the other modes, a CA cert can be specified
-                V::attribute('eapol_ca_cert', V::optional(V::stringType()))->check($data);
-                if($data->eapol_ca_cert != null) {
-                    $cert = $this->verifyCertificate($data->eapol_ca_cert);
+                V::key('eapol_ca_cert', V::optional(V::stringType()))->check($data);
+                if($data['eapol_ca_cert'] != null) {
+                    $cert = $this->verifyCertificate($data['eapol_ca_cert']);
                     $caCert = new SSLCert();
                     $caCert->setContent($cert);
                     $em->persist($caCert);
                     $sensor->setEAPOLCACert($caCert);
                 };
                 if($sensor->getEAPOLMode() == Sensor::EAPOL_MODE_TLS) {
-                    V::attribute('eapol_client_cert', V::stringType())
-                        ->attribute('eapol_client_key', V::stringType())
-                        ->attribute('eapol_client_key_password', V::optional(V::stringType()->length(1, 512)))
+                    V::key('eapol_client_cert', V::stringType())
+                        ->key('eapol_client_key', V::stringType())
+                        ->key('eapol_client_key_password', V::optional(V::stringType()->length(1, 512)))
                         ->check($data);
-                    $cert = $this->verifyCertificate($data->eapol_client_cert);
-                    $key = $this->verifyKey($data->eapol_client_key, $data->eapol_client_key_password == null ? '' : $data->eapol_client_key_password);
+                    $cert = $this->verifyCertificate($data['eapol_client_cert']);
+                    $key = $this->verifyKey($data['eapol_client_key'], $data['eapol_client_key_password'] == null ? '' : $data['eapol_client_key_password']);
                     $clientCert = new SSLCert();
                     $clientCert->setContent($cert)->setKey($key);
                     $em->persist($clientCert);
                     $sensor->setEAPOLClientCert($clientCert);
-                    $sensor->setEAPOLClientCertPassphrase($data->eapol_client_key_password);
+                    $sensor->setEAPOLClientCertPassphrase($data['eapol_client_key_password']);
                 } else {
                     // PEAP or TTLS
-                    V::attribute('eapol_password', V::optional(V::stringType()->length(1, 512)))
-                        ->attribute('eapol_anon_identity', V::optional(V::stringType()->length(1, 512)))
+                    V::key('eapol_password', V::optional(V::stringType()->length(1, 512)))
+                        ->key('eapol_anon_identity', V::optional(V::stringType()->length(1, 512)))
                         ->check($data);
-                    $sensor->setEAPOLPassword($data->eapol_password);
-                    $sensor->setEAPOLAnonymousIdentity($data->eapol_anon_identity);
+                    $sensor->setEAPOLPassword($data['eapol_password']);
+                    $sensor->setEAPOLAnonymousIdentity($data['eapol_anon_identity']);
                 }
             }
         }
@@ -372,16 +369,16 @@ class Sensors extends RESTResource {
      * The status data JSON object also MAY contain the following attributes:
      * - service_status: associative JSON array {service_name: service_status, ...}
      *
-     * @param \stdClass $data
+     * @param array $data
      * @return SensorStatus
      * @throws BadRequestException
      */
     public function createStatus($sensor, $data) {
         // Validation
-        V::objectType()
-            ->attribute('status', V::stringType())
+        V::arrayType()
+            ->key('status', V::stringType())
             ->check($data);
-        $statusDataDecoded = base64_decode($data->status);
+        $statusDataDecoded = base64_decode($data['status']);
         V::json()->check($statusDataDecoded);
         $statusData = json_decode($statusDataDecoded);
         V::objectType()
@@ -492,16 +489,16 @@ class Sensors extends RESTResource {
         $sensorData['unhandledEvents'] = $sensorData['new_events'] != 0;
         // If the server cert fingerprint was sent and differs from the current (or soon-to-be) TLS cert, include updated cert data
         $srvCert = $this->getServerCert();
-        if(V::attribute('srv_crt_fp', V::stringType())->validate($statusData) && openssl_x509_fingerprint($srvCert, 'sha256') != $statusData->srv_crt_fp)
+        if(V::key('srv_crt_fp', V::stringType())->validate($statusData) && openssl_x509_fingerprint($srvCert, 'sha256') != $statusData['srv_crt_fp'])
             $sensorData['server_crt'] = $srvCert;
         // If the EAPOL CA cert fingerprint was sent and differs, include updated cert
         $caCertFP = $sensor->getEAPOLCACert() == null ? null : $sensor->getEAPOLCACert()->getFingerprint();
-        if(V::attribute('eapol_ca_crt_fp', V::optional(V::stringType()))->validate($statusData) && $caCertFP != $statusData->eapol_ca_crt_fp)
+        if(V::key('eapol_ca_crt_fp', V::optional(V::stringType()))->validate($statusData) && $caCertFP != $statusData['eapol_ca_crt_fp'])
             $sensorData['eapol_ca_cert'] = $sensor->getEAPOLCACert() == null ? null : $sensor->getEAPOLCACert()->getContent();
         else unset($sensorData['eapol_ca_cert']);
         // If the EAPOL TLS cert fingerprint was sent and differs, include updated cert and key
         $clientCertFP = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getFingerprint();
-        if(V::attribute('eapol_client_crt_fp', V::optional(V::stringType()))->validate($statusData) && $clientCertFP != $statusData->eapol_client_crt_fp) {
+        if(V::key('eapol_client_crt_fp', V::optional(V::stringType()))->validate($statusData) && $clientCertFP != $statusData['eapol_client_crt_fp']) {
             $sensorData['eapol_client_cert'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getContent();
             $sensorData['eapol_client_key'] = $sensor->getEAPOLClientCert() == null ? null : $sensor->getEAPOLClientCert()->getKey();
         } else unset($sensorData['eapol_client_cert']);
@@ -546,7 +543,7 @@ class Sensors extends RESTResource {
      * - eapol_client_key_password: Client key passphrase for EAPOL in TLS mode
      *
      * @param int $id
-     * @param \stdClass $data
+     * @param array $data
      * @return Sensor
      * @throws ForbiddenException
      * @throws BadRequestException
@@ -555,54 +552,54 @@ class Sensors extends RESTResource {
         $this->assureAllowed('update');
         // Validation
         V::intVal()->check($id);
-        V::objectType()
-            ->attribute('name', V::alnum('_-.')->length(1, 50))
-            ->attribute('location', V::stringType()->length(0, 255))
-            ->attribute('division', V::intVal())
-            ->attribute('eapol_mode', V::intVal()->between(0, 4))
-            ->attribute('server_endpoint_mode', V::intVal()->between(0, 1))
-            ->attribute('network_ip_mode', V::intVal()->between(0, 2))
-            ->attribute('network_mac_mode', V::intVal()->between(0, 1))
-            ->attribute('proxy_mode', V::intVal()->between(0, 1))
-            ->attribute('update_interval', V::optional(V::intVal()->between(1, 60)))
-            ->attribute('service_network', V::optional(V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/')))
-            ->attribute('firmware', V::optional(V::intVal()))
-            ->attribute('services', V::arrayVal()->each(V::objectType()
-                ->attribute('service', V::intVal())
-                ->attribute('revision', V::nullType())  // The revision field is currently unused
+        V::arrayType()
+            ->key('name', V::alnum('_-.')->length(1, 50))
+            ->key('location', V::stringType()->length(0, 255))
+            ->key('division', V::intVal())
+            ->key('eapol_mode', V::intVal()->between(0, 4))
+            ->key('server_endpoint_mode', V::intVal()->between(0, 1))
+            ->key('network_ip_mode', V::intVal()->between(0, 2))
+            ->key('network_mac_mode', V::intVal()->between(0, 1))
+            ->key('proxy_mode', V::intVal()->between(0, 1))
+            ->key('update_interval', V::optional(V::intVal()->between(1, 60)))
+            ->key('service_network', V::optional(V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9]?)$/')))
+            ->key('firmware', V::optional(V::intVal()))
+            ->key('services', V::arrayVal()->each(V::arrayType()
+                ->key('service', V::intVal())
+                ->key('revision', V::nullType())  // The revision field is currently unused
             ))->check($data);
         $em = $this->getEntityManager();
         $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
         // Persistence
-        $sensor->setName($data->name);
-        $sensor->setLocation($data->location);
+        $sensor->setName($data['name']);
+        $sensor->setLocation($data['location']);
         // TODO Move this sensor's events to the new Division, too
-        $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data->division);
+        $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data['division']);
         V::objectType()->check($division);
         $sensor->setDivision($division);
-        $sensor->setServerEndpointMode($data->server_endpoint_mode);
+        $sensor->setServerEndpointMode($data['server_endpoint_mode']);
         if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_CUSTOM) {
-            V::attribute('server_endpoint_host', V::stringType()->ip())
-                ->attribute('server_endpoint_port_https', V::intVal()->between(1, 65535))
+            V::key('server_endpoint_host', V::stringType()->ip())
+                ->key('server_endpoint_port_https', V::intVal()->between(1, 65535))
                 ->check($data);
-            $sensor->setServerEndpointHost($data->server_endpoint_host)
-                ->setServerEndpointPortHTTPS($data->server_endpoint_port_https);
+            $sensor->setServerEndpointHost($data['server_endpoint_host'])
+                ->setServerEndpointPortHTTPS($data['server_endpoint_port_https']);
         } else {
             $sensor->setServerEndpointHost(null)
                 ->setServerEndpointPortHTTPS(null);
         }
-        $sensor->setNetworkIPMode($data->network_ip_mode);
+        $sensor->setNetworkIPMode($data['network_ip_mode']);
         if($sensor->getNetworkIPMode() == Sensor::NETWORK_IP_MODE_STATIC) {
-            V::attribute('network_ip_address', V::stringType()->ip())
-                ->attribute('network_ip_netmask', V::stringType()->ip())
-                ->attribute('network_ip_gateway', V::optional(V::stringType()->ip()))
-                ->attribute('network_ip_dns', V::optional(V::stringType()->ip()))
+            V::key('network_ip_address', V::stringType()->ip())
+                ->key('network_ip_netmask', V::stringType()->ip())
+                ->key('network_ip_gateway', V::optional(V::stringType()->ip()))
+                ->key('network_ip_dns', V::optional(V::stringType()->ip()))
                 ->check($data);
-            $sensor->setNetworkIPAddress($data->network_ip_address)
-                ->setNetworkIPNetmask($data->network_ip_netmask)
-                ->setNetworkIPGateway($data->network_ip_gateway)
-                ->setNetworkIPDNS($data->network_ip_dns);
+            $sensor->setNetworkIPAddress($data['network_ip_address'])
+                ->setNetworkIPNetmask($data['network_ip_netmask'])
+                ->setNetworkIPGateway($data['network_ip_gateway'])
+                ->setNetworkIPDNS($data['network_ip_dns']);
         } else {
             $sensor->setNetworkIPAddress(null)
                 ->setNetworkIPNetmask(null)
@@ -610,32 +607,32 @@ class Sensors extends RESTResource {
                 ->setNetworkIPDNS(null);
         }
         if($sensor->getNetworkIPMode() == Sensor::NETWORK_IP_MODE_DHCP) {
-            V::attribute('network_dhcp_hostname', V::optional(V::alnum('-.')->lowercase()->length(1, 253)))->check($data);
-            $sensor->setNetworkDHCPHostname($data->network_dhcp_hostname == '' ? null : $data->network_dhcp_hostname);
+            V::key('network_dhcp_hostname', V::optional(V::alnum('-.')->lowercase()->length(1, 253)))->check($data);
+            $sensor->setNetworkDHCPHostname($data['network_dhcp_hostname'] == '' ? null : $data['network_dhcp_hostname']);
         } else {
             $sensor->setNetworkDHCPHostname(null);
         }
-        $sensor->setNetworkMACMode($data->network_mac_mode);
+        $sensor->setNetworkMACMode($data['network_mac_mode']);
         if($sensor->getNetworkMACMode() == Sensor::NETWORK_MAC_MODE_CUSTOM) {
-            V::attribute('network_mac_address', V::stringType()->macAddress())
+            V::key('network_mac_address', V::stringType()->macAddress())
                 ->check($data);
-            $sensor->setNetworkMACAddress($data->network_mac_address);
+            $sensor->setNetworkMACAddress($data['network_mac_address']);
         } else {
             $sensor->setNetworkMACAddress(null);
         }
-        $sensor->setProxyMode($data->proxy_mode);
+        $sensor->setProxyMode($data['proxy_mode']);
         if($sensor->getProxyMode() == Sensor::PROXY_MODE_ENABLED) {
-            V::attribute('proxy_host', V::stringType())
-                ->attribute('proxy_port', V::intVal()->between(0, 65535))
-                ->attribute('proxy_user', V::optional(V::stringType()))
+            V::key('proxy_host', V::stringType())
+                ->key('proxy_port', V::intVal()->between(0, 65535))
+                ->key('proxy_user', V::optional(V::stringType()))
                 ->check($data);
-            $sensor->setProxyHost($data->proxy_host)
-                ->setProxyPort($data->proxy_port);
-            if(strlen($data->proxy_user) > 0) {
-                $sensor->setProxyUser($data->proxy_user);
+            $sensor->setProxyHost($data['proxy_host'])
+                ->setProxyPort($data['proxy_port']);
+            if(strlen($data['proxy_user']) > 0) {
+                $sensor->setProxyUser($data['proxy_user']);
                 // Only change the password if one was explicitly submitted
-                if(V::attribute('proxy_password', V::stringType())->validate($data)) {
-                    $sensor->setProxyPassword($data->proxy_password);
+                if(V::key('proxy_password', V::stringType())->validate($data)) {
+                    $sensor->setProxyPassword($data['proxy_password']);
                 }
             } else {
                 $sensor->setProxyUser(null);
@@ -647,14 +644,14 @@ class Sensors extends RESTResource {
                 ->setProxyUser(null)
                 ->setProxyPassword(null);
         }
-        $sensor->setEAPOLMode($data->eapol_mode);
+        $sensor->setEAPOLMode($data['eapol_mode']);
         if($sensor->getEAPOLMode() != Sensor::EAPOL_MODE_DISABLED) {
-            V::attribute('eapol_identity', V::stringType()->length(1, 512))->check($data);
-            $sensor->setEAPOLIdentity($data->eapol_identity);
+            V::key('eapol_identity', V::stringType()->length(1, 512))->check($data);
+            $sensor->setEAPOLIdentity($data['eapol_identity']);
             if($sensor->getEAPOLMode() == Sensor::EAPOL_MODE_MD5) {
-                V::attribute('eapol_password', V::optional(V::stringType()->length(1, 512)), false)->check($data);
+                V::key('eapol_password', V::optional(V::stringType()->length(1, 512)), false)->check($data);
                 // Only update the password if it was specified, otherwise keep the existing one
-                if(V::attribute('eapol_password')->validate($data)) $sensor->setEAPOLPassword($data->eapol_password);
+                if(V::key('eapol_password')->validate($data)) $sensor->setEAPOLPassword($data['eapol_password']);
                 // Reset remaining parameters
                 $sensor->setEAPOLClientCertPassphrase(null)
                     ->setEAPOLAnonymousIdentity(null);
@@ -668,10 +665,10 @@ class Sensors extends RESTResource {
                 }
             } else {
                 // For the other modes, a CA cert can be specified
-                V::attribute('eapol_ca_cert', V::optional(V::stringType()), false)->check($data);
+                V::key('eapol_ca_cert', V::optional(V::stringType()), false)->check($data);
                 // If a CA cert wasn't specified, just keep the existing one and do nothing
-                if(V::attribute('eapol_ca_cert')->validate($data)) {
-                    if($data->eapol_ca_cert == null) {
+                if(V::key('eapol_ca_cert')->validate($data)) {
+                    if($data['eapol_ca_cert'] == null) {
                         // Remove CA cert (if there was one set previously)
                         if($sensor->getEAPOLCACert() != null) {
                             $em->remove($sensor->getEAPOLCACert());
@@ -679,7 +676,7 @@ class Sensors extends RESTResource {
                         }
                     } else {
                         // Attribute was specified with a value: overwrite existing CA cert or create new one
-                        $cert = $this->verifyCertificate($data->eapol_ca_cert);
+                        $cert = $this->verifyCertificate($data['eapol_ca_cert']);
                         $caCert = $sensor->getEAPOLCACert();
                         if($caCert == null) {
                             $caCert = new SSLCert();
@@ -690,15 +687,15 @@ class Sensors extends RESTResource {
                     }
                 }
                 if($sensor->getEAPOLMode() == Sensor::EAPOL_MODE_TLS) {
-                    V::attribute('eapol_client_cert', V::stringType(), false)
-                        ->attribute('eapol_client_key', V::stringType(), false)
-                        ->attribute('eapol_client_key_password', V::optional(V::stringType()->length(1, 512)), false)
+                    V::key('eapol_client_cert', V::stringType(), false)
+                        ->key('eapol_client_key', V::stringType(), false)
+                        ->key('eapol_client_key_password', V::optional(V::stringType()->length(1, 512)), false)
                         ->check($data);
-                    if(V::attribute('eapol_client_key_password')->validate($data)) $sensor->setEAPOLClientCertPassphrase($data->eapol_client_key_password);
-                    if(V::attribute('eapol_client_cert')->validate($data) && V::attribute('eapol_client_key')->validate($data)) {
+                    if(V::key('eapol_client_key_password')->validate($data)) $sensor->setEAPOLClientCertPassphrase($data['eapol_client_key_password']);
+                    if(V::key('eapol_client_cert')->validate($data) && V::key('eapol_client_key')->validate($data)) {
                         // Attribute was specified with a value: overwrite existing client cert or create new one
-                        $cert = $this->verifyCertificate($data->eapol_client_cert);
-                        $key = $this->verifyKey($data->eapol_client_key, $sensor->getEAPOLClientCertPassphrase() == null ? '' : $sensor->getEAPOLClientCertPassphrase());
+                        $cert = $this->verifyCertificate($data['eapol_client_cert']);
+                        $key = $this->verifyKey($data['eapol_client_key'], $sensor->getEAPOLClientCertPassphrase() == null ? '' : $sensor->getEAPOLClientCertPassphrase());
                         $clientCert = $sensor->getEAPOLClientCert();
                         if($clientCert == null) {
                             $clientCert = new SSLCert();
@@ -715,12 +712,12 @@ class Sensors extends RESTResource {
                         ->setEAPOLAnonymousIdentity(null);
                 } else {
                     // PEAP or TTLS
-                    V::attribute('eapol_password', V::optional(V::stringType()->length(1, 512)), false)
-                        ->attribute('eapol_anon_identity', V::optional(V::stringType()->length(1, 512)))
+                    V::key('eapol_password', V::optional(V::stringType()->length(1, 512)), false)
+                        ->key('eapol_anon_identity', V::optional(V::stringType()->length(1, 512)))
                         ->check($data);
                     // Keep the existing password if none was given
-                    if(V::attribute('eapol_password')->validate($data)) $sensor->setEAPOLPassword($data->eapol_password);
-                    $sensor->setEAPOLAnonymousIdentity($data->eapol_anon_identity);
+                    if(V::key('eapol_password')->validate($data)) $sensor->setEAPOLPassword($data['eapol_password']);
+                    $sensor->setEAPOLAnonymousIdentity($data['eapol_anon_identity']);
                     // Reset unused parameters
                     if($sensor->getEAPOLClientCert() != null) {
                         $em->remove($sensor->getEAPOLClientCert());
@@ -745,13 +742,13 @@ class Sensors extends RESTResource {
             }
         }
         $firmware = null;
-        if($data->firmware != null) {
-            $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data->firmware);
+        if($data['firmware'] != null) {
+            $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data['firmware']);
             V::objectType()->check($firmware);
         }
         $sensor->setFirmware($firmware);
-        $sensor->setUpdateInterval($data->update_interval);
-        $sensor->setServiceNetwork($data->service_network);
+        $sensor->setUpdateInterval($data['update_interval']);
+        $sensor->setServiceNetwork($data['service_network']);
         // Service handling, merge with existing data
         $serviceRepository = $em->getRepository('HoneySens\app\models\entities\Service');
         $revisionRepository = $em->getRepository('HoneySens\app\models\entities\ServiceRevision');
@@ -759,12 +756,12 @@ class Sensors extends RESTResource {
         $assignments = $sensor->getServices()->toArray();
         // Add/Update of service assignments
         $handledAssignments = array();
-        foreach($data->services as $serviceAssignment) {
+        foreach($data['services'] as $serviceAssignment) {
             $assigned = false;
             // Validate availability of the assignment
-            $service = $serviceRepository->find($serviceAssignment->service);
+            $service = $serviceRepository->find($serviceAssignment['service']);
             V::objectType()->check($service);
-            $revision = $serviceAssignment->revision == null ? null : $revisionRepository->find($serviceAssignment->revision);
+            $revision = $serviceAssignment['revision'] == null ? null : $revisionRepository->find($serviceAssignment['revision']);
             // TODO Check if revision belongs to service
             // Update existing assignment
             foreach($assignments as $assignment) {
@@ -835,7 +832,7 @@ class Sensors extends RESTResource {
      * Triggers the creation and file download of a new sensor configuration archive.
      *
      * @param int $id Sensor id of the config archive that was requested
-     * @return
+     * @return Task
      * @throws ForbiddenException
      */
     public function requestConfigDownload($id) {
@@ -864,7 +861,7 @@ class Sensors extends RESTResource {
             $taskParams['eapol_client_key'] = $sensor->getEAPOLClientCert()->getKey();
         } else $taskParams['eapol_client_key'] = null;
         $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_SENSORCFG_CREATOR, $taskParams);
-        return $task->getState();
+        return $task;
     }
 
     /**

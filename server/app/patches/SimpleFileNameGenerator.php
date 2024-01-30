@@ -8,7 +8,7 @@ use FileUpload\PathResolver\PathResolver;
 use FileUpload\Util;
 
 /**
- * Upstream fixed a compatibility issue with PHP7+, but Packagist h as not been updated yet.
+ * Upstream fixed a compatibility issue with PHP7+, but Packagist has not been updated yet.
  * This fixed implementation is taken from the upstream repository, see https://github.com/Gargron/fileupload/issues/87
  */
 class SimpleFileNameGenerator extends Simple

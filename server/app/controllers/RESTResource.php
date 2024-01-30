@@ -6,7 +6,6 @@ use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\ServiceManager;
 use Respect\Validation\Validator as V;
-use Slim\Slim;
 
 abstract class RESTResource {
 
@@ -18,21 +17,15 @@ abstract class RESTResource {
     protected $entityManager;
     protected $services;
     protected $config;
-    protected $app;
 
     public function __construct(EntityManager $entityManager, $services, $config) {
         $this->entityManager = $entityManager;
         $this->services = $services;
         $this->config = $config;
-        $this->app = Slim::getInstance();
     }
 
     protected function getEntityManager() {
         return $this->entityManager;
-    }
-
-    protected function getApp() {
-        return $this->app;
     }
 
     protected function getServiceManager() {
@@ -43,7 +36,7 @@ abstract class RESTResource {
         return $this->config;
     }
 
-    abstract static function registerRoutes($app, $em, $services, $config, $messages);
+    abstract static function registerRoutes($app, $em, $services, $config);
 
     protected function assureAllowed($method, $realm=null) {
         if($realm) {
@@ -154,6 +147,10 @@ abstract class RESTResource {
      * X-HS-TS: Unix timestamp of this request
      *
      * Returns Sensor instance in case of successful authentication or throws an exception for invalid requests.
+     *
+     * @param $method string
+     * @param $body string
+     * @return Sensor
      */
     protected function validateSensorRequest($method, $body='') {
         $headers = $this->getNormalizedRequestHeaders();
