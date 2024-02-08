@@ -28,7 +28,6 @@ use HoneySens\app\models\ServiceManager;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Server\MiddlewareInterface;
 use Psr\Log\LoggerInterface;
 use \Respect\Validation\Exceptions\ValidationException;
 use \Slim\Factory\AppFactory;

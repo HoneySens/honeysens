@@ -10,6 +10,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-contrib-symlink');
     grunt.loadNpmTasks('grunt-latex');
     grunt.loadNpmTasks('grunt-mkdir');
     grunt.loadNpmTasks('grunt-shell');
@@ -28,14 +29,13 @@ module.exports = function(grunt) {
             srcPrefix + '/css/jquery.fileupload.css',
             srcPrefix + '/css/fonts.css',
             srcPrefix + '/css/honeysens.css'],
-        clean: [srcPrefix + '/app/vendor',
-                srcPrefix + '/app/composer.phar',
-                dstPrefix + '/app',
-                dstPrefix + '/cache',
-                dstPrefix + '/data',
-                dstPrefix + '/docs',
-                dstPrefix + '/public',
-                dstPrefix + '/utils'],
+        clean: [
+            dstPrefix + '/app',
+            dstPrefix + '/cache',
+            dstPrefix + '/data',
+            dstPrefix + '/docs',
+            dstPrefix + '/public',
+            dstPrefix + '/utils'],
         mkdir: {
             dist: {
                 options: { create: [
@@ -45,6 +45,27 @@ module.exports = function(grunt) {
                     dstPrefix + '/data/configs',
                     dstPrefix + '/data/CA'] }
            }
+        },
+        symlink: {
+            options: {
+                overwrite: true
+            },
+            composer_json: {
+                src: srcPrefix + '/app/composer.json',
+                dest: srcPrefix + '/out/dev/composer.json'
+            },
+            composer_sh: {
+                src: srcPrefix + '/app/composer.sh',
+                dest: srcPrefix + '/out/dev/composer.sh'
+            },
+            php_app: {
+                src: dstPrefix + '/app',
+                dest: '/opt/HoneySens/app'
+            },
+            php_vendor: {
+                src: srcPrefix + '/out/dev/vendor',
+                dest: dstPrefix + '/app/vendor'
+            }
         },
         copy: {
             static: {
@@ -89,6 +110,12 @@ module.exports = function(grunt) {
                     { expand: true, cwd: dstPrefix + '/docs/admin_manual/', dest: dstPrefix + '/public/docs/', src: 'admin_manual.pdf' },
                     { expand: true, cwd: dstPrefix + '/docs/user_manual/', dest: dstPrefix + '/public/docs/', src: 'user_manual.pdf' }
                 ]
+            },
+            php_vendor: {
+                expand: true,
+                cwd: srcPrefix + '/out/dev/',
+                dest: dstPrefix + '/app/',
+                src: 'vendor/**'
             }
         },
         concat: {
@@ -123,7 +150,7 @@ module.exports = function(grunt) {
                     outputDirectory: dstPrefix + '/docs/admin_manual'
                 },
                 expand: true,
-                cwd: srcPrefix + '/docs/admin_manual/',
+                cwd: srcPrefix + '/key/admin_manual/',
                 src: 'admin_manual.tex'
             },
             user_manual: {
@@ -159,10 +186,10 @@ module.exports = function(grunt) {
         },
         composer: {
             options: {
-                cwd: srcPrefix + '/app',
+                composerLocation: srcPrefix + '/out/dev/composer.phar',
                 usePhp: true,
-                composerLocation: 'composer.phar'
-            }
+                cwd: srcPrefix + '/out/dev'
+            },
         },
         shell: {
             CA: {
@@ -177,7 +204,8 @@ module.exports = function(grunt) {
                 ].join('&&')
             },
             composer: {
-                command: 'cd ' + srcPrefix + '/app && /bin/sh composer.sh'
+                command: '/bin/sh composer.sh',
+                cwd: srcPrefix + '/out/dev'
             }
         },
         watch: {
@@ -237,28 +265,35 @@ module.exports = function(grunt) {
     ]);
     grunt.registerTask('default', [
         'mkdir',
-        'shell:composer',
-        'composer:install',
         'copy:static',
         'copy:app',
         'copy:public',
         'copy:data',
         'copy:requirejs',
         'copy:js',
+        'symlink:composer_json',
+        'symlink:composer_sh',
+        'symlink:php_app',
+        'shell:composer',
+        'composer:install',
+        'symlink:php_vendor',
         'concat:dist',
         'chmod'
     ]);
     grunt.registerTask('release', [
         'clean',
         'mkdir',
-        'shell:composer',
-        'composer:install',
         'docs',
         'copy:static',
         'copy:app',
         'copy:public',
         'copy:data',
         'copy:requirejs',
+        'symlink:composer_json',
+        'symlink:composer_sh',
+        'shell:composer',
+        'composer:install',
+        'copy:php_vendor',
         'requirejs',
         'cssmin:dist',
         'chmod'
