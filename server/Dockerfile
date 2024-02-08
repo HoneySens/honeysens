@@ -22,7 +22,7 @@ COPY out/web /opt/HoneySens/
 RUN /bin/bash /opt/HoneySens/utils/docker/setup_prepare.sh
 RUN /bin/bash /opt/HoneySens/utils/docker/setup_release.sh
 
-HEALTHCHECK CMD /usr/bin/test $(/usr/bin/curl -sk https://localhost/api/system/identify) = 'HoneySens'
+HEALTHCHECK CMD /usr/bin/test $(/usr/bin/curl -sk https://localhost:8443/api/system/identify) = 'HoneySens'
 
 VOLUME /opt/HoneySens/data
 
