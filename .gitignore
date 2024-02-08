@@ -5,18 +5,9 @@ HoneySens.iml
 server/.vagrant/*
 server/.settings/*
 
-# 3rd party modules
-server/app/vendor/*
-server/node_modules/*
-
-# Build dirs
+# Build artifaccts
 server/out/
 sensor/platforms/bbb/out/
 sensor/platforms/docker_x86/out/
 sensor/platforms/docker_x86/conf/
 sensor/services/**/out/
-
-# Build artifacts
-package-lock.json
-server/app/composer.lock
-server/app/composer.phar

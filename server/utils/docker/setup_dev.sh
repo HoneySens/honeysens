@@ -9,7 +9,7 @@ npm install -g grunt-cli
 # Create dummy template config to prevent data initialization in 01_init_volumes.sh
 mkdir -p /opt/HoneySens/data
 touch /opt/HoneySens/data/config.cfg
-chown -R hs:hs /opt/HoneySens/data
+chown -R hs:hs /opt/HoneySens
 
 # Disable LDAP certificate verification within the dev environment
 echo -e "TLS_REQCERT\tnever" >> /etc/ldap/ldap.conf
