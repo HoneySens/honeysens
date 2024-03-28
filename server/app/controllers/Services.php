@@ -1,6 +1,5 @@
 <?php
 namespace HoneySens\app\controllers;
-use FileUpload\File;
 
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Service;
@@ -286,15 +285,6 @@ class Services extends RESTResource {
         $em->flush();
         $service = $serviceRevision->getService();
         $this->log(sprintf('Revision %s (%s) of service %s deleted', $serviceRevision->getRevision(), $serviceRevision->getArchitecture(), $service->getName()), LogEntry::RESOURCE_SERVICES, $service->getId());
-    }
-
-    /**
-     * Attempts to remove an uploaded file if it exists
-     *
-     * @param \FileUpload\File $file
-     */
-    private function removeFile(File $file) {
-        if(file_exists($file->getRealPath())) exec('rm ' . escapeshellarg($file->getRealPath()));
     }
 
     /**

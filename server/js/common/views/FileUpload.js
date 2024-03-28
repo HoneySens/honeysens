@@ -2,18 +2,25 @@ define(['app/app',
         'app/models',
         'tpl!app/common/templates/FileUpload.tpl',
         'app/views/common',
-        'jquery.fileupload'],
+        'fileinput'],
 function(HoneySens, Models, FileUploadTpl) {
     HoneySens.module('Common.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
+
+        function generateToken() {
+            return Math.random().toString(36).substring(2);
+        }
+
         Views.FileUpload = Marionette.ItemView.extend({
             template: FileUploadTpl,
             className: 'container-fluid',
+            uploadToken: generateToken(),
             events: {
                 'click button.createService': function() {
                     var service = new Models.Service(),
                         view = this;
                     view.$el.find('button.createService').addClass('hide');
-                    service.save({task: this.model.id}, {wait: true,
+                    service.save({task: this.model.id}, {
+                        wait: true,
                         success: function(m) {
                             view.$el.find('div.serviceMgrRunning').removeClass('hide');
                             // The "create service" endpoint returns a task model
@@ -92,38 +99,47 @@ function(HoneySens, Models, FileUploadTpl) {
             onRender: function() {
                 var view = this,
                     spinner = HoneySens.Views.inlineSpinner.spin();
-                view.$el.find('div.progress, span.progress-text').hide();
+                //view.$el.find('div.progress, span.progress-text').hide();
                 view.$el.find('div.loadingInline').html(spinner.el);
-                view.$el.find('#fileUpload').fileupload({
-                    url: 'api/tasks/upload',
-                    dataType: 'json',
-                    maxChunkSize: 50000000, // TODO define globally
-                    start: function() {
-                        // TODO use an add callback instead of this to allow saving of the XHR object and allow abortion of the upload task
-                        view.$el.find('span.fileinput-button').hide().siblings('div.progress').show();
-                        view.$el.find('span.progress-text').show();
+                view.$el.find('#fileUpload').fileinput({
+                    'dropZoneEnabled': false,
+                    'enableResumableUpload': true,
+                    'maxFileCount': 1,
+                    'showPreview': false,
+                    'showRemove': false,
+                    'uploadUrl': 'api/tasks/upload',
+                    'uploadExtraData': function() {
+                        return {
+                            'token': view.uploadToken
+                        }
                     },
-                    progressall: function(e, data) {
-                        var progress = parseInt(data.loaded / data.total * 100) + '%';
-                        view.$el.find('div.progress-bar').css('width', progress).text(progress);
-                        view.$el.find('span.progress-loaded').text((data.loaded / (1000 * 1000)).toFixed(1));
-                        view.$el.find('span.progress-total').text(+(data.total / (1000 * 1000)).toFixed(1));
-                    },
-                    fail: function(e, data) {
-                        var errorMsg = data.jqXHR.hasOwnProperty('responseJSON') ? ' (' + data.jqXHR.responseJSON.error + ')' : '';
-                        view.$el.find('div.uploadInvalid span.errorMsg').text('Auf dem Server ist ein Fehler aufgetreten' + errorMsg);
-                        view.$el.find('div.uploadInvalid').removeClass('hide').siblings().addClass('hide');
-                    },
-                    done: function(e, data) {
-                        // Update local model, refresh view
-                        var task = HoneySens.data.models.tasks.add(new Models.Task(data.result.task));
-                        view.undelegateEvents();
-                        view.model = task;
-                        view.delegateEvents();
-                        view.render();
-                        HoneySens.Views.waitForTask(task);
+                    'resumableUploadOptions': {
+                        'chunkSize': 50000
                     }
+                }).on('filechunksuccess', function(ev, p, i, r, f, rm, data) {
+                    if(!data.response.hasOwnProperty("task")) return;
+                    // Successful upload: update local model, refresh view
+                    var task = HoneySens.data.models.tasks.add(new Models.Task(data.response.task));
+                    view.undelegateEvents();
+                    view.model = task;
+                    view.delegateEvents();
+                    view.render();
+                    HoneySens.Views.waitForTask(task);
+                }).on('filechunkajaxerror', function(ev, p, i, r, f, rm, data) {
+                    var errorMsg = data.jqXHR.hasOwnProperty('responseJSON') ? ' (' + data.jqXHR.responseJSON.error + ')' : '';
+                    view.$el.find('div.uploadInvalid span.errorMsg').text('Auf dem Server ist ein Fehler aufgetreten' + errorMsg);
+                    view.$el.find('div.uploadInvalid').removeClass('hide').siblings().addClass('hide');
+                    // Generate a new unique token after upload failures
+                    view.uploadToken = generateToken();
+                }).on('fileuploaded', function(ev) {
+                    // Generate a new unique token after successful uploads
+                    view.uploadToken = generateToken();
                 });
+            },
+            onDestroy: function() {
+                var $fu = this.$el.find('#fileUpload');
+                $fu.off('fileuploaded');
+                $fu.off('fileuploaderror');
             },
             modelEvents: {
                 change: 'render'
