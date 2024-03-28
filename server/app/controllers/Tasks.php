@@ -11,7 +11,6 @@ use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\ServiceManager;
-use HoneySens\app\patches\SimpleFileNameGenerator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
@@ -56,7 +55,7 @@ class Tasks extends RESTResource {
         // Generic endpoint to upload files, returns the ID of the associated verification task.
         $app->post('/api/tasks/upload', function(Request $requset, Response $response) use ($app, $em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
-            $state = $controller->upload($_FILES['upload']);
+            $state = $controller->upload();
             $response->getBody()->write(json_encode($state));
             return $response;
         });
@@ -147,43 +146,57 @@ class Tasks extends RESTResource {
      * Application-wide upload endpoint.
      * Supports chunked uploads and launches a new verification task for each uploaded file.
      *
-     * @param $data
      * @return array
      */
-    public function upload($data) {
+    public function upload() {
+        # TODO check upload permission
         // Only users that are logged in can upload stuff
+        $sessionUser = $this->getSessionUser();
         V::objectType()->check($this->getSessionUser());
-        $uploadPath = realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH));
-        $pathResolver = new \FileUpload\PathResolver\Simple(realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH)));
-        $fs = new \FileUpload\FileSystem\Simple();
-        $fileUpload = new FileUpload($data, $_SERVER);
-        $fileUpload->setPathResolver($pathResolver);
-        $fileUpload->setFileSystem($fs);
-        $fileUpload->setFileNameGenerator(new SimpleFileNameGenerator());
-        list($files, $headers) = $fileUpload->processAll();
-        $result = array('files' => $files);
-        foreach($files as $file) {
-            // Check remaining disk space for target directory
-            if($file->size >= disk_free_space($uploadPath)) {
-                $filePath = sprintf('%s/%s', $uploadPath, $file->getBasename());
-                if(file_exists($filePath)) unlink($filePath);
+        $uploadDir = realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH));
+        $fileBlob = 'fileBlob';
+        if(!isset($_FILES[$fileBlob]) || !isset($_POST['token']))
+            throw new Exception('Invalid upload data');
+        $tmpFileName = $_FILES[$fileBlob]['tmp_name'];
+        // Generate a user-specific and upload-specific file name
+        $finalFileName = $sessionUser->getId() . '-' . md5($_POST['token']);
+        $chunkIndex = $_POST['chunkIndex'];
+        $chunkCount = $_POST['chunkCount'];
+        $fileName = $_POST['fileName'];
+        $fileSize = $_POST['fileSize'];
+        $targetFile = $uploadDir . '/' . $finalFileName;
+        $result = [
+            'chunkIndex' => $chunkIndex,
+            'append' => true
+        ];
+        if($chunkCount > 1) $targetFile .= '_' . str_pad($chunkIndex, 4, '0', STR_PAD_LEFT);
+        if(!move_uploaded_file($tmpFileName, $targetFile))
+            throw new Exception('Uploaded file could not be moved from temp to upload directory');
+        $chunks = glob("{$uploadDir}/{$finalFileName}_*");
+        if($chunkCount > 1 && count($chunks) < $chunkCount) {
+            // Further chunks are required, acknowledge that the current chunk has been received
+            return $result;
+        }
+        // In case a multi-chunk upload was received, assemble the final result
+        $allChunksUploaded = $chunkCount > 1 && count($chunks) == $chunkCount;
+        if($allChunksUploaded) {
+            if($fileSize >= disk_free_space($uploadDir)) {
+                foreach($chunks as $tmpFileName) if(file_exists($tmpFileName)) @unlink($tmpFileName);
                 throw new Exception('Disk capacity exceeded');
             }
-            if($file->completed) {
-                // Verify archive content
-                $taskParams = array('path' => $file->getBasename());
-                $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue($this->getSessionUser(), Task::TYPE_UPLOAD_VERIFIER, $taskParams);
-                $result['task'] = $task->getState();
-                $this->log(sprintf('File "%s" uploaded', $file->getBasename()), LogEntry::RESOURCE_TASKS);
-            } elseif($file->errorCode != 0) {
-                // Upload failed during preprocessing (e.g. could not write to PHP upload_tmp_dir)
-                throw new Exception($file->error);
-            }
+            $outFile = $uploadDir . '/' . $finalFileName;
+            $handle = fopen($outFile, 'a+');
+            foreach($chunks as $tmpFileName) fwrite($handle, file_get_contents($tmpFileName));
+            foreach($chunks as $tmpFileName) @unlink($tmpFileName);
+            fclose($handle);
         }
-        foreach($headers as $header => $value) {
-            header($header . ': ' . $value);
-        }
-        // The array with the 'files' key is required by the fileupload plugin used for the frontend
+        // Verify archive content
+        $task = $this->getServiceManager()->get(ServiceManager::SERVICE_TASK)->enqueue(
+            $this->getSessionUser(),
+            Task::TYPE_UPLOAD_VERIFIER,
+            array('path' => $finalFileName));
+        $result['task'] = $task->getState();
+        $this->log(sprintf('File "%s" uploaded as "%s"', $fileName, $finalFileName), LogEntry::RESOURCE_TASKS);
         return $result;
     }
 

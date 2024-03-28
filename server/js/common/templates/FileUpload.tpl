@@ -4,20 +4,7 @@
         <% if(!hasTask()) { %>
             <form>
                 <div class="form-group">
-                    <label for="fileUpload" class="control-label">Upload&nbsp;
-                        <span class="progress-text">
-                            (<span class="progress-loaded"></span> / <span class="progress-total"></span> MB)
-                        </span>
-                    </label>
-                    <span class="btn btn-primary form-control fileinput-button">
-                        <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Datei w&auml;hlen
-                        <input type="file" id="fileUpload" name="upload" />
-                    </span>
-                    <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                            0%
-                        </div>
-                    </div>
+                    <input type="file" id="fileUpload" />
                 </div>
                 <div class="uploadInvalid alert alert-danger hide">
                     <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;<span class="errorMsg"></span>

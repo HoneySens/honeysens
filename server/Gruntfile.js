@@ -28,6 +28,7 @@ module.exports = function(grunt) {
             srcPrefix + '/css/bootstrap-datepicker3.css',
             srcPrefix + '/css/jquery.fileupload.css',
             srcPrefix + '/css/fonts.css',
+            srcPrefix + '/css/fileinput.css',
             srcPrefix + '/css/honeysens.css'],
         clean: [
             dstPrefix + '/app',
