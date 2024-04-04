@@ -1,9 +1,6 @@
 <?php
 namespace HoneySens\app\models;
 
-use Celery;
-use CeleryException;
-use CeleryPublishException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
 use Exception;
@@ -11,26 +8,36 @@ use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Predis;
+use Smuuf\CeleryForPhp\Celery;
+use Smuuf\CeleryForPhp\TaskSignature;
+use Smuuf\CeleryForPhp\Brokers\RedisBroker;
+use Smuuf\CeleryForPhp\Drivers\PredisRedisDriver;
+use Smuuf\CeleryForPhp\Backends\RedisBackend;
 
 class TaskService {
 
     const PRIORITY_LOW = 'low';
     const PRIORITY_HIGH = 'high';
 
+    private $broker;
     private $broker_host;
     private $broker_port;
+    private $celery;
     private $config;
     private $em;
-    private $queue_high;
-    private $queue_low;
     private $services;
 
     public function __construct($services, ConfigParser $config, EntityManager $em) {
         $this->services = $services;
         $this->broker_host = getenv('HS_BROKER_HOST');
         $this->broker_port = getenv('HS_BROKER_PORT');
-        $this->queue_high = new Celery($this->broker_host, null, null, null, self::PRIORITY_HIGH, self::PRIORITY_HIGH, $this->broker_port, 'redis');
-        $this->queue_low = new Celery($this->broker_host, null, null, null, self::PRIORITY_LOW, self::PRIORITY_LOW, $this->broker_port, 'redis');
+        $this->broker = new Predis\Client([
+            'scheme' => 'tcp',
+            'host' => $this->broker_host,
+            'port' => $this->broker_port
+        ]);
+        $driver = new PredisRedisDriver($this->broker);
+        $this->celery = new Celery(new RedisBroker($driver), new RedisBackend($driver));
         $this->config = $config;
         $this->em = $em;
     }
@@ -54,29 +61,31 @@ class TaskService {
         if($user) $user->addTask($task); // Unassociated tasks are allowed
         $this->em->persist($task);
         $this->em->flush();
-        // Send to job queue
+        // Prepare Celery task
         switch ($task->getType()) {
             case Task::TYPE_EMAIL_EMITTER:
-                $this->queue_low->PostTask('processor.tasks.emit_email', array($task->getId()));
+                $taskSig = new TaskSignature('processor.tasks.emit_email', self::PRIORITY_LOW, array($task->getId()));
                 break;
             case Task::TYPE_EVENT_EXTRACTOR:
-                $this->queue_low->PostTask('processor.tasks.extract_events', array($task->getId()));
+                $taskSig = new TaskSignature('processor.tasks.extract_events', self::PRIORITY_LOW, array($task->getId()));
                 break;
             case Task::TYPE_EVENT_FORWARDER:
-                $this->queue_high->PostTask('processor.tasks.forward_events', array($task->getId()));
+                $taskSig = new TaskSignature('processor.tasks.forward_events', self::PRIORITY_HIGH, array($task->getId()));
                 break;
             case Task::TYPE_REGISTRY_MANAGER:
-                $this->queue_low->PostTask('processor.tasks.upload_to_registry', array($task->getId()));
+                $taskSig = new TaskSignature('processor.tasks.upload_to_registry', self::PRIORITY_LOW, array($task->getId()));
                 break;
             case Task::TYPE_SENSORCFG_CREATOR:
-                $this->queue_low->PostTask('processor.tasks.create_sensor_config', array($task->getId()));
+                $taskSig = new TaskSignature('processor.tasks.create_sensor_config', self::PRIORITY_LOW, array($task->getId()));
                 break;
             case Task::TYPE_UPLOAD_VERIFIER:
-                $this->queue_low->PostTask('processor.tasks.verify_upload', array($task->getId()));
+                $taskSig = new TaskSignature('processor.tasks.verify_upload', self::PRIORITY_LOW, array($task->getId()));
                 break;
             default:
                 throw new Exception('Unknown task type ' . $task->getType());
         }
+        // Send to job queue
+        $this->celery->sendTask($taskSig);
         return $task;
     }
 
@@ -86,11 +95,6 @@ class TaskService {
      * @return int
      */
     public function getQueueLength() {
-        $broker = new Predis\Client([
-            'scheme' => 'tcp',
-            'host' => $this->broker_host,
-            'port' => $this->broker_port
-        ]);
-        return $broker->llen("low") + $broker->llen("high");
+        return $this->broker->llen("low") + $this->broker->llen("high");
     }
 }

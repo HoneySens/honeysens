@@ -4,7 +4,7 @@
     "doctrine/annotations": "2.0.1",
     "beberlei/doctrineextensions": "v1.3.0",
     "guzzlehttp/psr7": "2.6.2",
-    "massivescale/celery-php": "2.1.2",
+    "smuuf/celery-for-php": "0.2",
     "noiselabs/configparser": "dev-master",
     "phpseclib/phpseclib": "3.0.34",
     "predis/predis": "v2.2.2",
