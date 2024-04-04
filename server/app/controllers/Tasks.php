@@ -37,7 +37,7 @@ class Tasks extends RESTResource {
 
         $app->get('/api/tasks/{id:\d+}/result[/{delete:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
-            $delete = $args['id'] ?? null;
+            $delete = $args['delete'] ?? 0;
             $controller->downloadResult($args['id'], boolval($delete));
         });
 
@@ -115,10 +115,10 @@ class Tasks extends RESTResource {
      * @throws ForbiddenException
      */
     public function downloadResult($id, $delete=false) {
-        // TODO Ensure that a user can only download his own task's results
         $this->assureAllowed('get');
         $task = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Task')->find($id);
         V::objectType()->check($task);
+        if($task->getUser() != $this->getSessionUser()) throw new ForbiddenException();
         $result = $task->getResult();
         $controller = $this;
         $deleteFunc = function() use ($controller, $id) {
@@ -147,18 +147,17 @@ class Tasks extends RESTResource {
      * Supports chunked uploads and launches a new verification task for each uploaded file.
      *
      * @return array
+     * @throws ForbiddenException
      */
     public function upload() {
-        # TODO check upload permission
-        // Only users that are logged in can upload stuff
-        $sessionUser = $this->getSessionUser();
-        V::objectType()->check($this->getSessionUser());
+        $this->assureAllowed('upload');
         $uploadDir = realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH));
         $fileBlob = 'fileBlob';
         if(!isset($_FILES[$fileBlob]) || !isset($_POST['token']))
             throw new Exception('Invalid upload data');
         $tmpFileName = $_FILES[$fileBlob]['tmp_name'];
         // Generate a user-specific and upload-specific file name
+        $sessionUser = $this->getSessionUser();
         $finalFileName = $sessionUser->getId() . '-' . md5($_POST['token']);
         $chunkIndex = $_POST['chunkIndex'];
         $chunkCount = $_POST['chunkCount'];
@@ -211,12 +210,12 @@ class Tasks extends RESTResource {
      */
     public function delete($id) {
         $this->assureAllowed('delete');
-        // TODO Ensure that a user can only delete his own task's results
         // Validation
         V::intVal()->check($id);
         $em = $this->getEntityManager();
         $task = $em->getRepository('HoneySens\app\models\entities\Task')->find($id);
         V::objectType()->check($task);
+        if($task->getUser() != $this->getSessionUser()) throw new ForbiddenException();
         // Running tasks can't be interrupted
         if($task->getStatus() == Task::STATUS_RUNNING) throw new BadRequestException();
         // Recursively remove temporary task files

@@ -40,7 +40,7 @@ abstract class RESTResource {
 
     protected function assureAllowed($method, $realm=null) {
         if($realm) {
-            if(!in_array($method, $_SESSION['user']['permissions'][$realm])) throw new \Exception('Not permitted.');
+            if(!in_array($method, $_SESSION['user']['permissions'][$realm])) throw new ForbiddenException();
         } else {
             if(!in_array($method, $_SESSION['user']['permissions'][strtolower(str_replace('HoneySens\\app\\controllers\\', '', get_class($this)))])) {
                 throw new ForbiddenException();
