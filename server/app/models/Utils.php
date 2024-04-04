@@ -71,7 +71,7 @@ class Utils {
         return $fullSql;
     }
 
-    protected function getParamsArray($paramObj) {
+    static function getParamsArray($paramObj) {
         $parameters=array();
         foreach ($paramObj as $val){
             /* @var $val Doctrine\ORM\Query\Parameter */
