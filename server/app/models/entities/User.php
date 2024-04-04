@@ -388,6 +388,7 @@ class User {
                 array_push($permissions['settings'], 'create', 'update', 'delete');
                 array_push($permissions['platforms'], 'create', 'update', 'delete');
                 array_push($permissions['services'], 'create', 'update', 'delete');
+                array_push($permissions['tasks'], 'upload');
             case $this::ROLE_MANAGER:
                 array_push($permissions['certs'], 'create', 'delete');
                 array_push($permissions['events'], 'update', 'archive', 'delete');
