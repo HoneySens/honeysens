@@ -55,39 +55,39 @@ class Eventfilters extends RESTResource {
      * - type: Further specification of the field type
      * - value: Value this condition uses for comparison
      *
-     * @param stdClass $conditionData
+     * @param array $conditionData
      * @return EventFilterCondition
      * @throws BadRequestException
      */
     private function createCondition($conditionData) {
         // Validation
-        V::objectType()
-            ->attribute('field', V::intVal()->between(0, 3))
-            ->attribute('type', V::intVal()->between(0, 3))
-            ->attribute('value', V::stringType())
+        V::arrayType()
+            ->key('field', V::intVal()->between(0, 3))
+            ->key('type', V::intVal()->between(0, 3))
+            ->key('value', V::stringType())
             ->check($conditionData);
-        if($conditionData->field == EventFilterCondition::FIELD_CLASSIFICATION) {
-            V::intVal()->between(0, 4)->check($conditionData->value);
-        } elseif($conditionData->field == EventFilterCondition::FIELD_SOURCE) {
-            if($conditionData->type == EventFilterCondition::TYPE_SOURCE_VALUE) {
-                V::ip()->check($conditionData->value);
-            } elseif($conditionData->type == EventFilterCondition::TYPE_SOURCE_IPRANGE) {
+        if($conditionData['field'] == EventFilterCondition::FIELD_CLASSIFICATION) {
+            V::intVal()->between(0, 4)->check($conditionData['value']);
+        } elseif($conditionData['field'] == EventFilterCondition::FIELD_SOURCE) {
+            if($conditionData['type'] == EventFilterCondition::TYPE_SOURCE_VALUE) {
+                V::ip()->check($conditionData['value']);
+            } elseif($conditionData['type'] == EventFilterCondition::TYPE_SOURCE_IPRANGE) {
                 V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)-(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/')
-                    ->check($conditionData->value);
-            } elseif($conditionData->type == EventFilterCondition::TYPE_SOURCE_REGEX) {
+                    ->check($conditionData['value']);
+            } elseif($conditionData['type'] == EventFilterCondition::TYPE_SOURCE_REGEX) {
                 // Unused
                 throw new BadRequestException();
             }
-        } elseif($conditionData->field == EventFilterCondition::FIELD_TARGET) {
-            V::intVal()->between(0, 65535)->check($conditionData->value);
-        } elseif($conditionData->field == EventFilterCondition::FIELD_PROTOCOL) {
-            V::intVal()->between(0, 2)->check($conditionData->value);
+        } elseif($conditionData['field'] == EventFilterCondition::FIELD_TARGET) {
+            V::intVal()->between(0, 65535)->check($conditionData['value']);
+        } elseif($conditionData['field'] == EventFilterCondition::FIELD_PROTOCOL) {
+            V::intVal()->between(0, 2)->check($conditionData['value']);
         }
         // Entity creation
         $condition = new EventFilterCondition();
-        $condition->setField($conditionData->field)
-            ->setType($conditionData->type)
-            ->setValue($conditionData->value);
+        $condition->setField($conditionData['field'])
+            ->setType($conditionData['type'])
+            ->setValue($conditionData['value']);
         return $condition;
     }
 
@@ -98,37 +98,37 @@ class Eventfilters extends RESTResource {
      * - value: Value this condition uses for comparison
      *
      * @param EventFilterCondition $condition
-     * @param stdClass $conditionData
+     * @param array $conditionData
      * @throws BadRequestException
      */
     private function updateCondition(EventFilterCondition $condition, $conditionData) {
         // Validation
-        V::objectType()
-            ->attribute('field', V::intVal()->between(0, 3))
-            ->attribute('type', V::intVal()->between(0, 3))
-            ->attribute('value', V::stringType())
+        V::arrayType()
+            ->key('field', V::intVal()->between(0, 3))
+            ->key('type', V::intVal()->between(0, 3))
+            ->key('value', V::stringType())
             ->check($conditionData);
-        if($conditionData->field == EventFilterCondition::FIELD_CLASSIFICATION) {
-            V::intVal()->between(0, 4)->check($conditionData->value);
-        } elseif($conditionData->field == EventFilterCondition::FIELD_SOURCE) {
-            if($conditionData->type == EventFilterCondition::TYPE_SOURCE_VALUE) {
-                V::ip()->check($conditionData->value);
-            } elseif($conditionData->type == EventFilterCondition::TYPE_SOURCE_IPRANGE) {
+        if($conditionData['field'] == EventFilterCondition::FIELD_CLASSIFICATION) {
+            V::intVal()->between(0, 4)->check($conditionData['value']);
+        } elseif($conditionData['field'] == EventFilterCondition::FIELD_SOURCE) {
+            if($conditionData['type'] == EventFilterCondition::TYPE_SOURCE_VALUE) {
+                V::ip()->check($conditionData['value']);
+            } elseif($conditionData['type'] == EventFilterCondition::TYPE_SOURCE_IPRANGE) {
                 V::regex('/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)-(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/')
-                    ->check($conditionData->value);
-            } elseif($conditionData->type == EventFilterCondition::TYPE_SOURCE_REGEX) {
+                    ->check($conditionData['value']);
+            } elseif($conditionData['type'] == EventFilterCondition::TYPE_SOURCE_REGEX) {
                 // Unused
                 throw new BadRequestException();
             }
-        } elseif($conditionData->field == EventFilterCondition::FIELD_TARGET) {
-            V::intVal()->between(0, 65535)->check($conditionData->value);
-        } elseif($conditionData->field == EventFilterCondition::FIELD_PROTOCOL) {
-            V::intVal()->between(0, 2)->check($conditionData->value);
+        } elseif($conditionData['field'] == EventFilterCondition::FIELD_TARGET) {
+            V::intVal()->between(0, 65535)->check($conditionData['value']);
+        } elseif($conditionData['field'] == EventFilterCondition::FIELD_PROTOCOL) {
+            V::intVal()->between(0, 2)->check($conditionData['value']);
         }
         // Entity creation
-        $condition->setField($conditionData->field)
-            ->setType($conditionData->type)
-            ->setValue($conditionData->value);
+        $condition->setField($conditionData['field'])
+            ->setType($conditionData['type'])
+            ->setValue($conditionData['value']);
     }
 
     /**
@@ -182,7 +182,7 @@ class Eventfilters extends RESTResource {
             ->key('name', V::alnum('._-')->length(1, 255))
             ->key('type', V::intVal()->equals(0))
             ->key('division', V::intVal())
-            ->key('conditions', V::arrayVal()->each(V::objectType()))
+            ->key('conditions', V::arrayVal()->each(V::arrayType()))
             ->check($data);
         if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
             V::key('description', V::stringType()->length(1, 65535))->check($data);
@@ -230,7 +230,7 @@ class Eventfilters extends RESTResource {
             ->key('name', V::alnum('._-')->length(1, 255))
             ->key('type', V::intVal()->equals(0))
             ->key('division', V::intVal())
-            ->key('conditions', V::arrayVal()->each(V::objectType()))
+            ->key('conditions', V::arrayVal()->each(V::arrayType()))
             ->key('enabled', V::boolType())
             ->check($data);
         if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
@@ -252,13 +252,13 @@ class Eventfilters extends RESTResource {
         $forUpdate = array();
         $toAdd = array();
         foreach($data['conditions'] as $conditionData) {
-            if(V::attribute('id')->validate($conditionData)) $forUpdate[] = $conditionData->id;
+            if(V::key('id')->validate($conditionData)) $forUpdate[] = $conditionData['id'];
             else $toAdd[] = $conditionData;
         }
         $tasks = $this->updateCollection($filter->getConditions(), $forUpdate, $conditionRepository);
         foreach($tasks['update'] as $condition) {
             foreach($data['conditions'] as $conditionData) {
-                if(V::attribute('id')->validate($conditionData) && $conditionData->id == $condition->getId())
+                if(V::key('id')->validate($conditionData) && $conditionData['id'] == $condition->getId())
                     $this->updateCondition($condition, $conditionData);
             }
         }
