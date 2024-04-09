@@ -1,5 +1,6 @@
 <?php
 namespace HoneySens\app\controllers;
+use HoneySens\app\models\exceptions\NotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -31,7 +32,6 @@ class Eventdetails extends RESTResource {
      * - type: 0 for EventDetails, 1 for EventPackets
      * - userID: return only EventDetails/EventPackets that belong to the user with the given id
      * - eventID: return only EventDetails/EventPackets that belong to a certain event with the given id
-     * - id: return the EventDetail object with the given id
      * If no criteria are given, all EventDetails/EventPackets are returned.
      *
      * @param array $criteria
@@ -56,17 +56,11 @@ class Eventdetails extends RESTResource {
             $qb->andWhere('e.id = :eventid')
                 ->setParameter('eventid', $criteria['eventID']);
         }
-        if(V::key('id', V::intVal())->validate($criteria)) {
-            $qb->andWhere('entity.id = :id')
-                ->setParameter('id', $criteria['id']);
-            return $qb->getQuery()->getSingleResult()->getState();
-        } else {
-            $details = array();
-            foreach($qb->getQuery()->getResult() as $detail) {
-                $details[] = $detail->getState();
-            }
-            return $details;
+        $details = array();
+        foreach($qb->getQuery()->getResult() as $detail) {
+            $details[] = $detail->getState();
         }
+        return $details;
     }
 
     /**
@@ -75,6 +69,7 @@ class Eventdetails extends RESTResource {
      * @param int $eventID
      * @param int $userID
      * @return array
+     * @throws \Doctrine\ORM\NoResultException
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
     public function getArchivedDetails($eventID, $userID=null) {
@@ -92,7 +87,11 @@ class Eventdetails extends RESTResource {
         }
         $qb->andWhere('e.id = :id')
             ->setParameter('id', $eventID);
-        $event = $qb->getQuery()->getSingleResult();
+        try {
+            $event = $qb->getQuery()->getSingleResult();
+        } catch(\Exception $e) {
+            throw new NotFoundException();
+        }
         V::objectType()->check($event);
         return array('details' => $event->getDetails(), 'packets' => $event->getPackets());
     }

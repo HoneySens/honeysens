@@ -127,7 +127,7 @@ class Platforms extends RESTResource {
         try {
             $sensor = $this->validateSensorRequest('get');
         } catch (ForbiddenException $e) {
-            $this->assureAllowed('get');
+            $this->assureAllowed('download');
         }
         $firmware = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
         V::objectType()->check($firmware);
@@ -148,7 +148,7 @@ class Platforms extends RESTResource {
      * @throws ForbiddenException
      */
     public function downloadCurrentFirmwareForPlatform($id) {
-        $this->assureAllowed('get');
+        $this->assureAllowed('download');
         $platform = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Platform')->find($id);
         V::objectType()->check($platform);
         $revision = $platform->getDefaultFirmwareRevision();

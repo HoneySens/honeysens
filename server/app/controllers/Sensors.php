@@ -40,11 +40,7 @@ class Sensors extends RESTResource {
         $app->get('/api/sensors/status/by-sensor/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $criteria = array('userID' => $controller->getSessionUserID(), 'sensorID' => $args['id']);
-            try {
-                $result = $controller->getStatus($criteria);
-            } catch(\Exception $e) {
-                throw new NotFoundException();
-            }
+            $result = $controller->getStatus($criteria);
             $response->getBody()->write(json_encode($result));
             return $response;
         });
@@ -246,6 +242,7 @@ class Sensors extends RESTResource {
         $em = $this->getEntityManager();
         $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data['division']);
         V::objectType()->check($division);
+        $this->assureUserAffiliation($division->getId());
         $firmware = null;
         if($data['firmware'] != null) {
             $firmware = $em->getRepository('HoneySens\app\models\entities\Firmware')->find($data['firmware']);
@@ -571,12 +568,13 @@ class Sensors extends RESTResource {
         $em = $this->getEntityManager();
         $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
+        $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data['division']);
+        V::objectType()->check($division);
+        $this->assureUserAffiliation($division->getId());
         // Persistence
         $sensor->setName($data['name']);
         $sensor->setLocation($data['location']);
         // TODO Move this sensor's events to the new Division, too
-        $division = $em->getRepository('HoneySens\app\models\entities\Division')->find($data['division']);
-        V::objectType()->check($division);
         $sensor->setDivision($division);
         $sensor->setServerEndpointMode($data['server_endpoint_mode']);
         if($sensor->getServerEndpointMode() == Sensor::SERVER_ENDPOINT_MODE_CUSTOM) {
@@ -802,6 +800,7 @@ class Sensors extends RESTResource {
      */
     public function delete($id, $criteria) {
         $this->assureAllowed('delete');
+        // Validation
         try {
             // In case the current user can't delete events, force archiving
             $this->assureAllowed('delete', 'events');
@@ -810,11 +809,11 @@ class Sensors extends RESTResource {
             $this->assureAllowed('archive', 'events');
             $archive = true;
         }
-        // Validation
         V::intVal()->check($id);
         $em = $this->getEntityManager();
         $sensor = $em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
+        $this->assureUserAffiliation($sensor->getDivision()->getId());
         // (Archive and) Remove all events that belong to this sensor
         $events = $em->getRepository('HoneySens\app\models\entities\Event')->findBy(array('sensor' => $sensor));
         if($archive) {
@@ -836,12 +835,12 @@ class Sensors extends RESTResource {
      * @throws ForbiddenException
      */
     public function requestConfigDownload($id) {
-        // TODO Verify that requesting user is allowed to download that specific config
         $this->assureAllowed('downloadConfig');
         // Validation
         V::intVal()->check($id);
         $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
         V::objectType()->check($sensor);
+        $this->assureUserAffiliation($sensor->getDivision()->getId());
         // Enqueue a new task and return it, it's the client's obligation to check that task's status and download the result
         $taskParams = $this->getSensorState($sensor);
         $taskParams['secret'] = $sensor->getSecret();

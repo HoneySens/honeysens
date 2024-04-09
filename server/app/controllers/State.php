@@ -57,7 +57,6 @@ class State extends RESTResource {
         });
     }
 
-    // TODO add permission resource
     public function get($userID) {
         $this->assureAllowed('get');
         $em = $this->getEntityManager();

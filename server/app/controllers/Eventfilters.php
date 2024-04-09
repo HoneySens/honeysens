@@ -184,6 +184,7 @@ class Eventfilters extends RESTResource {
             ->key('division', V::intVal())
             ->key('conditions', V::arrayVal()->each(V::arrayType()))
             ->check($data);
+        $this->assureUserAffiliation($data['division']);
         if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
             V::key('description', V::stringType()->length(1, 65535))->check($data);
         else V::key('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
@@ -236,10 +237,12 @@ class Eventfilters extends RESTResource {
         if($this->getConfig()->getBoolean('misc', 'require_filter_description'))
             V::key('description', V::stringType()->length(1, 65535))->check($data);
         else V::key('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
-        // Persistence
         $em = $this->getEntityManager();
         $filter = $em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         V::objectType()->check($filter);
+        $this->assureUserAffiliation($filter->getDivision()->getId());
+        if($filter->getDivision()->getId() != $data['division']) $this->assureUserAffiliation($data['division']);
+        // Persistence
         $filter->setName($data['name']);
         $filter->setType($data['type']);
         $filter->setDescription($data['description']);
@@ -284,6 +287,7 @@ class Eventfilters extends RESTResource {
         $em = $this->getEntityManager();
         $filter = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         V::objectType()->check($filter);
+        $this->assureUserAffiliation($filter->getDivision()->getId());
         $fid = $filter->getId();
         $em->remove($filter);
         $em->flush();

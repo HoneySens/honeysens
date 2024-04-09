@@ -23,11 +23,7 @@ class Users extends RESTResource {
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();
             $criteria['id'] = $args['id'] ?? null;
-            try {
-                $result = $controller->get($criteria);
-            } catch(\Exception $e) {
-                throw new NotFoundException();
-            }
+            $result = $controller->get($criteria);
             $response->getBody()->write(json_encode($result));
             return $response;
         });
@@ -83,7 +79,11 @@ class Users extends RESTResource {
         if(V::key('id', V::intVal())->validate($criteria)) {
             $qb->andWhere('u.id = :id')
                 ->setParameter('id', $criteria['id']);
-            return $this->getStateWithPermissionConfig($qb->getQuery()->getSingleResult());
+            try {
+                return $this->getStateWithPermissionConfig($qb->getQuery()->getSingleResult());
+            } catch(\Exception $e) {
+                throw new NotFoundException();
+            }
         } else {
             $users = array();
             foreach($qb->getQuery()->getResult() as $user) {

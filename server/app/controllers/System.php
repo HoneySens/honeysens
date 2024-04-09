@@ -28,18 +28,14 @@ class System extends RESTResource {
         });
 
         $app->get('/api/system/identify', function(Request $request, Response $response) use ($app, $em, $services, $config) {
-            // Predictable endpoint used to test the server connection (useful to figure out if a proxy actually works)
+            // Predictable endpoint used to test the server's reachability (useful to figure out if a proxy actually works)
             $response->getBody()->write("HoneySens");
             return $response;
         });
 
         $app->delete('/api/system/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
             $controller = new System($em, $services, $config);
-            try {
-                $controller->removeAllEvents();
-            } catch(\Exception $e) {
-                throw new BadRequestException();
-            }
+            $controller->removeAllEvents();
             $response->getBody()->write(json_encode([]));
             return $response;
         });
@@ -111,14 +107,18 @@ class System extends RESTResource {
 
     /**
      * Removes all events from the database, including archived ones.
+     * Only admin users are permitted to execute that action.
      *
-     * @throws \Exception
+     * @throws ForbiddenException
      */
     public function removeAllEvents() {
+        // This can only be invoked from an admin session
+        if($_SESSION['user']['role'] != User::ROLE_ADMIN) {
+            throw new ForbiddenException();
+        }
         // QueryBuilder seems to ignore the cascade on delete specifications and fails with constraint checks,
         // if we just delete events here. As a workaround we will manually do the cascade stuff by deleting
         // referenced event details and packets first.
-        $this->assureAllowed('delete', 'events');
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->delete('HoneySens\app\models\entities\EventDetail', 'ed');
         $qb->getQuery()->execute();
