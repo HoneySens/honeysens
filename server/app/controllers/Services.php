@@ -102,7 +102,7 @@ class Services extends RESTResource {
 
     /**
      * Queries the registry for availability and checks all registered services
-     * for their status. Only returns true if all revisionsof all registered
+     * for their status. Only returns true if all revisions of all registered
      * services have a matching template in the registry.
      *
      * @return array

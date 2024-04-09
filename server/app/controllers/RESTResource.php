@@ -48,6 +48,23 @@ abstract class RESTResource {
         }
     }
 
+    public function assureUserAffiliation($divisionID) {
+        $userID = $this->getSessionUserID();
+        if($userID === null)
+            return;
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('d')->from('HoneySens\app\models\entities\Division', 'd')
+            ->where('d.id = :id')
+            ->andwhere(':userid MEMBER OF d.users')
+            ->setParameter('id', $divisionID)
+            ->setParameter('userid', $userID);
+        try {
+            $qb->getQuery()->getSingleResult();
+        } catch(\Exception $e) {
+            throw new ForbiddenException();
+        }
+    }
+
     protected function offerFile($path, $name, $callback=null) {
         if(!file_exists($path)) {
             header('HTTP/1.0 400 Bad Request');

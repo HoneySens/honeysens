@@ -47,7 +47,7 @@ class Settings extends RESTResource {
      * @throws \HoneySens\app\models\exceptions\ForbiddenException
      */
     public function get() {
-        $this->assureAllowed('all');
+        $this->assureAllowed('get');
         // TODO This silently returns nothing if the config is invalid
         $config = $this->getConfig();
         $caCert = file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt');

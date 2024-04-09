@@ -1,6 +1,8 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use Doctrine\ORM\Query\Expr\Join as Join;
+use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\exceptions\NotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -39,7 +41,7 @@ class Certs extends RESTResource {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('c')->from('HoneySens\app\models\entities\SSLCert', 'c');
         if(V::key('userID', V::intType())->validate($criteria)) {
-            $qb->join('c.sensor', 's')
+            $qb->join(Sensor::class, 's', Join::WITH, 's.EAPOLCACert = c')
                 ->join('s.division', 'd')
                 ->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $criteria['userID']);

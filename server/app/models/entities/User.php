@@ -395,20 +395,20 @@ class User {
                 array_push($permissions['eventfilters'], 'create', 'update', 'delete');
                 array_push($permissions['platforms'], 'download');
                 array_push($permissions['sensors'], 'create', 'update', 'delete', 'downloadConfig');
-                array_push($permissions['users'], 'all', 'get');
+                array_push($permissions['users'], 'get');
                 array_push($permissions['contacts'], 'create', 'update', 'delete');
             case $this::ROLE_OBSERVER:
-                array_push($permissions['certs'], 'all', 'get');
+                array_push($permissions['certs'], 'get');
                 array_push($permissions['eventdetails'], 'get');
-                array_push($permissions['events'], 'all', 'get', 'getByLastID');
+                array_push($permissions['events'], 'get', 'getByLastID');
                 array_push($permissions['eventfilters'], 'get');
-                array_push($permissions['sensors'], 'all', 'get');
-                array_push($permissions['divisions'], 'all', 'get');
-                array_push($permissions['contacts'], 'all', 'get');
-                array_push($permissions['platforms'], 'all', 'get');
+                array_push($permissions['sensors'], 'get');
+                array_push($permissions['divisions'], 'get');
+                array_push($permissions['contacts'], 'get');
+                array_push($permissions['platforms'], 'get');
                 array_push($permissions['sensorstatus'], 'get');
                 array_push($permissions['services'], 'get');
-                array_push($permissions['settings'], 'all', 'get');
+                array_push($permissions['settings'], 'get');
                 array_push($permissions['stats'], 'get');
                 array_push($permissions['tasks'], 'get', 'create', 'update', 'delete');
                 array_push($permissions['users'], 'updateSelf');
