@@ -8,11 +8,12 @@ function(HoneySens, DivisionTpl) {
                 'click button:submit': function(e) {
                     e.preventDefault();
                     this.$el.find('form').trigger('submit');
+                    this.$el.find('button').prop('disabled', true).text('...');
                 }
             },
             onRender: function() {
                 var view = this;
-                
+
                 this.$el.find('form').validator().on('submit', function (e) {
                     if (!e.isDefaultPrevented()) {
                         e.preventDefault();

@@ -6,10 +6,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
-class JsonBodyParserMiddleware implements MiddlewareInterface
-{
-    public function process(Request $request, RequestHandler $handler): Response
-    {
+class JsonBodyParserMiddleware implements MiddlewareInterface {
+
+    public function process(Request $request, RequestHandler $handler): Response {
         $contentType = $request->getHeaderLine('Content-Type');
 
         if (strstr($contentType, 'application/json')) {

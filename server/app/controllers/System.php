@@ -65,12 +65,7 @@ class System extends RESTResource {
      * @return bool
      */
     static function installRequired($config) {
-        try {
-            return $config->getBoolean('server', 'setup');
-        } catch(NoOptionException $e) {
-            // If the option doesn't exist, we run a configuration < 0.2.0 and therefore don't need to reinstall
-            return false;
-        }
+        return $config->getBoolean('server', 'setup');
     }
 
     /**
@@ -132,44 +127,39 @@ class System extends RESTResource {
     }
 
     /**
-     * Checks existence of parts of the DB schema and triggers the setup process if necessary.
-     *
-     * @param $em Doctrine entity manager
-     * @param $skipPermissionCheck Boolean that determines if the permission checks are skipped (useful to reset the DB during bootstrap)
-     * @param $forceReset Boolean that forces the removal of all data, even if the DB is in a clean shape
-     * @throws \Exception
+     * Creates the database schema, a division and an administrative user
+     * associated with that division.
      */
-    function initDBSchema($em, $skipPermissionCheck=false, $forceReset=false) {
-        // This can only be invoked from an admin session
-        if(!$skipPermissionCheck && $_SESSION['user']['role'] != User::ROLE_ADMIN) {
-            throw new ForbiddenException();
-        }
-        $schemaManager = $em->getConnection()->getSchemaManager();
-        if($forceReset || !$schemaManager->tablesExist(array('users'))) {
-            // TODO replace this simple setup process with a more sophisticated frontend setup script and query for user data (admin passwd etc.)
-            $con = $em->getConnection();
-            $schemaTool = new SchemaTool($em);
-            $classes = $em->getMetadataFactory()->getAllMetadata();
-            // Remove existing tables
-            $schemaTool->dropSchema($classes);
-            $con->query('DROP TABLE IF EXISTS `last_updates`');
-            // Create schema
-            $schemaTool->createSchema($classes);
-            $this->addLastUpdatesTable($em);
-            // Default admin user
-            $admin = new User();
-            $admin
-                ->setName('admin')
-                ->setPassword('admin')
-                ->setDomain(User::DOMAIN_LOCAL)
-                ->setFullName('Administrator')
-                ->setEmail('')
-                ->setRole($admin::ROLE_ADMIN);
-            $em->persist($admin);
-            $em->flush();
-            // Remove old data files
-            exec(realpath(APPLICATION_PATH . '/scripts/clear_data.py') . ' ' . escapeshellarg(realpath(APPLICATION_PATH . '/../data')) . ' 2>&1', $output);
-        }
+    private function initDBSchema($em, $adminEMail, $adminPassword, $divisionName) {
+        $con = $em->getConnection();
+        $schemaTool = new SchemaTool($em);
+        $classes = $em->getMetadataFactory()->getAllMetadata();
+        // Remove existing tables
+        $schemaTool->dropSchema($classes);
+        $con->query('DROP TABLE IF EXISTS `last_updates`');
+        // Create schema
+        $schemaTool->createSchema($classes);
+        $this->addLastUpdatesTable($em);
+        // Initial division
+        $division = new Division();
+        $division->setName($divisionName);
+        $em->persist($division);
+        // Default admin user
+        $admin = new User();
+        $admin
+            ->setName('admin')
+            ->setPassword($adminPassword)
+            ->setDomain(User::DOMAIN_LOCAL)
+            ->setFullName('Administrator')
+            ->setEmail($adminEMail)
+            ->setRole($admin::ROLE_ADMIN)
+            ->addToDivision($division);
+        $em->persist($admin);
+        // Platforms
+        $connection = $em->getConnection();
+        $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("1", "bbb", "BeagleBone Black", "BeagleBone Black is a low-cost, community-supported development platform.", "bbb")')->execute();
+        $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("2", "docker_x86", "Docker (x86)", "Dockerized sensor platform to be used on generic x86 hardware.", "docker_x86")')->execute();
+        $em->flush();
     }
 
     /**
@@ -219,7 +209,7 @@ class System extends RESTResource {
     function install($data) {
         $em = $this->getEntityManager();
         $config = $this->getConfig();
-        if(!$this::installRequired($config)) {
+        if(!$this::installRequired($config) || $em->getConnection()->getSchemaManager()->tablesExist(array('users'))) {
             throw new ForbiddenException();
         };
         // Validation
@@ -230,12 +220,7 @@ class System extends RESTResource {
             ->attribute('divisionName', V::alnum()->length(1, 255))
             ->check($data);
         // Persistence
-        $connection = $em->getConnection();
-        $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("1", "bbb", "BeagleBone Black", "BeagleBone Black is a low-cost, community-supported development platform.", "bbb")')->execute();
-        $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("2", "docker_x86", "Docker (x86)", "Dockerized sensor platform to be used on generic x86 hardware.", "docker_x86")')->execute();
-        $admin = $em->getRepository('HoneySens\app\models\entities\User')->find(1);
-        $admin->setEmail($data->email);
-        $admin->setPassword($data->password);
+        $this->initDBSchema($em, $data->email, $data->password, $data->divisionName);
         $config->set('server', 'host', $data->serverEndpoint);
         $config->set('server', 'setup', 'false');
         try {
@@ -243,11 +228,6 @@ class System extends RESTResource {
         } catch (\ErrorException $e) {
             throw new BadRequestException($this::ERR_CONFIG_WRITE);
         }
-        $division = new Division();
-        $division->setName($data->divisionName);
-        $admin->addToDivision($division);
-        $em->persist($division);
-        $em->flush();
         return array('cert_cn' => $data->serverEndpoint,
             'setup' => false);
     }
