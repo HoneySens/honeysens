@@ -4,6 +4,7 @@ use Doctrine\ORM\EntityManager;
 use GuzzleHttp\Psr7\LazyOpenStream;
 use HoneySens\app\adapters\JsonBodyParserMiddleware;
 use HoneySens\app\adapters\SessionMiddleware;
+use HoneySens\app\adapters\SetupCheckMiddleware;
 use HoneySens\app\controllers\Certs;
 use HoneySens\app\controllers\Contacts;
 use HoneySens\app\controllers\Divisions;
@@ -39,12 +40,13 @@ define('APPLICATION_PATH', sprintf('%s/app', BASE_PATH));
 define('DATA_PATH', sprintf('%s/data', BASE_PATH));
 set_include_path(implode(PATH_SEPARATOR, array(realpath(APPLICATION_PATH . '/vendor'), get_include_path())));
 
-function initSlim($appConfig) {
+function initSlim($appConfig, $em) {
     $debug = $appConfig->getBoolean('server', 'debug');
     $app = AppFactory::create();
     $app->addRoutingMiddleware();
     $app->add(new JsonBodyParserMiddleware());
     $app->add(new SessionMiddleware());
+    $app->add(new SetupCheckMiddleware($app, $em));
     $errorMiddleware = $app->addErrorMiddleware($debug, true, true);
     if(!$debug) {
         $errorMiddleware->setDefaultErrorHandler(function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails, ?LoggerInterface $logger = null) use ($app) {
@@ -85,7 +87,7 @@ function initConfig() {
     return $config;
 }
 
-function initDoctrine() {
+function initDatabase() {
     $config = new Configuration();
     $config->setMetadataCache(new PhpFilesAdapter('doctrine_metadata'));
     $config->setQueryCache(new PhpFilesAdapter('doctrine_queries'));
@@ -105,20 +107,9 @@ function initDoctrine() {
         'password' => getenv('HS_DB_PASSWORD'),
         'dbname' => getenv('HS_DB_NAME')
     );
-    return EntityManager::create($connectionParams, $config);
-}
-
-function initDBSchema($em) {
-    $systemController = new System($em, null, null);
-    $systemController->initDBSchema($em, true);
-}
-
-function initDBEventManager($em) {
+    $em = EntityManager::create($connectionParams, $config);
     $em->getEventManager()->addEventSubscriber(new EntityUpdateSubscriber());
-}
-
-function initServiceManager($config, $em) {
-    return new ServiceManager($config, $em);
+    return $em;
 }
 
 /**
@@ -155,4 +146,18 @@ function initRoutes($app, $em, $services, $config) {
     Tasks::registerRoutes($app ,$em, $services, $config);
     Templates::registerRoutes($app ,$em, $services, $config);
     Users::registerRoutes($app, $em, $services, $config);
+}
+
+/**
+ * Primary entry point, initializes all components and routes, then runs the route dispatcher.
+ * This method blocks until the request has been served.
+ */
+function launch() {
+    initClassLoading();
+    $config = initConfig();
+    $em = initDatabase();
+    $app = initSlim($config, $em);
+    $services = new ServiceManager($config, $em);
+    initRoutes($app, $em, $services, $config);
+    $app->run();
 }
