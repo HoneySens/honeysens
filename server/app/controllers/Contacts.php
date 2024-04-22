@@ -15,8 +15,8 @@ use Respect\Validation\Validator as V;
  */
 class Contacts extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/contacts[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($contacts, $em, $services, $config) {
+        $contacts->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Contacts($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();

@@ -7,8 +7,8 @@ use Respect\Validation\Validator as V;
 
 class Stats extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/stats', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+    static function registerRoutes($stats, $em, $services, $config) {
+        $stats->get('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Stats($em, $services, $config);
             $criteria = $request->getQueryParams();
             $criteria['userID'] = $controller->getSessionUserID();

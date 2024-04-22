@@ -10,8 +10,8 @@ use Respect\Validation\Validator as V;
 
 class Certs extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/certs/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($certs, $em, $services, $config) {
+        $certs->get('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Certs($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();

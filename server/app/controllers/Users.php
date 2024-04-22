@@ -11,14 +11,15 @@ use HoneySens\app\models\Utils;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Users extends RESTResource {
 
     const ERROR_DUPLICATE = 1;
     const ERROR_REQUIRE_PASSWORD_CHANGE = 2;
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/users[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($users, $em, $services, $config) {
+        $users->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Users($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();
@@ -28,28 +29,28 @@ class Users extends RESTResource {
             return $response;
         });
 
-        $app->post('/api/users', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $users->post('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Users($em, $services, $config);
             $user = $controller->create($request->getParsedBody());
             $response->getBody()->write(json_encode($user->getState()));
             return $response;
         });
 
-        $app->put('/api/users/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $users->put('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Users($em, $services, $config);
             $user = $controller->update($args['id'], $request->getParsedBody());
             $response->getBody()->write(json_encode($user->getState()));
             return $response;
         });
 
-        $app->put('/api/users/session', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $users->put('/session', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Users($em, $services, $config);
             $user = $controller->updateSelf($request->getParsedBody());
             $response->getBody()->write(json_encode($user->getState()));
             return $response;
         });
 
-        $app->delete('/api/users/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $users->delete('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Users($em, $services, $config);
             $controller->delete($args['id']);
             $response->getBody()->write(json_encode([]));

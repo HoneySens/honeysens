@@ -12,6 +12,7 @@ use HoneySens\app\models\ServiceManager;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Services extends RESTResource {
 
@@ -19,8 +20,8 @@ class Services extends RESTResource {
     const CREATE_ERROR_REGISTRY_OFFLINE = 1;
     const CREATE_ERROR_DUPLICATE = 2;
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/services[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($apiServices, $em, $services, $config) {
+        $apiServices->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Services($em, $services, $config);
             $criteria = array('id' => $args['id'] ?? null);
             try {
@@ -32,13 +33,13 @@ class Services extends RESTResource {
             return $response;
         });
 
-        $app->get('/api/services/status', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $apiServices->get('/status', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Services($em, $services, $config);
             $response->getBody()->write(json_encode($controller->getStatusSummary()));
             return $response;
         });
 
-        $app->get('/api/services/{id:\d+}/status', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $apiServices->get('/{id:\d+}/status', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Services($em, $services, $config);
             $result = $controller->getStatus($args['id']);
             $response->getBody()->write(json_encode($result));
@@ -46,28 +47,28 @@ class Services extends RESTResource {
         });
 
         // Requires a reference to a successfully completed verification task.
-        $app->post('/api/services', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $apiServices->post('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Services($em, $services, $config);
             $service = $controller->create($request->getParsedBody());
             $response->getBody()->write(json_encode($service->getState()));
             return $response;
         });
 
-        $app->put('/api/services/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $apiServices->put('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Services($em, $services, $config);
             $service = $controller->update($args['id'], $request->getParsedBody());
             $response->getBody()->write(json_encode($service->getState()));
             return $response;
         });
 
-        $app->delete('/api/services/revisions/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $apiServices->delete('/revisions/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Services($em, $services, $config);
             $controller->deleteRevision($args['id']);
             $response->getBody()->write(json_encode([]));
             return $response;
         });
 
-        $app->delete('/api/services/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $apiServices->delete('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Services($em, $services, $config);
             $controller->delete($args['id']);
             $response->getBody()->write(json_encode([]));

@@ -36,7 +36,7 @@ abstract class RESTResource {
         return $this->config;
     }
 
-    abstract static function registerRoutes($app, $em, $services, $config);
+    abstract static function registerRoutes($api, $em, $services, $config);
 
     protected function assureAllowed($method, $realm=null) {
         if($realm) {

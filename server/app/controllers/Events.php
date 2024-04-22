@@ -18,11 +18,12 @@ use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Events extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/events[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($events, $em, $services, $config) {
+        $events->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Events($em, $services, $config);
             $criteria = $request->getQueryParams();
             $criteria['userID'] = $controller->getSessionUserID();
@@ -36,7 +37,7 @@ class Events extends RESTResource {
             return $response;
         });
 
-        $app->post('/api/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $events->post('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Events($em, $services, $config);
             $requestBody = $request->getBody()->getContents();
             $sensor = $controller->validateSensorRequest('create', $requestBody);
@@ -46,7 +47,7 @@ class Events extends RESTResource {
             return $response;
         });
 
-        $app->put('/api/events/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $events->put('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Events($em, $services, $config);
             $eventData = $request->getParsedBody();
             $eventData['id'] = $args['id'];
@@ -56,7 +57,7 @@ class Events extends RESTResource {
             return $response;
         });
 
-        $app->put('/api/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $events->put('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Events($em, $services, $config);
             $eventData = $request->getParsedBody();
             $eventData['userID'] = $controller->getSessionUserID();
@@ -65,7 +66,7 @@ class Events extends RESTResource {
             return $response;
         });
 
-        $app->delete('/api/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $events->delete('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Events($em, $services, $config);
             $criteria = $request->getParsedBody();
             $criteria['userID'] = $controller->getSessionUserID();

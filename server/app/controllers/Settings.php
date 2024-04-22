@@ -8,32 +8,33 @@ use HoneySens\app\models\Utils;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Settings extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/settings', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+    static function registerRoutes($settings, $em, $services, $config) {
+        $settings->get('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Settings($em, $services, $config);
             $settings = $controller->get();
             $response->getBody()->write(json_encode($settings));
             return $response;
         });
 
-        $app->put('/api/settings', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $settings->put('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Settings($em, $services, $config);
             $settings = $controller->update($request->getParsedBody());
             $response->getBody()->write(json_encode($settings));
             return $response;
         });
 
-        $app->post('/api/settings/testmail', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $settings->post('/testmail', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Settings($em, $services, $config);
             $task = $controller->sendTestMail($request->getParsedBody());
             $response->getBody()->write(json_encode($task->getState()));
             return $response;
         });
 
-        $app->post('/api/settings/testevent', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $settings->post('/testevent', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Settings($em, $services, $config);
             $response->getBody()->write(json_encode($controller->sendTestEvent()));
             return $response;
