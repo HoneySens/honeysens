@@ -11,6 +11,7 @@ use HoneySens\app\models\exceptions\NotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Platforms extends RESTResource {
 
@@ -18,8 +19,8 @@ class Platforms extends RESTResource {
     const CREATE_ERROR_UNKNOWN_PLATFORM = 1;
     const CREATE_ERROR_DUPLICATE = 2;
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/platforms[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($platforms, $em, $services, $config) {
+        $platforms->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
             $criteria = array('id' => $args['id'] ?? null);
             try {
@@ -31,17 +32,17 @@ class Platforms extends RESTResource {
             return $response;
         });
 
-        $app->get('/api/platforms/{id:\d+}/firmware/current', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $platforms->get('/{id:\d+}/firmware/current', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
             $controller->downloadCurrentFirmwareForPlatform($args['id']);
         });
 
-        $app->get('/api/platforms/firmware/{id:\d+}/raw', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $platforms->get('/firmware/{id:\d+}/raw', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
             $controller->downloadFirmware($args['id']);
         });
 
-        $app->get('/api/platforms/firmware/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $platforms->get('/firmware/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
             $firmware = $controller->getFirmware($args['id']);
             $response->getBody()->write(json_encode($firmware->getState()));
@@ -49,21 +50,21 @@ class Platforms extends RESTResource {
         });
 
         // Requires a successfully completed verification task
-        $app->post('/api/platforms/firmware', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $platforms->post('/firmware', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
             $firmware = $controller->create($request->getParsedBody());
             $response->getBody()->write(json_encode($firmware->getState()));
             return $response;
         });
 
-        $app->put('/api/platforms/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $platforms->put('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
             $platform = $controller->update($args['id'], $request->getParsedBody());
             $response->getBody()->write(json_encode($platform->getState()));
             return $response;
         });
 
-        $app->delete('/api/platforms/firmware/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $platforms->delete('/firmware/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Platforms($em, $services, $config);
             $controller->delete($args['id']);
             $response->getBody()->write(json_encode([]));

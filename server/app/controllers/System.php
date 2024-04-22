@@ -13,6 +13,7 @@ use phpseclib3\File\X509;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class System extends RESTResource {
 
@@ -20,34 +21,34 @@ class System extends RESTResource {
     const ERR_UNKNOWN = 0;
     const ERR_CONFIG_WRITE = 1;
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/system', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+    static function registerRoutes($system, $em, $services, $config) {
+        $system->get('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new System($em, $services, $config);
             $response->getBody()->write(json_encode($controller->get()));
             return $response;
         });
 
-        $app->get('/api/system/identify', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $system->get('/identify', function(Request $request, Response $response) use ($em, $services, $config) {
             // Predictable endpoint used to test the server's reachability (useful to figure out if a proxy actually works)
             $response->getBody()->write("HoneySens");
             return $response;
         });
 
-        $app->delete('/api/system/events', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $system->delete('/events', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new System($em, $services, $config);
             $controller->removeAllEvents();
             $response->getBody()->write(json_encode([]));
             return $response;
         });
 
-        $app->put('/api/system/ca', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $system->put('/ca', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new System($em, $services, $config);
             $controller->refreshCertificates($em);
             $response->getBody()->write(json_encode([]));
             return $response;
         });
 
-        $app->post('/api/system/install', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $system->post('/install', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new System($em, $services, $config);
             $request = $request->getBody()->getContents();
             V::json()->check($request);

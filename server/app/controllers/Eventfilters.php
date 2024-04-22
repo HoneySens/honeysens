@@ -12,8 +12,8 @@ use Respect\Validation\Validator as V;
 
 class Eventfilters extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/eventfilters[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($eventfilters, $em, $services, $config) {
+        $eventfilters->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Eventfilters($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();
@@ -27,21 +27,21 @@ class Eventfilters extends RESTResource {
             return $response;
         });
 
-        $app->post('/api/eventfilters', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $eventfilters->post('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Eventfilters($em, $services, $config);
             $filter = $controller->create($request->getParsedBody());
             $response->getBody()->write(json_encode($filter->getState()));
             return $response;
         });
 
-        $app->put('/api/eventfilters/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $eventfilters->put('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Eventfilters($em, $services, $config);
             $filter = $controller->update($args['id'], $request->getParsedBody());
             $response->getBody()->write(json_encode($filter->getState()));
             return $response;
         });
 
-        $app->delete('/api/eventfilters/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $eventfilters->delete('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Eventfilters($em, $services, $config);
             $controller->delete($args['id']);
             $response->getBody()->write(json_encode([]));

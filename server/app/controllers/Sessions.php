@@ -8,21 +8,22 @@ use HoneySens\app\models\exceptions\ForbiddenException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Sessions extends RESTResource {
 
     const SESSION_TIMEOUT_DEFAULT = 1200;  # Seconds of inactivity until a regular session expires
     const SESSION_TIMEOUT_CHANGEPW = 600;  # Seconds until the "change password on first login" session expires
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->post('/api/sessions', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+    static function registerRoutes($sessions, $em, $services, $config) {
+        $sessions->post('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Sessions($em, $services, $config);
             $userState = $controller->create($request->getParsedBody());
             $response->getBody()->write(json_encode($userState));
             return $response;
         });
 
-        $app->delete('/api/sessions', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $sessions->delete('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Sessions($em, $services, $config);
             $user = $controller->destroy();
             $response->getBody()->write(json_encode($user->getState()));

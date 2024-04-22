@@ -11,13 +11,14 @@ use HoneySens\app\models\Utils;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Divisions extends RESTResource {
 
     const ERROR_DUPLICATE = 1;
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/divisions[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($divisions, $em, $services, $config) {
+        $divisions->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Divisions($em, $services, $config);
             $criteria = array();
             $criteria['userID'] = $controller->getSessionUserID();
@@ -31,21 +32,21 @@ class Divisions extends RESTResource {
             return $response;
         });
 
-        $app->post('/api/divisions', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $divisions->post('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Divisions($em, $services, $config);
             $division = $controller->create($request->getParsedBody());
             $response->getBody()->write(json_encode($division->getState()));
             return $response;
         });
 
-        $app->put('/api/divisions/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $divisions->put('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Divisions($em, $services, $config);
             $division = $controller->update($args['id'], $request->getParsedBody());
             $response->getBody()->write(json_encode($division->getState()));
             return $response;
         });
 
-        $app->delete('/api/divisions/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $divisions->delete('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Divisions($em, $services, $config);
             $controller->delete($args['id'], $request->getParsedBody());
             $response->getBody()->write(json_encode([]));

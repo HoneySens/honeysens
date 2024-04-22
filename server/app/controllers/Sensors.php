@@ -14,11 +14,12 @@ use HoneySens\app\models\ServiceManager;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Sensors extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/sensors[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($sensors, $em, $services, $config) {
+        $sensors->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $criteria = array('userID' => $controller->getSessionUserID(), 'id' => $args['id'] ?? null);
             try {
@@ -28,16 +29,16 @@ class Sensors extends RESTResource {
             }
             $response->getBody()->write(json_encode($result));
             return $response;
-       });
+        });
 
-        $app->get('/api/sensors/config/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $sensors->get('/config/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $task = $controller->requestConfigDownload($args['id']);
             $response->getBody()->write(json_encode($task->getState()));
             return $response;
         });
 
-        $app->get('/api/sensors/status/by-sensor/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $sensors->get('/status/by-sensor/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $criteria = array('userID' => $controller->getSessionUserID(), 'sensorID' => $args['id']);
             $result = $controller->getStatus($criteria);
@@ -49,7 +50,7 @@ class Sensors extends RESTResource {
          * This resource is used by authenticated sensors to receive firmware download details.
          * The return value is an array with platform names as keys and their respective access URIs as value.
          */
-        $app->get('/api/sensors/firmware', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $sensors->get('/firmware', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $sensor = $controller->validateSensorRequest('get', '');
             $body = json_encode($controller->getFirmwareURIs($sensor));
@@ -58,7 +59,7 @@ class Sensors extends RESTResource {
             return $response;
         });
 
-        $app->post('/api/sensors', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $sensors->post('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $sensor = $controller->create($request->getParsedBody());
             $result = $controller->getSensorState($sensor);
@@ -69,7 +70,7 @@ class Sensors extends RESTResource {
         /**
          * Polling endpoint for sensors to send status data and receive their current configuration.
          */
-        $app->post('/api/sensors/status', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $sensors->post('/status', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $requestBody = $request->getBody()->getContents();
             $sensor = $controller->validateSensorRequest('create', $requestBody);
@@ -81,7 +82,7 @@ class Sensors extends RESTResource {
             return $response;
         });
 
-        $app->put('/api/sensors/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $sensors->put('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $sensor = $controller->update($args['id'], $request->getParsedBody());
             $result = $controller->getSensorState($sensor);
@@ -89,7 +90,7 @@ class Sensors extends RESTResource {
             return $response;
         });
 
-        $app->delete('/api/sensors/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $sensors->delete('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Sensors($em, $services, $config);
             $controller->delete($args['id'], $request->getParsedBody());
             $response->getBody()->write(json_encode([]));

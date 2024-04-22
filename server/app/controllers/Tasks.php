@@ -14,6 +14,7 @@ use HoneySens\app\models\ServiceManager;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Tasks extends RESTResource {
 
@@ -22,8 +23,8 @@ class Tasks extends RESTResource {
     const UPLOAD_TYPE_SERVICE_ARCHIVE = 0;
     const UPLOAD_TYPE_PLATFORM_ARCHIVE = 1;
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/tasks[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+    static function registerRoutes($tasks, $em, $services, $config) {
+        $tasks->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
             $criteria = array('userID' => $controller->getSessionUserID(), 'id' => $args['id'] ?? null);
             try {
@@ -35,13 +36,13 @@ class Tasks extends RESTResource {
             return $response;
         });
 
-        $app->get('/api/tasks/{id:\d+}/result[/{delete:\d+}]', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $tasks->get('/{id:\d+}/result[/{delete:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
             $delete = $args['delete'] ?? 0;
             $controller->downloadResult($args['id'], boolval($delete));
         });
 
-        $app->get('/api/tasks/status', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $tasks->get('/status', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
             try {
                 $result = array('queue_length' => $controller->getBrokerQueueLength());
@@ -53,14 +54,14 @@ class Tasks extends RESTResource {
         });
 
         // Generic endpoint to upload files, returns the ID of the associated verification task.
-        $app->post('/api/tasks/upload', function(Request $requset, Response $response) use ($app, $em, $services, $config) {
+        $tasks->post('/upload', function(Request $requset, Response $response) use ($em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
             $state = $controller->upload();
             $response->getBody()->write(json_encode($state));
             return $response;
         });
 
-        $app->delete('/api/tasks/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $tasks->delete('/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Tasks($em, $services, $config);
             $controller->delete($args['id']);
             $response->getBody()->write(json_encode([]));

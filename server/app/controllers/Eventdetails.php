@@ -3,14 +3,14 @@ namespace HoneySens\app\controllers;
 use HoneySens\app\models\exceptions\NotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Eventdetails extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
+    static function registerRoutes($eventdetails, $em, $services, $config) {
         // Returns details (including packets) that belong to a certain event
-        $app->get('/api/eventdetails/by-event/{id:\d+}', function(Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $eventdetails->get('/by-event/{id:\d+}', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Eventdetails($em, $services, $config);
             $details = $controller->get(array('userID' => $controller->getSessionUserID(), 'eventID' => $args['id'], 'type' => 0));
             $packets = $controller->get(array('userID' => $controller->getSessionUserID(), 'eventID' => $args['id'], 'type' => 1));
@@ -19,7 +19,7 @@ class Eventdetails extends RESTResource {
             return $response;
         });
 
-        $app->get('/api/eventdetails/by-archived-event/{id:\d+}', function(Request $request, Response $response, array $args) use($app, $em, $services, $config) {
+        $eventdetails->get('/by-archived-event/{id:\d+}', function(Request $request, Response $response, array $args) use($em, $services, $config) {
             $controller = new Eventdetails($em, $services, $config);
             $result = $controller->getArchivedDetails($args['id'], $controller->getSessionUserID());
             $response->getBody()->write(json_encode($result));

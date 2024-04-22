@@ -32,6 +32,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use \Respect\Validation\Exceptions\ValidationException;
 use \Slim\Factory\AppFactory;
+use \Slim\Routing\RouteCollectorProxy;
 use \Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 
 // Global paths
@@ -127,25 +128,63 @@ function initRoutes($app, $em, $services, $config) {
         return $response->withBody($template);
     });
 
-    // Initialize API
-    Certs::registerRoutes($app, $em, $services, $config);
-    Contacts::registerRoutes($app, $em, $services, $config);
-    Divisions::registerRoutes($app, $em, $services, $config);
-    Eventdetails::registerRoutes($app, $em, $services, $config);
-    Eventfilters::registerRoutes($app, $em, $services, $config);
-    Events::registerRoutes($app, $em, $services, $config);
-    Logs::registerRoutes($app, $em, $services, $config);
-    Platforms::registerRoutes($app, $em, $services, $config);
-    Sensors::registerRoutes($app, $em, $services, $config);
-    Services::registerRoutes($app, $em, $services, $config);
-    Sessions::registerRoutes($app, $em, $services, $config);
-    Settings::registerRoutes($app, $em, $services, $config);
-    State::registerRoutes($app, $em, $services, $config);
-    Stats::registerRoutes($app, $em, $services, $config);
-    System::registerRoutes($app, $em, $services, $config);
-    Tasks::registerRoutes($app ,$em, $services, $config);
-    Templates::registerRoutes($app ,$em, $services, $config);
-    Users::registerRoutes($app, $em, $services, $config);
+    // Register API routes
+    $app->group('/api', function(RouteCollectorProxy $api) use ($em, $services, $config) {
+        $api->group('/certs', function(RouteCollectorProxy $certs) use ($em, $services, $config) {
+            Certs::registerRoutes($certs, $em, $services, $config);
+        });
+        $api->group('/contacts', function(RouteCollectorProxy $contacts) use ($em, $services, $config) {
+            Contacts::registerRoutes($contacts, $em, $services, $config);
+        });
+        $api->group('/divisions', function(RouteCollectorProxy $divisions) use ($em, $services, $config) {
+            Divisions::registerRoutes($divisions, $em, $services, $config);
+        });
+        $api->group('/eventdetails', function(RouteCollectorProxy $evDetails) use ($em, $services, $config) {
+            Eventdetails::registerRoutes($evDetails, $em, $services, $config);
+        });
+        $api->group('/eventfilters', function(RouteCollectorProxy $evFilters) use ($em, $services, $config) {
+            Eventfilters::registerRoutes($evFilters, $em, $services, $config);
+        });
+        $api->group('/events', function(RouteCollectorProxy $events) use ($em, $services, $config) {
+            Events::registerRoutes($events, $em, $services, $config);
+        });
+        $api->group('/logs', function(RouteCollectorProxy $logs) use ($em, $services, $config) {
+            Logs::registerRoutes($logs, $em, $services, $config);
+        });
+        $api->group('/platforms', function(RouteCollectorProxy $platforms) use ($em, $services, $config) {
+            Platforms::registerRoutes($platforms, $em, $services, $config);
+        });
+        $api->group('/sensors', function(RouteCollectorProxy $sensors) use ($em, $services, $config) {
+            Sensors::registerRoutes($sensors, $em, $services, $config);
+        });
+        $api->group('/services', function(RouteCollectorProxy $apiServices) use ($em, $services, $config) {
+            Services::registerRoutes($apiServices, $em, $services, $config);
+        });
+        $api->group('/sessions', function(RouteCollectorProxy $sessions) use ($em, $services, $config) {
+            Sessions::registerRoutes($sessions, $em, $services, $config);
+        });
+        $api->group('/settings', function(RouteCollectorProxy $settings) use ($em, $services, $config) {
+            Settings::registerRoutes($settings, $em, $services, $config);
+        });
+        $api->group('/state', function(RouteCollectorProxy $state) use ($em, $services, $config) {
+            State::registerRoutes($state, $em, $services, $config);
+        });
+        $api->group('/stats', function(RouteCollectorProxy $stats) use ($em, $services, $config) {
+            Stats::registerRoutes($stats, $em, $services, $config);
+        });
+        $api->group('/system', function(RouteCollectorProxy $system) use ($em, $services, $config) {
+            System::registerRoutes($system, $em, $services, $config);
+        });
+        $api->group('/tasks', function(RouteCollectorProxy $tasks) use ($em, $services, $config) {
+            Tasks::registerRoutes($tasks ,$em, $services, $config);
+        });
+        $api->group('/templates', function(RouteCollectorProxy $templates) use ($em, $services, $config) {
+            Templates::registerRoutes($templates ,$em, $services, $config);
+        });
+        $api->group('/users', function(RouteCollectorProxy $users) use ($em, $services, $config) {
+            Users::registerRoutes($users, $em, $services, $config);
+        });
+    });
 }
 
 /**

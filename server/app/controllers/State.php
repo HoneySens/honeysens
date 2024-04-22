@@ -8,10 +8,10 @@ use Respect\Validation\Validator as V;
 
 class State extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
+    static function registerRoutes($state, $em, $services, $config) {
         // Returns an array containing full current application state information (e.g. all entities)
         // that is accessible for the given user.
-        $app->get('/api/state', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+        $state->get('', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new State($em, $services, $config);
             // Set $userID to null for global admin users to avoid user-specific filtering
             $userID = $controller->getSessionUserID();

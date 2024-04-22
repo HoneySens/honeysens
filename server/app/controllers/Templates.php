@@ -7,17 +7,18 @@ use HoneySens\app\models\ServiceManager;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
+use \Slim\Routing\RouteCollectorProxy;
 
 class Templates extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/templates', function (Request $request, Response $response) use ($app, $em, $services, $config) {
+    static function registerRoutes($templates, $em, $services, $config) {
+        $templates->get('', function (Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Templates($em, $services, $config);
             $response->getBody()->write(json_encode($controller->get()));
             return $response;
         });
 
-        $app->put('/api/templates/{id:\d+}', function (Request $request, Response $response, array $args) use ($app, $em, $services, $config) {
+        $templates->put('/{id:\d+}', function (Request $request, Response $response, array $args) use ($em, $services, $config) {
             $controller = new Templates($em, $services, $config);
             $template = $controller->update(intval($args['id']), $request->getParsedBody());
             $response->getBody()->write(json_encode($template->getState()));

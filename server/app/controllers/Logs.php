@@ -7,8 +7,8 @@ use Respect\Validation\Validator as V;
 
 class Logs extends RESTResource {
 
-    static function registerRoutes($app, $em, $services, $config) {
-        $app->get('/api/logs/', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+    static function registerRoutes($logs, $em, $services, $config) {
+        $logs->get('/', function(Request $request, Response $response) use ($em, $services, $config) {
             $controller = new Logs($em, $services, $config);
             $logs = $controller->get($request->getQueryParams());
             $response->getBody()->write(json_encode($logs));
