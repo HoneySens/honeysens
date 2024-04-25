@@ -1,17 +1,17 @@
 {
   "require": {
-    "doctrine/orm": "2.17.1",
-    "doctrine/annotations": "2.0.1",
-    "beberlei/doctrineextensions": "v1.3.0",
-    "guzzlehttp/psr7": "2.6.2",
-    "smuuf/celery-for-php": "0.2",
+    "doctrine/orm": "^2.19",
+    "doctrine/annotations": "^2.0",
+    "beberlei/doctrineextensions": "^1.5",
+    "guzzlehttp/psr7": "^2.6",
+    "smuuf/celery-for-php": "^0.2.0",
     "noiselabs/configparser": "dev-master",
-    "phpseclib/phpseclib": "3.0.34",
-    "predis/predis": "v2.2.2",
-    "rmccue/requests": "v2.0.9",
-    "respect/validation": "2.2.4",
-    "slim/slim": "4.12.0",
-    "symfony/cache": "v5.4.32"
+    "phpseclib/phpseclib": "^3.0",
+    "predis/predis": "^2.2",
+    "rmccue/requests": "^2.0",
+    "respect/validation": "^2.3",
+    "slim/slim": "^4.13",
+    "symfony/cache": "^7.0"
   },
   "autoload": {
     "psr-4": {"HoneySens\\": "/opt/HoneySens/"}

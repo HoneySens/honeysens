@@ -3,7 +3,7 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 
 # Additional dev requirements
-apt-get install -y npm nodejs wget unzip texlive-base texlive-latex-extra texlive-extra-utils figlet boxes git
+apt-get install -y boxes figlet git nodejs npm unzip texlive-base texlive-latex-extra texlive-extra-utils wget
 npm install -g grunt-cli
 
 # Create dummy template config to prevent data initialization in 01_init_volumes.sh
@@ -16,3 +16,7 @@ echo -e "TLS_REQCERT\tnever" >> /etc/ldap/ldap.conf
 
 # Permit write access to startup scripts
 chown hs:hs /etc/startup.d
+
+# Create composer shortcut in $PATH
+echo -e '#!/usr/bin/env bash\n/mnt/out/dev/composer.phar -d /mnt/out/dev/ $*' >/usr/local/bin/composer
+chmod +x /usr/local/bin/composer

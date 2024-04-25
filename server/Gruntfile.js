@@ -55,6 +55,10 @@ module.exports = function(grunt) {
                 src: srcPrefix + '/app/composer.json',
                 dest: srcPrefix + '/out/dev/composer.json'
             },
+            composer_lock: {
+                src: srcPrefix + '/app/composer.lock',
+                dest: srcPrefix + '/out/dev/composer.lock'
+            },
             composer_sh: {
                 src: srcPrefix + '/app/composer.sh',
                 dest: srcPrefix + '/out/dev/composer.sh'
@@ -273,6 +277,7 @@ module.exports = function(grunt) {
         'copy:requirejs',
         'copy:js',
         'symlink:composer_json',
+        'symlink:composer_lock',
         'symlink:composer_sh',
         'symlink:php_app',
         'shell:composer',
@@ -291,6 +296,7 @@ module.exports = function(grunt) {
         'copy:data',
         'copy:requirejs',
         'symlink:composer_json',
+        'symlink:composer_lock',
         'symlink:composer_sh',
         'shell:composer',
         'composer:install',
