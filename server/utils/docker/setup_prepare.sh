@@ -16,7 +16,7 @@ apt-get install -y software-properties-common screen python3-openssl python3-pym
 # PHP 8
 add-apt-repository -y ppa:ondrej/php
 apt-get -qq update
-apt-get install -y php8.3 php8.3-mbstring php8.3-mysql php8.3-xml php8.3-ldap
+apt-get install -y php8.3 php8.3-curl php8.3-mbstring php8.3-mysql php8.3-xml php8.3-ldap
 
 # Apache
 sed -i -e 's/upload_max_filesize.*/upload_max_filesize = 100M/' -e 's/post_max_size.*/post_max_size = 100M/' /etc/php/8.3/apache2/php.ini
