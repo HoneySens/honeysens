@@ -130,7 +130,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
             });
 
             HoneySens.commands.setHandler('init:finalize', function() {
-                // Inteitialize Layout according to system and session status
+                // Initialize Layout according to system and session status
                 var user = HoneySens.data.session.user;
                 if(HoneySens.data.system.get('setup')) {
                     document.location.hash = '#setup';

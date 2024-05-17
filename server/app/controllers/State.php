@@ -1,93 +1,221 @@
 <?php
 namespace HoneySens\app\controllers;
 
-use HoneySens\app\models\ServiceManager;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Query\ResultSetMapping;
+use HoneySens\app\services\ContactsService;
+use HoneySens\app\services\DivisionsService;
+use HoneySens\app\services\EventFiltersService;
+use HoneySens\app\services\EventsService;
+use HoneySens\app\services\PlatformsService;
+use HoneySens\app\services\SensorServicesService;
+use HoneySens\app\services\SensorsService;
+use HoneySens\app\services\SettingsService;
+use HoneySens\app\services\StatsService;
+use HoneySens\app\services\SystemService;
+use HoneySens\app\services\TasksService;
+use HoneySens\app\services\UsersService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
 
 class State extends RESTResource {
 
-    static function registerRoutes($state, $em, $services, $config) {
-        // Returns an array containing full current application state information (e.g. all entities)
-        // that is accessible for the given user.
-        $state->get('', function(Request $request, Response $response) use ($em, $services, $config) {
-            $controller = new State($em, $services, $config);
-            // Set $userID to null for global admin users to avoid user-specific filtering
-            $userID = $controller->getSessionUserID();
-            $queryParams = $request->getQueryParams();
-            $ts = $queryParams['ts'] ?? null;
-            $lastEventId = $queryParams['last_id'] ?? null;
-            $stateParams = $queryParams;
-            $stateParams['userID'] = $userID;
-            V::optional(V::intVal())->check($ts);
-            V::optional(V::oneOf(V::intVal(), V::equals('null')))->check($lastEventId);
-            $now = new \DateTime();
-            $eventsController = new Events($em, $services, $config);
-            if($ts == null) {
-                // Return full state
-                $state = $controller->get($userID);
-            } else {
-                // Return incremental state
-                $events = array();
-                if($lastEventId) {
-                    // Return new events since the provided last event ID
-                    $events = $eventsController->get(array_merge($stateParams, array('lastID' => $lastEventId)))['items'];
-                }
-                $updateService = $services->get(ServiceManager::SERVICE_ENTITY_UPDATE);
-                $state = $updateService->getUpdatedEntities($em, $services, $config, $ts, $stateParams);
-                $state['new_events'] = $events;
-            }
-            try {
-                // The lastEventID is only returned if a user is logged in, otherwise this will throw a ForbiddenException
-                $lastEvents = $eventsController->get(array(
-                    'userID' => $userID,
-                    'sort_by' => 'id',
-                    'order' => 'desc',
-                    'page' => 0,
-                    'per_page' => 1
-                ))['items'];
-                $state['lastEventID'] = count($lastEvents) > 0 ? $lastEvents[0]['id'] : null;
-            } catch(\Exception $e) {
-                $state['lastEventID'] = null;
-            }
-            $state['timestamp'] = $now->format('U');
-            $response->getBody()->write(json_encode($state));
-            return $response;
-        });
+    static function registerRoutes($api) {
+        $api->get('', [State::class, 'get']);
     }
 
-    public function get($userID) {
+    /**
+     * Returns an array containing full current application state information (e.g. all entities)
+     *  that is accessible for the given user.
+     */
+    public function get(Request $request,
+                        Response $response,
+                        EntityManager $em,
+                        ContactsService $contactsService,
+                        DivisionsService $divisionsService,
+                        EventFiltersService $eventFiltersService,
+                        EventsService $eventsService,
+                        PlatformsService $platformsService,
+                        SensorsService $sensorsService,
+                        SensorServicesService $sensorServicesService,
+                        SettingsService $settingsService,
+                        StatsService $statsService,
+                        SystemService $systemService,
+                        TasksService $tasksService,
+                        UsersService $usersService) {
         $this->assureAllowed('get');
-        $em = $this->getEntityManager();
-        $config = $this->getConfig();
+        // Set $userID to null for admin users to avoid user-specific filtering
+        $userID = $this->getSessionUserID();
+        $queryParams = $request->getQueryParams();
+        $ts = $queryParams['ts'] ?? null;
+        $lastEventId = $queryParams['last_id'] ?? null;
+        $stateParams = $queryParams;
+        $stateParams['userID'] = $userID;
+        V::optional(V::intVal())->check($ts);
+        V::optional(V::oneOf(V::intVal(), V::equals('null')))->check($lastEventId);
+        $now = new \DateTime();
+        $state = $this->getEntities(
+            $em,
+            $platformsService,
+            $sensorsService,
+            $usersService,
+            $divisionsService,
+            $contactsService,
+            $settingsService,
+            $eventFiltersService,
+            $sensorServicesService,
+            $statsService,
+            $tasksService,
+            $ts,
+            $stateParams);
+        if($ts === null) {
+            $state['new_events'] = array();
+            $state['system'] = $systemService->getSystemInfo();
+            $state['user'] = $_SESSION['user'];
+        } else {
+            // Return incremental state
+            $events = array();
+            if($lastEventId) {
+                // Return new events since the provided last event ID
+                $events = $eventsService->get(array_merge($stateParams, array('lastID' => $lastEventId)), $this->getSessionUser())['items'];
+            }
+            $state['new_events'] = $events;
+        }
+        try {
+            // The lastEventID is only returned if a user is logged in, otherwise this will throw a ForbiddenException
+            $lastEvents = $eventsService->get(array(
+                'userID' => $userID,
+                'sort_by' => 'id',
+                'order' => 'desc',
+                'page' => 0,
+                'per_page' => 1
+            ), $this->getSessionUser())['items'];
+            $state['lastEventID'] = count($lastEvents) > 0 ? $lastEvents[0]['id'] : null;
+        } catch(\Exception $e) {
+            $state['lastEventID'] = null;
+        }
+        $state['timestamp'] = $now->format('U');
+        $response->getBody()->write(json_encode($state));
+        return $response;
+    }
 
-        try { $sensors = (new Sensors($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $sensors = array(); }
-        try { $event_filters = (new Eventfilters($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $event_filters = array(); }
-        try { $users = (new Users($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $users = array(); }
-        try { $divisions = (new Divisions($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $divisions = array(); }
-        try { $contacts = (new Contacts($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $contacts = array(); }
-        try { $services = (new Services($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $services = array(); }
-        try { $platforms = (new Platforms($em, $this->getServiceManager(), $config))->get(array()); } catch(\Exception $e) { $platforms = array(); }
-        try { $settings = (new Settings($em, $this->getServiceManager(), $config))->get(); } catch(\Exception $e) { $settings = array(); }
-        try { $stats = (new Stats($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $stats = array(); }
-        try { $tasks = (new Tasks($em, $this->getServiceManager(), $config))->get(array('userID' => $userID)); } catch(\Exception $e) { $tasks = array(); }
-        try { $system = (new System($em, $this->getServiceManager(), $config))->get(); } catch(\Exception $e) { $system = array(); }
-
-        return array(
-            'user' => $_SESSION['user'],
-            'sensors' => $sensors,
-            'new_events' => array(),
-            'event_filters' => $event_filters,
-            'users' => $users,
-            'divisions' => $divisions,
-            'contacts' => $contacts,
-            'services' => $services,
-            'platforms' => $platforms,
-            'settings' => $settings,
-            'system' => $system,
-            'stats' => $stats,
-            'tasks' => $tasks
-        );
+    /**
+     * Used to calculate an array of entities that have been changed since the given timestamp.
+     *
+     * @param $ts int UNIX timestamp
+     * @param $attributes array An optional array of attributes that is passed on to all affected controller methods
+     * @return array
+     */
+    private function getEntities(EntityManager $em,
+                                 PlatformsService $platformsService,
+                                 SensorsService $sensorsService,
+                                 UsersService $usersService,
+                                 DivisionsService $divisionsService,
+                                 ContactsService $contactsService,
+                                 SettingsService $settingsService,
+                                 EventFiltersService $eventFiltersService,
+                                 SensorServicesService $sensorServicesService,
+                                 StatsService $statsService,
+                                 TasksService $tasksService,
+                                 ?int $ts = null,
+                                 array $attributes = array()) {
+        $result = array();
+        if($ts === null) {
+            $lastUpdates = [
+                0 => ['name' => 'platforms'],
+                1 => ['name' => 'sensors'],
+                2 => ['name' => 'users'],
+                3 => ['name' => 'divisions'],
+                4 => ['name' => 'contacts'],
+                5 => ['name' => 'settings'],
+                6 => ['name' => 'event_filters'],
+                7 => ['name' => 'services'],
+                8 => ['name' => 'stats'],
+                9 => ['name' => 'tasks']
+            ];
+        } else {
+            $timestamp = new \DateTime('@' . $ts);
+            $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            $rsm = new ResultSetMapping();
+            $rsm->addScalarResult('table_name', 'name');
+            $query = $em->createNativeQuery('SELECT table_name FROM last_updates WHERE timestamp >= ?', $rsm);
+            $query->setParameter(1, $timestamp, "datetime");
+            $lastUpdates = $query->getResult();
+        }
+        foreach($lastUpdates as $table) {
+            $result[$table['name']] = [];
+            switch($table['name']) {
+                case 'platforms':
+                    try {
+                        $this->assureAllowed('get', 'platforms');
+                        $result[$table['name']] = $platformsService->get($attributes);
+                    } catch (\Exception $e) {}
+                    break;
+                case 'sensors':
+                    try {
+                        $this->assureAllowed('get', 'sensors');
+                        $result[$table['name']] = $sensorsService->get($attributes);
+                    } catch(\Exception $e) {}
+                    break;
+                case 'users':
+                    try {
+                        $this->assureAllowed('get', 'users');
+                        $result[$table['name']] = $usersService->get($attributes);
+                    } catch(\Exception $e) {}
+                    break;
+                case 'divisions':
+                    try {
+                        $this->assureAllowed('get', 'divisions');
+                        $result[$table['name']] = $divisionsService->get($attributes);
+                    } catch(\Exception $e) {}
+                    break;
+                case 'contacts':
+                    try {
+                        $this->assureAllowed('get', 'contacts');
+                        $result[$table['name']] = $contactsService->get($attributes);
+                    } catch(\Exception $e) {}
+                    break;
+                case 'settings':
+                    try {
+                        $this->assureAllowed('get', 'settings');
+                        $result[$table['name']] = $settingsService->get($this->getSessionUserID());
+                    } catch(\Exception $e) {}
+                    break;
+                case 'event_filters':
+                    try {
+                        $this->assureAllowed('get', 'eventfilters');
+                        $result[$table['name']] = $eventFiltersService->get($attributes);
+                    } catch(\Exception $e) {}
+                    break;
+                case 'services':
+                    try {
+                        $this->assureAllowed('get', 'services');
+                        $result[$table['name']] = $sensorServicesService->get($attributes);
+                    } catch(\Exception $e) {}
+                    break;
+                case 'stats':
+                    try {
+                        if ($ts === null) {
+                            $result[$table['name']] = $statsService->get(array(
+                                'userID' => $attributes['userID']));
+                        } else {
+                            $result[$table['name']] = $statsService->get(array(
+                                'userID' => $attributes['userID'],
+                                'year' => $attributes['stats_year'],
+                                'month' => $attributes['stats_month'],
+                                'division' => $attributes['stats_division']));
+                        }
+                    } catch(\Exception $e) {}
+                    break;
+                case 'tasks':
+                    try {
+                        $this->assureAllowed('get', 'tasks');
+                        $result[$table['name']] = $tasksService->get($attributes);
+                    } catch(\Exception $e) {}
+                    break;
+            }
+        }
+        return $result;
     }
 }

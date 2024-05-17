@@ -1,10 +1,12 @@
 <?php
 namespace HoneySens\app\controllers;
+
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\ServiceManager;
+use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
 
 abstract class RESTResource {
@@ -18,7 +20,7 @@ abstract class RESTResource {
     protected $services;
     protected $config;
 
-    public function __construct(EntityManager $entityManager, $services, $config) {
+    public function __construct(EntityManager $entityManager, ServiceManager $services, ConfigParser $config) {
         $this->entityManager = $entityManager;
         $this->services = $services;
         $this->config = $config;
@@ -32,11 +34,15 @@ abstract class RESTResource {
         return $this->services;
     }
 
+    /**
+     * @deprecated
+     * @return ConfigParser
+     */
     protected function getConfig() {
         return $this->config;
     }
 
-    abstract static function registerRoutes($api, $em, $services, $config);
+    abstract static function registerRoutes($api);
 
     protected function assureAllowed($method, $realm=null) {
         if($realm) {
@@ -48,28 +54,12 @@ abstract class RESTResource {
         }
     }
 
-    public function assureUserAffiliation($divisionID) {
-        $userID = $this->getSessionUserID();
-        if($userID === null)
-            return;
-        $qb = $this->getEntityManager()->createQueryBuilder();
-        $qb->select('d')->from('HoneySens\app\models\entities\Division', 'd')
-            ->where('d.id = :id')
-            ->andwhere(':userid MEMBER OF d.users')
-            ->setParameter('id', $divisionID)
-            ->setParameter('userid', $userID);
-        try {
-            $qb->getQuery()->getSingleResult();
-        } catch(\Exception $e) {
-            throw new ForbiddenException();
-        }
-    }
-
     protected function offerFile($path, $name, $callback=null) {
         if(!file_exists($path)) {
             header('HTTP/1.0 400 Bad Request');
             exit;
         }
+        session_write_close();
         @apache_setenv('no-gzip', 1);
         @ini_set('zlib.output_compression', 'Off');
         set_time_limit(0);
@@ -96,6 +86,7 @@ abstract class RESTResource {
      * @param $ids Array of entity IDs to update the collection with
      * @param $repository Repository to fetch entities from
      * @return array Specifies tasks to perform to perform the operation
+     * @deprecated
      */
     protected function updateCollection($collection, &$ids, $repository) {
         $tasks = array('add' => array(), 'update' => array(), 'remove' => array());
@@ -132,6 +123,8 @@ abstract class RESTResource {
 
     /**
      * Returns the User object of the currently logged in user (or null if no user is logged in).
+     *
+     * @return null|User
      */
     public function getSessionUser() {
         if($_SESSION['user']['role'] == User::ROLE_GUEST) return null;
@@ -231,6 +224,7 @@ abstract class RESTResource {
 
     /**
      * Retrieves the log service and records a log entry, references the session user by default.
+     * @deprecated
      */
     public function log($message, $resourceType, $resourceID=null, $userID=null) {
         if($userID === null) {

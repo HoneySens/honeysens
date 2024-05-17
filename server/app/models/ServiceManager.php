@@ -3,6 +3,7 @@ namespace HoneySens\app\models;
 
 use Doctrine\ORM\EntityManager;
 use Exception;
+use HoneySens\app\services\LogService;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
 /**
@@ -12,7 +13,6 @@ use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 class ServiceManager {
 
     const SERVICE_CONTACT = 0;
-    const SERVICE_ENTITY_UPDATE = 1;
     const SERVICE_REGISTRY = 2;
     const SERVICE_TASK = 3;
     const SERVICE_LOG = 4;
@@ -38,10 +38,9 @@ class ServiceManager {
     private function instantiate($serviceID) {
         switch($serviceID) {
             case 0: return new ContactService($this);
-            case 1: return new EntityUpdateService($this);
             case 2: return new RegistryService($this, $this->config);
             case 3: return new TaskService($this, $this->config, $this->em);
-            case 4: return new LogService($this, $this->em);
+            case 4: return new LogService($this->em);
             case 5: return new TemplateService($this, $this->em);
             default: return null;
         }
