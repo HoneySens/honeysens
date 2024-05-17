@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Query;
 use Respect\Validation\Validator as V;
 
@@ -96,5 +97,45 @@ class Utils {
     static function emailValidator() {
         // TLDs are optional in E-Mail addresses
         return V::regex('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$/');
+    }
+
+    /**
+     * Computes an ArrayCollection update with a list of entity IDs. Returns an array of the form
+     * array('add' => array(), 'update' => array(), 'remove' => array())
+     * that specifies the required tasks to complete the operation.
+     *
+     * @param $collection ArrayCollection of the entities to be updated
+     * @param $ids array of entity IDs to update the collection with
+     * @param $repository \Doctrine\Persistence\ObjectRepository to fetch entities from
+     * @return array Specifies tasks to perform to perform the operation
+     */
+    static function updateCollection($collection, &$ids, $repository) {
+        $tasks = array('add' => array(), 'update' => array(), 'remove' => array());
+        foreach($collection as $entity) {
+            if(in_array($entity->getId(), $ids)) {
+                $tasks['update'][] = $entity;
+                if(($key = array_search($entity->getId(), $ids)) !== false) {
+                    unset($ids[$key]);
+                    $ids = array_values($ids);
+                }
+            } else {
+                $tasks['remove'][] = $entity;
+            }
+        }
+        foreach($ids as $entityId) {
+            $entity = $repository->find($entityId);
+            if($entity) $tasks['add'][] = $entity;
+        }
+        return $tasks;
+    }
+
+    static function recursiveDelete($str) {
+        if (is_file($str)) return unlink($str);
+        if (is_dir($str)) {
+            $scan = glob(rtrim($str, '/').'/*');
+            foreach($scan as $index=>$path) self::recursiveDelete($path);
+            return @rmdir($str);
+        }
+        return false;
     }
 }

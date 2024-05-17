@@ -1,6 +1,8 @@
 <?php
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
+use \DI\Bridge\Slim\Bridge;
+use \DI\Container;
 use GuzzleHttp\Psr7\LazyOpenStream;
 use HoneySens\app\adapters\JsonBodyParserMiddleware;
 use HoneySens\app\adapters\SessionMiddleware;
@@ -27,11 +29,11 @@ use HoneySens\app\models\EntityUpdateSubscriber;
 use HoneySens\app\models\exceptions;
 use HoneySens\app\models\ServiceManager;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use \Respect\Validation\Exceptions\ValidationException;
-use \Slim\Factory\AppFactory;
 use \Slim\Routing\RouteCollectorProxy;
 use \Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 
@@ -41,9 +43,10 @@ define('APPLICATION_PATH', sprintf('%s/app', BASE_PATH));
 define('DATA_PATH', sprintf('%s/data', BASE_PATH));
 set_include_path(implode(PATH_SEPARATOR, array(realpath(APPLICATION_PATH . '/vendor'), get_include_path())));
 
-function initSlim($appConfig, $em) {
-    $debug = $appConfig->getBoolean('server', 'debug');
-    $app = AppFactory::create();
+function initSlim(ContainerInterface $container) {
+    $debug = $container->get('NoiseLabs\ToolKit\ConfigParser\ConfigParser')->getBoolean('server', 'debug');
+    $em = $container->get('Doctrine\ORM\EntityManager');
+    $app = Bridge::create($container);
     $app->addRoutingMiddleware();
     $app->add(new JsonBodyParserMiddleware());
     $app->add(new SessionMiddleware());
@@ -79,13 +82,7 @@ function initSlim($appConfig, $em) {
 }
 
 function initClassLoading() {
-    require_once('vendor/autoload.php');
-}
 
-function initConfig() {
-    $config = new ConfigParser();
-    $config->read(APPLICATION_PATH . '/../data/config.cfg');
-    return $config;
 }
 
 function initDatabase() {
@@ -113,6 +110,22 @@ function initDatabase() {
     return $em;
 }
 
+function createDependencyContainer(EntityManager $em) {
+    return new Container([
+        'NoiseLabs\ToolKit\ConfigParser\ConfigParser' => function() {
+            $config = new ConfigParser();
+            $config->read(APPLICATION_PATH . '/../data/config.cfg');
+            return $config;
+        },
+        'Doctrine\ORM\EntityManager' => function() use ($em) {
+            return $em;
+        },
+        'ServiceManager' => function(ContainerInterface $c, EntityManager $em) {
+            return new ServiceManager($c->get('ConfigParser'), $em);
+        }
+    ]);
+}
+
 /**
  * URL route definitions
  *
@@ -121,68 +134,68 @@ function initDatabase() {
  * @param $services ServiceManager
  * @param $config ConfigParser
  */
-function initRoutes($app, $em, $services, $config) {
+function initRoutes($app) {
     // Deliver the web application
-    $app->get('/', function(Request $request, Response $response) use ($app, $em, $services, $config) {
+    $app->get('/', function(Request $request, Response $response) {
         $template = new LazyOpenStream(APPLICATION_PATH . '/templates/index.html', 'r');
         return $response->withBody($template);
     });
 
     // Register API routes
-    $app->group('/api', function(RouteCollectorProxy $api) use ($em, $services, $config) {
-        $api->group('/certs', function(RouteCollectorProxy $certs) use ($em, $services, $config) {
-            Certs::registerRoutes($certs, $em, $services, $config);
+    $app->group('/api', function(RouteCollectorProxy $api) {
+        $api->group('/certs', function(RouteCollectorProxy $certs) {
+            Certs::registerRoutes($certs);
         });
-        $api->group('/contacts', function(RouteCollectorProxy $contacts) use ($em, $services, $config) {
-            Contacts::registerRoutes($contacts, $em, $services, $config);
+        $api->group('/contacts', function(RouteCollectorProxy $contacts) {
+            Contacts::registerRoutes($contacts);
         });
-        $api->group('/divisions', function(RouteCollectorProxy $divisions) use ($em, $services, $config) {
-            Divisions::registerRoutes($divisions, $em, $services, $config);
+        $api->group('/divisions', function(RouteCollectorProxy $divisions) {
+            Divisions::registerRoutes($divisions);
         });
-        $api->group('/eventdetails', function(RouteCollectorProxy $evDetails) use ($em, $services, $config) {
-            Eventdetails::registerRoutes($evDetails, $em, $services, $config);
+        $api->group('/eventdetails', function(RouteCollectorProxy $evDetails) {
+            Eventdetails::registerRoutes($evDetails);
         });
-        $api->group('/eventfilters', function(RouteCollectorProxy $evFilters) use ($em, $services, $config) {
-            Eventfilters::registerRoutes($evFilters, $em, $services, $config);
+        $api->group('/eventfilters', function(RouteCollectorProxy $evFilters) {
+            Eventfilters::registerRoutes($evFilters);
         });
-        $api->group('/events', function(RouteCollectorProxy $events) use ($em, $services, $config) {
-            Events::registerRoutes($events, $em, $services, $config);
+        $api->group('/events', function(RouteCollectorProxy $events) {
+            Events::registerRoutes($events);
         });
-        $api->group('/logs', function(RouteCollectorProxy $logs) use ($em, $services, $config) {
-            Logs::registerRoutes($logs, $em, $services, $config);
+        $api->group('/logs', function(RouteCollectorProxy $logs) {
+            Logs::registerRoutes($logs);
         });
-        $api->group('/platforms', function(RouteCollectorProxy $platforms) use ($em, $services, $config) {
-            Platforms::registerRoutes($platforms, $em, $services, $config);
+        $api->group('/platforms', function(RouteCollectorProxy $platforms) {
+            Platforms::registerRoutes($platforms);
         });
-        $api->group('/sensors', function(RouteCollectorProxy $sensors) use ($em, $services, $config) {
-            Sensors::registerRoutes($sensors, $em, $services, $config);
+        $api->group('/sensors', function(RouteCollectorProxy $sensors) {
+            Sensors::registerRoutes($sensors);
         });
-        $api->group('/services', function(RouteCollectorProxy $apiServices) use ($em, $services, $config) {
-            Services::registerRoutes($apiServices, $em, $services, $config);
+        $api->group('/services', function(RouteCollectorProxy $apiServices) {
+            Services::registerRoutes($apiServices);
         });
-        $api->group('/sessions', function(RouteCollectorProxy $sessions) use ($em, $services, $config) {
-            Sessions::registerRoutes($sessions, $em, $services, $config);
+        $api->group('/sessions', function(RouteCollectorProxy $sessions) {
+            Sessions::registerRoutes($sessions);
         });
-        $api->group('/settings', function(RouteCollectorProxy $settings) use ($em, $services, $config) {
-            Settings::registerRoutes($settings, $em, $services, $config);
+        $api->group('/settings', function(RouteCollectorProxy $settings) {
+            Settings::registerRoutes($settings);
         });
-        $api->group('/state', function(RouteCollectorProxy $state) use ($em, $services, $config) {
-            State::registerRoutes($state, $em, $services, $config);
+        $api->group('/state', function(RouteCollectorProxy $state) {
+            State::registerRoutes($state);
         });
-        $api->group('/stats', function(RouteCollectorProxy $stats) use ($em, $services, $config) {
-            Stats::registerRoutes($stats, $em, $services, $config);
+        $api->group('/stats', function(RouteCollectorProxy $stats) {
+            Stats::registerRoutes($stats);
         });
-        $api->group('/system', function(RouteCollectorProxy $system) use ($em, $services, $config) {
-            System::registerRoutes($system, $em, $services, $config);
+        $api->group('/system', function(RouteCollectorProxy $system) {
+            System::registerRoutes($system);
         });
-        $api->group('/tasks', function(RouteCollectorProxy $tasks) use ($em, $services, $config) {
-            Tasks::registerRoutes($tasks ,$em, $services, $config);
+        $api->group('/tasks', function(RouteCollectorProxy $tasks) {
+            Tasks::registerRoutes($tasks);
         });
-        $api->group('/templates', function(RouteCollectorProxy $templates) use ($em, $services, $config) {
-            Templates::registerRoutes($templates ,$em, $services, $config);
+        $api->group('/templates', function(RouteCollectorProxy $templates) {
+            Templates::registerRoutes($templates);
         });
-        $api->group('/users', function(RouteCollectorProxy $users) use ($em, $services, $config) {
-            Users::registerRoutes($users, $em, $services, $config);
+        $api->group('/users', function(RouteCollectorProxy $users) {
+            Users::registerRoutes($users);
         });
     });
 }
@@ -192,11 +205,10 @@ function initRoutes($app, $em, $services, $config) {
  * This method blocks until the request has been served.
  */
 function launch() {
-    initClassLoading();
-    $config = initConfig();
+    require_once('vendor/autoload.php');
     $em = initDatabase();
-    $app = initSlim($config, $em);
-    $services = new ServiceManager($config, $em);
-    initRoutes($app, $em, $services, $config);
+    $dependencyContainer = createDependencyContainer($em);
+    $app = initSlim($dependencyContainer);
+    initRoutes($app);
     $app->run();
 }

@@ -2,9 +2,9 @@
 namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\exceptions\NotFoundException;
+use HoneySens\app\services\ContactsService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Respect\Validation\Validator as V;
 
 /**
  * Class Contacts
@@ -15,50 +15,21 @@ use Respect\Validation\Validator as V;
  */
 class Contacts extends RESTResource {
 
-    static function registerRoutes($contacts, $em, $services, $config) {
-        $contacts->get('[/{id:\d+}]', function(Request $request, Response $response, array $args) use ($em, $services, $config) {
-            $controller = new Contacts($em, $services, $config);
-            $criteria = array();
-            $criteria['userID'] = $controller->getSessionUserID();
-            $criteria['id'] = $args['id'] ?? null;
-            try {
-                $result = $controller->get($criteria);
-            } catch(\Exception $e) {
-                throw new NotFoundException();
-            }
-            $response->getBody()->write(json_encode($result));
-            return $response;
-        });
+    static function registerRoutes($api) {
+        $api->get('[/{id:\d+}]', [Contacts::class, 'get']);
     }
 
-    /**
-     * Fetches IncidentContacts from the DB by various criteria:
-     * - userID: return only contacts that belong to the user with the given id
-     * - id: return the contact with the given id
-     * If no criteria are given, all certs are returned.
-     *
-     * @param array $criteria
-     * @return array
-     */
-    public function get($criteria) {
+    public function get(Request $request, Response $response, ContactsService $service, $id = null) {
         $this->assureAllowed('get');
-        $qb = $this->getEntityManager()->createQueryBuilder();
-        $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c');
-        if(V::key('userID', V::intType())->validate($criteria)) {
-            $qb->join('c.division', 'd')
-                ->andWhere(':userid MEMBER OF d.users')
-                ->setParameter('userid', $criteria['userID']);
+        $criteria = array(
+            'userID' => $this->getSessionUserID(),
+            'id' => $id);
+        try {
+            $result = $service->get($criteria);
+        } catch(\Exception $e) {
+            throw new NotFoundException();
         }
-        if(V::key('id', V::intVal())->validate($criteria)) {
-            $qb->andWhere('c.id = :id')
-                ->setParameter('id', $criteria['id']);
-            return $qb->getQuery()->getSingleResult()->getState();
-        } else {
-            $contacts = array();
-            foreach($qb->getQuery()->getResult() as $contact) {
-                $contacts[] = $contact->getState();
-            }
-            return $contacts;
-        }
+        $response->getBody()->write(json_encode($result));
+        return $response;
     }
 }
