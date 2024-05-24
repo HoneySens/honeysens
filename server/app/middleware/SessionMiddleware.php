@@ -1,5 +1,5 @@
 <?php
-namespace HoneySens\app\adapters;
+namespace HoneySens\app\middleware;
 
 use HoneySens\app\models\entities\User;
 use Psr\Http\Message\ResponseInterface as Response;

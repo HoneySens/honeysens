@@ -2,6 +2,7 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Sensor;
@@ -12,10 +13,6 @@ use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
-use HoneySens\app\models\ServiceManager;
-use HoneySens\app\services\DivisionsService;
-use HoneySens\app\services\EventsService;
-use HoneySens\app\services\LogService;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
 
@@ -24,13 +21,13 @@ class SensorsService {
     private ConfigParser $config;
     private EntityManager $em;
     private LogService $logger;
-    private ServiceManager $serviceManager;
+    private TaskAdapter $taskAdapter;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, ServiceManager $serviceManager) {
+    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, TaskAdapter $taskAdapter) {
         $this->config = $config;
         $this->em= $em;
         $this->logger = $logger;
-        $this->serviceManager = $serviceManager;
+        $this->taskAdapter = $taskAdapter;
     }
 
     /**
@@ -601,7 +598,7 @@ class SensorsService {
             $taskParams['eapol_client_cert'] = $sensor->getEAPOLClientCert()->getContent();
             $taskParams['eapol_client_key'] = $sensor->getEAPOLClientCert()->getKey();
         } else $taskParams['eapol_client_key'] = null;
-        $task = $this->serviceManager->get(ServiceManager::SERVICE_TASK)->enqueue($sessionUser, Task::TYPE_SENSORCFG_CREATOR, $taskParams);
+        $task = $this->taskAdapter->enqueue($sessionUser, Task::TYPE_SENSORCFG_CREATOR, $taskParams);
         return $task;
     }
 

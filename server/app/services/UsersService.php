@@ -8,7 +8,6 @@ use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
-use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
@@ -18,13 +17,11 @@ class UsersService {
     private ConfigParser $config;
     private EntityManager $em;
     private LogService $logger;
-    private ServiceManager $serviceManager;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, ServiceManager $serviceManager) {
+    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger) {
         $this->config = $config;
         $this->em= $em;
         $this->logger = $logger;
-        $this->serviceManager = $serviceManager;
     }
 
     /**
@@ -216,8 +213,7 @@ class UsersService {
                 $state['permissions']['sensors'] = array_values(array_diff($state['permissions']['sensors'], ['delete']));
         }
         // Enable API logging if the module is enabled and $user is an administrator
-        if($user->getRole() == User::ROLE_ADMIN &&
-            $this->serviceManager->get(ServiceManager::SERVICE_LOG)->isEnabled()) {
+        if($user->getRole() == User::ROLE_ADMIN && $this->logger->isEnabled()) {
             $state['permissions']['logs'] = array('get');
         }
         return $state;

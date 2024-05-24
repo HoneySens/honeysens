@@ -4,9 +4,9 @@ use Doctrine\ORM\EntityManager;
 use \DI\Bridge\Slim\Bridge;
 use \DI\Container;
 use GuzzleHttp\Psr7\LazyOpenStream;
-use HoneySens\app\adapters\JsonBodyParserMiddleware;
-use HoneySens\app\adapters\SessionMiddleware;
-use HoneySens\app\adapters\SetupCheckMiddleware;
+use HoneySens\app\middleware\JsonBodyParserMiddleware;
+use HoneySens\app\middleware\SessionMiddleware;
+use HoneySens\app\middleware\SetupCheckMiddleware;
 use HoneySens\app\controllers\Certs;
 use HoneySens\app\controllers\Contacts;
 use HoneySens\app\controllers\Divisions;
@@ -27,7 +27,6 @@ use HoneySens\app\controllers\Templates;
 use HoneySens\app\controllers\Users;
 use HoneySens\app\models\EntityUpdateSubscriber;
 use HoneySens\app\models\exceptions;
-use HoneySens\app\models\ServiceManager;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -119,9 +118,6 @@ function createDependencyContainer(EntityManager $em) {
         },
         'Doctrine\ORM\EntityManager' => function() use ($em) {
             return $em;
-        },
-        'ServiceManager' => function(ContainerInterface $c, EntityManager $em) {
-            return new ServiceManager($c->get('ConfigParser'), $em);
         }
     ]);
 }
@@ -130,9 +126,6 @@ function createDependencyContainer(EntityManager $em) {
  * URL route definitions
  *
  * @param $app Slim\Slim
- * @param $em Doctrine\ORM\EntityManager
- * @param $services ServiceManager
- * @param $config ConfigParser
  */
 function initRoutes($app) {
     // Deliver the web application

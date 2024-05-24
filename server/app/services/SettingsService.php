@@ -2,10 +2,11 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use HoneySens\app\adapters\EMailAdapter;
+use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
-use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
@@ -13,15 +14,17 @@ use Respect\Validation\Validator as V;
 class SettingsService {
 
     private ConfigParser $config;
+    private EMailAdapter $emailAdapter;
     private EntityManager $em;
     private LogService $logger;
-    private ServiceManager $serviceManager;
+    private TaskAdapter $taskAdapter;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, ServiceManager $serviceManager) {
+    public function __construct(ConfigParser $config, EntityManager $em, EMailAdapter $emailAdapter, LogService $logger, TaskAdapter $taskAdapter) {
         $this->config = $config;
         $this->em= $em;
+        $this->emailAdapter = $emailAdapter;
         $this->logger = $logger;
-        $this->serviceManager = $serviceManager;
+        $this->taskAdapter = $taskAdapter;
     }
 
     /**
@@ -276,9 +279,8 @@ class SettingsService {
             ->key('smtpPassword', V::stringType())
             ->check($data);
         // Send mail
-        $contactService = $this->serviceManager->get(ServiceManager::SERVICE_CONTACT);
         $this->logger->log(sprintf('Test E-Mail sent to %s', $data['recipient']), LogEntry::RESOURCE_SETTINGS);
-        return $contactService->sendTestMail($sessionUser, $data['smtpFrom'], $data['recipient'], $data['smtpServer'], $data['smtpPort'], $data['smtpEncryption'], $data['smtpUser'], $data['smtpPassword']);
+        return $this->emailAdapter->sendTestMail($sessionUser, $data['smtpFrom'], $data['recipient'], $data['smtpServer'], $data['smtpPort'], $data['smtpEncryption'], $data['smtpUser'], $data['smtpPassword']);
     }
 
     public function sendTestEvent() {
@@ -296,7 +298,7 @@ class SettingsService {
             'status' => 0,
             'comment' => ''
         );
-        $this->serviceManager->get(ServiceManager::SERVICE_TASK)->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('event' => $ev));
+        $this->taskAdapter->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('event' => $ev));
         $this->logger->log('Syslog test event forwarded', LogEntry::RESOURCE_SESSIONS);
         return $ev;
     }

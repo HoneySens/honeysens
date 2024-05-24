@@ -2,6 +2,8 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use HoneySens\app\adapters\RegistryAdapter;
+use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Service;
 use HoneySens\app\models\entities\ServiceRevision;
@@ -10,7 +12,6 @@ use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
-use HoneySens\app\models\ServiceManager;
 use Respect\Validation\Validator as V;
 
 class SensorServicesService {
@@ -21,12 +22,14 @@ class SensorServicesService {
 
     private EntityManager $em;
     private LogService $logger;
-    private ServiceManager $serviceManager;
+    private RegistryAdapter $registryAdapter;
+    private TaskAdapter $taskAdapter;
 
-    public function __construct(EntityManager $em, LogService $logger, ServiceManager $serviceManager) {
+    public function __construct(EntityManager $em, LogService $logger, RegistryAdapter $registryAdapter, TaskAdapter $taskAdapter) {
         $this->em= $em;
         $this->logger = $logger;
-        $this->serviceManager = $serviceManager;
+        $this->registryAdapter = $registryAdapter;
+        $this->taskAdapter = $taskAdapter;
     }
 
 
@@ -80,8 +83,7 @@ class SensorServicesService {
         if(!$taskResult['valid']) throw new BadRequestException();
         if($taskResult['type'] != TasksService::UPLOAD_TYPE_SERVICE_ARCHIVE) throw new BadRequestException();
         // Check registry availability
-        $registryService = $this->serviceManager->get(ServiceManager::SERVICE_REGISTRY);
-        if(!$registryService->isAvailable()) throw new BadRequestException(self::CREATE_ERROR_REGISTRY_OFFLINE);
+        if(!$this->registryAdapter->isAvailable()) throw new BadRequestException(self::CREATE_ERROR_REGISTRY_OFFLINE);
         // Check for duplicates
         $service = $this->em->getRepository('HoneySens\app\models\entities\Service')
             ->findOneBy(array(
@@ -120,7 +122,7 @@ class SensorServicesService {
         $this->em->remove($task);
         $this->em->flush();
         // Enqueue registry upload task
-        $task = $this->serviceManager->get(ServiceManager::SERVICE_TASK)->enqueue($sessionUser, Task::TYPE_REGISTRY_MANAGER, $taskResult);
+        $task = $this->taskAdapter->enqueue($sessionUser, Task::TYPE_REGISTRY_MANAGER, $taskResult);
         $this->logger->log(sprintf('Service %s:%s (%s) added', $service->getName(), $serviceRevision->getRevision(),
             $serviceRevision->getArchitecture()), LogEntry::RESOURCE_SERVICES, $service->getId());
         return $task;
@@ -161,7 +163,7 @@ class SensorServicesService {
         V::objectType()->check($service);
         // Remove revisions and service from the registry
         foreach($service->getRevisions() as $revision) $this->removeServiceRevision($revision);
-        $this->serviceManager->get(ServiceManager::SERVICE_REGISTRY)->removeRepository($service->getRepository());
+        $this->registryAdapter->removeRepository($service->getRepository());
         // Remove service from the db
         $sid = $service->getId();
         $this->em->remove($service);
@@ -195,7 +197,7 @@ class SensorServicesService {
      * @return array
      */
     public function getStatusSummary() {
-        $registryStatus = $this->serviceManager->get(ServiceManager::SERVICE_REGISTRY)->isAvailable();
+        $registryStatus = $this->registryAdapter->isAvailable();
         $serviceStatus = true;
         if($registryStatus) {
             foreach($this->em->getRepository('HoneySens\app\models\entities\Service')->findAll() as $service) {
@@ -222,7 +224,7 @@ class SensorServicesService {
         V::intVal()->check($id);
         $service = $this->em->getRepository('HoneySens\app\models\entities\Service')->find($id);
         if(!V::objectType()->validate($service)) throw new NotFoundException();
-        $tags = $this->serviceManager->get(ServiceManager::SERVICE_REGISTRY)->getTags($service->getRepository());
+        $tags = $this->registryAdapter->getTags($service->getRepository());
         V::arrayType()->check($tags);
         $result = array();
         foreach($service->getRevisions() as $revision) {
@@ -239,8 +241,7 @@ class SensorServicesService {
     private function removeServiceRevision(ServiceRevision $serviceRevision) {
         $repository = $serviceRevision->getService()->getRepository();
         try {
-            $this->serviceManager
-                ->get(ServiceManager::SERVICE_REGISTRY)
+            $this->registryAdapter
                 ->removeTag($repository, sprintf('%s-%s', $serviceRevision->getArchitecture(), $serviceRevision->getRevision()));
         } catch (NotFoundException $e) {
             // The registry is online, but doesn't contain this image -> we can continue

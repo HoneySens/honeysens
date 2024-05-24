@@ -3,15 +3,12 @@ namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\controllers\Divisions;
-use HoneySens\app\controllers\Sensors;
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\IncidentContact;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
-use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
-use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
 
 class DivisionsService {
@@ -164,7 +161,7 @@ class DivisionsService {
      * @param array $criteria Additional deletion criteria
      * @throws ForbiddenException
      */
-    public function delete($id, $criteria, ServiceManager $serviceManager, ConfigParser $configParser) {
+    public function delete($id, $criteria, ?int $userID, EventsService $eventsService, SensorsService $sensorsService) {
         // Validation
         $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
         V::intVal()->check($id);
@@ -173,9 +170,8 @@ class DivisionsService {
         V::objectType()->check($division);
         $did = $division->getId();
         // Delete sensors
-        $sensorController = new Sensors($this->em, $serviceManager, $configParser);
         foreach($division->getSensors() as $sensor) {
-            $sensorController->delete($sensor->getId(), array('archive' => $archive));
+            $sensorsService->delete($sensor->getId(), $archive, $userID, $this, $eventsService);
         }
         // Remove division associations from archived events
         $this->em->createQueryBuilder()

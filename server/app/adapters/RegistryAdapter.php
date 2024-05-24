@@ -1,19 +1,11 @@
 <?php
-namespace HoneySens\app\models;
+namespace HoneySens\app\adapters;
 
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use WpOrg\Requests\Requests;
 
-class RegistryService {
-
-    protected $appConfig = null;
-    private $services;
-
-    public function __construct($services, $config) {
-        $this->services = $services;
-        $this->appConfig = $config;
-    }
+class RegistryAdapter {
 
     public function isAvailable() {
         try {

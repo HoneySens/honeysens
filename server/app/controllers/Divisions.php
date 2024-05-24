@@ -2,9 +2,9 @@
 namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\exceptions\NotFoundException;
-use HoneySens\app\models\ServiceManager;
 use HoneySens\app\services\DivisionsService;
-use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
+use HoneySens\app\services\EventsService;
+use HoneySens\app\services\SensorsService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -47,9 +47,9 @@ class Divisions extends RESTResource {
         return $response;
     }
 
-    public function delete(Request $request, Response $response, DivisionsService $service, ServiceManager $serviceManager, ConfigParser $configParser, $id) {
+    public function delete(Request $request, Response $response, DivisionsService $service, EventsService $eventsService, SensorsService $sensorsService, $id) {
         $this->assureAllowed('delete');
-        $service->delete($id, $request->getParsedBody(), $serviceManager, $configParser);
+        $service->delete($id, $request->getParsedBody(), $this->getSessionUserID(), $eventsService, $sensorsService);
         $response->getBody()->write(json_encode([]));
         return $response;
     }

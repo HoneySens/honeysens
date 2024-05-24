@@ -5,8 +5,7 @@ use Doctrine\ORM\EntityManager;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
-use HoneySens\app\models\ServiceManager;
-use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
+use HoneySens\app\services\LogService;
 use Respect\Validation\Validator as V;
 
 abstract class RESTResource {
@@ -16,30 +15,12 @@ abstract class RESTResource {
     const HEADER_SENSOR = 'x-hs-sensor';
     const HEADER_TIMESTAMP = 'x-hs-ts';
 
-    protected $entityManager;
-    protected $services;
-    protected $config;
+    private EntityManager $em;
+    private LogService $logger;
 
-    public function __construct(EntityManager $entityManager, ServiceManager $services, ConfigParser $config) {
-        $this->entityManager = $entityManager;
-        $this->services = $services;
-        $this->config = $config;
-    }
-
-    protected function getEntityManager() {
-        return $this->entityManager;
-    }
-
-    protected function getServiceManager() {
-        return $this->services;
-    }
-
-    /**
-     * @deprecated
-     * @return ConfigParser
-     */
-    protected function getConfig() {
-        return $this->config;
+    public function __construct(EntityManager $em, LogService $logger) {
+        $this->em = $em;
+        $this->logger = $logger;
     }
 
     abstract static function registerRoutes($api);
@@ -113,7 +94,7 @@ abstract class RESTResource {
      * This means that for both admin and guest users null is returned, which means that an additional permission check is
      * required. This step is usually done inside of the resource classes/controllers.
      *
-     * @return null|integer
+     * @return ?integer
      */
     public function getSessionUserID() {
         if($_SESSION['user']['role'] == User::ROLE_ADMIN) {
@@ -124,11 +105,11 @@ abstract class RESTResource {
     /**
      * Returns the User object of the currently logged in user (or null if no user is logged in).
      *
-     * @return null|User
+     * @return ?User
      */
     public function getSessionUser() {
         if($_SESSION['user']['role'] == User::ROLE_GUEST) return null;
-        return $this->entityManager->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
+        return $this->em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
     }
 
     /**
@@ -170,7 +151,7 @@ abstract class RESTResource {
             ->key(self::HEADER_TIMESTAMP, V::intVal())
             ->key(self::HEADER_SENSOR, V::intVal())->validate($headers))
             throw new ForbiddenException();
-        $sensor = $this->getEntityManager()->getRepository('HoneySens\app\models\entities\Sensor')->find($headers[self::HEADER_SENSOR]);
+        $sensor = $this->em->getRepository('HoneySens\app\models\entities\Sensor')->find($headers[self::HEADER_SENSOR]);
         V::objectType()->check($sensor);
         if(!$this->isValidMAC($headers[self::HEADER_HMAC],
             $sensor->getSecret(),
@@ -231,6 +212,6 @@ abstract class RESTResource {
             $sessionUser = $this->getSessionUser();
             $userID = $sessionUser != null ? $sessionUser->getId() : null;
         }
-        $this->services->get(ServiceManager::SERVICE_LOG)->log($message, $resourceType, $resourceID, $userID);
+        $this->logger->log($message, $resourceType, $resourceID, $userID);
     }
 }

@@ -1,17 +1,19 @@
 <?php
-namespace HoneySens\app\models;
+namespace HoneySens\app\adapters;
 
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventPacket;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\Template;
 
-class ContactService {
+class EMailAdapter {
 
-    private $services;
+    private TaskAdapter $taskAdapter;
+    private TemplateAdapter $templateAdapter;
 
-    public function __construct($services) {
-        $this->services = $services;
+    public function __construct(TaskAdapter $taskAdapter, TemplateAdapter $templateAdapter) {
+        $this->taskAdapter = $taskAdapter;
+        $this->templateAdapter = $templateAdapter;
     }
 
     private function getEventClassificationText($event) {
@@ -133,8 +135,7 @@ class ContactService {
         if(count($contacts) == 0) return array('success' => true);
         // Prepare content
         $subject = $event->getClassification() >= $event::CLASSIFICATION_LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
-        $templateService = $this->services->get(ServiceManager::SERVICE_TEMPLATE);
-        $body = $templateService->processTemplate(Template::TYPE_EMAIL_EVENT_NOTIFICATION, array(
+        $body = $this->templateAdapter->processTemplate(Template::TYPE_EMAIL_EVENT_NOTIFICATION, array(
             'ID' => $event->getId(),
             'SUMMARY' => $this->createEventSummary($event),
             'DETAILS' => $this->createEventDetails($event)
@@ -145,8 +146,7 @@ class ContactService {
         // Notify each contact
         foreach($contacts as $contact) {
             $taskParams['to'] = $contact->getEMail();
-            $taskService = $this->services->get(ServiceManager::SERVICE_TASK);
-            $taskService->enqueue(null, Task::TYPE_EMAIL_EMITTER, $taskParams);
+            $this->taskAdapter->enqueue(null, Task::TYPE_EMAIL_EMITTER, $taskParams);
         }
         return array('success' => true);
     }
@@ -168,7 +168,6 @@ class ContactService {
             $taskParams['smtp_user'] = $smtpUser;
             $taskParams['smtp_password'] = $smtpPassword;
         }
-        $taskService = $this->services->get(ServiceManager::SERVICE_TASK);
-        return $taskService->enqueue($user, Task::TYPE_EMAIL_EMITTER, $taskParams);
+        return $this->taskAdapter->enqueue($user, Task::TYPE_EMAIL_EMITTER, $taskParams);
     }
 }
