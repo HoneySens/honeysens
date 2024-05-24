@@ -20,7 +20,7 @@ class Sessions extends RESTResource {
         return $response;
     }
 
-    public function logout(Request $request, Response $response, SessionsService $service) {
+    public function logout(Response $response, SessionsService $service) {
         $user = $service->delete($this->getSessionUser());
         $response->getBody()->write(json_encode($user->getState()));
         return $response;

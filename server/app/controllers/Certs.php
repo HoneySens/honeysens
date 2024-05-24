@@ -12,7 +12,7 @@ class Certs extends RESTResource {
         $api->get('/{id:\d+}', [Certs::class, 'get']);
     }
 
-    public function get(Request $request, Response $response, CertsService $service, $id) {
+    public function get(Response $response, CertsService $service, $id) {
         $this->assureAllowed('get');
         $criteria = array(
             'userID' => $this->getSessionUserID(),

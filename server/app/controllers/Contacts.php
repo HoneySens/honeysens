@@ -19,7 +19,7 @@ class Contacts extends RESTResource {
         $api->get('[/{id:\d+}]', [Contacts::class, 'get']);
     }
 
-    public function get(Request $request, Response $response, ContactsService $service, $id = null) {
+    public function get(Response $response, ContactsService $service, $id = null) {
         $this->assureAllowed('get');
         $criteria = array(
             'userID' => $this->getSessionUserID(),

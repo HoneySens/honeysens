@@ -12,7 +12,7 @@ class Templates extends RESTResource {
         $api->put('/{id:\d+}', [Templates::class, 'put']);
     }
 
-    public function get(Request $request, Response $response, TemplatesService $service) {
+    public function get(Response $response, TemplatesService $service) {
         $this->assureAllowed('get', 'settings');
         $response->getBody()->write(json_encode($service->get()));
         return $response;

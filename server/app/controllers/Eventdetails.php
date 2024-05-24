@@ -13,7 +13,7 @@ class Eventdetails extends RESTResource {
         $api->get('/by-archived-event/{id:\d+}', [Eventdetails::class, 'getFromArchive']);
     }
 
-    public function get(Request $request, Response $response, EventsService $service, $id) {
+    public function get(Response $response, EventsService $service, $id) {
         $this->assureAllowed('get');
         $details = $service->getEventDetails(array('userID' => $this->getSessionUserID(), 'eventID' => $id, 'type' => 0));
         $packets = $service->getEventDetails(array('userID' => $this->getSessionUserID(), 'eventID' => $id, 'type' => 1));
@@ -22,7 +22,7 @@ class Eventdetails extends RESTResource {
         return $response;
     }
 
-    public function getFromArchive(Request $request, Response $response, EventsService $service, $id) {
+    public function getFromArchive(Response $response, EventsService $service, $id) {
         $this->assureAllowed('get');
         $result = $service->getArchivedDetails($id, $this->getSessionUserID());
         $response->getBody()->write(json_encode($result));

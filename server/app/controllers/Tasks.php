@@ -17,7 +17,7 @@ class Tasks extends RESTResource {
         $api->delete('/{id:\d+}', [Tasks::class, 'delete']);
     }
 
-    public function get(Request $request, Response $response, TasksService $service, $id = null) {
+    public function get(Response $response, TasksService $service, $id = null) {
         $this->assureAllowed('get');
         $criteria = array(
             'userID' => $this->getSessionUserID(),
@@ -31,13 +31,13 @@ class Tasks extends RESTResource {
         return $response;
     }
 
-    public function downloadResult(Request $request, Response $response, TasksService $service, $id, $delete = 0) {
+    public function downloadResult(TasksService $service, $id, $delete = 0) {
         $this->assureAllowed('get');
         [$filePath, $fileName, $callback] = $service->downloadResult($id, $this->getSessionUser(), boolval($delete));
         $this->offerFile($filePath, $fileName, $callback);
     }
 
-    public function getStatus(Request $request, Response $response, TasksService $service) {
+    public function getStatus(Response $response, TasksService $service) {
         $this->assureAllowed('get');
         try {
             $result = array('queue_length' => $service->getBrokerQueueLength());
@@ -51,14 +51,14 @@ class Tasks extends RESTResource {
     /**
      * Generic endpoint to upload files, returns the ID of the associated verification task.
      */
-    public function upload(Request $request, Response $response, TasksService $service) {
+    public function upload(Response $response, TasksService $service) {
         $this->assureAllowed('upload');
         $state = $service->upload($this->getSessionUser());
         $response->getBody()->write(json_encode($state));
         return $response;
     }
 
-    public function delete(Request $request, Response $response, TasksService $service, $id) {
+    public function delete(Response $response, TasksService $service, $id) {
         $this->assureAllowed('delete');
         $service->delete($id, $this->getSessionUser());
         $response->getBody()->write(json_encode([]));

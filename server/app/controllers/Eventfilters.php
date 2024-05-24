@@ -16,7 +16,7 @@ class Eventfilters extends RESTResource {
         $api->delete('/{id:\d+}', [Eventfilters::class, 'delete']);
     }
 
-    public function get(Request $request, Response $response, EventFiltersService $service, $id = null) {
+    public function get(Response $response, EventFiltersService $service, $id = null) {
         $this->assureAllowed('get');
         $criteria = array(
             'userID' => $this->getSessionUserID(),
@@ -44,7 +44,7 @@ class Eventfilters extends RESTResource {
         return $response;
     }
 
-    public function delete(Request $request, Response $response, EventFiltersService $service, DivisionsService $divisionsService, $id) {
+    public function delete(Response $response, EventFiltersService $service, DivisionsService $divisionsService, $id) {
         $this->assureAllowed('delete');
         $service->delete($id, $divisionsService, $this->getSessionUserID());
         $response->getBody()->write(json_encode([]));
