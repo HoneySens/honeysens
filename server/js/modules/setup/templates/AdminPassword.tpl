@@ -17,7 +17,7 @@
     </div>
     <div class="form-group has-feedback">
         <label for="adminEmail">E-Mail-Adresse für den administrativen Account:</label>
-        <input type="email" name="adminEmail" id="adminEmail" class="form-control" placeholder="E-Mail" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
+        <input type="email" name="adminEmail" id="adminEmail" class="form-control" placeholder="E-Mail" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>
