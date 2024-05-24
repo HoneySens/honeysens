@@ -1,20 +1,22 @@
 <?php
-namespace HoneySens\app\models;
+namespace HoneySens\app\adapters;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
 use Exception;
+use HoneySens\app\models\CeleryException;
+use HoneySens\app\models\CeleryPublishException;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Predis;
-use Smuuf\CeleryForPhp\Celery;
-use Smuuf\CeleryForPhp\TaskSignature;
-use Smuuf\CeleryForPhp\Brokers\RedisBroker;
-use Smuuf\CeleryForPhp\Drivers\PredisRedisDriver;
 use Smuuf\CeleryForPhp\Backends\RedisBackend;
+use Smuuf\CeleryForPhp\Brokers\RedisBroker;
+use Smuuf\CeleryForPhp\Celery;
+use Smuuf\CeleryForPhp\Drivers\PredisRedisDriver;
+use Smuuf\CeleryForPhp\TaskSignature;
 
-class TaskService {
+class TaskAdapter {
 
     const PRIORITY_LOW = 'low';
     const PRIORITY_HIGH = 'high';
@@ -23,12 +25,9 @@ class TaskService {
     private $broker_host;
     private $broker_port;
     private $celery;
-    private $config;
     private $em;
-    private $services;
 
-    public function __construct($services, ConfigParser $config, EntityManager $em) {
-        $this->services = $services;
+    public function __construct(EntityManager $em) {
         $this->broker_host = getenv('HS_BROKER_HOST');
         $this->broker_port = getenv('HS_BROKER_PORT');
         $this->broker = new Predis\Client([
@@ -38,14 +37,13 @@ class TaskService {
         ]);
         $driver = new PredisRedisDriver($this->broker);
         $this->celery = new Celery(new RedisBroker($driver), new RedisBackend($driver));
-        $this->config = $config;
         $this->em = $em;
     }
 
     /**
      * Registers a new task by persisting it into the database and notifying the task queue
      *
-     * @param User $user
+     * @param ?User $user
      * @param int $type
      * @param array $params
      * @return Task
@@ -54,7 +52,7 @@ class TaskService {
      * @throws CeleryPublishException
      * @throws Exception
      */
-    public function enqueue($user, $type, $params) {
+    public function enqueue(?User $user, $type, $params) {
         // Persist
         $task = new Task();
         $task->setType($type)->setParams($params);

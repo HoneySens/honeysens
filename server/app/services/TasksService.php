@@ -4,15 +4,13 @@ namespace HoneySens\app\services;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
+use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
-use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
-use HoneySens\app\services\LogService;
-use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
 
 class TasksService {
@@ -22,16 +20,14 @@ class TasksService {
     const UPLOAD_TYPE_SERVICE_ARCHIVE = 0;
     const UPLOAD_TYPE_PLATFORM_ARCHIVE = 1;
 
-    private ConfigParser $config;
     private EntityManager $em;
     private LogService $logger;
-    private ServiceManager $serviceManager;
+    private TaskAdapter $taskAdapter;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, ServiceManager $serviceManager) {
-        $this->config = $config;
+    public function __construct(EntityManager $em, LogService $logger, TaskAdapter $taskAdapter) {
         $this->em= $em;
         $this->logger = $logger;
-        $this->serviceManager = $serviceManager;
+        $this->taskAdapter = $taskAdapter;
     }
 
     /**
@@ -102,7 +98,7 @@ class TasksService {
      * @throws ForbiddenException
      */
     public function getBrokerQueueLength() {
-        return $this->serviceManager->get(ServiceManager::SERVICE_TASK)->getQueueLength();
+        return $this->taskAdapter->getQueueLength();
     }
 
     /**
@@ -151,7 +147,7 @@ class TasksService {
             fclose($handle);
         }
         // Verify archive content
-        $task = $this->serviceManager->get(ServiceManager::SERVICE_TASK)->enqueue(
+        $task = $this->taskAdapter->enqueue(
             $sessionUser,
             Task::TYPE_UPLOAD_VERIFIER,
             array('path' => $finalFileName));

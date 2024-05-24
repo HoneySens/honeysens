@@ -1,23 +1,23 @@
 <?php
-namespace HoneySens\app\models;
+namespace HoneySens\app\adapters;
 
 use Doctrine\ORM\EntityManager;
-use Predis;
 use HoneySens\app\models\entities\Template;
 use HoneySens\app\models\entities\TemplateOverlay;
 use HoneySens\app\models\exceptions\NotFoundException;
+use Predis;
 
 /**
  * Management of notification templates. System-wide default templates are defined here. Since these can be
  * overwritten with overlays, this service manages both user-defined overlay data and hardcoded templates
  * to provide a single consistent template API.
  */
-class TemplateService {
+class TemplateAdapter {
 
     private $em;
     private $templates;
 
-    public function __construct($services, EntityManager $em) {
+    public function __construct(EntityManager $em) {
         $this->em = $em;
         $this->templates = array();
         // Fetch default templates from broker

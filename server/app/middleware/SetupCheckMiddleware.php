@@ -1,7 +1,6 @@
 <?php
-namespace HoneySens\app\adapters;
+namespace HoneySens\app\middleware;
 
-use Doctrine\ORM\EntityManager;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;

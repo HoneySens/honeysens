@@ -9,7 +9,6 @@ use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
-use HoneySens\app\models\ServiceManager;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
 
@@ -22,13 +21,11 @@ class PlatformsService {
     private ConfigParser $config;
     private EntityManager $em;
     private LogService $logger;
-    private ServiceManager $serviceManager;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, ServiceManager $serviceManager) {
+    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger) {
         $this->config = $config;
         $this->em= $em;
         $this->logger = $logger;
-        $this->serviceManager = $serviceManager;
     }
 
     /**

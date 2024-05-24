@@ -3,6 +3,9 @@ namespace HoneySens\app\services;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\QueryBuilder;
+use HoneySens\app\adapters\EMailAdapter;
+use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\entities\ArchivedEvent;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventDetail;
@@ -13,7 +16,6 @@ use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
-use HoneySens\app\models\ServiceManager;
 use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
@@ -21,15 +23,17 @@ use Respect\Validation\Validator as V;
 class EventsService {
 
     private ConfigParser $config;
+    private EMailAdapter $emailAdapter;
     private EntityManager $em;
     private LogService $logger;
-    private ServiceManager $serviceManager;
+    private TaskAdapter $taskAdapter;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, ServiceManager $serviceManager) {
+    public function __construct(ConfigParser $config, EntityManager $em, EMailAdapter $emailAdapter, LogService $logger, TaskAdapter $taskAdapter) {
         $this->config = $config;
         $this->em= $em;
+        $this->emailAdapter = $emailAdapter;
         $this->logger = $logger;
-        $this->serviceManager = $serviceManager;
+        $this->taskAdapter = $taskAdapter;
     }
 
     /**
@@ -76,7 +80,7 @@ class EventsService {
             if(V::key('format', V::stringType())->validate($criteria) && $criteria['format'] == 'text/csv') {
                 $qb->setFirstResult(0)->setMaxResults($totalCount);
                 $taskParams = array('query' => Utils::getFullSQL($qb->getQuery()));
-                $task = $this->serviceManager->get(ServiceManager::SERVICE_TASK)->enqueue($user, Task::TYPE_EVENT_EXTRACTOR, $taskParams);
+                $task = $this->taskAdapter->enqueue($user, Task::TYPE_EVENT_EXTRACTOR, $taskParams);
                 return $task->getState();
             } else {
                 $events = array();
@@ -243,16 +247,14 @@ class EventsService {
         try {
             // Event forwarding
             if ($this->config->getBoolean('syslog', 'enabled')) {
-                $taskService = $this->serviceManager->get(ServiceManager::SERVICE_TASK);
                 foreach ($events as $event) {
                     if ($this->em->contains($event))
-                        $taskService->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('id' => $event->getId()));
+                        $this->taskAdapter->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('id' => $event->getId()));
                 }
             }
             // Send mails for each incident
-            $mailService = $this->serviceManager->get(ServiceManager::SERVICE_CONTACT);
             foreach ($events as $event) {
-                if ($this->em->contains($event)) $mailService->sendIncident($this->config, $this->em, $event);
+                if ($this->em->contains($event)) $this->emailAdapter->sendIncident($this->config, $this->em, $event);
             }
         } catch(\Exception $e) {
             // If subsequent event handlers cause exceptions, fail gracefully and signal successful event creation to sensor
@@ -532,7 +534,7 @@ class EventsService {
      * If no criteria are given, all events will be selected matching the default parameters.
      *
      * @param array $criteria
-     * @return array
+     * @return QueryBuilder
      * @throws \Exception
      */
     private function fetchEvents($criteria) {
