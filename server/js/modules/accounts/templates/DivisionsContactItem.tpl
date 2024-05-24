@@ -10,7 +10,7 @@
              <select name="user" class="form-control">
                 <option value="">Bitte w&auml;hlen</option>
             </select>
-            <input type="email" name="email" class="form-control" placeholder="E-Mail-Adresse" value="<%- email %>" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
+            <input type="email" name="email" class="form-control" placeholder="E-Mail-Adresse" value="<%- email %>" data-pattern-error="Bitte geben Sie eine E-Mail-Adresse ein." required />
             <div class="form-feedback">
                 <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                 <div class="help-block with-errors"></div>
