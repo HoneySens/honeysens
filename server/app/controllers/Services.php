@@ -18,7 +18,7 @@ class Services extends RESTResource {
         $api->get('/{id:\d+}/status', [Services::class, 'getStatus']);
     }
 
-    public function get(Request $request, Response $response, SensorServicesService $service, $id = null) {
+    public function get(Response $response, SensorServicesService $service, $id = null) {
         $this->assureAllowed('get');
         $criteria = array('id' => $id);
         try {
@@ -47,27 +47,27 @@ class Services extends RESTResource {
         return $response;
     }
 
-    public function delete(Request $request, Response $response, SensorServicesService $service, $id) {
+    public function delete(Response $response, SensorServicesService $service, $id) {
         $this->assureAllowed('delete');
         $service->delete($id);
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function deleteRevision(Request $request, Response $response, SensorServicesService $service, $id) {
+    public function deleteRevision(Response $response, SensorServicesService $service, $id) {
         $this->assureAllowed('delete');
         $service->deleteRevision($id);
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function getStatusSummary(Request $request, Response $response, SensorServicesService $service) {
+    public function getStatusSummary(Response $response, SensorServicesService $service) {
         $this->assureAllowed('get');
         $response->getBody()->write(json_encode($service->getStatusSummary()));
         return $response;
     }
 
-    public function getStatus(Request $request, Response $response, SensorServicesService $service, $id) {
+    public function getStatus(Response $response, SensorServicesService $service, $id) {
         $this->assureAllowed('get');
         $result = $service->getStatus($id);
         $response->getBody()->write(json_encode($result));

@@ -22,7 +22,7 @@ class Sensors extends RESTResource {
         $api->delete('/{id:\d+}', [Sensors::class, 'delete']);
     }
 
-    public function get(Request $request, Response $response, SensorsService $service, $id = null) {
+    public function get(Response $response, SensorsService $service, $id = null) {
         $this->assureAllowed('get');
         $criteria = array(
             'userID' => $this->getSessionUserID(),
@@ -69,7 +69,7 @@ class Sensors extends RESTResource {
         return $response;
     }
 
-    public function getStatus(Request $request, Response $response, SensorsService $service, $id) {
+    public function getStatus(Response $response, SensorsService $service, $id) {
         $this->assureAllowed('get');
         $criteria = array(
             'userID' => $this->getSessionUserID(),
@@ -79,7 +79,7 @@ class Sensors extends RESTResource {
         return $response;
     }
 
-    public function requestConfigDownload(Request $request, Response $response, SensorsService $service, DivisionsService $divisionsService, $id) {
+    public function requestConfigDownload(Response $response, SensorsService $service, DivisionsService $divisionsService, $id) {
         $this->assureAllowed('downloadConfig');
         $task = $service->requestConfigDownload($id, $divisionsService, $this->getSessionUser(), $this->getSessionUserID());
         $response->getBody()->write(json_encode($task->getState()));
@@ -90,7 +90,7 @@ class Sensors extends RESTResource {
      * This resource is used by authenticated sensors to receive firmware download details.
      * The return value is an array with platform names as keys and their respective access URIs as value.
      */
-    public function getFirmware(Request $request, Response $response, SensorsService $service) {
+    public function getFirmware(Response $response, SensorsService $service) {
         $sensor = $this->validateSensorRequest('get', '');
         $body = json_encode($service->getFirmwareURIs($sensor));
         $this->setMACHeaders($sensor, 'get', $body);

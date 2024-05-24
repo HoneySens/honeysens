@@ -20,7 +20,7 @@ class Platforms extends RESTResource {
         $api->get('/{id:\d+}/firmware/current', [Platforms::class, 'downloadCurrentFirmware']);
     }
 
-    public function get(Request $request, Response $response, PlatformsService $service, $id = null) {
+    public function get(Response $response, PlatformsService $service, $id = null) {
         $this->assureAllowed('get');
         $criteria = array('id' => $id);
         try {
@@ -32,7 +32,7 @@ class Platforms extends RESTResource {
         return $response;
     }
 
-    public function getFirmware(Request $request, Response $response, PlatformsService $service, $id) {
+    public function getFirmware(Response $response, PlatformsService $service, $id) {
         $this->assureAllowed('get');
         $firmware = $service->getFirmware($id);
         $response->getBody()->write(json_encode($firmware->getState()));
@@ -54,14 +54,14 @@ class Platforms extends RESTResource {
         return $response;
     }
 
-    public function deleteFirmware(Request $request, Response $response, PlatformsService $service, $id) {
+    public function deleteFirmware(Response $response, PlatformsService $service, $id) {
         $this->assureAllowed('delete');
         $service->deleteFirmware($id);
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function downloadFirmware(Request $request, Response $response, PlatformsService $service, $id) {
+    public function downloadFirmware(PlatformsService $service, $id) {
         // Authenticate either as sensor or with a user session
         try {
             $sensor = $this->validateSensorRequest('get');
@@ -73,7 +73,7 @@ class Platforms extends RESTResource {
         $this->offerFile($firmwarePath, $downloadName);
     }
 
-    public function downloadCurrentFirmware(Request $request, Response $response, PlatformsService $service, $id) {
+    public function downloadCurrentFirmware(PlatformsService $service, $id) {
         $this->assureAllowed('download');
         [$firmwarePath, $downloadName] = $service->downloadCurrentFirmwareForPlatform($id);
         $this->offerFile($firmwarePath, $downloadName);

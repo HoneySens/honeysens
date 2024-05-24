@@ -18,7 +18,7 @@ class Users extends RESTResource {
         $api->delete('/{id:\d+}', [Users::class, 'delete']);
     }
 
-    public function get(Request $request, Response $response, UsersService $service, $id = null) {
+    public function get(Response $response, UsersService $service, $id = null) {
         $this->assureAllowed('get');
         $criteria = array(
             'userID' => $this->getSessionUserID(),
@@ -49,7 +49,7 @@ class Users extends RESTResource {
         return $response;
     }
 
-    public function delete(Request $request, Response $response, UsersService $service, $id) {
+    public function delete(Response $response, UsersService $service, $id) {
         $this->assureAllowed('delete');
         $service->delete($id);
         $response->getBody()->write(json_encode([]));

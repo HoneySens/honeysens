@@ -20,18 +20,18 @@ class System extends RESTResource {
         $api->post('/install', [System::class, 'install']);
     }
 
-    public function getSystemInfo(Request $request, Response $response, SystemService $service) {
+    public function getSystemInfo(Response $response, SystemService $service) {
         $response->getBody()->write(json_encode($service->getSystemInfo()));
         return $response;
     }
 
-    public function removeAllEvents(Request $request, Response $response, SystemService $service) {
+    public function removeAllEvents(Response $response, SystemService $service) {
         $service->removeAllEvents();
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function refreshCertificates(Request $request, Response $response, SystemService $service) {
+    public function refreshCertificates(Response $response, SystemService $service) {
         $service->refreshCertificates();
         $response->getBody()->write(json_encode([]));
         return $response;

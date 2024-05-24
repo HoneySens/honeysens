@@ -14,7 +14,7 @@ class Settings extends RESTResource {
         $api->post('/testevent', [Settings::class, 'sendTestEvent']);
     }
 
-    public function get(Request $request, Response $response, SettingsService $service) {
+    public function get(Response $response, SettingsService $service) {
         $this->assureAllowed('get');
         $settings = $service->get($this->getSessionUserID());
         $response->getBody()->write(json_encode($settings));
@@ -35,7 +35,7 @@ class Settings extends RESTResource {
         return $response;
     }
 
-    public function sendTestEvent(Request $request, Response $response, SettingsService $service) {
+    public function sendTestEvent(Response $response, SettingsService $service) {
         $this->assureAllowed('update');
         $response->getBody()->write(json_encode($service->sendTestEvent()));
         return $response;

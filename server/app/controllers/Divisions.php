@@ -19,7 +19,7 @@ class Divisions extends RESTResource {
         $api->delete('/{id:\d+}', [Divisions::class, 'delete']);
     }
 
-    public function get(Request $request, Response $response, DivisionsService $service, $id = null) {
+    public function get(Response $response, DivisionsService $service, $id = null) {
         $this->assureAllowed('get');
         $criteria = array(
             'userID' => $this->getSessionUserID(),
