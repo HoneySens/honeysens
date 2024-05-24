@@ -81,7 +81,7 @@ function initSlim(ContainerInterface $container) {
 }
 
 function initClassLoading() {
-
+    require_once('vendor/autoload.php');
 }
 
 function initDatabase() {
@@ -198,7 +198,7 @@ function initRoutes($app) {
  * This method blocks until the request has been served.
  */
 function launch() {
-    require_once('vendor/autoload.php');
+    initClassLoading();
     $em = initDatabase();
     $dependencyContainer = createDependencyContainer($em);
     $app = initSlim($dependencyContainer);
