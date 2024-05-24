@@ -2,9 +2,7 @@
 require_once dirname(__FILE__) . '/../app/Bootstrap.php';
 
 initClassLoading();
-$config = initConfig();
-initSlim($config);
-$em = initDoctrine($config);
+$em = initDatabase();
 
 $classLoader = new \Doctrine\Common\ClassLoader('Symfony', APPLICATION_PATH . '/lib/Doctrine');
 $classLoader->register();
