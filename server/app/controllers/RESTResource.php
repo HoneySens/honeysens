@@ -59,37 +59,6 @@ abstract class RESTResource {
     }
 
     /**
-     * Computes an ArrayCollection update with a list of entity IDs. Returns an array of the form
-     * array('add' => array(), 'update' => array(), 'remove' => array())
-     * that specifies the required tasks to complete the operation.
-     *
-     * @param $collection ArrayCollection of the entities to be updated
-     * @param $ids Array of entity IDs to update the collection with
-     * @param $repository Repository to fetch entities from
-     * @return array Specifies tasks to perform to perform the operation
-     * @deprecated
-     */
-    protected function updateCollection($collection, &$ids, $repository) {
-        $tasks = array('add' => array(), 'update' => array(), 'remove' => array());
-        foreach($collection as $entity) {
-            if(in_array($entity->getId(), $ids)) {
-                $tasks['update'][] = $entity;
-                if(($key = array_search($entity->getId(), $ids)) !== false) {
-                    unset($ids[$key]);
-                    $ids = array_values($ids);
-                }
-            } else {
-                $tasks['remove'][] = $entity;
-            }
-        }
-        foreach($ids as $entityId) {
-            $entity = $repository->find($entityId);
-            if($entity) $tasks['add'][] = $entity;
-        }
-        return $tasks;
-    }
-
-    /**
      * Returns the user id of the currently logged in user or null in case of an admin user.
      * This means that for both admin and guest users null is returned, which means that an additional permission check is
      * required. This step is usually done inside of the resource classes/controllers.
@@ -110,23 +79,6 @@ abstract class RESTResource {
     public function getSessionUser() {
         if($_SESSION['user']['role'] == User::ROLE_GUEST) return null;
         return $this->em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
-    }
-
-    /**
-     * Validates the given MAC for a specific key and request.
-     *
-     * @param $mac string The MAC to validate
-     * @param $key string
-     * @param $algo string Hashing algorithm to use
-     * @param $timestamp int
-     * @param $method string HTTP request type
-     * @param $body string HTTP body
-     * @return bool
-     */
-    protected function isValidMAC($mac, $key, $algo, $timestamp, $method, $body) {
-        if(!in_array($algo, array('sha256'))) return false;
-        $msg = sprintf('%u %s %s', $timestamp, $method, $body);
-        return $mac === hash_hmac($algo, $msg, $key, false);
     }
 
     /**
@@ -183,20 +135,6 @@ abstract class RESTResource {
     }
 
     /**
-     * Normalizes and returns HTTP request headers by converting their keys to lowercase and replacing _ with -.
-     *
-     * @return array
-     */
-    protected function getNormalizedRequestHeaders() {
-        $result = [];
-        foreach(getallheaders() as $key => $val) {
-            $nkey = str_replace('_', '-', strtolower($key));
-            $result[$nkey] = $val;
-        }
-        return $result;
-    }
-
-    /**
      * Returns the current server TLS certificate data as a string.
      */
     public function getServerCert() {
@@ -204,14 +142,33 @@ abstract class RESTResource {
     }
 
     /**
-     * Retrieves the log service and records a log entry, references the session user by default.
-     * @deprecated
+     * Validates the given MAC for a specific key and request.
+     *
+     * @param $mac string The MAC to validate
+     * @param $key string
+     * @param $algo string Hashing algorithm to use
+     * @param $timestamp int
+     * @param $method string HTTP request type
+     * @param $body string HTTP body
+     * @return bool
      */
-    public function log($message, $resourceType, $resourceID=null, $userID=null) {
-        if($userID === null) {
-            $sessionUser = $this->getSessionUser();
-            $userID = $sessionUser != null ? $sessionUser->getId() : null;
+    private function isValidMAC($mac, $key, $algo, $timestamp, $method, $body) {
+        if(!in_array($algo, array('sha256'))) return false;
+        $msg = sprintf('%u %s %s', $timestamp, $method, $body);
+        return $mac === hash_hmac($algo, $msg, $key, false);
+    }
+
+    /**
+     * Normalizes and returns HTTP request headers by converting their keys to lowercase and replacing _ with -.
+     *
+     * @return array
+     */
+    private function getNormalizedRequestHeaders() {
+        $result = [];
+        foreach(getallheaders() as $key => $val) {
+            $nkey = str_replace('_', '-', strtolower($key));
+            $result[$nkey] = $val;
         }
-        $this->logger->log($message, $resourceType, $resourceID, $userID);
+        return $result;
     }
 }
