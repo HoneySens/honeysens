@@ -7,6 +7,7 @@ use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\services\LogService;
 use Respect\Validation\Validator as V;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 
 abstract class RESTResource {
 
@@ -23,7 +24,7 @@ abstract class RESTResource {
         $this->logger = $logger;
     }
 
-    abstract static function registerRoutes($api);
+    abstract static function registerRoutes(RouteCollectorProxyInterface $api);
 
     protected function assureAllowed($method, $realm=null) {
         if($realm) {
@@ -64,6 +65,7 @@ abstract class RESTResource {
      * required. This step is usually done inside of the resource classes/controllers.
      *
      * @return ?integer
+     * @deprecated
      */
     public function getSessionUserID() {
         if($_SESSION['user']['role'] == User::ROLE_ADMIN) {
@@ -72,12 +74,13 @@ abstract class RESTResource {
     }
 
     /**
-     * Returns the User object of the currently logged in user (or null if no user is logged in).
+     * Returns a User object for the currently logged in user.
      *
-     * @return ?User
+     * @return User
+     * @throws ForbiddenException
      */
     public function getSessionUser() {
-        if($_SESSION['user']['role'] == User::ROLE_GUEST) return null;
+        if($_SESSION['user']['role'] == User::ROLE_GUEST) throw new ForbiddenException();
         return $this->em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
     }
 

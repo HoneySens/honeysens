@@ -68,8 +68,11 @@ function initSlim(ContainerInterface $container) {
                     $result = array('code' => $exception->getCode());
                     break;
                 default:
+                    if($exception instanceof exceptions\SystemException) $exception = $exception->nestedException;
                     $status = 500;
                     $result = array('error' => $exception->getMessage());
+                    error_log('Exception in ' . $exception->getFile() . ':' . $exception->getLine() . ': ' . $exception->getMessage());
+                    error_log($exception->getTraceAsString());
                     break;
             }
             $response = $app->getResponseFactory()->createResponse()->withStatus($status);

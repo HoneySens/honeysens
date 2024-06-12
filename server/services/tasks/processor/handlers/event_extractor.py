@@ -2,8 +2,8 @@ import csv
 import json
 import os
 import pymysql
+import re
 import shutil
-from string import digits
 
 from .handler import HandlerInterface
 
@@ -46,11 +46,8 @@ class EventExtractor(HandlerInterface):
 
     @staticmethod
     def parse_db_event(row):
-        """Parses a raw event row into a dictionary, e.g. renaming keys from 'id0' to 'id'."""
-        result = {}
-        for key, val in row.items():
-            result[key.translate(str.maketrans('', '', digits))] = val
-        return result
+        """Parses a raw event row into a dictionary, e.g. renaming keys from 'id_0' to 'id'."""
+        return {re.sub(r'_\d+$', '', key): val for key, val in row.items()}
 
     def generate_event_row(self, event: dict, headers: list, sensors: dict) -> list:
         """Takes a dictionary of parsed db event data and returns it in a serialized format structured by headers."""

@@ -2,6 +2,7 @@
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use HoneySens\app\models\constants\EventStatus;
 
 /**
  * @ORM\Entity
@@ -18,11 +19,6 @@ class Event {
     const CLASSIFICATION_CONN_ATTEMPT = 2;
     const CLASSIFICATION_LOW_HP = 3;
     const CLASSIFICATION_PORTSCAN = 4;
-
-    const STATUS_UNEDITED = 0;
-    const STATUS_BUSY = 1;
-    const STATUS_RESOLVED = 2;
-    const STATUS_IGNORED = 3;
 
     /**
      * @ORM\Id
@@ -76,7 +72,7 @@ class Event {
      *
      * @ORM\Column(type="integer")
      */
-    protected $status = 0;
+    protected $status = EventStatus::UNEDITED->value;
 
     /**
      * Comment for the guy who works on the event
@@ -238,23 +234,12 @@ class Event {
         return $this->summary;
     }
 
-    /**
-     * Set status
-     *
-     * @param integer $status
-     * @return Event
-     */
-    public function setStatus($status) {
-        $this->status = $status;
+    public function setStatus(EventStatus $status): Event {
+        $this->status = $status->value;
         return $this;
     }
 
-    /**
-     * Get status
-     *
-     * @return integer
-     */
-    public function getStatus() {
+    public function getStatus(): int {
         return $this->status;
     }
 

@@ -1,30 +1,32 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use HoneySens\app\models\constants\EventDetailType;
 use HoneySens\app\services\EventsService;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 
 class Eventdetails extends RESTResource {
 
-    static function registerRoutes($api) {
+    static function registerRoutes(RouteCollectorProxyInterface $api): void {
         // Returns details (including packets) that belong to a certain event
         $api->get('/by-event/{id:\d+}', [Eventdetails::class, 'get']);
         $api->get('/by-archived-event/{id:\d+}', [Eventdetails::class, 'getFromArchive']);
     }
 
-    public function get(Response $response, EventsService $service, $id) {
+    public function get(Response $response, EventsService $service, int $id): Response {
         $this->assureAllowed('get');
-        $details = $service->getEventDetails(array('userID' => $this->getSessionUserID(), 'eventID' => $id, 'type' => 0));
-        $packets = $service->getEventDetails(array('userID' => $this->getSessionUserID(), 'eventID' => $id, 'type' => 1));
-        $result = array('details' => $details, 'packets' => $packets);
+        $result = array(
+            'details' => $service->getEventDetails($this->getSessionUser(), EventDetailType::GENERIC, $id),
+            'packets' => $service->getEventDetails($this->getSessionUser(), EventDetailType::INTERACTION, $id)
+        );
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function getFromArchive(Response $response, EventsService $service, $id) {
+    public function getFromArchive(Response $response, EventsService $service, int $id): Response {
         $this->assureAllowed('get');
-        $result = $service->getArchivedDetails($id, $this->getSessionUserID());
+        $result = $service->getArchivedDetails($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }

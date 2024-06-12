@@ -5,6 +5,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query\ResultSetMapping;
 use HoneySens\app\services\ContactsService;
 use HoneySens\app\services\DivisionsService;
+use HoneySens\app\services\dto\EventFilterConditions;
 use HoneySens\app\services\EventFiltersService;
 use HoneySens\app\services\EventsService;
 use HoneySens\app\services\PlatformsService;
@@ -32,7 +33,6 @@ class State extends RESTResource {
     public function get(Request $request,
                         Response $response,
                         EntityManager $em,
-                        ContactsService $contactsService,
                         DivisionsService $divisionsService,
                         EventFiltersService $eventFiltersService,
                         EventsService $eventsService,
@@ -61,7 +61,6 @@ class State extends RESTResource {
             $sensorsService,
             $usersService,
             $divisionsService,
-            $contactsService,
             $settingsService,
             $eventFiltersService,
             $sensorServicesService,
@@ -78,19 +77,19 @@ class State extends RESTResource {
             $events = array();
             if($lastEventId) {
                 // Return new events since the provided last event ID
-                $events = $eventsService->get(array_merge($stateParams, array('lastID' => $lastEventId)), $this->getSessionUser())['items'];
+                $filterConditions = Events::validateEventFilterConditions($this->getSessionUser(), $queryParams);
+                $filterConditions->lastID = intval($lastEventId);
+                $events = $eventsService->get($this->getSessionUser(), $filterConditions)['items'];
             }
             $state['new_events'] = $events;
         }
         try {
             // The lastEventID is only returned if a user is logged in, otherwise this will throw a ForbiddenException
-            $lastEvents = $eventsService->get(array(
-                'userID' => $userID,
-                'sort_by' => 'id',
-                'order' => 'desc',
-                'page' => 0,
-                'per_page' => 1
-            ), $this->getSessionUser())['items'];
+            $lastEventFilter = new EventFilterConditions();
+            $lastEventFilter->user = $this->getSessionUser();
+            $lastEventFilter->sortBy = 'id';
+            $lastEventFilter->sortOrder = 'desc';
+            $lastEvents = $eventsService->get($this->getSessionUser(), $lastEventFilter, perPage: 1)['items'];
             $state['lastEventID'] = count($lastEvents) > 0 ? $lastEvents[0]['id'] : null;
         } catch(\Exception $e) {
             $state['lastEventID'] = null;
@@ -112,7 +111,6 @@ class State extends RESTResource {
                                  SensorsService $sensorsService,
                                  UsersService $usersService,
                                  DivisionsService $divisionsService,
-                                 ContactsService $contactsService,
                                  SettingsService $settingsService,
                                  EventFiltersService $eventFiltersService,
                                  SensorServicesService $sensorServicesService,
@@ -167,13 +165,13 @@ class State extends RESTResource {
                 case 'divisions':
                     try {
                         $this->assureAllowed('get', 'divisions');
-                        $result[$table['name']] = $divisionsService->get($attributes);
+                        $result[$table['name']] = $divisionsService->get($this->getSessionUser());
                     } catch(\Exception $e) {}
                     break;
                 case 'contacts':
                     try {
                         $this->assureAllowed('get', 'contacts');
-                        $result[$table['name']] = $contactsService->get($attributes);
+                        $result[$table['name']] = $divisionsService->getContact($this->getSessionUser());
                     } catch(\Exception $e) {}
                     break;
                 case 'settings':

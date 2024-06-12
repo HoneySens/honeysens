@@ -43,7 +43,7 @@ class Utils {
                 elseif(is_array($paramsArr[$nameParam])){
                     $sqlArr='';
                     foreach ($paramsArr[$nameParam] as $var){
-                        if(!empty($sqlArr))
+                        if(strlen($sqlArr) > 0)
                             $sqlArr.=',';
 
                         if(is_string($var)){

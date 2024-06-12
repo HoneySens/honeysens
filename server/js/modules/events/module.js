@@ -24,7 +24,11 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
         delete result.directions;
         // Assign the return values of function params
         _.each(_.clone(result), function(param, key) {
-            if(_.isFunction(param)) result[key] = param();
+            if(_.isFunction(param)) {
+                let paramVal = param();
+                if(paramVal !== null) result[key] = paramVal;
+                else delete result[key];
+            }
         });
         return result;
     }
@@ -220,6 +224,9 @@ function(HoneySens, Routing, Models, Backbone, JSON, LayoutView, EventListView, 
                 calcParams[collection.queryParams.order] = collection.queryParams.directions[collection.state.order];
             }
             calcParams.format = 'text/csv';
+
+            console.log(calcParams);
+
             $.ajax({
                 type: 'GET',
                 url: 'api/events',

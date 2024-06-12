@@ -3,7 +3,7 @@ namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\adapters\TaskAdapter;
-use HoneySens\app\models\entities\Event;
+use HoneySens\app\models\constants\EventStatus;
 use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\SensorStatus;
@@ -718,7 +718,7 @@ class SensorsService {
         $qb->select('count(e.id)')
             ->from('HoneySens\app\models\entities\Event', 'e')
             ->where('e.sensor = :sensor AND e.status = :status')
-            ->setParameters(array('sensor' => $sensor, 'status' => Event::STATUS_UNEDITED));
+            ->setParameters(array('sensor' => $sensor, 'status' => EventStatus::UNEDITED));
         $state['new_events'] = intval($qb->getQuery()->getSingleScalarResult());
         return $state;
     }

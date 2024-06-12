@@ -2,89 +2,109 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
+use Doctrine\Persistence\Mapping\MappingException;
 use HoneySens\app\controllers\Divisions;
+use HoneySens\app\models\constants\ContactType;
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\IncidentContact;
 use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
+use HoneySens\app\models\exceptions\NotFoundException;
+use HoneySens\app\models\exceptions\SystemException;
 use HoneySens\app\models\Utils;
-use Respect\Validation\Validator as V;
 
 class DivisionsService {
 
     private EntityManager $em;
+    private EventsService $eventsService;
     private LogService $logger;
+    private SensorsService $sensorsService;
 
-    public function __construct(EntityManager $em, LogService $logger) {
+    public function __construct(EntityManager $em, LogService $logger, EventsService $eventsService, SensorsService $sensorsService) {
         $this->em= $em;
+        $this->eventsService = $eventsService;
         $this->logger = $logger;
+        $this->sensorsService = $sensorsService;
     }
 
     /**
-     * Fetches divisions from the DB by various criteria:
-     * - userID: return only divisions that belong to the user with the given id
-     * - id: return the divison with the given id
-     * If no criteria are given, all divisons are returned.
+     * Fetches divisions from the DB.
      *
-     * @param array $criteria
-     * @return array
+     * @param User $user User for which to retrieve associated entities; admins receive all entities
+     * @param int|null $id ID of a specific division to fetch
+     * @throws NotFoundException
      */
-    public function get($criteria) {
+    public function get(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('d')->from('HoneySens\app\models\entities\Division', 'd');
-        if(V::key('userID', V::intType())->validate($criteria)) {
+        if($user->getRole() !== User::ROLE_ADMIN) {
             $qb->andWhere(':userid MEMBER OF d.users')
-                ->setParameter('userid', $criteria['userID']);
+                ->setParameter('userid', $user->getId());
         }
-        if(V::key('id', V::intVal())->validate($criteria)) {
-            $qb->andWhere('d.id = :id')
-                ->setParameter('id', $criteria['id']);
-            return $qb->getQuery()->getSingleResult()->getState();
-        } else {
-            $divisions = array();
-            foreach($qb->getQuery()->getResult() as $division) {
-                $divisions[] = $division->getState();
+        try {
+            if ($id !== null) {
+                $qb->andWhere('d.id = :id')
+                    ->setParameter('id', $id);
+                return $qb->getQuery()->getSingleResult()->getState();
+            } else {
+                $divisions = array();
+                foreach ($qb->getQuery()->getResult() as $division) {
+                    $divisions[] = $division->getState();
+                }
+                return $divisions;
             }
-            return $divisions;
+        } catch (NonUniqueResultException|NoResultException) {
+            throw new NotFoundException();
         }
     }
 
     /**
-     * Creates and persists a new Division object.
-     * The following parameters are required:
-     * - name: Division name
-     * - users: Array specifying a list of user IDs that are part of the division
-     * - contacts: Array specifying a list of contacts to add. Each item is another array specifying contact data.
+     * Creates a new division.
      *
-     * @param array $data
+     * @param string $name Name of the new division
+     * @param array $users List of initial user IDs to add to the division
+     * @param array $contacts List of initial contacts to add. Each item is an array specifying contact data.
      * @return Division
+     * @throws BadRequestException
+     * @throws SystemException
      */
-    public function create($data) {
-        // Validation
-        V::arrayType()
-            ->key('name', V::alnum()->length(1, 255))
-            ->key('users', V::arrayVal()->each(V::intType()))
-            ->key('contacts', V::arrayVal()->each(V::arrayType()))
-            ->check($data);
+    public function create(string $name, array $users, array $contacts): Division {
         // Name duplication check
-        if($this->getDivisionByName($data['name']) != null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
+        if($this->getDivisionByName($name) != null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
         // Persistence
         $division = new Division();
-        $division->setName($data['name']);
+        $division->setName($name);
         $userRepository = $this->em->getRepository('HoneySens\app\models\entities\User');
-        foreach($data['users'] as $userId) {
+        foreach($users as $userId) {
             $user = $userRepository->find($userId);
-            V::objectType()->check($user);
+            if($user === null) throw new BadRequestException();
             $user->addToDivision($division);
         }
-        foreach($data['contacts'] as $contactData) {
-            $contact = $this->createContact($contactData);
-            $division->addIncidentContact($contact);
-            $this->em->persist($contact);
+        try {
+            foreach ($contacts as $contactData) {
+                $contactType = ContactType::from($contactData['type']);
+                $contact = $this->createContact(
+                    $contactType,
+                    $contactData['sendWeeklySummary'],
+                    $contactData['sendCriticalEvents'],
+                    $contactData['sendAllEvents'],
+                    $contactData['sendSensorTimeouts'],
+                    email: $contactType === ContactType::EMAIL ? $contactData['email'] : null,
+                    userID: $contactType === ContactType::USER ? $contactData['user'] : null
+                );
+                $division->addIncidentContact($contact);
+                $this->em->persist($contact);
+            }
+            $this->em->persist($division);
+            $this->em->flush();
+        } catch (ORMException $e) {
+            throw new SystemException($e);
         }
-        $this->em->persist($division);
-        $this->em->flush();
         $this->logger->log(sprintf('Division %s (ID %d) created with %d users and %d contacts',
             $division->getName(), $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
             LogEntry::RESOURCE_DIVISIONS, $division->getId());
@@ -92,60 +112,76 @@ class DivisionsService {
     }
 
     /**
-     * Updates an existing Division object.
-     * The following parameters are required:
-     * - name: Division name
-     * - users: Array specifying a list of user IDs that are part of the division
-     * - contacts: Array specifying a list of contacts to add. Each item is another array specifying contact data.
+     * Updates an existing division.
      *
-     * @param int $id
-     * @param array $data
-     * @return Division
+     * @param int $id Division ID to update
+     * @param string $name Division name
+     * @param array $users List of user IDs that should be associated with the division
+     * @param array $contacts List of contacts that should be associated with the division. Each item is another array specifying contact data.
+     * @throws BadRequestException
+     * @throws SystemException
      */
-    public function update($id, $data) {
-        // Validation
-        V::intVal()->check($id);
-        V::arrayType()
-            ->key('name', V::alnum()->length(1, 255))
-            ->key('users', V::arrayVal()->each(V::intType()))
-            ->key('contacts', V::arrayVal()->each(V::arrayType()))
-            ->check($data);
+    public function update(int $id, string $name, array $users, array $contacts): Division {
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($id);
-        V::objectType()->check($division);
+        if($division === null) throw new BadRequestException();
         // Name duplication check
-        $duplicate = $this->getDivisionByName($data['name']);
-        if($duplicate != null && $duplicate->getId() != $division->getId())
+        $duplicate = $this->getDivisionByName($name);
+        if($duplicate !== null && $duplicate->getId() !== $division->getId())
             throw new BadRequestException(Divisions::ERROR_DUPLICATE);
         // Persistence
-        $division->setName($data['name']);
+        $division->setName($name);
         // Process user association
         $userRepository = $this->em->getRepository('HoneySens\app\models\entities\User');
-        $tasks = Utils::updateCollection($division->getUsers(), $data['users'], $userRepository);
+        $tasks = Utils::updateCollection($division->getUsers(), $users, $userRepository);
         foreach($tasks['add'] as $user) $user->addToDivision($division);
         foreach($tasks['remove'] as $user) $user->removeFromDivision($division);
         // Process contact association
         $contactRepository = $this->em->getRepository('HoneySens\app\models\entities\IncidentContact');
         $forUpdate = array();
         $toAdd = array();
-        foreach($data['contacts'] as $contactData) {
-            if(V::key('id')->validate($contactData)) $forUpdate[] = $contactData['id'];
+        foreach($contacts as $contactData) {
+            if(array_key_exists('id', $contactData)) $forUpdate[] = $contactData['id'];
             else $toAdd[] = $contactData;
         }
         $tasks = Utils::updateCollection($division->getIncidentContacts(), $forUpdate, $contactRepository);
         foreach($tasks['update'] as $contact)
-            foreach($data['contacts'] as $contactData)
-                if(V::key('id')->validate($contactData) && $contactData['id'] == $contact->getId())
-                    $this->updateContact($contact, $contactData);
-        foreach($tasks['remove'] as $contact) {
-            $division->removeIncidentContact($contact);
-            $this->em->remove($contact);
+            foreach($contacts as $contactData)
+                if($contactData['id'] === $contact->getId()) {
+                    $contactType = ContactType::from($contactData['type']);
+                    $this->updateContact(
+                        $contact,
+                        $contactType,
+                        $contactData['sendWeeklySummary'],
+                        $contactData['sendCriticalEvents'],
+                        $contactData['sendAllEvents'],
+                        $contactData['sendSensorTimeouts'],
+                        email: $contactType === ContactType::EMAIL ? $contactData['email'] : null,
+                        userID: $contactType === ContactType::USER ? $contactData['user'] : null
+                    );
+                }
+        try {
+            foreach ($tasks['remove'] as $contact) {
+                $division->removeIncidentContact($contact);
+                $this->em->remove($contact);
+            }
+            foreach ($toAdd as $contactData) {
+                $contactType = ContactType::from($contactData['type']);
+                $contact = $this->createContact(
+                    $contactType,
+                    $contactData['sendWeeklySummary'],
+                    $contactData['sendCriticalEvents'],
+                    $contactData['sendAllEvents'],
+                    $contactData['sendSensorTimeouts'],
+                    email: $contactType === ContactType::EMAIL ? $contactData['email'] : null,
+                    userID: $contactType === ContactType::USER ? $contactData['user'] : null
+                );
+                $division->addIncidentContact($contact);
+                $this->em->persist($contact);
+            }
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
         }
-        foreach($toAdd as $contactData) {
-            $contact = $this->createContact($contactData);
-            $division->addIncidentContact($contact);
-            $this->em->persist($contact);
-        }
-        $this->em->flush();
         $this->logger->log(sprintf('Division %s (ID %d) updated with %d users and %d contacts',
             $division->getName(), $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
             LogEntry::RESOURCE_DIVISIONS, $division->getId());
@@ -153,47 +189,52 @@ class DivisionsService {
     }
 
     /**
-     * Removes the division with the given id.
-     * If 'archive' is set to true in additional criteria, all events of all sensors (of this division) are sent
-     * to the archive first.
+     * Removes a division with the given id.
      *
-     * @param int $id
-     * @param array $criteria Additional deletion criteria
+     * @param int $id Division ID to delete
+     * @param bool $archive If set, all events of all sensors (of this division) are sent to the archive
+     * @param User $user Session user that calls this service
+     * @throws BadRequestException
      * @throws ForbiddenException
      */
-    public function delete($id, $criteria, ?int $userID, EventsService $eventsService, SensorsService $sensorsService) {
-        // Validation
-        $archive = V::key('archive', V::boolType())->validate($criteria) && $criteria['archive'];
-        V::intVal()->check($id);
-        // Persistence
+    public function delete(int $id, bool $archive, User $user): void {
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($id);
-        V::objectType()->check($division);
-        $did = $division->getId();
+        if($division === null) throw new BadRequestException();
         // Delete sensors
         foreach($division->getSensors() as $sensor) {
-            $sensorsService->delete($sensor->getId(), $archive, $userID, $this, $eventsService);
+            $this->sensorsService->delete($sensor->getId(), $archive, $user->getId(), $this, $this->eventsService);
         }
-        // Remove division associations from archived events
-        $this->em->createQueryBuilder()
-            ->update('HoneySens\app\models\entities\ArchivedEvent', 'e')
-            ->set('e.division', ':null')
-            ->set('e.divisionName', ':dname')
-            ->where('e.division = :division')
-            ->setParameter('dname', $division->getName())
-            ->setParameter('division', $division)
-            ->setParameter('null', null)
-            ->getQuery()
-            ->execute();
-        $this->em->remove($division);
-        $this->em->flush();
-        // Detach entities, otherwise we would run into conflicts with the now-detached ArchivedEvents
-        $this->em->clear();
-        $this->logger->log(sprintf('Division %s (ID %d) and all associated users and sensors deleted. Events were %s.', $division->getName(), $did, $archive ? 'archived' : 'deleted'), LogEntry::RESOURCE_DIVISIONS, $division->getId());
+        try {
+            // Remove division associations from archived events
+            $this->em->createQueryBuilder()
+                ->update('HoneySens\app\models\entities\ArchivedEvent', 'e')
+                ->set('e.division', ':null')
+                ->set('e.divisionName', ':dname')
+                ->where('e.division = :division')
+                ->setParameter('dname', $division->getName())
+                ->setParameter('division', $division)
+                ->setParameter('null', null)
+                ->getQuery()
+                ->execute();
+            $this->em->remove($division);
+            $this->em->flush();
+            // Detach entities, otherwise we would run into conflicts with the now-detached ArchivedEvents
+            $this->em->clear();
+        } catch (ORMException|MappingException $e) {
+            throw new SystemException($e);
+        }
+        $this->logger->log(sprintf('Division %s (ID %d) and all associated users and sensors deleted. Events were %s.', $division->getName(), $division->getId(), $archive ? 'archived' : 'deleted'), LogEntry::RESOURCE_DIVISIONS, $division->getId());
     }
 
-    public function assureUserAffiliation($divisionID, $userID) {
-        if($userID === null)
-            return;
+    /**
+     * Asserts that a given user is associated with a specific division.
+     * Throws an exception in case that affiliation doesn't exist.
+     *
+     * @param int $divisionID Division ID to check association for
+     * @param int $userID User ID to check association for
+     * @throws ForbiddenException
+     */
+    public function assureUserAffiliation(int $divisionID, int $userID): void {
         $qb = $this->em->createQueryBuilder();
         $qb->select('d')->from('HoneySens\app\models\entities\Division', 'd')
             ->where('d.id = :id')
@@ -202,95 +243,104 @@ class DivisionsService {
             ->setParameter('userid', $userID);
         try {
             $qb->getQuery()->getSingleResult();
-        } catch(\Exception $e) {
+        } catch(\Exception) {
             throw new ForbiddenException();
         }
     }
 
     /**
-     * Creates and returns a new Contact entity with the provided attributes.
-     * Caution: The presence of the fields 'email' or 'user' specify the contact type. Only one can be set at once.
-     * - email: A plain E-Mail address string that resembles this contact
-     * - user: The user ID that resembles this contact (his E-Mail address will be used)
-     * - type: Indicates whether this contact is a user (1) or just a plain E-Mail address (0).
-     * - sendWeeklySummary: A boolean value that determines if this contact should receive a weekly summary
-     * - sendCriticalEvents: A boolean value that determines if this contact should receive critical event mails
-     * - sendAllEvents: A boolean value that determines if this contact should receive mails for all events
-     * - sendSensorTimeouts: A boolean value that determines if this contact should receive mails when sensors time out
+     * Fetches IncidentContacts from the DB.
      *
-     * @param array $contactData
-     * @return IncidentContact
+     * @param User $user User for which to retrieve associated entities; admins receive all entities
+     * @param int|null $id ID of a specific incident contact to fetch
+     * @throws NotFoundException
+     */
+    public function getContact(User $user, ?int $id = null): array {
+        $qb = $this->em->createQueryBuilder();
+        $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c');
+        if($user->getRole() !== User::ROLE_ADMIN) {
+            $qb->join('c.division', 'd')
+                ->andWhere(':userid MEMBER OF d.users')
+                ->setParameter('userid', $user->getId());
+        }
+        try {
+            if ($id !== null) {
+                $qb->andWhere('c.id = :id')
+                    ->setParameter('id', $id);
+                return $qb->getQuery()->getSingleResult()->getState();
+            } else {
+                $contacts = array();
+                foreach ($qb->getQuery()->getResult() as $contact) {
+                    $contacts[] = $contact->getState();
+                }
+                return $contacts;
+            }
+        } catch (NonUniqueResultException|NoResultException) {
+            throw new NotFoundException();
+        }
+    }
+
+    /**
+     * Creates and returns, but does NOT persist a new incident contact.
+     *
+     * @param ContactType $type Indicates whether this contact is a user or just a plain E-Mail address
+     * @param bool $sendWeeklySummary Determines if this contact should receive a weekly summary
+     * @param bool $sendCriticalEvents Determines if this contact should receive critical event mails
+     * @param bool $sendAllEvents Determines if this contact should receive mails for all events
+     * @param bool $sendSensorTimeouts Determines if this contact should receive mails when sensors time out
+     * @param string|null $email Depending on type, the E-Mail address that resembles this contact
+     * @param int|null $userID Depending on type, the user ID that resembles this contact (its e-mail address will be used)
      * @throws BadRequestException
      */
-    private function createContact($contactData) {
-        // Validation
-        V::key('email')
-            ->key('user')
-            ->key('type', V::intType()->between(0, 1))
-            ->key('sendWeeklySummary', V::boolVal())
-            ->key('sendCriticalEvents', V::boolVal())
-            ->key('sendAllEvents', V::boolVal())
-            ->key('sendSensorTimeouts', V::boolVal())
-            ->check($contactData);
+    private function createContact(ContactType $type, bool $sendWeeklySummary, bool $sendCriticalEvents, bool $sendAllEvents, bool $sendSensorTimeouts, ?string $email, ?int $userID): IncidentContact {
         $contact = new IncidentContact();
-        if($contactData['type'] === IncidentContact::TYPE_MAIL) {
-            V::key('email', Utils::emailValidator())->check($contactData);
-            $contact->setEMail($contactData['email']);
+        if($type === ContactType::EMAIL) {
+            $contact->setEMail($email);
         } else {
-            V::key('user', V::intVal())->check($contactData);
-            $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($contactData['user']);
-            V::objectType()->check($user);
+            $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($userID);
+            if($user === null) throw new BadRequestException();
             $contact->setUser($user);
         }
-        $contact->setSendWeeklySummary($contactData['sendWeeklySummary'])
-            ->setSendCriticalEvents($contactData['sendCriticalEvents'])
-            ->setSendAllEvents($contactData['sendAllEvents'])
-            ->setSendSensorTimeouts($contactData['sendSensorTimeouts']);
+        $contact->setSendWeeklySummary($sendWeeklySummary)
+            ->setSendCriticalEvents($sendCriticalEvents)
+            ->setSendAllEvents($sendAllEvents)
+            ->setSendSensorTimeouts($sendSensorTimeouts);
         return $contact;
     }
 
     /**
-     * Updates an existing contact entity with the provided attributes.
-     * Caution: The presence of the fields 'email' or 'user' specify the contact type. Only one can be set at once.
-     * - email: A plain E-Mail address string that resembles this contact
-     * - user: The user ID that resembles this contact (his E-Mail address will be used)
-     * - type: Indicates whether this contact is a user (1) or just a plain E-Mail address (0).
-     * - sendWeeklySummary: A boolean value that determines if this contact should receive a weekly summary
-     * - sendCriticalEvents: A boolean value that determines if this contact should receive critical event mails
-     * - sendAllEvents: A boolean value that determines if this contact should receive mails for all events
-     * - sendSensorTimeouts: A boolean value that determines if this contact should receive mails when sensors time out
+     * Updates, but does NOT persist an existing contact.
      *
-     * @param IncidentContact $contact
-     * @param array $contactData
+     * @param IncidentContact $contact Incident contact entity to update
+     * @param ContactType $type Indicates whether this contact is a user or just a plain E-Mail address
+     * @param bool $sendWeeklySummary Determines if this contact should receive a weekly summary
+     * @param bool $sendCriticalEvents Determines if this contact should receive critical event mails
+     * @param bool $sendAllEvents Determines if this contact should receive mails for all events
+     * @param bool $sendSensorTimeouts Determines if this contact should receive mails when sensors time out
+     * @param string|null $email Depending on type, the E-Mail address that resembles this contact
+     * @param int|null $userID Depending on type, the user ID that resembles this contact (its e-mail address will be used)
+     * @throws BadRequestException
      */
-    private function updateContact(IncidentContact $contact, $contactData) {
-        // Validation
-        V::key('email')
-            ->key('user')
-            ->key('type', V::intType()->between(0, 1))
-            ->key('sendWeeklySummary', V::boolVal())
-            ->key('sendCriticalEvents', V::boolVal())
-            ->key('sendAllEvents', V::boolVal())
-            ->key('sendSensorTimeouts', V::boolVal())
-            ->check($contactData);
-        if($contactData['type'] === IncidentContact::TYPE_MAIL) {
-            V::key('email', Utils::emailValidator())->check($contactData);
-            $contact->setEMail($contactData['email']);
-            $contact->setUser();
+    private function updateContact(IncidentContact $contact, ContactType $type, bool $sendWeeklySummary, bool $sendCriticalEvents, bool $sendAllEvents, bool $sendSensorTimeouts, ?string $email, ?int $userID): void {
+        if($type === ContactType::EMAIL) {
+            $contact->setEMail($email);
+            $contact->setUser(null);
         } else {
-            V::key('user', V::intVal())->check($contactData);
-            $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($contactData['user']);
-            V::objectType()->check($user);
+            $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($userID);
+            if($user === null) throw new BadRequestException();
             $contact->setUser($user);
             $contact->setEMail(null);
         }
-        $contact->setSendWeeklySummary($contactData['sendWeeklySummary'])
-            ->setSendCriticalEvents($contactData['sendCriticalEvents'])
-            ->setSendAllEvents($contactData['sendAllEvents'])
-            ->setSendSensorTimeouts($contactData['sendSensorTimeouts']);
+        $contact->setSendWeeklySummary($sendWeeklySummary)
+            ->setSendCriticalEvents($sendCriticalEvents)
+            ->setSendAllEvents($sendAllEvents)
+            ->setSendSensorTimeouts($sendSensorTimeouts);
     }
 
-    private function getDivisionByName($name) {
+    /**
+     * Fetches a division by its name.
+     */
+    private function getDivisionByName(string $name): ?Division {
         return $this->em->getRepository('HoneySens\app\models\entities\Division')->findOneBy(array('name' => $name));
     }
 }

@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\adapters;
 
+use HoneySens\app\models\constants\EventDetailType;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventPacket;
 use HoneySens\app\models\entities\Task;
@@ -73,8 +74,8 @@ class EMailAdapter {
         $interactionDetails = array();
         if(count($details) > 0) {
             foreach($details as $detail) {
-                if($detail->getType() == $detail::TYPE_GENERIC) $genericDetails[] = $detail;
-                elseif($detail->getType() == $detail::TYPE_INTERACTION) $interactionDetails[] = $detail;
+                if($detail->getType() == EventDetailType::GENERIC) $genericDetails[] = $detail;
+                elseif($detail->getType() == EventDetailType::INTERACTION) $interactionDetails[] = $detail;
             }
         }
         $detailBlockWritten = false;
