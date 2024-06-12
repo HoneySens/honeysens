@@ -8,9 +8,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class EventDetail {
 
-    const TYPE_GENERIC = 0;
-    const TYPE_INTERACTION = 1;
-
     /**
      * @ORM\Id
      * @ORM\Column(type="integer")

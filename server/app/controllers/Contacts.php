@@ -1,34 +1,26 @@
 <?php
 namespace HoneySens\app\controllers;
 
-use HoneySens\app\models\exceptions\NotFoundException;
-use HoneySens\app\services\ContactsService;
+use HoneySens\app\services\DivisionsService;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 
 /**
  * Class Contacts
  * @package HoneySens\app\controllers
  *
- * Contact creation and updates are handled by the division controller,
- * because contacts always belong to a certain division.
+ * Incident contact retrieval. Contact creation and updates are handled
+ * by the division controller, because contacts always belong to a certain division.
  */
 class Contacts extends RESTResource {
 
-    static function registerRoutes($api) {
+    static function registerRoutes(RouteCollectorProxyInterface $api): void {
         $api->get('[/{id:\d+}]', [Contacts::class, 'get']);
     }
 
-    public function get(Response $response, ContactsService $service, $id = null) {
+    public function get(Response $response, DivisionsService $service, $id = null): Response {
         $this->assureAllowed('get');
-        $criteria = array(
-            'userID' => $this->getSessionUserID(),
-            'id' => $id);
-        try {
-            $result = $service->get($criteria);
-        } catch(\Exception $e) {
-            throw new NotFoundException();
-        }
+        $result = $service->getContact($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }

@@ -4,11 +4,8 @@ namespace HoneySens\app\adapters;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
 use Exception;
-use HoneySens\app\models\CeleryException;
-use HoneySens\app\models\CeleryPublishException;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
-use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Predis;
 use Smuuf\CeleryForPhp\Backends\RedisBackend;
 use Smuuf\CeleryForPhp\Brokers\RedisBroker;
@@ -48,8 +45,6 @@ class TaskAdapter {
      * @param array $params
      * @return Task
      * @throws OptimisticLockException
-     * @throws CeleryException
-     * @throws CeleryPublishException
      * @throws Exception
      */
     public function enqueue(?User $user, $type, $params) {

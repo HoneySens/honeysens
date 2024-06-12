@@ -1,16 +1,14 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
 
+use Doctrine\ORM\Mapping as ORM;
+use HoneySens\app\models\constants\ContactType;
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="contacts")
  */
 class IncidentContact {
-
-    const TYPE_MAIL = 0;
-    const TYPE_USER = 1;
 
     /**
      * @ORM\Id
@@ -67,23 +65,18 @@ class IncidentContact {
      */
     protected $division;
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
      * Get type
      *
-     * @return integer
+     * @return ContactType
      */
     public function getType() {
-        if($this->email == null) return $this::TYPE_USER;
-        else return $this::TYPE_MAIL;
+        if($this->email === null) return ContactType::USER;
+        else return ContactType::EMAIL;
     }
 
     /**
@@ -99,7 +92,7 @@ class IncidentContact {
      * @return string
      */
     public function getEMail() {
-        if($this->getType() == $this::TYPE_USER) {
+        if($this->getType() === ContactType::USER) {
             return $this->user->getEmail();
         } else return $this->email;
     }

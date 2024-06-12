@@ -1,28 +1,19 @@
 <?php
 namespace HoneySens\app\controllers;
 
-use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\services\CertsService;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Interfaces\RouteCollectorProxyInterface;
 
 class Certs extends RESTResource {
 
-    static function registerRoutes($api) {
+    static function registerRoutes(RouteCollectorProxyInterface $api): void {
         $api->get('/{id:\d+}', [Certs::class, 'get']);
     }
 
-    public function get(Response $response, CertsService $service, $id) {
+    public function get(Response $response, CertsService $service, int $id): Response {
         $this->assureAllowed('get');
-        $criteria = array(
-            'userID' => $this->getSessionUserID(),
-            'id' => $id
-        );
-        try {
-            $result = $service->get($criteria);
-        } catch(\Exception $e) {
-            throw new NotFoundException();
-        }
+        $result = $service->get($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
