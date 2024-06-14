@@ -1,4 +1,4 @@
-version: "2"
+version: "2.4"
 services:
 
   server:
@@ -30,7 +30,7 @@ services:
       - MYSQL_DATABASE=honeysens
       - MYSQL_USER=honeysens
       - MYSQL_PASSWORD=honeysens
-    image: mysql:8-oracle
+    image: mysql:8.3-oracle
     networks:
       - honeysens
     user: "999:999"
