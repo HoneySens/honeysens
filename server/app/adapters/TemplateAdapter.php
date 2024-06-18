@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\adapters;
 
+use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\models\entities\Template;
 use HoneySens\app\models\entities\TemplateOverlay;
@@ -30,11 +31,15 @@ class TemplateAdapter {
             $this->templates[$type] = new Template(
                 $type, $template['name'], $template['template'], $template['variables'], $template['preview']);
         // Fetch and link overlays from the database
-        foreach($this->em->getRepository('HoneySens\app\models\entities\TemplateOverlay')->findAll() as $overlay) {
-            if(array_key_exists($overlay->getType(), $this->templates)) {
-                $this->templates[$overlay->getType()]->setOverlay($overlay);
-            }
-        };
+        try {
+            foreach ($this->em->getRepository('HoneySens\app\models\entities\TemplateOverlay')->findAll() as $overlay) {
+                if (array_key_exists($overlay->getType(), $this->templates)) {
+                    $this->templates[$overlay->getType()]->setOverlay($overlay);
+                }
+            };
+        } catch(TableNotFoundException) {
+            // May happen if the DB hasn't been initialized yet, which we can safely ignore
+        }
     }
 
     /**
