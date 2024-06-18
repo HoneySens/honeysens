@@ -183,7 +183,7 @@ class State extends RESTResource {
                 case 'event_filters':
                     try {
                         $this->assureAllowed('get', 'eventfilters');
-                        $result[$table['name']] = $eventFiltersService->get($attributes);
+                        $result[$table['name']] = $eventFiltersService->get($this->getSessionUser());
                     } catch(\Exception $e) {}
                     break;
                 case 'services':
