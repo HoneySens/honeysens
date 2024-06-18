@@ -1,6 +1,8 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\ORM\Mapping as ORM;
+use HoneySens\app\models\constants\EventFilterConditionField;
+use HoneySens\app\models\constants\EventFilterConditionType;
 
 /**
  * A filter condition that belongs to a certain filter.
@@ -10,16 +12,6 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="event_filter_conditions")
  */
 class EventFilterCondition {
-
-    const FIELD_CLASSIFICATION = 0; // Event::$classification
-    const FIELD_SOURCE = 1;
-    const FIELD_TARGET = 2;
-    const FIELD_PROTOCOL = 3; // EventPacket::$protocol
-
-    const TYPE_SOURCE_VALUE = 0;
-    const TYPE_SOURCE_REGEX = 1;
-    const TYPE_SOURCE_IPRANGE = 2;
-    const TYPE_TARGET_PORT = 3;
 
     /**
      * @ORM\Id
@@ -151,23 +143,23 @@ class EventFilterCondition {
      */
     public function matches(Event $e) {
         switch($this->field) {
-            case $this::FIELD_CLASSIFICATION:
+            case EventFilterConditionField::CLASSIFICATION:
                 return $e->getClassification() == $this->value;
                 break;
-            case $this::FIELD_SOURCE:
+            case EventFilterConditionField::SOURCE:
                 switch($this->type) {
-                    case $this::TYPE_SOURCE_VALUE:
+                    case EventFilterConditionType::SOURCE_VALUE:
                         return $e->getSource() == $this->value;
                         break;
-                    case $this::TYPE_SOURCE_IPRANGE:
+                    case EventFilterConditionType::SOURCE_IPRANGE:
                         $value = explode("-", $this->value);
                         return $e->getSource() >= trim($value[0]) && $e->getSource() <= trim($value[1]);
                         break;
                 }
                 break;
-            case $this::FIELD_TARGET:
+            case EventFilterConditionField::TARGET:
                 switch($this->type) {
-                    case $this::TYPE_TARGET_PORT:
+                    case EventFilterConditionType::TARGET_PORT:
                         $port = null;
                         foreach($e->getPackets() as $packet) {
                             if($port == null || $port == $packet->getPort()) {
@@ -181,7 +173,7 @@ class EventFilterCondition {
                         break;
                 }
                 break;
-            case $this::FIELD_PROTOCOL:
+            case EventFilterConditionField::PROTOCOL:
                 $packetCounts = array(EventPacket::PROTOCOL_UNKNOWN => 0, EventPacket::PROTOCOL_TCP => 0, EventPacket::PROTOCOL_UDP => 0);
                 $packets = $e->getPackets();
                 foreach($packets as $packet) {

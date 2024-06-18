@@ -146,7 +146,7 @@ class DivisionsService {
         $tasks = Utils::updateCollection($division->getIncidentContacts(), $forUpdate, $contactRepository);
         foreach($tasks['update'] as $contact)
             foreach($contacts as $contactData)
-                if($contactData['id'] === $contact->getId()) {
+                if(array_key_exists('id', $contactData) && $contactData['id'] === $contact->getId()) {
                     $contactType = ContactType::from($contactData['type']);
                     $this->updateContact(
                         $contact,
@@ -189,7 +189,7 @@ class DivisionsService {
     }
 
     /**
-     * Removes a division with the given id.
+     * Removes a division and all of its associated entities.
      *
      * @param int $id Division ID to delete
      * @param bool $archive If set, all events of all sensors (of this division) are sent to the archive
