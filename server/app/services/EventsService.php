@@ -12,11 +12,11 @@ use HoneySens\app\adapters\EMailAdapter;
 use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\EventDetailType;
 use HoneySens\app\models\constants\EventStatus;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\ArchivedEvent;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventDetail;
 use HoneySens\app\models\entities\EventPacket;
-use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
@@ -276,7 +276,7 @@ class EventsService {
             throw new SystemException($e);
         }
         $this->updateSensorRepo();
-        $this->logger->log('Metadata for one or multiple events updated', LogEntry::RESOURCE_EVENTS);
+        $this->logger->log('Metadata for one or multiple events updated', LogResource::EVENTS);
     }
 
     /**
@@ -329,7 +329,7 @@ class EventsService {
             throw new SystemException($e);
         }
         $this->updateSensorRepo();
-        $this->logger->log('One or multiple events deleted', LogEntry::RESOURCE_EVENTS);
+        $this->logger->log('One or multiple events deleted', LogResource::EVENTS);
     }
 
     /**
@@ -353,7 +353,7 @@ class EventsService {
                 throw new SystemException($e);
             }
         }
-        $this->logger->log('One or multiple events archived', LogEntry::RESOURCE_EVENTS);
+        $this->logger->log('One or multiple events archived', LogResource::EVENTS);
     }
 
     /**

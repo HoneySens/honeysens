@@ -8,9 +8,9 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\Mapping\MappingException;
 use HoneySens\app\controllers\Divisions;
 use HoneySens\app\models\constants\ContactType;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\IncidentContact;
-use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -107,7 +107,7 @@ class DivisionsService {
         }
         $this->logger->log(sprintf('Division %s (ID %d) created with %d users and %d contacts',
             $division->getName(), $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
-            LogEntry::RESOURCE_DIVISIONS, $division->getId());
+            LogResource::DIVISIONS, $division->getId());
         return $division;
     }
 
@@ -184,7 +184,7 @@ class DivisionsService {
         }
         $this->logger->log(sprintf('Division %s (ID %d) updated with %d users and %d contacts',
             $division->getName(), $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
-            LogEntry::RESOURCE_DIVISIONS, $division->getId());
+            LogResource::DIVISIONS, $division->getId());
         return $division;
     }
 
@@ -223,7 +223,7 @@ class DivisionsService {
         } catch (ORMException|MappingException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Division %s (ID %d) and all associated users and sensors deleted. Events were %s.', $division->getName(), $division->getId(), $archive ? 'archived' : 'deleted'), LogEntry::RESOURCE_DIVISIONS, $division->getId());
+        $this->logger->log(sprintf('Division %s (ID %d) and all associated users and sensors deleted. Events were %s.', $division->getName(), $division->getId(), $archive ? 'archived' : 'deleted'), LogResource::DIVISIONS, $division->getId());
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\ORM\Mapping as ORM;
+use HoneySens\app\models\constants\LogResource;
 
 /**
  * Class LogEntry
@@ -14,20 +15,6 @@ use Doctrine\ORM\Mapping as ORM;
  * @package HoneySens\app\models\entities
  */
 class LogEntry {
-
-    const RESOURCE_GENERIC = 0;
-    const RESOURCE_CONTACTS = 1;
-    const RESOURCE_DIVISIONS = 2;
-    const RESOURCE_EVENTFILTERS = 3;
-    const RESOURCE_EVENTS = 4;
-    const RESOURCE_PLATFORMS = 5;
-    const RESOURCE_SENSORS= 6;
-    const RESOURCE_SERVICES = 7;
-    const RESOURCE_SETTINGS = 8;
-    const RESOURCE_TASKS = 9;
-    const RESOURCE_USERS = 10;
-    const RESOURCE_SYSTEM = 11;
-    const RESOURCE_SESSIONS = 12;
 
     /**
      * @ORM\Id
@@ -61,7 +48,7 @@ class LogEntry {
      *
      * @ORM\Column(type="integer")
      */
-    protected $resourceType = self::RESOURCE_GENERIC;
+    protected $resourceType = LogResource::GENERIC->value;
 
     /**
      * The actual log message, e.g. what happened.
@@ -139,22 +126,17 @@ class LogEntry {
 
     /**
      * Sets the resource type this log entry can be attributed to.
-     *
-     * @param int $resourceType
-     * @return LogEntry
      */
-    public function setResourceType($resourceType = null) {
-        $this->resourceType = $resourceType;
+    public function setResourceType(LogResource $resourceType): LogEntry {
+        $this->resourceType = $resourceType->value;
         return $this;
     }
 
     /**
      * Returns the resource type this log entry can be attributed to.
-     *
-     * @return int
      */
-    public function getResourceType() {
-        return $this->resourceType;
+    public function getResourceType(): LogResource {
+        return LogResource::from($this->resourceType);
     }
 
     /**

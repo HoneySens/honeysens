@@ -4,7 +4,7 @@ namespace HoneySens\app\services;
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\adapters\EMailAdapter;
 use HoneySens\app\adapters\TaskAdapter;
-use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\Utils;
@@ -223,7 +223,7 @@ class SettingsService {
         $this->config->set('misc', 'archive_keep_days', $data['archiveKeepDays']);
         $this->config->save();
         $this->em->getConnection()->executeUpdate('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "settings"');
-        $this->logger->log('System settings updated', LogEntry::RESOURCE_SETTINGS);
+        $this->logger->log('System settings updated', LogResource::SETTINGS);
         return array(
             'id' => 0,
             'serverHost' => $this->config['server']['host'],
@@ -279,7 +279,7 @@ class SettingsService {
             ->key('smtpPassword', V::stringType())
             ->check($data);
         // Send mail
-        $this->logger->log(sprintf('Test E-Mail sent to %s', $data['recipient']), LogEntry::RESOURCE_SETTINGS);
+        $this->logger->log(sprintf('Test E-Mail sent to %s', $data['recipient']), LogResource::SETTINGS);
         return $this->emailAdapter->sendTestMail($sessionUser, $data['smtpFrom'], $data['recipient'], $data['smtpServer'], $data['smtpPort'], $data['smtpEncryption'], $data['smtpUser'], $data['smtpPassword']);
     }
 
@@ -299,7 +299,7 @@ class SettingsService {
             'comment' => ''
         );
         $this->taskAdapter->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('event' => $ev));
-        $this->logger->log('Syslog test event forwarded', LogEntry::RESOURCE_SESSIONS);
+        $this->logger->log('Syslog test event forwarded', LogResource::SESSIONS);
         return $ev;
     }
 }

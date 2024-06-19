@@ -2,7 +2,7 @@
 namespace HoneySens\app\services;
 
 use HoneySens\app\adapters\TemplateAdapter;
-use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Template;
 use Respect\Validation\Validator as V;
 
@@ -53,11 +53,11 @@ class TemplatesService {
         if($data['template'] == null) {
             $this->templateAdapter->setOverlay($type, null);
             $this->logger->log(sprintf('Template "%s" (ID %s) reset to system default',
-                $template->getName(), $template->getType()), LogEntry::RESOURCE_SETTINGS, $template->getType());
+                $template->getName(), $template->getType()), LogResource::SETTINGS, $template->getType());
         } else {
             $this->templateAdapter->setOverlay($type, $data['template']);
             $this->logger->log(sprintf('Template "%s" (ID %s) updated with custom content',
-                $template->getName(), $template->getType()), LogEntry::RESOURCE_SETTINGS, $template->getType());
+                $template->getName(), $template->getType()), LogResource::SETTINGS, $template->getType());
         }
         return $template;
     }

@@ -3,8 +3,8 @@ namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Division;
-use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -88,7 +88,7 @@ class SystemService {
         $qb->getQuery()->execute();
         $qb->delete('HoneySens\app\models\entities\ArchivedEvent', 'ae');
         $qb->getQuery()->execute();
-        $this->logger->log('All events removed', LogEntry::RESOURCE_SYSTEM);
+        $this->logger->log('All events removed', LogResource::SYSTEM);
     }
 
 
@@ -113,7 +113,7 @@ class SystemService {
         exec('/etc/startup.d/02_regen_honeysens_ca.sh force');
         // Recreate TLS certificates
         exec('/etc/startup.d/03_regen_https_cert.sh force');
-        $this->logger->log('Certificates renewed', LogEntry::RESOURCE_SYSTEM);
+        $this->logger->log('Certificates renewed', LogResource::SYSTEM);
         // Graceful httpd restart
         $pid = trim(file_get_contents('/var/run/apache2.pid'));
         exec('kill -USR1 ' . $pid);
