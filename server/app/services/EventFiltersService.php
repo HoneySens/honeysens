@@ -8,9 +8,9 @@ use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use HoneySens\app\models\constants\EventFilterConditionField;
 use HoneySens\app\models\constants\EventFilterConditionType;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\EventFilter;
 use HoneySens\app\models\entities\EventFilterCondition;
-use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -98,7 +98,7 @@ class EventFiltersService {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Event filter %s (ID %d) created with %d condition(s)', $filter->getName(), $filter->getId(), sizeof($filter->getConditions())), LogEntry::RESOURCE_EVENTFILTERS, $filter->getId());
+        $this->logger->log(sprintf('Event filter %s (ID %d) created with %d condition(s)', $filter->getName(), $filter->getId(), sizeof($filter->getConditions())), LogResource::EVENTFILTERS, $filter->getId());
         return $filter;
     }
 
@@ -171,7 +171,7 @@ class EventFiltersService {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Event filter %s (ID %d) updated with %d conditions', $filter->getName(), $filter->getId(), sizeof($filter->getConditions())), LogEntry::RESOURCE_EVENTFILTERS, $filter->getId());
+        $this->logger->log(sprintf('Event filter %s (ID %d) updated with %d conditions', $filter->getName(), $filter->getId(), sizeof($filter->getConditions())), LogResource::EVENTFILTERS, $filter->getId());
         return $filter;
     }
 
@@ -195,7 +195,7 @@ class EventFiltersService {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Event filter %s (ID %d) deleted', $filter->getName(), $fid), LogEntry::RESOURCE_EVENTFILTERS, $fid);
+        $this->logger->log(sprintf('Event filter %s (ID %d) deleted', $filter->getName(), $fid), LogResource::EVENTFILTERS, $fid);
     }
 
     /**

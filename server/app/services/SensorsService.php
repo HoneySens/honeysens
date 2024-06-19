@@ -4,7 +4,7 @@ namespace HoneySens\app\services;
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\EventStatus;
-use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\SensorStatus;
 use HoneySens\app\models\entities\ServiceAssignment;
@@ -222,7 +222,7 @@ class SensorsService {
         // TODO Config archive status is not necessary anymore
         $sensor->setConfigArchiveStatus(Sensor::CONFIG_ARCHIVE_STATUS_SCHEDULED);
         $this->em->flush();
-        $this->logger->log(sprintf('Sensor %s (ID %d) created', $sensor->getName(), $sensor->getId()), LogEntry::RESOURCE_SENSORS, $sensor->getId());
+        $this->logger->log(sprintf('Sensor %s (ID %d) created', $sensor->getName(), $sensor->getId()), LogResource::SENSORS, $sensor->getId());
         return $sensor;
     }
 
@@ -508,7 +508,7 @@ class SensorsService {
             $this->em->remove($deletionCandidate);
         }
         $this->em->flush();
-        $this->logger->log(sprintf('Sensor %s (ID %d) updated', $sensor->getName(), $sensor->getId()), LogEntry::RESOURCE_SENSORS, $sensor->getId());
+        $this->logger->log(sprintf('Sensor %s (ID %d) updated', $sensor->getName(), $sensor->getId()), LogResource::SENSORS, $sensor->getId());
         return $sensor;
     }
 
@@ -534,7 +534,7 @@ class SensorsService {
         $sid = $sensor->getId();
         $this->em->remove($sensor);
         $this->em->flush();
-        $this->logger->log(sprintf('Sensor %s (ID %d) deleted', $sensor->getName(), $sid), LogEntry::RESOURCE_SENSORS, $sid);
+        $this->logger->log(sprintf('Sensor %s (ID %d) deleted', $sensor->getName(), $sid), LogResource::SENSORS, $sid);
     }
 
     /**

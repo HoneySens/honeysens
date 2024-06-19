@@ -2,7 +2,7 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
-use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -65,11 +65,11 @@ class SessionsService {
                         $userState['permissions'] = $guestUser->getState()['permissions'];
                         $userState['permissions']['users'] = array('updateSelf');
                         $sessionTimeout = self::SESSION_TIMEOUT_CHANGEPW;
-                        $this->logger->log(sprintf('Password change request sent to user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
+                        $this->logger->log(sprintf('Password change request sent to user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
                     } else {
                         $userState = $usersService->getStateWithPermissionConfig($user);
                         $sessionTimeout = self::SESSION_TIMEOUT_DEFAULT;
-                        $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
+                        $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
                     }
                     session_regenerate_id(true);
                     $_SESSION['user'] = $userState;
@@ -93,7 +93,7 @@ class SessionsService {
                                 $_SESSION['user'] = $userState;
                                 $_SESSION['authenticated'] = true;
                                 $_SESSION['last_activity'] = time();
-                                $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
+                                $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
                                 return $userState;
                             } else throw new ForbiddenException();
                         } catch(\Exception $e) {
@@ -115,7 +115,7 @@ class SessionsService {
     public function delete(User $user) {
         $guestUser = new User();
         $guestUser->setRole(User::ROLE_GUEST);
-        if($user != null) $this->logger->log(sprintf('Logout by user %s (ID %d)', $user->getName(), $user->getId()), LogEntry::RESOURCE_SESSIONS, null, $user->getId());
+        if($user != null) $this->logger->log(sprintf('Logout by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
         session_destroy();
         return $guestUser;
     }

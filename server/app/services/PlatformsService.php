@@ -2,8 +2,8 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Firmware;
-use HoneySens\app\models\entities\LogEntry;
 use HoneySens\app\models\entities\Platform;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
@@ -122,7 +122,7 @@ class PlatformsService {
         $platform->registerFirmware($firmware, sprintf('%s/%s/%s', DATA_PATH, TasksService::UPLOAD_PATH, $task->getParams()['path']), $this->config);
         // Remove upload verification task
         $tasksService->delete($task->getId(), $user);
-        $this->logger->log(sprintf('Firmware revision %s for platform %s added', $firmware->getVersion(), $platform->getName()), LogEntry::RESOURCE_PLATFORMS, $platform->getId());
+        $this->logger->log(sprintf('Firmware revision %s for platform %s added', $firmware->getVersion(), $platform->getName()), LogResource::PLATFORMS, $platform->getId());
         return $firmware;
     }
 
@@ -149,7 +149,7 @@ class PlatformsService {
         V::objectType()->check($firmware);
         $platform->setDefaultFirmwareRevision($firmware);
         $this->em->flush();
-        $this->logger->log(sprintf('Default firmware revision for platform %s set to %s', $platform->getName(), $firmware->getVersion()), LogEntry::RESOURCE_PLATFORMS, $platform->getId());
+        $this->logger->log(sprintf('Default firmware revision for platform %s set to %s', $platform->getName(), $firmware->getVersion()), LogResource::PLATFORMS, $platform->getId());
         return $platform;
     }
 
@@ -182,7 +182,7 @@ class PlatformsService {
         $platform->unregisterFirmware($firmware, $this->config);
         $this->em->remove($firmware);
         $this->em->flush();
-        $this->logger->log(sprintf('Firmware revision %s of platform %s deleted', $firmware->getVersion(), $platform->getName()), LogEntry::RESOURCE_PLATFORMS, $platform->getId());
+        $this->logger->log(sprintf('Firmware revision %s of platform %s deleted', $firmware->getVersion(), $platform->getName()), LogResource::PLATFORMS, $platform->getId());
     }
 
     /**

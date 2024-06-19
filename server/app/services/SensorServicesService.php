@@ -4,7 +4,7 @@ namespace HoneySens\app\services;
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\adapters\RegistryAdapter;
 use HoneySens\app\adapters\TaskAdapter;
-use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Service;
 use HoneySens\app\models\entities\ServiceRevision;
 use HoneySens\app\models\entities\Task;
@@ -124,7 +124,7 @@ class SensorServicesService {
         // Enqueue registry upload task
         $task = $this->taskAdapter->enqueue($sessionUser, Task::TYPE_REGISTRY_MANAGER, $taskResult);
         $this->logger->log(sprintf('Service %s:%s (%s) added', $service->getName(), $serviceRevision->getRevision(),
-            $serviceRevision->getArchitecture()), LogEntry::RESOURCE_SERVICES, $service->getId());
+            $serviceRevision->getArchitecture()), LogResource::SERVICES, $service->getId());
         return $task;
     }
 
@@ -152,7 +152,7 @@ class SensorServicesService {
         V::objectType()->check($defaultRevision);
         $service->setDefaultRevision($data['default_revision']);
         $this->em->flush();
-        $this->logger->log(sprintf('Default revision for service %s set to %s', $service->getName(), $defaultRevision->getRevision()), LogEntry::RESOURCE_SERVICES, $service->getId());
+        $this->logger->log(sprintf('Default revision for service %s set to %s', $service->getName(), $defaultRevision->getRevision()), LogResource::SERVICES, $service->getId());
         return $service;
     }
 
@@ -168,7 +168,7 @@ class SensorServicesService {
         $sid = $service->getId();
         $this->em->remove($service);
         $this->em->flush();
-        $this->logger->log(sprintf('Service %s and all associated revisions deleted', $service->getName()), LogEntry::RESOURCE_SERVICES, $sid);
+        $this->logger->log(sprintf('Service %s and all associated revisions deleted', $service->getName()), LogResource::SERVICES, $sid);
     }
 
     /**
@@ -186,7 +186,7 @@ class SensorServicesService {
         $this->removeServiceRevision($serviceRevision);
         $this->em->flush();
         $service = $serviceRevision->getService();
-        $this->logger->log(sprintf('Revision %s (%s) of service %s deleted', $serviceRevision->getRevision(), $serviceRevision->getArchitecture(), $service->getName()), LogEntry::RESOURCE_SERVICES, $service->getId());
+        $this->logger->log(sprintf('Revision %s (%s) of service %s deleted', $serviceRevision->getRevision(), $serviceRevision->getArchitecture(), $service->getName()), LogResource::SERVICES, $service->getId());
     }
 
     /**

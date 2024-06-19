@@ -5,7 +5,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use HoneySens\app\adapters\TaskAdapter;
-use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
@@ -152,7 +152,7 @@ class TasksService {
             Task::TYPE_UPLOAD_VERIFIER,
             array('path' => $finalFileName));
         $result['task'] = $task->getState();
-        $this->logger->log(sprintf('File "%s" uploaded as "%s"', $fileName, $finalFileName), LogEntry::RESOURCE_TASKS);
+        $this->logger->log(sprintf('File "%s" uploaded as "%s"', $fileName, $finalFileName), LogResource::TASKS);
         return $result;
     }
 

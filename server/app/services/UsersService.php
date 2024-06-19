@@ -3,7 +3,7 @@ namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
 use HoneySens\app\controllers\Users;
-use HoneySens\app\models\entities\LogEntry;
+use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -101,7 +101,7 @@ class UsersService {
         if(V::key('fullName')->validate($data)) $user->setFullName($data['fullName']);
         $this->em->persist($user);
         $this->em->flush();
-        $this->logger->log(sprintf('User %s (ID %d) created', $user->getName(), $user->getId()), LogEntry::RESOURCE_USERS, $user->getId());
+        $this->logger->log(sprintf('User %s (ID %d) created', $user->getName(), $user->getId()), LogResource::USERS, $user->getId());
         return $user;
     }
 
@@ -158,7 +158,7 @@ class UsersService {
         if(V::key('fullName')->validate($data)) $user->setFullName($data['fullName']);
         else $user->setFullName(null);
         $this->em->flush();
-        $this->logger->log(sprintf('User %s (ID %d) updated', $user->getName(), $user->getId()), LogEntry::RESOURCE_USERS, $user->getId());
+        $this->logger->log(sprintf('User %s (ID %d) updated', $user->getName(), $user->getId()), LogResource::USERS, $user->getId());
         return $user;
     }
 
@@ -180,7 +180,7 @@ class UsersService {
             ->setLegacyPassword(null)
             ->setRequirePasswordChange(false);
         $this->em->flush();
-        $this->logger->log(sprintf('Password of user %s (ID %d) updated', $sessionUser->getName(), $sessionUser->getId()), LogEntry::RESOURCE_USERS, $sessionUser->getId());
+        $this->logger->log(sprintf('Password of user %s (ID %d) updated', $sessionUser->getName(), $sessionUser->getId()), LogResource::USERS, $sessionUser->getId());
         return $sessionUser;
     }
 
@@ -193,7 +193,7 @@ class UsersService {
         $uid = $user->getId();
         $this->em->remove($user);
         $this->em->flush();
-        $this->logger->log(sprintf('User %s (ID %d) deleted', $user->getName(), $uid), LogEntry::RESOURCE_USERS, $uid);
+        $this->logger->log(sprintf('User %s (ID %d) deleted', $user->getName(), $uid), LogResource::USERS, $uid);
     }
 
     /**
