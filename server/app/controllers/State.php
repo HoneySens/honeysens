@@ -147,7 +147,7 @@ class State extends RESTResource {
                 case 'platforms':
                     try {
                         $this->assureAllowed('get', 'platforms');
-                        $result[$table['name']] = $platformsService->get($attributes);
+                        $result[$table['name']] = $platformsService->get();
                     } catch (\Exception $e) {}
                     break;
                 case 'sensors':
