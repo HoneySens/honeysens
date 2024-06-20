@@ -2,6 +2,10 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\OptimisticLockException;
 use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Firmware;
 use HoneySens\app\models\entities\Platform;
@@ -9,8 +13,9 @@ use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
+use HoneySens\app\models\exceptions\NotFoundException;
+use HoneySens\app\models\exceptions\SystemException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
-use Respect\Validation\Validator as V;
 
 class PlatformsService {
 
@@ -21,202 +26,214 @@ class PlatformsService {
     private ConfigParser $config;
     private EntityManager $em;
     private LogService $logger;
+    private TasksService $tasksService;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger) {
+    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, TasksService $tasksService) {
         $this->config = $config;
         $this->em= $em;
         $this->logger = $logger;
+        $this->tasksService = $tasksService;
     }
 
     /**
-     * Fetches platforms from the DB by various criteria:
-     * - id: returns the platform with the given id
-     * If no criteria are given, all platforms are returned.
+     * Fetches platforms from the DB.
      *
-     * @param array $criteria
-     * @return array
-     * @throws ForbiddenException
-     * @throws \Doctrine\ORM\NoResultException
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @param int|null $id OD of a specific platform to fetch
+     * @throws NotFoundException
      */
-    public function get($criteria) {
+    public function get(?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('p')->from('HoneySens\app\models\entities\Platform', 'p');
-        if(V::key('id', V::intVal())->validate($criteria)) {
-            $qb->andWhere('p.id = :id')
-                ->setParameter('id', $criteria['id']);
-            return $qb->getQuery()->getSingleResult()->getState();
-        } else {
-            $platforms = array();
-            foreach($qb->getQuery()->getResult() as $platform) {
-                $platforms[] = $platform->getState();
+        try {
+            if ($id !== null) {
+                $qb->andWhere('p.id = :id')
+                    ->setParameter('id', $id);
+                return $qb->getQuery()->getSingleResult()->getState();
+            } else {
+                $platforms = array();
+                foreach ($qb->getQuery()->getResult() as $platform) {
+                    $platforms[] = $platform->getState();
+                }
+                return $platforms;
             }
-            return $platforms;
+        } catch(NonUniqueResultException|NoResultException) {
+            throw new NotFoundException();
         }
     }
 
     /**
-     * Fetches the firmware with the given id.
+     * Fetches the firmware with the given ID.
      *
-     * @param $id
-     * @return Firmware
-     * @throws ForbiddenException
+     * @param int $id Firmware identifier
+     * @throws NotFoundException
+     * @throws SystemException
      */
-    public function getFirmware($id) {
-        $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
-        V::objectType()->check($firmware);
+    public function getFirmware(int $id): Firmware {
+        try {
+            $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        if($firmware === null) throw new NotFoundException();
         return $firmware;
     }
 
     /**
      * Creates and persists a new firmware revision.
-     * It expects binary file data as parameter and supports chunked uploads.
+     * Requires a successfully completed upload verification task ID.
      *
-     * @param array $data
-     * @param User $user
+     * @param User $user Session user that calls this service, needs to be in possession of $taskId
+     * @param int $taskId ID of a successfully completed upload verification task
      * @return Firmware
      * @throws BadRequestException
      * @throws ForbiddenException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws NotFoundException
+     * @throws SystemException
      */
-    public function createFirmware(array $data, User $user, TasksService $tasksService) {
-        // Validation, we just expect a task id here
-        V::arrayType()
-            ->key('task', V::intVal())
-            ->check($data);
-        // Validate the given task
-        $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($data['task']);
-        V::objectType()->check($task);
-        if($task->getUser() !== $user) throw new ForbiddenException();
-        if($task->getType() != Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() != Task::STATUS_DONE) throw new BadRequestException();
-        $taskResult = $task->getResult();
-        V::arrayType()->check($taskResult);
-        V::key('valid', V::boolType())->check($taskResult);
-        if(!$taskResult['valid']) throw new BadRequestException();
-        if($taskResult['type'] != TasksService::UPLOAD_TYPE_PLATFORM_ARCHIVE) throw new BadRequestException();
-        // Check platform existence
-        $platform = $this->em->getRepository('HoneySens\app\models\entities\Platform')
-            ->findOneBy(array('name' => $taskResult['platform']));
-        if(!V::objectType()->validate($platform))
-            throw new BadRequestException(self::CREATE_ERROR_UNKNOWN_PLATFORM);
-        // Duplicate test
-        $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')
-            ->findOneBy(array('name' => $taskResult['name'], 'version' => $taskResult['version']));
-        if(V::objectType()->validate($firmware))
-            throw new BadRequestException(self::CREATE_ERROR_DUPLICATE);
-        // Persistence
-        $firmware = new Firmware();
-        $firmware->setName($taskResult['name'])
-            ->setVersion($taskResult['version'])
-            ->setPlatform($platform)
-            ->setDescription($taskResult['description'])
-            ->setChangelog('')
-            ->setPlatform($platform);
-        $platform->addFirmwareRevision($firmware);
-        $this->em->persist($firmware);
-        // Set this firmware as default if there isn't a default yet
-        if(!$platform->hasDefaultFirmwareRevision()) {
-            $platform->setDefaultFirmwareRevision($firmware);
+    public function createFirmware(User $user, int $taskId): Firmware {
+        // Task validation
+        try {
+            $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($taskId);
+            if($task === null) throw new NotFoundException();
+            if($task->getUser() !== $user) throw new ForbiddenException();
+            if($task->getType() != Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() != Task::STATUS_DONE)
+                throw new BadRequestException();
+            $taskResult = $task->getResult();
+            if($taskResult === null) throw new BadRequestException();
+            if(!$taskResult['valid'] || $taskResult['type'] != TasksService::UPLOAD_TYPE_PLATFORM_ARCHIVE)
+                throw new BadRequestException();
+            // Check platform existence
+            $platform = $this->em->getRepository('HoneySens\app\models\entities\Platform')
+                ->findOneBy(array('name' => $taskResult['platform']));
+            if($platform === null) throw new BadRequestException(self::CREATE_ERROR_UNKNOWN_PLATFORM);
+            // Duplicate test
+            $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')
+                ->findOneBy(array('name' => $taskResult['name'], 'version' => $taskResult['version']));
+            if($firmware !== null) throw new BadRequestException(self::CREATE_ERROR_DUPLICATE);
+            // Persistence
+            $firmware = new Firmware();
+            $firmware->setName($taskResult['name'])
+                ->setVersion($taskResult['version'])
+                ->setPlatform($platform)
+                ->setDescription($taskResult['description'])
+                ->setChangelog('')
+                ->setPlatform($platform);
+            $platform->addFirmwareRevision($firmware);
+            // Set this firmware as default if there isn't a default yet
+            if(!$platform->hasDefaultFirmwareRevision()) {
+                $platform->setDefaultFirmwareRevision($firmware);
+            }
+                $this->em->persist($firmware);
+                $this->em->flush();
+        } catch(OptimisticLockException|ORMException $e) {
+            throw new SystemException($e);
         }
-        $this->em->flush();
-        $platform->registerFirmware($firmware, sprintf('%s/%s/%s', DATA_PATH, TasksService::UPLOAD_PATH, $task->getParams()['path']), $this->config);
+        $platform->registerFirmware(
+            $firmware,
+            sprintf('%s/%s/%s', DATA_PATH, TasksService::UPLOAD_PATH, $task->getParams()['path']),
+            $this->config);
         // Remove upload verification task
-        $tasksService->delete($task->getId(), $user);
+        $this->tasksService->delete($task->getId(), $user);
         $this->logger->log(sprintf('Firmware revision %s for platform %s added', $firmware->getVersion(), $platform->getName()), LogResource::PLATFORMS, $platform->getId());
         return $firmware;
     }
 
     /**
-     * Updates platform metadata.
-     * Only the default firmware revision can be changed.
+     * Sets the default firmware revision for a specific platform.
      *
-     * @param int $id
-     * @param array $data
-     * @return Platform
-     * @throws ForbiddenException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @param int $id ID of the platform to update
+     * @param int $defaultFirmwareRevision New default firmware revision ID
+     * @throws SystemException
      */
-    public function updateFirmware($id, $data) {
-        // Validation
-        V::intVal()->check($id);
-        V::arrayType()
-            ->key('default_firmware_revision', V::intVal())
-            ->check($data);
-        // Persistence
-        $platform = $this->em->getRepository('HoneySens\app\models\entities\Platform')->find($id);
-        V::objectType()->check($platform);
-        $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($data['default_firmware_revision']);
-        V::objectType()->check($firmware);
-        $platform->setDefaultFirmwareRevision($firmware);
-        $this->em->flush();
+    public function updateFirmware(int $id, int $defaultFirmwareRevision): Platform
+    {
+        try {
+            $platform = $this->em->getRepository('HoneySens\app\models\entities\Platform')->find($id);
+            if($platform === null) throw new NotFoundException();
+            $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($defaultFirmwareRevision);
+            if($firmware === null) throw new NotFoundException();
+            $platform->setDefaultFirmwareRevision($firmware);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
         $this->logger->log(sprintf('Default firmware revision for platform %s set to %s', $platform->getName(), $firmware->getVersion()), LogResource::PLATFORMS, $platform->getId());
         return $platform;
     }
 
     /**
-     * Removes a firmware revision from the given platform.
+     * Removes a specific firmware revision.
      *
-     * @param $id
+     * @param int $id Firmware revision ID to delete
      * @throws BadRequestException
-     * @throws ForbiddenException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws NotFoundException
+     * @throws SystemException
      */
-    public function deleteFirmware($id) {
-        // Validation
-        V::intVal()->check($id);
-        // Persistence
-        $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
-        V::objectType()->check($firmware);
-        $platform = $firmware->getPlatform();
-        V::objectType()->check($platform);
-        // Don't remove the default firmware revision for this platform
-        if($platform->getDefaultFirmwareRevision() == $firmware) throw new BadRequestException();
-        // In case this revision is set as target firmware on some sensors, reset those back to their default revision
-        $qb = $this->em->createQueryBuilder();
-        $qb->select('s')->from('HoneySens\app\models\entities\Sensor', 's')
-            ->where('s.firmware = :firmware')
-            ->setParameter('firmware', $firmware);
-        foreach($qb->getQuery()->getResult() as $sensor) {
-            $sensor->setFirmware(null);
+    public function deleteFirmware(int $id): void {
+        try {
+            $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
+            if ($firmware === null) throw new NotFoundException();
+            $platform = $firmware->getPlatform();
+            // Don't remove the default firmware revision for this platform
+            if ($platform->getDefaultFirmwareRevision() === $firmware) throw new BadRequestException();
+            // In case this revision is set as target firmware on some sensors, reset those back to their default revision
+            $qb = $this->em->createQueryBuilder();
+            $qb->select('s')->from('HoneySens\app\models\entities\Sensor', 's')
+                ->where('s.firmware = :firmware')
+                ->setParameter('firmware', $firmware);
+            foreach ($qb->getQuery()->getResult() as $sensor) {
+                $sensor->setFirmware(null);
+            }
+            $platform->unregisterFirmware($firmware, $this->config);
+            $this->em->remove($firmware);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
         }
-        $platform->unregisterFirmware($firmware, $this->config);
-        $this->em->remove($firmware);
-        $this->em->flush();
         $this->logger->log(sprintf('Firmware revision %s of platform %s deleted', $firmware->getVersion(), $platform->getName()), LogResource::PLATFORMS, $platform->getId());
     }
 
     /**
-     * Attempts to download the given firmware binary blob.
-     * What exactly is offered to the client depends on the specific platform implementation.
+     * Locates download details for the given firmware ID.
+     * Returns a tuple [<local_firmware_path>, <file_name>].
      *
-     * @param $id
-     * @return array
+     * @param int $firmwareId Firmware revision identifier
      * @throws BadRequestException
-     * @throws ForbiddenException
+     * @throws NotFoundException
+     * @throws SystemException
      */
-    public function getFirmwareDownload($id) {
-        $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
-        V::objectType()->check($firmware);
+    public function getFirmwareDownload(int $firmwareId): array {
+        try {
+            $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($firmwareId);
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        if($firmware === null) throw new NotFoundException();
         $platform = $firmware->getPlatform();
         $firmwarePath = $platform->obtainFirmware($firmware, $this->config);
         $downloadName = sprintf('%s-%s.tar.gz', preg_replace('/\s+/', '-', strtolower($firmware->getName())), preg_replace('/\s+/', '-', strtolower($firmware->getVersion())));
-        if($firmwarePath != null) return [$firmwarePath, $downloadName];
-        else throw new BadRequestException();
+        if($firmwarePath === null) throw new BadRequestException();
+        return [$firmwarePath, $downloadName];
     }
 
     /**
-     * Attempts to identify and download the current default firmware for a given platform.
+     * Locates download details for he current default firmware for a given platform ID.
+     * Returns a tuple [<local_firmware_path>, <file_name>].
      *
-     * @param $id
-     * @return array
+     * @param int $platformId Platform identifier
      * @throws BadRequestException
-     * @throws ForbiddenException
+     * @throws NotFoundException
+     * @throws SystemException
      */
-    public function downloadCurrentFirmwareForPlatform($id) {
-        $platform = $this->em->getRepository('HoneySens\app\models\entities\Platform')->find($id);
-        V::objectType()->check($platform);
-        $revision = $platform->getDefaultFirmwareRevision();
-        V::objectType()->check($revision);
-        return $this->getFirmwareDownload($revision->getId());
+    public function downloadCurrentFirmwareForPlatform(int $platformId): array {
+        try {
+            $platform = $this->em->getRepository('HoneySens\app\models\entities\Platform')->find($platformId);
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        if($platform === null) throw new NotFoundException();
+        $firmware = $platform->getDefaultFirmwareRevision();
+        if($firmware === null) throw new NotFoundException();
+        return $this->getFirmwareDownload($firmware->getId());
     }
 }
