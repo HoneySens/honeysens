@@ -43,6 +43,10 @@ spec:
           image: localhost:5000/honeysens/backup:2.5.0-20220421
           name: backup
           resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
           volumeMounts:
             - mountPath: /srv/backup
               name: honeysens-backup

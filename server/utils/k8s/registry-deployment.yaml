@@ -33,6 +33,10 @@ spec:
           image: registry:2
           name: registry
           resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
           volumeMounts:
             - mountPath: /var/lib/registry
               name: honeysens-registry

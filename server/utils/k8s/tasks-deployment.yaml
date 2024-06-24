@@ -33,6 +33,10 @@ spec:
           image: localhost:5000/honeysens/tasks:2.5.0-20220421
           name: tasks
           resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
           volumeMounts:
             - mountPath: /srv/data
               name: honeysens-data
