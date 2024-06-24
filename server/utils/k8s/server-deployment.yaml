@@ -47,6 +47,10 @@ spec:
             #- containerPort: 80
             - containerPort: 8443
           resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
           volumeMounts:
             - mountPath: /opt/HoneySens/data
               name: honeysens-data

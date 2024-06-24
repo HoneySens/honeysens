@@ -26,12 +26,16 @@ spec:
         io.kompose.service: broker
     spec:
       containers:
-        - image: ubuntu/redis:6.2-22.04_beta
+        - image: ubuntu/redis:6.0-21.04_beta
           env:
             - name: ALLOW_EMPTY_PASSWORD
               value: "yes"
           name: broker
           resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
