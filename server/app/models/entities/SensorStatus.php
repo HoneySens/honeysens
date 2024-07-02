@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\ORM\Mapping as ORM;
+use HoneySens\app\models\constants\SensorStatusFlag;
 use stdClass;
 
 /**
@@ -8,15 +9,6 @@ use stdClass;
  * @ORM\Table(name="statuslogs")
  */
 class SensorStatus {
-
-    const STATUS_ERROR = 0;    // Sensor is running, but encountered an internal problem
-    const STATUS_RUNNING = 1;  // Sensor is up and running
-    const STATUS_UPDATING = 2; // Sensor is currently performing a firmware update
-    const STATUS_TIMEOUT = 3;  // Sensor didn't send a status report for a certain amount of time
-
-    const SERVICE_STATUS_RUNNING = 0;
-    const SERVICE_STATUS_SCHEDULED = 1;
-    const SERVICE_STATUS_ERROR = 2;
 
     /**
      * @ORM\Id
@@ -70,7 +62,7 @@ class SensorStatus {
     protected $swVersion;
 
     /**
-     * JSON-serialized stdClass object that stores service status data as
+     * JSON-serialized associative array that stores service status data as
      * reported by the sensor: {service_name: service_status, ...}.
      *
      * @ORM\Column(type="string", nullable=true)
@@ -136,22 +128,17 @@ class SensorStatus {
     
     /**
      * Set current status
-     * 
-     * @param integer $status
-     * @return \HoneySens\app\models\entities\SensorStatus
      */
-    public function setStatus($status) {
-        $this->status = $status;
+    public function setStatus(SensorStatusFlag $status): SensorStatus {
+        $this->status = $status->value;
         return $this;
     }
     
     /**
      * Get current status
-     * 
-     * @return integer
      */
-    public function getStatus() {
-        return $this->status;
+    public function getStatus(): SensorStatusFlag {
+        return SensorStatusFlag::from($this->status);
     }
 
     /**
@@ -255,7 +242,7 @@ class SensorStatus {
     /**
      * Sets the service status, expects an object with attributes {$service_name => $service_status, ...}.
      *
-     * @param stdClass $serviceStatus
+     * @param array $serviceStatus
      * @return $this
      */
     public function setServiceStatus($serviceStatus) {
@@ -269,7 +256,7 @@ class SensorStatus {
      * @return stdClass
      */
     public function getServiceStatus() {
-        return json_decode($this->serviceStatus);
+        return json_decode($this->serviceStatus, true);
     }
 
     /**
@@ -297,7 +284,7 @@ class SensorStatus {
             'id' => $this->getId(),
             'sensor' => $this->getSensor()->getId(),
             'timestamp' => $this->getTimestamp()->format('U'),
-            'status' => $this->getStatus(),
+            'status' => $this->getStatus()->value,
             'ip' => $this->getIP(),
             'free_mem' => $this->getFreeMem(),
             'disk_usage' => $this->getDiskUsage(),

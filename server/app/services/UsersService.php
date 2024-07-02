@@ -12,15 +12,14 @@ use HoneySens\app\models\Utils;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
 
-class UsersService {
+class UsersService extends Service {
 
     private ConfigParser $config;
-    private EntityManager $em;
     private LogService $logger;
 
     public function __construct(ConfigParser $config, EntityManager $em, LogService $logger) {
+        parent::__construct($em);
         $this->config = $config;
-        $this->em= $em;
         $this->logger = $logger;
     }
 

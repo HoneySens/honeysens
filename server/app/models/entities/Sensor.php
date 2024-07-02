@@ -2,6 +2,11 @@
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use HoneySens\app\models\constants\SensorEAPOLMode;
+use HoneySens\app\models\constants\SensorNetworkIPMode;
+use HoneySens\app\models\constants\SensorNetworkMACMode;
+use HoneySens\app\models\constants\SensorProxyMode;
+use HoneySens\app\models\constants\SensorServerEndpointMode;
 
 /**
  * @ORM\Entity
@@ -9,29 +14,10 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Sensor {
 
-    const SERVER_ENDPOINT_MODE_DEFAULT = 0;
-    const SERVER_ENDPOINT_MODE_CUSTOM = 1;
-
-    const NETWORK_IP_MODE_DHCP = 0;
-    const NETWORK_IP_MODE_STATIC = 1;
-    const NETWORK_IP_MODE_NONE = 2;
-
-    const NETWORK_MAC_MODE_ORIGINAL = 0;
-    const NETWORK_MAC_MODE_CUSTOM = 1;
-
-    const PROXY_MODE_DISABLED = 0;
-    const PROXY_MODE_ENABLED = 1;
-
     const CONFIG_ARCHIVE_STATUS_UNAVAILABLE = 0;
     const CONFIG_ARCHIVE_STATUS_SCHEDULED = 1;
     const CONFIG_ARCHIVE_STATUS_CREATING = 2;
     const CONFIG_ARCHIVE_STATUS_AVAILABLE = 3;
-
-    const EAPOL_MODE_DISABLED = 0;
-    const EAPOL_MODE_MD5 = 1;
-    const EAPOL_MODE_TLS = 2;
-    const EAPOL_MODE_PEAP = 3;
-    const EAPOL_MODE_TTLS = 4;
 
     /**
      * @ORM\Id
@@ -379,13 +365,13 @@ class Sensor {
         return $this->division;
     }
 
-    public function setServerEndpointMode($mode) {
-        $this->serverEndpointMode = $mode;
+    public function setServerEndpointMode(SensorServerEndpointMode $mode): Sensor {
+        $this->serverEndpointMode = $mode->value;
         return $this;
     }
 
-    public function getServerEndpointMode() {
-        return $this->serverEndpointMode;
+    public function getServerEndpointMode(): SensorServerEndpointMode {
+        return SensorServerEndpointMode::from($this->serverEndpointMode);
     }
 
     public function setServerEndpointHost($host) {
@@ -406,13 +392,13 @@ class Sensor {
         return $this->serverEndpointPortHTTPS;
     }
 
-    public function setNetworkIPMode($mode) {
-        $this->networkIPMode = $mode;
+    public function setNetworkIPMode(SensorNetworkIPMode $mode): Sensor {
+        $this->networkIPMode = $mode->value;
         return $this;
     }
 
-    public function getNetworkIPMode() {
-        return $this->networkIPMode;
+    public function getNetworkIPMode(): SensorNetworkIPMode {
+        return SensorNetworkIPMode::from($this->networkIPMode);
     }
 
     public function setNetworkIPAddress($address) {
@@ -451,13 +437,13 @@ class Sensor {
         return $this->networkIPDNS;
     }
 
-    public function setNetworkMACMode($mode) {
-        $this->networkMACMode = $mode;
+    public function setNetworkMACMode(SensorNetworkMACMode $mode): Sensor {
+        $this->networkMACMode = $mode->value;
         return $this;
     }
 
-    public function getNetworkMACMode() {
-        return $this->networkMACMode;
+    public function getNetworkMACMode(): SensorNetworkMACMode {
+        return SensorNetworkMACMode::from($this->networkMACMode);
     }
 
     public function setNetworkMACAddress($address) {
@@ -478,13 +464,13 @@ class Sensor {
         return $this->networkDHCPHostname;
     }
 
-    public function setProxyMode($mode) {
-        $this->proxyMode = $mode;
+    public function setProxyMode(SensorProxyMode $mode): Sensor {
+        $this->proxyMode = $mode->value;
         return $this;
     }
 
-    public function getProxyMode() {
-        return $this->proxyMode;
+    public function getProxyMode(): SensorProxyMode {
+        return SensorProxyMode::from($this->proxyMode);
     }
 
     public function setProxyHost($host) {
@@ -635,12 +621,9 @@ class Sensor {
 
     /**
      * Set the EAPOL mode
-     *
-     * @param integer $mode
-     * @return $this
      */
-    public function setEAPOLMode($mode) {
-        $this->EAPOLMode = $mode;
+    public function setEAPOLMode(SensorEAPOLMode $mode): Sensor {
+        $this->EAPOLMode = $mode->value;
         return $this;
     }
 
@@ -649,8 +632,8 @@ class Sensor {
      *
      * @return integer
      */
-    public function getEAPOLMode() {
-        return $this->EAPOLMode;
+    public function getEAPOLMode(): SensorEAPOLMode {
+        return SensorEAPOLMode::from($this->EAPOLMode);
     }
 
     /**
@@ -774,10 +757,8 @@ class Sensor {
     }
 
     public function getState() {
-        $eapol_password = $this->getEAPOLPassword() ? '******' : null;
         $eapol_ca_cert = $this->getEAPOLCACert() ? $this->getEAPOLCACert()->getFingerprint() : null;
         $eapol_client_cert = $this->getEAPOLClientCert() ? $this->getEAPOLClientCert()->getFingerprint() : null;
-        $eapol_client_key_password = $this->getEAPOLClientCertPassphrase() ? '******' : null;
         $last_status = $this->getLastStatus();
         $last_status_ts = $last_status ? $last_status->getTimestamp()->format('U') : null;
         $last_status_code = $last_status ? $last_status->getStatus() : null;
@@ -796,31 +777,29 @@ class Sensor {
             'name' => $this->getName(),
             'location' => $this->getLocation(),
             'division' => $this->getDivision()->getId(),
-            'eapol_mode' => $this->getEAPOLMode(),
+            'eapol_mode' => $this->getEAPOLMode()->value,
             'eapol_identity' => $this->getEAPOLIdentity(),
-            'eapol_password' => $eapol_password,
             'eapol_anon_identity' => $this->getEAPOLAnonymousIdentity(),
             'eapol_ca_cert' => $eapol_ca_cert,
             'eapol_client_cert' => $eapol_client_cert,
-            'eapol_client_key_password' => $eapol_client_key_password,
             'last_status' => $last_status_code,
             'last_status_ts' => $last_status_ts,
             'last_status_since' => $last_status_since,
             'last_service_status' => $last_service_status,
             'sw_version' => $sw_version,
             'last_ip' => $last_ip,
-            'server_endpoint_mode' => $this->getServerEndpointMode(),
+            'server_endpoint_mode' => $this->getServerEndpointMode()->value,
             'server_endpoint_host' => $this->getServerEndpointHost(),
             'server_endpoint_port_https' => $this->getServerEndpointPortHTTPS(),
-            'network_ip_mode' => $this->getNetworkIPMode(),
+            'network_ip_mode' => $this->getNetworkIPMode()->value,
             'network_ip_address' => $this->getNetworkIPAddress(),
             'network_ip_netmask' => $this->getNetworkIPNetmask(),
             'network_ip_gateway' => $this->getNetworkIPGateway(),
             'network_ip_dns' => $this->getNetworkIPDNS(),
-            'network_mac_mode' => $this->getNetworkMACMode(),
+            'network_mac_mode' => $this->getNetworkMACMode()->value,
             'network_mac_address' => $this->getNetworkMACAddress(),
             'network_dhcp_hostname' => $this->getNetworkDHCPHostname(),
-            'proxy_mode' => $this->getProxyMode(),
+            'proxy_mode' => $this->getProxyMode()->value,
             'proxy_host' => $this->getProxyHost(),
             'proxy_port' => $this->getProxyPort(),
             'proxy_user' => $this->getProxyUser(),

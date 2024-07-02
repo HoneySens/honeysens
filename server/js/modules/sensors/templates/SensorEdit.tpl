@@ -193,7 +193,7 @@
                         </div>
                         <div class="form-group networkEAPOLPassword has-feedback">
                             <label for="networkEAPOLPassword" class="control-label">Passwort</label>
-                            <input type="password" class="form-control" name="networkEAPOLPassword" minlength="1" maxlength="512" />
+                            <input type="password" class="form-control" name="networkEAPOLPassword" minlength="1" maxlength="512" placeholder="Neues Passwort" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
@@ -253,7 +253,7 @@
                         </div>
                         <div class="form-group networkEAPOLClientPassphrase has-feedback">
                             <label for="networkEAPOLClientPassphrase" class="control-label">Passphrase des privaten Schl&uuml;sels</label>
-                            <input type="text" class="form-control" name="networkEAPOLClientPassphrase" minlength="1" maxlength="512" placeholder="optional" />
+                            <input type="password" class="form-control" name="networkEAPOLClientPassphrase" minlength="1" maxlength="512" placeholder="optional" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>

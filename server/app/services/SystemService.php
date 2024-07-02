@@ -13,19 +13,18 @@ use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use phpseclib3\File\X509;
 use Respect\Validation\Validator as V;
 
-class SystemService {
+class SystemService extends Service {
 
     const VERSION = '2.7.0';
     const ERR_UNKNOWN = 0;
     const ERR_CONFIG_WRITE = 1;
 
     private ConfigParser $config;
-    private EntityManager $em;
     private LogService $logger;
 
     public function __construct(ConfigParser $config, EntityManager $em, LogService $logger) {
+        parent::__construct($em);
         $this->config = $config;
-        $this->em= $em;
         $this->logger = $logger;
     }
 

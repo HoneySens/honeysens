@@ -18,15 +18,14 @@ use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\exceptions\SystemException;
 use HoneySens\app\models\Utils;
 
-class DivisionsService {
+class DivisionsService extends Service {
 
-    private EntityManager $em;
     private EventsService $eventsService;
     private LogService $logger;
     private SensorsService $sensorsService;
 
     public function __construct(EntityManager $em, LogService $logger, EventsService $eventsService, SensorsService $sensorsService) {
-        $this->em= $em;
+        parent::__construct($em);
         $this->eventsService = $eventsService;
         $this->logger = $logger;
         $this->sensorsService = $sensorsService;
@@ -224,28 +223,6 @@ class DivisionsService {
             throw new SystemException($e);
         }
         $this->logger->log(sprintf('Division %s (ID %d) and all associated users and sensors deleted. Events were %s.', $division->getName(), $division->getId(), $archive ? 'archived' : 'deleted'), LogResource::DIVISIONS, $division->getId());
-    }
-
-    /**
-     * Asserts that a given user is associated with a specific division.
-     * Throws an exception in case that affiliation doesn't exist.
-     *
-     * @param int $divisionID Division ID to check association for
-     * @param int $userID User ID to check association for
-     * @throws ForbiddenException
-     */
-    public function assureUserAffiliation(int $divisionID, int $userID): void {
-        $qb = $this->em->createQueryBuilder();
-        $qb->select('d')->from('HoneySens\app\models\entities\Division', 'd')
-            ->where('d.id = :id')
-            ->andwhere(':userid MEMBER OF d.users')
-            ->setParameter('id', $divisionID)
-            ->setParameter('userid', $userID);
-        try {
-            $qb->getQuery()->getSingleResult();
-        } catch(\Exception) {
-            throw new ForbiddenException();
-        }
     }
 
     /**

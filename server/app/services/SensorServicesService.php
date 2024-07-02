@@ -5,7 +5,6 @@ use Doctrine\ORM\EntityManager;
 use HoneySens\app\adapters\RegistryAdapter;
 use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\LogResource;
-use HoneySens\app\models\entities\Service;
 use HoneySens\app\models\entities\ServiceRevision;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
@@ -14,19 +13,18 @@ use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use Respect\Validation\Validator as V;
 
-class SensorServicesService {
+class SensorServicesService extends Service {
 
     const CREATE_ERROR_NONE = 0;
     const CREATE_ERROR_REGISTRY_OFFLINE = 1;
     const CREATE_ERROR_DUPLICATE = 2;
 
-    private EntityManager $em;
     private LogService $logger;
     private RegistryAdapter $registryAdapter;
     private TaskAdapter $taskAdapter;
 
     public function __construct(EntityManager $em, LogService $logger, RegistryAdapter $registryAdapter, TaskAdapter $taskAdapter) {
-        $this->em= $em;
+        parent::__construct($em);
         $this->logger = $logger;
         $this->registryAdapter = $registryAdapter;
         $this->taskAdapter = $taskAdapter;
@@ -109,7 +107,7 @@ class SensorServicesService {
         $this->em->persist($serviceRevision);
         // Persist service if necessary
         if(!V::objectType()->validate($service)) {
-            $service = new Service();
+            $service = new \HoneySens\app\models\entities\Service();
             $service->setName($taskResult['name'])
                 ->setDescription($taskResult['description'])
                 ->setRepository($taskResult['repository'])

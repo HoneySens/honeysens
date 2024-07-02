@@ -153,7 +153,7 @@ class State extends RESTResource {
                 case 'sensors':
                     try {
                         $this->assureAllowed('get', 'sensors');
-                        $result[$table['name']] = $sensorsService->get($attributes);
+                        $result[$table['name']] = $sensorsService->get($this->getSessionUser());
                     } catch(\Exception $e) {}
                     break;
                 case 'users':
