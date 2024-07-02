@@ -13,19 +13,18 @@ use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\Utils;
 use Respect\Validation\Validator as V;
 
-class TasksService {
+class TasksService extends Service {
 
     const UPLOAD_PATH = 'upload';
 
     const UPLOAD_TYPE_SERVICE_ARCHIVE = 0;
     const UPLOAD_TYPE_PLATFORM_ARCHIVE = 1;
 
-    private EntityManager $em;
     private LogService $logger;
     private TaskAdapter $taskAdapter;
 
     public function __construct(EntityManager $em, LogService $logger, TaskAdapter $taskAdapter) {
-        $this->em= $em;
+        parent::__construct($em);
         $this->logger = $logger;
         $this->taskAdapter = $taskAdapter;
     }

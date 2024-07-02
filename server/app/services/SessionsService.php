@@ -9,18 +9,17 @@ use HoneySens\app\models\exceptions\ForbiddenException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Respect\Validation\Validator as V;
 
-class SessionsService {
+class SessionsService extends Service {
 
     const SESSION_TIMEOUT_DEFAULT = 1200;  # Seconds of inactivity until a regular session expires
     const SESSION_TIMEOUT_CHANGEPW = 600;  # Seconds until the "change password on first login" session expires
 
     private ConfigParser $config;
-    private EntityManager $em;
     private LogService $logger;
 
     public function __construct(ConfigParser $config, EntityManager $em, LogService $logger) {
+        parent::__construct($em);
         $this->config = $config;
-        $this->em= $em;
         $this->logger = $logger;
     }
 

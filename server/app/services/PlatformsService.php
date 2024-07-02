@@ -17,20 +17,19 @@ use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\exceptions\SystemException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
-class PlatformsService {
+class PlatformsService extends Service {
 
     const CREATE_ERROR_NONE = 0;
     const CREATE_ERROR_UNKNOWN_PLATFORM = 1;
     const CREATE_ERROR_DUPLICATE = 2;
 
     private ConfigParser $config;
-    private EntityManager $em;
     private LogService $logger;
     private TasksService $tasksService;
 
     public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, TasksService $tasksService) {
+        parent::__construct($em);
         $this->config = $config;
-        $this->em= $em;
         $this->logger = $logger;
         $this->tasksService = $tasksService;
     }

@@ -18,15 +18,12 @@ use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\exceptions\SystemException;
 use HoneySens\app\models\Utils;
 
-class EventFiltersService {
+class EventFiltersService extends Service {
 
-    private DivisionsService $divisionsService;
-    private EntityManager $em;
     private LogService $logger;
 
-    public function __construct(DivisionsService $divisionsService, EntityManager $em, LogService $logger) {
-        $this->divisionsService = $divisionsService;
-        $this->em= $em;
+    public function __construct(EntityManager $em, LogService $logger) {
+        parent::__construct($em);
         $this->logger = $logger;
     }
 
@@ -77,7 +74,7 @@ class EventFiltersService {
      */
     public function create(User $user, string $name, int $type, int $divisionID, array $conditions, ?string $description): EventFilter {
         if($user->getRole() !== User::ROLE_ADMIN)
-            $this->divisionsService->assureUserAffiliation($divisionID, $user->getId());
+            $this->assureUserAffiliation($divisionID, $user->getId());
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($divisionID);
         if($division === null) throw new BadRequestException();
         $filter = new EventFilter();
@@ -126,10 +123,10 @@ class EventFiltersService {
         if($filter === null) throw new BadRequestException();
         $userIsAdmin = $user->getRole() === User::ROLE_ADMIN;
         if(!$userIsAdmin)
-            $this->divisionsService->assureUserAffiliation($filter->getDivision()->getId(), $user->getId());
+            $this->assureUserAffiliation($filter->getDivision()->getId(), $user->getId());
         if($filter->getDivision()->getId() !== $divisionID && !$userIsAdmin)
             // If division association changes, assert the user is associated with the new division
-            $this->divisionsService->assureUserAffiliation($divisionID, $user->getId());
+            $this->assureUserAffiliation($divisionID, $user->getId());
         $filter->setName($name);
         $filter->setType($type);
         $filter->setDescription($description);
@@ -187,7 +184,7 @@ class EventFiltersService {
     public function delete(int $id, User $user): void {
         $filter = $this->em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         if($filter === null) throw new BadRequestException();
-        $this->divisionsService->assureUserAffiliation($filter->getDivision()->getId(), $user->getId());
+        $this->assureUserAffiliation($filter->getDivision()->getId(), $user->getId());
         $fid = $filter->getId();
         try {
             $this->em->remove($filter);

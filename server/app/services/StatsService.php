@@ -4,13 +4,7 @@ namespace HoneySens\app\services;
 use Doctrine\ORM\EntityManager;
 use Respect\Validation\Validator as V;
 
-class StatsService {
-
-    private EntityManager $em;
-
-    public function __construct(EntityManager $em) {
-        $this->em= $em;
-    }
+class StatsService extends Service {
 
     /**
      * Fetches statistical data from the DB by various criteria:

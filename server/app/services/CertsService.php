@@ -9,13 +9,7 @@ use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\NotFoundException;
 
-class CertsService {
-
-    private EntityManager $em;
-
-    public function __construct(EntityManager $em) {
-        $this->em= $em;
-    }
+class CertsService extends Service {
 
     /**
      * Fetches SSLCerts from the DB.

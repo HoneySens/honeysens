@@ -1,17 +1,19 @@
 <?php
 namespace HoneySens\app\services;
 
+use Doctrine\ORM\EntityManager;
 use HoneySens\app\adapters\TemplateAdapter;
 use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Template;
 use Respect\Validation\Validator as V;
 
-class TemplatesService {
+class TemplatesService extends Service {
 
     private LogService $logger;
     private TemplateAdapter $templateAdapter;
 
-    public function __construct(LogService $logger, TemplateAdapter $templateAdapter) {
+    public function __construct(EntityManager $em, LogService $logger, TemplateAdapter $templateAdapter) {
+        parent::__construct($em);
         $this->logger = $logger;
         $this->templateAdapter = $templateAdapter;
     }

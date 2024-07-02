@@ -27,17 +27,16 @@ use HoneySens\app\models\Utils;
 use HoneySens\app\services\dto\EventFilterConditions;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
-class EventsService {
+class EventsService extends Service {
 
     private ConfigParser $config;
     private EMailAdapter $emailAdapter;
-    private EntityManager $em;
     private LogService $logger;
     private TaskAdapter $taskAdapter;
 
-    public function __construct(ConfigParser $config, EntityManager $em, EMailAdapter $emailAdapter, LogService $logger, TaskAdapter $taskAdapter) {
+    public function __construct(ConfigParser $config, EMailAdapter $emailAdapter, EntityManager $em, LogService $logger, TaskAdapter $taskAdapter) {
+        parent::__construct($em);
         $this->config = $config;
-        $this->em= $em;
         $this->emailAdapter = $emailAdapter;
         $this->logger = $logger;
         $this->taskAdapter = $taskAdapter;

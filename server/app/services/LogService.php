@@ -12,13 +12,7 @@ use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\exceptions\SystemException;
 
-class LogService {
-
-    private $em;
-
-    public function __construct(EntityManager $em) {
-        $this->em = $em;
-    }
+class LogService extends Service {
 
     public function isEnabled(): bool {
         return getenv('API_LOG') === 'true';
