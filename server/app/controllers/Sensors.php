@@ -27,7 +27,7 @@ class Sensors extends RESTResource {
         $api->delete('/{id:\d+}', [Sensors::class, 'delete']);
     }
 
-    public function get(Response $response, SensorsService $service, int $id = null): Response {
+    public function get(Response $response, SensorsService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
         $result = $service->get($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));

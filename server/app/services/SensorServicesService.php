@@ -2,6 +2,9 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use HoneySens\app\adapters\RegistryAdapter;
 use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\LogResource;
@@ -11,7 +14,7 @@ use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
-use Respect\Validation\Validator as V;
+use HoneySens\app\models\exceptions\SystemException;
 
 class SensorServicesService extends Service {
 
@@ -32,67 +35,73 @@ class SensorServicesService extends Service {
 
 
     /**
-     * Fetches services from the DB by various criteria:
-     * - id: return the service with the given id
-     * If no criteria are given, all services are returned.
+     * Fetches sensor services from the DB.
      *
-     * @param array $criteria
-     * @return array
+     * @param int|null $id ID of a specific service to fetch
+     * @throws NotFoundException
      */
-    public function get($criteria) {
+    public function get(?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('s')->from('HoneySens\app\models\entities\Service', 's');
-        if(V::key('id', V::intVal())->validate($criteria)) {
-            $qb->andWhere('s.id = :id')
-                ->setParameter('id', $criteria['id']);
-            return $qb->getQuery()->getSingleResult()->getState();
-        } else {
-            $services = array();
-            foreach($qb->getQuery()->getResult() as $service) {
-                $services[] = $service->getState();
+        try {
+            if ($id !== null) {
+                $qb->andWhere('s.id = :id')
+                    ->setParameter('id', $id);
+                return $qb->getQuery()->getSingleResult()->getState();
+            } else {
+                $services = array();
+                foreach ($qb->getQuery()->getResult() as $service) {
+                    $services[] = $service->getState();
+                }
+                return $services;
             }
-            return $services;
+        } catch(NonUniqueResultException|NoResultException) {
+            throw new NotFoundException();
         }
     }
 
     /**
-     * Creates and persists a new service (or revision).
-     * A successfully completed upload verification task (id) is expected as input.
+     * Creates a new revision for a sensor service.
+     * Requires a reference to a finished upload verification tasks owned by the given user that references a service
+     * archive. Also automatically creates the referenced sensor service in case it's currently unknown.
+     * Returns a task that uploads the service revision into the registry.
      *
-     * @param array $data
-     * @return Task
+     * @param User $user The user which performs this operation, has to own the given task
+     * @param int $taskId ID of a completed upload verification task
      * @throws BadRequestException
      * @throws ForbiddenException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws SystemException
+     * @todo Let task results return a proper object
      */
-    public function create($data, User $sessionUser) {
-        // Validation, we just expect a task id here
-        V::arrayType()
-            ->key('task', V::intVal())
-            ->check($data);
-        // Validate the given task
-        $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($data['task']);
-        V::objectType()->check($task);
-        if($task->getUser() !== $sessionUser) throw new ForbiddenException();
-        if($task->getType() != Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() != Task::STATUS_DONE) throw new BadRequestException();
+    public function create(User $user, int $taskId): Task {
+        try {
+            $serviceRepository = $this->em->getRepository('HoneySens\app\models\entities\Service');
+            $serviceRevisionRepository = $this->em->getRepository('HoneySens\app\models\entities\ServiceRevision');
+            $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($taskId);
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        if($task === null) throw new BadRequestException();
+        if($task->getUser() !== $user) throw new ForbiddenException();
+        if($task->getType() !== Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() !== Task::STATUS_DONE)
+            throw new BadRequestException();
         $taskResult = $task->getResult();
-        V::arrayType()->check($taskResult);
-        V::key('valid', V::boolType())->check($taskResult);
-        if(!$taskResult['valid']) throw new BadRequestException();
-        if($taskResult['type'] != TasksService::UPLOAD_TYPE_SERVICE_ARCHIVE) throw new BadRequestException();
-        // Check registry availability
-        if(!$this->registryAdapter->isAvailable()) throw new BadRequestException(self::CREATE_ERROR_REGISTRY_OFFLINE);
+        if($taskResult === null ||
+            !array_key_exists('valid', $taskResult) ||
+            !$taskResult['valid'] ||
+            $taskResult['type'] !== TasksService::UPLOAD_TYPE_SERVICE_ARCHIVE)
+            throw new BadRequestException();
+        if(!$this->registryAdapter->isAvailable())
+            throw new BadRequestException(self::CREATE_ERROR_REGISTRY_OFFLINE);
         // Check for duplicates
-        $service = $this->em->getRepository('HoneySens\app\models\entities\Service')
-            ->findOneBy(array(
+        $service = $serviceRepository->findOneBy(array(
                 'name' => $taskResult['name'],
                 'repository' => $taskResult['repository']));
-        $serviceRevision = $this->em->getRepository('HoneySens\app\models\entities\ServiceRevision')
-            ->findOneBy(array(
+        $serviceRevision = $serviceRevisionRepository->findOneBy(array(
                 'service' => $service,
                 'architecture' => $taskResult['architecture'],
                 'revision' => $taskResult['revision']));
-        if(V::objectType()->validate($service) && V::objectType()->validate($serviceRevision)) {
+        if($service !== null && $serviceRevision !== null) {
             // Error: The revision for this service is already registered
             throw new BadRequestException(self::CREATE_ERROR_DUPLICATE);
         }
@@ -104,109 +113,130 @@ class SensorServicesService extends Service {
             ->setCatchAll($taskResult['catchAll'])
             ->setPortAssignment($taskResult['portAssignment'])
             ->setDescription($taskResult['revisionDescription']);
-        $this->em->persist($serviceRevision);
-        // Persist service if necessary
-        if(!V::objectType()->validate($service)) {
-            $service = new \HoneySens\app\models\entities\Service();
-            $service->setName($taskResult['name'])
-                ->setDescription($taskResult['description'])
-                ->setRepository($taskResult['repository'])
-                ->setDefaultRevision($serviceRevision->getRevision());
-            $this->em->persist($service);
+        try {
+            $this->em->persist($serviceRevision);
+            // Persist service if necessary
+            if ($service === null) {
+                $service = new \HoneySens\app\models\entities\Service();
+                $service->setName($taskResult['name'])
+                    ->setDescription($taskResult['description'])
+                    ->setRepository($taskResult['repository'])
+                    ->setDefaultRevision($serviceRevision->getRevision());
+                $this->em->persist($service);
+            }
+            $service->addRevision($serviceRevision);
+            // Remove upload verification task, but keep the uploaded file for the next task
+            $taskResult['path'] = $task->getParams()['path'];
+            $this->em->remove($task);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
         }
-        $service->addRevision($serviceRevision);
-        // Remove upload verification task, but keep the uploaded file for the next task
-        $taskResult['path'] = $task->getParams()['path'];
-        $this->em->remove($task);
-        $this->em->flush();
         // Enqueue registry upload task
-        $task = $this->taskAdapter->enqueue($sessionUser, Task::TYPE_REGISTRY_MANAGER, $taskResult);
+        $task = $this->taskAdapter->enqueue($user, Task::TYPE_REGISTRY_MANAGER, $taskResult);
         $this->logger->log(sprintf('Service %s:%s (%s) added', $service->getName(), $serviceRevision->getRevision(),
             $serviceRevision->getArchitecture()), LogResource::SERVICES, $service->getId());
         return $task;
     }
 
     /**
-     * Updates an existing service.
+     * Sets the default revision of an existing sensor service.
      *
-     * The following parameters are recognized:
-     * - default_revision: A division this service defaults to
-     *
-     * @param int $id
-     * @param array $data
-     * @return Service
+     * @param int $id ID of the service to update
+     * @param string $defaultRevision The revision name/tag this service defaults to
+     * @throws NotFoundException
+     * @throws SystemException
      */
-    public function update($id, $data) {
-        // Validation
-        V::intVal()->check($id);
-        V::arrayType()
-            ->key('default_revision', V::stringType())
-            ->check($data);
-        // Persistence
-        $service = $this->em->getRepository('HoneySens\app\models\entities\Service')->find($id);
-        V::objectType()->check($service);
-        $defaultRevision = $this->em->getRepository('HoneySens\app\models\entities\ServiceRevision')
-            ->findOneBy(array('revision' => $data['default_revision']));
-        V::objectType()->check($defaultRevision);
-        $service->setDefaultRevision($data['default_revision']);
-        $this->em->flush();
-        $this->logger->log(sprintf('Default revision for service %s set to %s', $service->getName(), $defaultRevision->getRevision()), LogResource::SERVICES, $service->getId());
+    public function update(int $id, string $defaultRevision): \HoneySens\app\models\entities\Service {
+        try {
+            $service = $this->em->getRepository('HoneySens\app\models\entities\Service')->find($id);
+            if($service === null) throw new NotFoundException();
+            $targetRevision = $this->em
+                ->getRepository('HoneySens\app\models\entities\ServiceRevision')
+                ->findOneBy(array('revision' => $defaultRevision));
+            if($targetRevision === null) throw new NotFoundException();
+            $service->setDefaultRevision($defaultRevision);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        $this->logger->log(sprintf('Default revision for service %s set to %s', $service->getName(), $defaultRevision), LogResource::SERVICES, $service->getId());
         return $service;
     }
 
-    public function delete($id) {
-        // Validation
-        V::intVal()->check($id);
+    /**
+     * Removes a specific service and all of its associated revisions.
+     *
+     * @param int $id Service ID to delete
+     * @throws NotFoundException
+     * @throws SystemException
+     */
+    public function deleteService(int $id): void {
         $service = $this->em->getRepository('HoneySens\app\models\entities\Service')->find($id);
-        V::objectType()->check($service);
+        if($service === null) throw new NotFoundException();
         // Remove revisions and service from the registry
         foreach($service->getRevisions() as $revision) $this->removeServiceRevision($revision);
         $this->registryAdapter->removeRepository($service->getRepository());
-        // Remove service from the db
-        $sid = $service->getId();
-        $this->em->remove($service);
-        $this->em->flush();
-        $this->logger->log(sprintf('Service %s and all associated revisions deleted', $service->getName()), LogResource::SERVICES, $sid);
+        try {
+            // Remove service from the db
+            $this->em->remove($service);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        $this->logger->log(sprintf('Service %s and all associated revisions deleted', $service->getName()), LogResource::SERVICES, $id);
     }
 
     /**
-     * Deletes a single service revision identified by the given id
+     * Removes a revision of a specific service.
      *
-     * @param int $id
+     * @param int $id Revision ID to delete
+     * @throws BadRequestException
+     * @throws NotFoundException
+     * @throws SystemException
      */
-    public function deleteRevision($id) {
-        // Validation
-        V::intVal()->check($id);
+    public function deleteRevision(int $id): void {
         $serviceRevision = $this->em->getRepository('HoneySens\app\models\entities\ServiceRevision')->find($id);
-        V::objectType()->check($serviceRevision);
+        if($serviceRevision === null) throw new NotFoundException();
         // Don't remove the default revision
-        if($serviceRevision->getRevision() === $serviceRevision->getService()->getDefaultRevision()) throw new BadRequestException();
-        $this->removeServiceRevision($serviceRevision);
-        $this->em->flush();
         $service = $serviceRevision->getService();
+        if($serviceRevision->getRevision() === $service->getDefaultRevision()) throw new BadRequestException();
+        try {
+            $this->removeServiceRevision($serviceRevision);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
         $this->logger->log(sprintf('Revision %s (%s) of service %s deleted', $serviceRevision->getRevision(), $serviceRevision->getArchitecture(), $service->getName()), LogResource::SERVICES, $service->getId());
     }
 
     /**
      * Queries the registry for availability and checks all registered services
-     * for their status. Only returns true if all revisions of all registered
-     * services have a matching template in the registry.
+     * for their status. Returns an array ['registry' => bool, 'services' => bool]:
+     * The value of 'registry' determines the availability of the registry itself,
+     * 'services' is a consolidated status report for all services: If any registered
+     * service is missing in the registry, this is false.
      *
      * @return array
+     * @throws SystemException
      */
-    public function getStatusSummary() {
+    public function getStatusSummary(): array {
         $registryStatus = $this->registryAdapter->isAvailable();
         $serviceStatus = true;
-        if($registryStatus) {
-            foreach($this->em->getRepository('HoneySens\app\models\entities\Service')->findAll() as $service) {
-                try {
-                    $ss = $this->getStatus($service->getId());
-                    $serviceStatus = $serviceStatus && !in_array(false, $ss, true);
-                } catch(\Exception $e) {
-                    $serviceStatus = false;
+        try {
+            if ($registryStatus) {
+                foreach ($this->em->getRepository('HoneySens\app\models\entities\Service')->findAll() as $service) {
+                    try {
+                        $ss = $this->getServiceStatus($service->getId());
+                        $serviceStatus = $serviceStatus && !in_array(false, $ss, true);
+                    } catch (NotFoundException) {
+                        $serviceStatus = false;
+                    }
                 }
-            }
-        } else $serviceStatus = false;  // If the registry isn't available, services aren't either
+            } else $serviceStatus = false;  // If the registry isn't available, services aren't either
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
         return array('registry' => $registryStatus, 'services' => $serviceStatus);
     }
 
@@ -214,16 +244,13 @@ class SensorServicesService extends Service {
      * Used to query individual service status from the registry. This basically lists for each service revision
      * registered in the db whether there is a matching template registered in the docker service registry.
      *
-     * @param int $id
+     * @param int $id Service ID to query
      * @throws NotFoundException
-     * @return array;
      */
-    public function getStatus($id) {
-        V::intVal()->check($id);
+    public function getServiceStatus(int $id): array {
         $service = $this->em->getRepository('HoneySens\app\models\entities\Service')->find($id);
-        if(!V::objectType()->validate($service)) throw new NotFoundException();
+        if($service === null) throw new NotFoundException();
         $tags = $this->registryAdapter->getTags($service->getRepository());
-        V::arrayType()->check($tags);
         $result = array();
         foreach($service->getRevisions() as $revision) {
             $result[$revision->getId()] = in_array(sprintf('%s-%s', $revision->getArchitecture(), $revision->getRevision()), $tags);
@@ -232,9 +259,11 @@ class SensorServicesService extends Service {
     }
 
     /**
-     * Removes a service revision from the registry and marks it for removal in the DB
+     * Removes a service revision from the registry and marks it for removal in the DB.
      *
-     * @param ServiceRevision $serviceRevision
+     * @param ServiceRevision $serviceRevision Instance of the service revision do delete.
+     * @throws BadRequestException
+     * @throws SystemException
      */
     private function removeServiceRevision(ServiceRevision $serviceRevision) {
         $repository = $serviceRevision->getService()->getRepository();
@@ -242,8 +271,12 @@ class SensorServicesService extends Service {
             $this->registryAdapter
                 ->removeTag($repository, sprintf('%s-%s', $serviceRevision->getArchitecture(), $serviceRevision->getRevision()));
         } catch (NotFoundException $e) {
-            // The registry is online, but doesn't contain this image -> we can continue
+            // The registry is online, but doesn't contain this image (anymore)
         }
-        $this->em->remove($serviceRevision);
+        try {
+            $this->em->remove($serviceRevision);
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
     }
 }

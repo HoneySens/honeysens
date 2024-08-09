@@ -3,7 +3,6 @@ namespace HoneySens\app\controllers;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query\ResultSetMapping;
-use HoneySens\app\services\ContactsService;
 use HoneySens\app\services\DivisionsService;
 use HoneySens\app\services\dto\EventFilterConditions;
 use HoneySens\app\services\EventFiltersService;
@@ -189,7 +188,7 @@ class State extends RESTResource {
                 case 'services':
                     try {
                         $this->assureAllowed('get', 'services');
-                        $result[$table['name']] = $sensorServicesService->get($attributes);
+                        $result[$table['name']] = $sensorServicesService->get();
                     } catch(\Exception $e) {}
                     break;
                 case 'stats':

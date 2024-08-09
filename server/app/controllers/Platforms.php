@@ -19,7 +19,7 @@ class Platforms extends RESTResource {
         $api->get('/{id:\d+}/firmware/current', [Platforms::class, 'downloadCurrentFirmware']);
     }
 
-    public function get(Response $response, PlatformsService $service, int $id = null): Response {
+    public function get(Response $response, PlatformsService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
         $result = $service->get($id);
         $response->getBody()->write(json_encode($result));

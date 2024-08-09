@@ -18,7 +18,7 @@ class Contacts extends RESTResource {
         $api->get('[/{id:\d+}]', [Contacts::class, 'get']);
     }
 
-    public function get(Response $response, DivisionsService $service, $id = null): Response {
+    public function get(Response $response, DivisionsService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
         $result = $service->getContact($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));

@@ -21,7 +21,7 @@ class Events extends RESTResource {
         $api->delete('', [Events::class, 'delete']);
     }
 
-    public function get(Request $request, Response $response, EventsService $service, int $id = null): Response {
+    public function get(Request $request, Response $response, EventsService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
         $queryParams = $request->getQueryParams();
         if($id !== null) $queryParams['id'] = $id;
@@ -53,7 +53,7 @@ class Events extends RESTResource {
         return $response;
     }
 
-    public function put(Request $request, Response $response, EventsService $service, int $id = null): Response {
+    public function put(Request $request, Response $response, EventsService $service, ?int $id = null): Response {
         $this->assureAllowed('update');
         $data = $request->getParsedBody();
         if($id !== null) $data['id'] = $id;

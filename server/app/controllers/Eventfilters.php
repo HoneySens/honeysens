@@ -19,7 +19,7 @@ class Eventfilters extends RESTResource {
         $api->delete('/{id:\d+}', [Eventfilters::class, 'delete']);
     }
 
-    public function get(Response $response, EventFiltersService $service, $id = null): Response {
+    public function get(Response $response, EventFiltersService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
         $result = $service->get($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
