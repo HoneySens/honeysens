@@ -1,10 +1,10 @@
 <?php
 namespace HoneySens\app\controllers;
 
-use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\services\SensorServicesService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Respect\Validation\Validator as V;
 
 class Services extends RESTResource {
 
@@ -18,14 +18,9 @@ class Services extends RESTResource {
         $api->get('/{id:\d+}/status', [Services::class, 'getStatus']);
     }
 
-    public function get(Response $response, SensorServicesService $service, $id = null) {
+    public function get(Response $response, SensorServicesService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $criteria = array('id' => $id);
-        try {
-            $result = $service->get($criteria);
-        } catch(\Exception $e) {
-            throw new NotFoundException();
-        }
+        $result = $service->get($id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
@@ -33,43 +28,47 @@ class Services extends RESTResource {
     /**
      * Requires a reference to a successfully completed verification task.
      */
-    public function post(Request $request, Response $response, SensorServicesService $service) {
+    public function post(Request $request, Response $response, SensorServicesService $service): Response {
         $this->assureAllowed('create');
-        $result = $service->create($request->getParsedBody(), $this->getSessionUser());
-        $response->getBody()->write(json_encode($result->getState()));
+        $data = $request->getParsedBody();
+        V::arrayType()->key('task', V::intVal())->check($data);
+        $task = $service->create($this->getSessionUser(), $data['task']);
+        $response->getBody()->write(json_encode($task->getState()));
         return $response;
     }
 
-    public function put(Request $request, Response $response, SensorServicesService $service, $id) {
+    public function put(Request $request, Response $response, SensorServicesService $service, int $id): Response {
         $this->assureAllowed('update');
-        $result = $service->update($id, $request->getParsedBody());
-        $response->getBody()->write(json_encode($result->getState()));
+        $data = $request->getParsedBody();
+        V::arrayType()->key('default_revision', V::stringType())->check($data);
+        $sensorService = $service->update($id, $data['default_revision']);
+        $response->getBody()->write(json_encode($sensorService->getState()));
         return $response;
     }
 
-    public function delete(Response $response, SensorServicesService $service, $id) {
+    public function delete(Response $response, SensorServicesService $service, int $id): Response {
         $this->assureAllowed('delete');
-        $service->delete($id);
+        $service->deleteService($id);
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function deleteRevision(Response $response, SensorServicesService $service, $id) {
+    public function deleteRevision(Response $response, SensorServicesService $service, int $id): Response {
         $this->assureAllowed('delete');
         $service->deleteRevision($id);
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function getStatusSummary(Response $response, SensorServicesService $service) {
+    public function getStatusSummary(Response $response, SensorServicesService $service): Response {
         $this->assureAllowed('get');
         $response->getBody()->write(json_encode($service->getStatusSummary()));
         return $response;
     }
 
-    public function getStatus(Response $response, SensorServicesService $service, $id) {
+    public function getStatus(Response $response, SensorServicesService $service, int $id): Response {
         $this->assureAllowed('get');
-        $result = $service->getStatus($id);
+        $result = $service->getServiceStatus($id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
