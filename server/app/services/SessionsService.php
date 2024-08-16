@@ -2,12 +2,12 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
 use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\User;
-use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
+use HoneySens\app\models\exceptions\SystemException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
-use Respect\Validation\Validator as V;
 
 class SessionsService extends Service {
 
@@ -16,57 +16,65 @@ class SessionsService extends Service {
 
     private ConfigParser $config;
     private LogService $logger;
+    private SystemService $systemService;
+    private UsersService $usersService;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger) {
+    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, SystemService $systemService, UsersService $usersService) {
         parent::__construct($em);
         $this->config = $config;
         $this->logger = $logger;
+        $this->systemService = $systemService;
+        $this->usersService = $usersService;
     }
 
     /**
-     * Authenticates a user.
+     * Authenticates a user with a given username and password.
+     * Creates a new session on the server, adds session headers to the client response
+     * and returns * an array carrying user data and associated permissions.
      *
-     * @param array $data
-     * @return array
+     * @param string $username Name of the user to authenticate as
+     * @param string $password Password to authenticate with
      * @throws ForbiddenException
-     * @throws BadRequestException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws SystemException
      */
-    public function create($data, UsersService $usersService, SystemService $systemService) {
+    public function create(string $username, string $password): array {
         // Disable login if the installer hasn't run yet
-        if($systemService->installRequired()) throw new ForbiddenException();
-        // Validation
-        V::arrayType()
-            ->key('username', V::stringType())
-            ->key('password', V::stringType())
-            ->check($data);
-        $user = $this->em->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $data['username']));
-        if(!V::objectType()->validate($user)) throw new ForbiddenException();
+        if($this->systemService->installRequired()) throw new ForbiddenException();
+        try {
+            $user = $this->em->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $username));
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        if($user === null) throw new ForbiddenException();
         // The validation procedure heavily depends on the user's domain
         switch($user->getDomain()) {
             case User::DOMAIN_LOCAL:
                 // Update password in case this user still relies on the deprecated hashing scheme
                 if($user->getLegacyPassword() != null) {
-                    if($user->getLegacyPassword() == sha1($data['password'])) {
+                    if($user->getLegacyPassword() == sha1($password)) {
                         // Password match - update scheme
-                        $user->setPassword($data['password']);
+                        $user->setPassword($password);
                         $user->setLegacyPassword(null);
-                        $this->em->flush();
+                        try {
+                            $this->em->flush();
+                        } catch(ORMException $e) {
+                            throw new SystemException($e);
+                        }
                     } else throw new ForbiddenException();
                 }
                 // Check password
-                if($user->getPassword() != null && password_verify($data['password'], $user->getPassword())) {
+                if($user->getPassword() != null && password_verify($password, $user->getPassword())) {
                     if($user->getRequirePasswordChange()) {
                         // User is not permitted to do anything except change his/her password
                         $guestUser = new User();
                         $guestUser->setRole(USER::ROLE_GUEST); // Temporarily assign guest permissions within this ession
-                        $userState = $usersService->getStateWithPermissionConfig($user);
+                        $userState = $this->usersService->getStateWithPermissionConfig($user);
                         $userState['permissions'] = $guestUser->getState()['permissions'];
                         $userState['permissions']['users'] = array('updateSelf');
                         $sessionTimeout = self::SESSION_TIMEOUT_CHANGEPW;
                         $this->logger->log(sprintf('Password change request sent to user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
                     } else {
-                        $userState = $usersService->getStateWithPermissionConfig($user);
+                        $userState = $this->usersService->getStateWithPermissionConfig($user);
                         $sessionTimeout = self::SESSION_TIMEOUT_DEFAULT;
                         $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
                     }
@@ -86,8 +94,8 @@ class SessionsService extends Service {
                         ldap_set_option($ldapHandle, LDAP_OPT_REFERRALS, 0);
                         try {
                             if($this->config['ldap']['encryption'] == '1') ldap_start_tls($ldapHandle);
-                            if(ldap_bind($ldapHandle, str_replace('%s', $data['username'], $this->config['ldap']['template']), $data['password']))  {
-                                $userState = $usersService->getStateWithPermissionConfig($user);
+                            if(ldap_bind($ldapHandle, str_replace('%s', $username, $this->config['ldap']['template']), $password))  {
+                                $userState = $this->usersService->getStateWithPermissionConfig($user);
                                 session_regenerate_id(true);
                                 $_SESSION['user'] = $userState;
                                 $_SESSION['authenticated'] = true;
@@ -107,14 +115,17 @@ class SessionsService extends Service {
     }
 
     /**
-     * Delete the session of a user.
+     * Close the server's active session of the currently logged in user.
+     * Returns an empty guest user model to clear frontend caches.
      *
+     * @param User $user Just used to log the identity of the user that's in process of being logged out.
      * @return User
+     * @throws SystemException
      */
-    public function delete(User $user) {
+    public function delete(User $user): User {
         $guestUser = new User();
         $guestUser->setRole(User::ROLE_GUEST);
-        if($user != null) $this->logger->log(sprintf('Logout by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
+        $this->logger->log(sprintf('Logout by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
         session_destroy();
         return $guestUser;
     }
