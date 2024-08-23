@@ -47,7 +47,7 @@ class TaskAdapter {
      * @throws OptimisticLockException
      * @throws Exception
      */
-    public function enqueue(?User $user, $type, $params) {
+    public function enqueue(?User $user, $type, $params): Task {
         // Persist
         $task = new Task();
         $task->setType($type)->setParams($params);

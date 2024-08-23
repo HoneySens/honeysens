@@ -155,7 +155,7 @@ class EMailAdapter {
     /**
      * Enqueues and returns a task to send a test E-Mail with the given parameters.
      */
-    public function sendTestMail($user, $from, $to, $smtpServer, $smtpPort, $smtpEncryption, $smtpUser, $smtpPassword) {
+    public function sendTestMail($user, $from, $to, $smtpServer, $smtpPort, $smtpEncryption, $smtpUser, $smtpPassword): Task {
         $taskParams = array(
             'test_mail' => true,
             'smtp_server' => $smtpServer,

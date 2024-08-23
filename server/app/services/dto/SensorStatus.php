@@ -1,7 +1,6 @@
 <?php
 namespace HoneySens\app\services\dto;
 
-use HoneySens\app\models\constants\SensorServiceStatus;
 use HoneySens\app\models\constants\SensorStatusFlag;
 
 class SensorStatus {
