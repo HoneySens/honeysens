@@ -3,6 +3,7 @@ namespace HoneySens\app\controllers;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query\ResultSetMapping;
+use HoneySens\app\models\entities\User;
 use HoneySens\app\services\DivisionsService;
 use HoneySens\app\services\dto\EventFilterConditions;
 use HoneySens\app\services\EventFiltersService;
@@ -176,7 +177,7 @@ class State extends RESTResource {
                 case 'settings':
                     try {
                         $this->assureAllowed('get', 'settings');
-                        $result[$table['name']] = $settingsService->get($this->getSessionUserID());
+                        $result[$table['name']] = $settingsService->get($this->getSessionUser()->getRole() === User::ROLE_ADMIN);
                     } catch(\Exception $e) {}
                     break;
                 case 'event_filters':

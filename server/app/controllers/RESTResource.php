@@ -75,6 +75,8 @@ abstract class RESTResource {
 
     /**
      * Returns a User object for the currently logged in user.
+     * In case no user is logged in, this throws an exception.
+     * This never returns a user with a guest role.
      *
      * @return User
      * @throws ForbiddenException

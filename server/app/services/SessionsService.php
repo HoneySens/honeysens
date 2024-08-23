@@ -119,7 +119,6 @@ class SessionsService extends Service {
      * Returns an empty guest user model to clear frontend caches.
      *
      * @param User $user Just used to log the identity of the user that's in process of being logged out.
-     * @return User
      * @throws SystemException
      */
     public function delete(User $user): User {

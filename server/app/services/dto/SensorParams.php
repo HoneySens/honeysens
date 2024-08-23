@@ -25,11 +25,11 @@ class SensorParams {
     public ?string $eapolAnonIdentity = null;
     // Server certificate for EAPOL, required for some configurations. If not set on update, the existing cert is kept.
     public ?string $eapolCACert;
-    // Client certificate for EAPOL in TLS mode. If not set on update, the existing password is kept.
+    // Client certificate for EAPOL in TLS mode. If not set on update, the existing certificate is kept.
     public ?string $eapolClientCert;
-    // Client key for EAPOL in TLS mode. If not set on update, the existing password is kept.
+    // Client key for EAPOL in TLS mode. If not set on update, the existing key is kept.
     public ?string $eapolClientKey;
-    // Client key passphrase for EAPOL in TLS mode. If not set on update, the existing password is kept.
+    // Client key passphrase for EAPOL in TLS mode. If not set on update, the existing passphrase is kept.
     public ?string $eapolClientKeyPassword;
 
     // Whether to use the global or a sensor-specific custom server endpoint
