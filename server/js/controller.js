@@ -92,7 +92,6 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                                     HoneySens.data.models.contacts.reset(data.contacts);
                                     HoneySens.data.models.services.reset(data.services);
                                     HoneySens.data.models.platforms.reset(data.platforms);
-                                    HoneySens.data.models.stats.set(data.stats);
                                     HoneySens.data.models.tasks.reset(data.tasks);
                                     HoneySens.data.models.logs.reset();
                                     HoneySens.data.settings.set(data.settings);
@@ -154,8 +153,7 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
             });
 
             HoneySens.commands.setHandler('fetchUpdates', function() {
-                let stats = HoneySens.data.models.stats,
-                    url = 'api/state?ts=' + HoneySens.data.lastUpdateTimestamp + '&last_id=' + HoneySens.data.lastEventID + '&stats_year=' + stats.get('year') + '&stats_month='+ stats.get('month') + '&stats_division=' + stats.get('division');
+                let url = 'api/state?ts=' + HoneySens.data.lastUpdateTimestamp + '&last_id=' + HoneySens.data.lastEventID;
                 $.ajax({
                     type: 'GET',
                     url: url,
@@ -176,7 +174,6 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                         if(_.has(data, 'contacts')) HoneySens.data.models.contacts.set(data.contacts);
                         if(_.has(data, 'services')) HoneySens.data.models.services.set(data.services);
                         if(_.has(data, 'platforms')) HoneySens.data.models.platforms.set(data.platforms);
-                        if(_.has(data, 'stats')) HoneySens.data.models.stats.set(data.stats);
                         if(_.has(data, 'tasks')) HoneySens.data.models.tasks.set(data.tasks);
                         HoneySens.vent.trigger('models:updated');
                         HoneySens.execute('counter:start');
@@ -227,7 +224,6 @@ function(HoneySens, Models, AppLayoutView, LoginView, NavigationView, SidebarVie
                     HoneySens.data.models.contacts.reset(data.contacts);
                     HoneySens.data.models.services.reset(data.services);
                     HoneySens.data.models.platforms.reset(data.platforms);
-                    HoneySens.data.models.stats.set(data.stats);
                     HoneySens.data.models.tasks.reset(data.tasks);
                     HoneySens.data.settings.set(data.settings);
                     HoneySens.data.system.set(data.system);

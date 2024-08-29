@@ -4,6 +4,7 @@ namespace HoneySens\app\controllers;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query\ResultSetMapping;
 use HoneySens\app\models\entities\User;
+use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\services\DivisionsService;
 use HoneySens\app\services\dto\EventFilterConditions;
 use HoneySens\app\services\EventFiltersService;
@@ -12,7 +13,6 @@ use HoneySens\app\services\PlatformsService;
 use HoneySens\app\services\SensorServicesService;
 use HoneySens\app\services\SensorsService;
 use HoneySens\app\services\SettingsService;
-use HoneySens\app\services\StatsService;
 use HoneySens\app\services\SystemService;
 use HoneySens\app\services\TasksService;
 use HoneySens\app\services\UsersService;
@@ -28,7 +28,7 @@ class State extends RESTResource {
 
     /**
      * Returns an array containing full current application state information (e.g. all entities)
-     *  that is accessible for the given user.
+     * that is accessible for the given user.
      */
     public function get(Request $request,
                         Response $response,
@@ -40,7 +40,6 @@ class State extends RESTResource {
                         SensorsService $sensorsService,
                         SensorServicesService $sensorServicesService,
                         SettingsService $settingsService,
-                        StatsService $statsService,
                         SystemService $systemService,
                         TasksService $tasksService,
                         UsersService $usersService) {
@@ -55,19 +54,24 @@ class State extends RESTResource {
         V::optional(V::intVal())->check($ts);
         V::optional(V::oneOf(V::intVal(), V::equals('null')))->check($lastEventId);
         $now = new \DateTime();
-        $state = $this->getEntities(
-            $em,
-            $platformsService,
-            $sensorsService,
-            $usersService,
-            $divisionsService,
-            $settingsService,
-            $eventFiltersService,
-            $sensorServicesService,
-            $statsService,
-            $tasksService,
-            $ts,
-            $stateParams);
+        try {
+            $state = $this->getEntities(
+                $em,
+                $platformsService,
+                $sensorsService,
+                $usersService,
+                $divisionsService,
+                $settingsService,
+                $eventFiltersService,
+                $sensorServicesService,
+                $tasksService,
+                $this->getSessionUser(),
+                $ts,
+                $stateParams);
+        } catch(ForbiddenException) {
+            // In case no user is logged in
+            $state = array();
+        }
         if($ts === null) {
             $state['new_events'] = array();
             $state['system'] = $systemService->getSystemInfo();
@@ -114,8 +118,8 @@ class State extends RESTResource {
                                  SettingsService $settingsService,
                                  EventFiltersService $eventFiltersService,
                                  SensorServicesService $sensorServicesService,
-                                 StatsService $statsService,
                                  TasksService $tasksService,
+                                 User $sessionUser,
                                  ?int $ts = null,
                                  array $attributes = array()) {
         $result = array();
@@ -129,8 +133,7 @@ class State extends RESTResource {
                 5 => ['name' => 'settings'],
                 6 => ['name' => 'event_filters'],
                 7 => ['name' => 'services'],
-                8 => ['name' => 'stats'],
-                9 => ['name' => 'tasks']
+                8 => ['name' => 'tasks']
             ];
         } else {
             $timestamp = new \DateTime('@' . $ts);
@@ -153,7 +156,7 @@ class State extends RESTResource {
                 case 'sensors':
                     try {
                         $this->assureAllowed('get', 'sensors');
-                        $result[$table['name']] = $sensorsService->get($this->getSessionUser());
+                        $result[$table['name']] = $sensorsService->get($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'users':
@@ -165,45 +168,31 @@ class State extends RESTResource {
                 case 'divisions':
                     try {
                         $this->assureAllowed('get', 'divisions');
-                        $result[$table['name']] = $divisionsService->get($this->getSessionUser());
+                        $result[$table['name']] = $divisionsService->get($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'contacts':
                     try {
                         $this->assureAllowed('get', 'contacts');
-                        $result[$table['name']] = $divisionsService->getContact($this->getSessionUser());
+                        $result[$table['name']] = $divisionsService->getContact($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'settings':
                     try {
                         $this->assureAllowed('get', 'settings');
-                        $result[$table['name']] = $settingsService->get($this->getSessionUser()->getRole() === User::ROLE_ADMIN);
+                        $result[$table['name']] = $settingsService->get($sessionUser->getRole() === User::ROLE_ADMIN);
                     } catch(\Exception $e) {}
                     break;
                 case 'event_filters':
                     try {
                         $this->assureAllowed('get', 'eventfilters');
-                        $result[$table['name']] = $eventFiltersService->get($this->getSessionUser());
+                        $result[$table['name']] = $eventFiltersService->get($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'services':
                     try {
                         $this->assureAllowed('get', 'services');
                         $result[$table['name']] = $sensorServicesService->get();
-                    } catch(\Exception $e) {}
-                    break;
-                case 'stats':
-                    try {
-                        if ($ts === null) {
-                            $result[$table['name']] = $statsService->get(array(
-                                'userID' => $attributes['userID']));
-                        } else {
-                            $result[$table['name']] = $statsService->get(array(
-                                'userID' => $attributes['userID'],
-                                'year' => $attributes['stats_year'],
-                                'month' => $attributes['stats_month'],
-                                'division' => $attributes['stats_division']));
-                        }
                     } catch(\Exception $e) {}
                     break;
                 case 'tasks':
