@@ -570,7 +570,6 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             HoneySens.data.models.contacts = new Models.IncidentContacts();
             HoneySens.data.models.services = new Models.Services();
             HoneySens.data.models.platforms = new Models.Platforms();
-            HoneySens.data.models.stats = new Models.Stats();
             HoneySens.data.models.tasks = new Models.Tasks();
             HoneySens.data.models.logs = new Models.Logs([], {state: {totalRecords: 0}});
             HoneySens.data.session.user = new Models.User();

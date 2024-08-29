@@ -20,7 +20,7 @@ function(HoneySens, Routing, Models, LayoutView, SummaryView) {
 
             HoneySens.reqres.setHandler('dashboard:show', function() {
                 if(!HoneySens.assureAllowed('events', 'get')) return false;
-               contentRegion.show(new SummaryView({model: HoneySens.data.models.stats.clone()}));
+                contentRegion.show(new SummaryView({model: new Models.Stats()}));
                 router.navigate('');
                 HoneySens.vent.trigger('dashboard:shown');
             });

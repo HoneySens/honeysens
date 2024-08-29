@@ -1,39 +1,26 @@
 <?php
 namespace HoneySens\app\services;
 
-use Doctrine\ORM\EntityManager;
-use Respect\Validation\Validator as V;
+use HoneySens\app\models\entities\User;
 
 class StatsService extends Service {
 
     /**
-     * Fetches statistical data from the DB by various criteria:
-     * - userID: return only data that the given user is permitted to see
-     * - year: returns only data that belongs to the given year
-     * - month: return only data that belongs to the given month
-     * - division: return only data that belongs to the given division
+     * Returns an event timeline and classification type breakdown,
+     * filterable by month year and division.
      *
-     * @param array $criteria
-     * @return array
+     * @param User $user User for which to retrieve stats; admins receive all data
+     * @param int|null $divisionID Division for which to retrieve stats
+     * @param int|null $year Year for which to retrieve stats, uses current year if null
+     * @param int|null $month If not null, breaks down the results for a single month
      */
-    public function get($criteria) {
+    public function get(User $user, ?int $divisionID = null, ?int $year = null, ?int $month = null): array {
         // Default to current year
-        $year = date('Y');
-        if (V::key('year', V::intVal()->between(1970, 2200))->validate($criteria)) {
-            $year = $criteria['year'];
-        }
-        $month = null;
-        if (V::key('month', V::intVal()->between(0, 12))->validate($criteria)) {
-            $month = $criteria['month'];
-        }
-        $division = null;
-        if (V::key('division', V::intVal())->validate($criteria)) {
-            $division = $criteria['division'];
-        }
+        $year = $year ?? date('Y');
 
         // Event timeline
         $timelineQB = $this->em->createQueryBuilder();
-        if ($month) {
+        if ($month !== null) {
             // Month specified, show single days
             $timelineQB->select(array('COUNT(e) AS events', 'DAY(e.timestamp) AS tick'))
                 ->from('HoneySens\app\models\entities\Event', 'e')
@@ -57,13 +44,13 @@ class StatsService extends Service {
                 ->setParameter('year', $year);
 
         }
-        if (V::key('userID', V::intType())->validate($criteria)) {
+        if($user->getRole() !== User::ROLE_ADMIN) {
             $timelineQB->andWhere(':userid MEMBER OF d.users')
-                ->setParameter('userid', $criteria['userID']);
+                ->setParameter('userid', $user->getId());
         }
-        if ($division) {
+        if($divisionID !== null) {
             $timelineQB->andWhere($timelineQB->expr()->eq('d.id', ':division'))
-                ->setParameter('division', $division);
+                ->setParameter('division', $divisionID);
         }
         $eventsTimeline = $timelineQB->getQuery()->getResult();
 
@@ -76,23 +63,23 @@ class StatsService extends Service {
             ->groupBy('classification')
             ->andWhere($timelineQB->expr()->eq('YEAR(e.timestamp)', ':year'))
             ->setParameter('year', $year);
-        if ($month) {
+        if ($month !== null) {
             $classificationQB->andWhere($classificationQB->expr()->eq('MONTH(e.timestamp)', ':month'))
                 ->setParameter('month', $month);
         }
-        if (V::key('userID', V::intType())->validate($criteria)) {
+        if($user->getRole() !== User::ROLE_ADMIN) {
             $classificationQB->andWhere(':userid MEMBER OF d.users')
-                ->setParameter('userid', $criteria['userID']);
+                ->setParameter('userid', $user->getId());
         }
-        if ($division) {
+        if ($divisionID !== null) {
             $classificationQB->andWhere($classificationQB->expr()->eq('d.id', ':division'))
-                ->setParameter('division', $criteria['division']);
+                ->setParameter('division', $divisionID);
         }
         $classificationBreakdown = $classificationQB->getQuery()->getResult();
         return array(
             'year' => $year,
             'month' => $month,
-            'division' => $division,
+            'division' => $divisionID,
             'events_timeline' => $eventsTimeline,
             'classification' => $classificationBreakdown
         );

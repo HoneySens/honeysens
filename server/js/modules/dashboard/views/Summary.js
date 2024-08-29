@@ -45,6 +45,7 @@ function(HoneySens, EventsTimelineView, ClassificationBreakdownView, SummaryTpl)
             },
             initialize: function() {
                 var view = this;
+                view.model.fetch();
                 HoneySens.reqres.setHandler('dashboard:filter:division', function(id) {
                     view.model.fetch({data: {year: parseInt(view.model.get('year')), month: view.model.get('month'), division: id}});
                 });
