@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use HoneySens\app\models\Utils;
 use HoneySens\app\services\SystemService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -20,28 +21,32 @@ class System extends RESTResource {
         $api->post('/install', [System::class, 'install']);
     }
 
-    public function getSystemInfo(Response $response, SystemService $service) {
-        $response->getBody()->write(json_encode($service->getSystemInfo()));
+    public function getSystemInfo(Response $response, SystemService $service): Response {
+        $response->getBody()->write(json_encode($service->getSystemInfo($this->getServerCert())));
         return $response;
     }
 
-    public function removeAllEvents(Response $response, SystemService $service) {
-        $service->removeAllEvents();
+    public function removeAllEvents(Response $response, SystemService $service): Response {
+        $service->removeAllEvents($this->getSessionUser());
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function refreshCertificates(Response $response, SystemService $service) {
-        $service->refreshCertificates();
+    public function refreshCertificates(Response $response, SystemService $service): Response {
+        $service->refreshCertificates($this->getSessionUser());
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function install(Request $request, Response $response, SystemService $service) {
-        $request = $request->getBody()->getContents();
-        V::json()->check($request);
-        $installData = json_decode($request);
-        $systemData = $service->install($installData);
+    public function install(Request $request, Response $response, SystemService $service): Response {
+        $data = $request->getParsedBody();
+        V::arrayType()
+            ->key('email', Utils::emailValidator())
+            ->key('password', V::stringType()->length(6, 255))
+            ->key('serverEndpoint', V::stringType())
+            ->key('divisionName', V::alnum()->length(1, 255))
+            ->check($data);
+        $systemData = $service->install($data['email'], $data['password'], $data['serverEndpoint'], $data['divisionName']);
         $response->getBody()->write(json_encode($systemData));
         return $response;
     }
