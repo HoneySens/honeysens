@@ -74,7 +74,7 @@ class State extends RESTResource {
         }
         if($ts === null) {
             $state['new_events'] = array();
-            $state['system'] = $systemService->getSystemInfo();
+            $state['system'] = $systemService->getSystemInfo($this->getServerCert());
             $state['user'] = $_SESSION['user'];
         } else {
             // Return incremental state

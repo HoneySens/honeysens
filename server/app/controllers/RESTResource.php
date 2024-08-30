@@ -15,6 +15,7 @@ abstract class RESTResource {
     const HEADER_HMAC_ALGO = 'x-hs-type';
     const HEADER_SENSOR = 'x-hs-sensor';
     const HEADER_TIMESTAMP = 'x-hs-ts';
+    const SERVER_TLS_CERT_PATH = '/srv/tls/https.crt';
 
     private EntityManager $em;
     private LogService $logger;
@@ -142,8 +143,8 @@ abstract class RESTResource {
     /**
      * Returns the current server TLS certificate data as a string.
      */
-    public function getServerCert() {
-        return file_get_contents('/srv/tls/https.crt');
+    public function getServerCert(): string {
+        return file_get_contents(self::SERVER_TLS_CERT_PATH);
     }
 
     /**

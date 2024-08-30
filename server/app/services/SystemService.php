@@ -1,22 +1,24 @@
 <?php
 namespace HoneySens\app\services;
 
+use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\Tools\SchemaTool;
+use Doctrine\ORM\Tools\ToolsException;
 use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
-use HoneySens\app\models\Utils;
+use HoneySens\app\models\exceptions\SystemException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use phpseclib3\File\X509;
-use Respect\Validation\Validator as V;
 
 class SystemService extends Service {
 
     const VERSION = '2.7.0';
-    const ERR_UNKNOWN = 0;
     const ERR_CONFIG_WRITE = 1;
 
     private ConfigParser $config;
@@ -29,24 +31,25 @@ class SystemService extends Service {
     }
 
     /**
-     * Figures out if the installer hasn't been run on this installation yet.
-     *
-     * @return bool
+     * Figures out whether the installer hasn't been run on this installation yet.
      */
-    public function installRequired() {
+    public function installRequired(): bool {
         return $this->config->getBoolean('server', 'setup');
     }
 
     /**
      * Returns metadata about the server, some of it relevant specifically for the setup process.
+     * The provided TLS certificate will be parsed to get the server's common name (CN).
+     *
+     * @param string $serverTLSCert PEM-formatted TLS certificate
      */
-    public function getSystemInfo() {
+    public function getSystemInfo(string $serverTLSCert): array {
         // Fetch TLS cert common name
         $commonName = null;
         $x509 = new X509();
         try {
             // Manually select the first cert of a potential chain (see https://github.com/phpseclib/phpseclib/issues/708)
-            $certs = preg_split('#-+BEGIN CERTIFICATE-+#', file_get_contents('/srv/tls/https.crt'));
+            $certs = preg_split('#-+BEGIN CERTIFICATE-+#', $serverTLSCert);
             array_shift($certs); // Remove the first empty element
             $cert = $x509->loadX509(sprintf('%s%s', '-----BEGIN CERTIFICATE-----', array_shift($certs)));
             foreach($cert['tbsCertificate']['subject']['rdnSequence'] as $prim) {
@@ -58,7 +61,7 @@ class SystemService extends Service {
                     }
                 }
             }
-        } catch(\Exception $e) {}
+        } catch(\Exception) {}
         return array(
             'build_id' => getenv('BUILD_ID'),
             'version' => self::VERSION,
@@ -68,13 +71,14 @@ class SystemService extends Service {
 
     /**
      * Removes all events from the database, including archived ones.
-     * Only admin users are permitted to execute that action.
+     * Only admin users are permitted to call this method.
      *
+     * @param User $user User calling this method
      * @throws ForbiddenException
+     * @throws SystemException
      */
-    public function removeAllEvents() {
-        // This can only be invoked from an admin session
-        if($_SESSION['user']['role'] != User::ROLE_ADMIN) throw new ForbiddenException();
+    public function removeAllEvents(User $user): void {
+        if($user->getRole() !== User::ROLE_ADMIN) throw new ForbiddenException();
         // QueryBuilder seems to ignore the cascade on delete specifications and fails with constraint checks,
         // if we just delete events here. As a workaround we will manually do the cascade stuff by deleting
         // referenced event details and packets first.
@@ -96,18 +100,17 @@ class SystemService extends Service {
      * 1. Creation of a new CA certificate from an existing key and regeneration of all sensor certificates (keeping their private keys).
      * 2. For self-signed setups: Creation of a new TLS certificate and signing that with the new CA.
      * 3. Restart of affected services.
+     * Only admin users are permitted to call this method.
      *
+     * @param User $user User calling this method
      * @throws BadRequestException
      * @throws ForbiddenException
+     * @throws SystemException
      */
-    public function refreshCertificates() {
-        // This can only be invoked from an admin session
-        if($_SESSION['user']['role'] != User::ROLE_ADMIN) throw new ForbiddenException();
+    public function refreshCertificates(User $user): void {
+        if($user->getRole() !== User::ROLE_ADMIN) throw new ForbiddenException();
         $caKeyPath = APPLICATION_PATH . '/../data/CA/ca.key';
-        $caCrtPath = APPLICATION_PATH . '/../data/CA/ca.crt';
-        if(!file_exists($caKeyPath)) {
-            throw new BadRequestException();
-        }
+        if(!file_exists($caKeyPath)) throw new BadRequestException();
         // Create new CA cert from existing private key
         exec('/etc/startup.d/02_regen_honeysens_ca.sh force');
         // Recreate TLS certificates
@@ -120,60 +123,61 @@ class SystemService extends Service {
 
     /**
      * Performs the initial configuration of a newly installed system.
-     * Expects an object with the following parameters:
-     * {
-     *   password: <admin password>,
-     *   serverEndpoint: <server endpoint>,
-     *   divisionName: <name of the initial division to create>
-     * }
+     * Creates an administrative account, an initial division and sets the server hostname.
      *
-     * @param $data
-     * @return array
-     * @throws ForbiddenException
+     * @param string $adminEmail Administrator e-mail address
+     * @param string $adminPassword Administrator password
+     * @param string $serverHostname Server DNS hostname
+     * @param string $initialDivision Name of the newly created division
      * @throws BadRequestException
+     * @throws SystemException
      */
-    public function install($data) {
-        if(!$this->installRequired() || $this->em->getConnection()->getSchemaManager()->tablesExist(array('users'))) {
-            throw new ForbiddenException();
-        };
-        // Validation
-        V::objectType()
-            ->attribute('email', Utils::emailValidator())
-            ->attribute('password', V::stringType()->length(6, 255))
-            ->attribute('serverEndpoint', V::stringType())
-            ->attribute('divisionName', V::alnum()->length(1, 255))
-            ->check($data);
-        // Persistence
-        $this->initDBSchema($this->em, $data->email, $data->password, $data->divisionName);
-        $this->config->set('server', 'host', $data->serverEndpoint);
+    public function install(string $adminEmail, string $adminPassword, string $serverHostname, string $initialDivision): array {
+        try {
+            if (!$this->installRequired() || $this->em->getConnection()->createSchemaManager()->tablesExist(array('users'))) {
+                throw new ForbiddenException();
+            };
+            $this->initDBSchema($adminEmail, $adminPassword, $initialDivision);
+        } catch(\Exception $e) {
+            throw new SystemException($e);
+        }
+        $this->config->set('server', 'host', $serverHostname);
         $this->config->set('server', 'setup', 'false');
         try {
             $this->config->save();
-        } catch (\ErrorException $e) {
+        } catch (\Exception) {
             throw new BadRequestException(self::ERR_CONFIG_WRITE);
         }
-        return array('cert_cn' => $data->serverEndpoint,
+        return array('cert_cn' => $serverHostname,
             'setup' => false);
     }
 
     /**
      * Creates the database schema, a division and an administrative user
      * associated with that division.
+     *
+     * @param string $adminEMail Administrator e-mail address
+     * @param string $adminPassword Administrator password
+     * @param string $divisionName Name of the newly created division
+     * @throws DBALException
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws ToolsException
      */
-    private function initDBSchema($em, $adminEMail, $adminPassword, $divisionName) {
-        $con = $em->getConnection();
-        $schemaTool = new SchemaTool($em);
-        $classes = $em->getMetadataFactory()->getAllMetadata();
+    private function initDBSchema(string $adminEMail, string $adminPassword, string $divisionName): void {
+        $con = $this->em->getConnection();
+        $schemaTool = new SchemaTool($this->em);
+        $classes = $this->em->getMetadataFactory()->getAllMetadata();
         // Remove existing tables
         $schemaTool->dropSchema($classes);
-        $con->query('DROP TABLE IF EXISTS `last_updates`');
+        $con->executeStatement('DROP TABLE IF EXISTS `last_updates`');
         // Create schema
         $schemaTool->createSchema($classes);
-        $this->addLastUpdatesTable($em);
+        $this->addLastUpdatesTable();
         // Initial division
         $division = new Division();
         $division->setName($divisionName);
-        $em->persist($division);
+        $this->em->persist($division);
         // Default admin user
         $admin = new User();
         $admin
@@ -184,18 +188,23 @@ class SystemService extends Service {
             ->setEmail($adminEMail)
             ->setRole($admin::ROLE_ADMIN)
             ->addToDivision($division);
-        $em->persist($admin);
-        // Platforms
-        $connection = $em->getConnection();
-        $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("1", "bbb", "BeagleBone Black", "BeagleBone Black is a low-cost, community-supported development platform.", "bbb")')->execute();
-        $connection->prepare('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("2", "docker_x86", "Docker (x86)", "Dockerized sensor platform to be used on generic x86 hardware.", "docker_x86")')->execute();
-        $em->flush();
+        $this->em->persist($admin);
+        // Add Platforms
+        $connection = $this->em->getConnection();
+        $connection->executeStatement('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("1", "bbb", "BeagleBone Black", "BeagleBone Black is a low-cost, community-supported development platform.", "bbb")');
+        $connection->executeStatement('INSERT IGNORE INTO platforms(id, name, title, description, discr) VALUES ("2", "docker_x86", "Docker (x86)", "Dockerized sensor platform to be used on generic x86 hardware.", "docker_x86")');
+        $this->em->flush();
     }
 
-    private function addLastUpdatesTable($em) {
-        // Add non-model table 'last_updates'
-        $connection = $em->getConnection();
-        $connection->prepare('CREATE TABLE last_updates(table_name VARCHAR(50) PRIMARY KEY, timestamp DATETIME)')->execute();
-        $connection->prepare('INSERT INTO last_updates (table_name, timestamp) VALUES ("platforms", NOW()), ("sensors", NOW()), ("users", NOW()), ("divisions", NOW()), ("contacts", NOW()), ("settings", NOW()), ("event_filters", NOW()), ("stats", NOW()), ("services", NOW()), ("tasks", NOW())')->execute();
+    /**
+     * Adds a non-model table called 'last_updates'
+     * that tracks update timestamps for each entity table.
+     *
+     * @throws DBALException
+     */
+    private function addLastUpdatesTable(): void {
+        $connection = $this->em->getConnection();
+        $connection->executeStatement('CREATE TABLE last_updates(table_name VARCHAR(50) PRIMARY KEY, timestamp DATETIME)');
+        $connection->executeStatement('INSERT INTO last_updates (table_name, timestamp) VALUES ("platforms", NOW()), ("sensors", NOW()), ("users", NOW()), ("divisions", NOW()), ("contacts", NOW()), ("settings", NOW()), ("event_filters", NOW()), ("stats", NOW()), ("services", NOW()), ("tasks", NOW())');
     }
 }

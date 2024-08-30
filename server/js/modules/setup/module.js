@@ -45,6 +45,7 @@ function(HoneySens, Routing, LayoutView, ErrorView, LandingView, AdminPasswordVi
                             type: 'POST',
                             url: 'api/system/install',
                             data: JSON.stringify(data.model),
+                            contentType: 'application/json',
                             success: function() {
                                 contentRegion.show(new FinalizeInstallView());
                             },
