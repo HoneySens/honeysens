@@ -3,6 +3,7 @@ namespace HoneySens\app\adapters;
 
 use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\ORM\EntityManager;
+use HoneySens\app\models\constants\TemplateType;
 use HoneySens\app\models\entities\Template;
 use HoneySens\app\models\entities\TemplateOverlay;
 use HoneySens\app\models\exceptions\NotFoundException;
@@ -54,24 +55,24 @@ class TemplateAdapter {
     /**
      * Returns the template of the given type.
      *
-     * @param int $type
+     * @param TemplateType $type
      * @return Template|null
      * @throws NotFoundException
      */
-    public function getTemplate($type) {
-        if(in_array($type, array_keys($this->templates), true)) {
-            return $this->templates[$type];
+    public function getTemplate(TemplateType $type) {
+        if(in_array($type->value, array_keys($this->templates), true)) {
+            return $this->templates[$type->value];
         } else throw new NotFoundException();
     }
 
     /**
      * Sets the given overlay string (or null) as the overlay for a given template type.
      *
-     * @param int $type
+     * @param TemplateType int $type
      * @param string|null $overlay
      * @throws NotFoundException
      */
-    public function setOverlay($type, $overlay) {
+    public function setOverlay(TemplateType $type, $overlay) {
         $template = $this->getTemplate($type);
         if($template->getOverlay() != null) {
             // Update/delete existing overlay
@@ -84,7 +85,7 @@ class TemplateAdapter {
         } elseif($overlay != null) {
             // Add new overlay
             $templateOverlay = new TemplateOverlay();
-            $templateOverlay->setType($type)->setTemplate($overlay);
+            $templateOverlay->setType($type->value)->setTemplate($overlay);
             $this->em->persist($templateOverlay);
             $template->setOverlay($templateOverlay);
         }
@@ -99,8 +100,8 @@ class TemplateAdapter {
      * @param array $data
      * @return string
      */
-    public function processTemplate($type, array $data) {
-       $template = $this->templates[$type];
+    public function processTemplate(TemplateType $type, array $data) {
+       $template = $this->templates[$type->value];
        $result = $template->getActiveTemplate();
        foreach($data as $var => $val) $result = str_replace('{{' . $var . '}}', $val, $result);
        return $result;
