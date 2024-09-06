@@ -11,8 +11,6 @@ namespace HoneySens\app\models\entities;
  */
 class Template {
 
-    const TYPE_EMAIL_EVENT_NOTIFICATION = 0;
-
     /**
      * Template type (message type this template applies to)
      *

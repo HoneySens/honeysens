@@ -2,6 +2,7 @@
 namespace HoneySens\app\adapters;
 
 use HoneySens\app\models\constants\EventDetailType;
+use HoneySens\app\models\constants\TemplateType;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventPacket;
 use HoneySens\app\models\entities\Task;
@@ -136,7 +137,7 @@ class EMailAdapter {
         if(count($contacts) == 0) return array('success' => true);
         // Prepare content
         $subject = $event->getClassification() >= $event::CLASSIFICATION_LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
-        $body = $this->templateAdapter->processTemplate(Template::TYPE_EMAIL_EVENT_NOTIFICATION, array(
+        $body = $this->templateAdapter->processTemplate(TemplateType::EMAIL_EVENT_NOTIFICATION, array(
             'ID' => $event->getId(),
             'SUMMARY' => $this->createEventSummary($event),
             'DETAILS' => $this->createEventDetails($event)
