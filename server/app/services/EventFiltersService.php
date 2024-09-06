@@ -2,7 +2,6 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Exception\NotSupported;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
@@ -117,7 +116,7 @@ class EventFiltersService extends Service {
     public function update(User $user, int $id, string $name, int $type, int $divisionID, array $conditions, ?string $description, bool $enabled): EventFilter {
         try {
             $filter = $this->em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
-        } catch (NotSupported $e) {
+        } catch (ORMException $e) {
             throw new SystemException($e);
         }
         if($filter === null) throw new BadRequestException();
@@ -131,11 +130,15 @@ class EventFiltersService extends Service {
         $filter->setType($type);
         $filter->setDescription($description);
         $filter->setEnabled($enabled);
-        $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($divisionID);
+        try {
+            $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($divisionID);
+            $conditionRepository = $this->em->getRepository('HoneySens\app\models\entities\EventFilterCondition');
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
         if($division === null) throw new BadRequestException();
         $filter->setDivision($division);
         // Process condition association
-        $conditionRepository = $this->em->getRepository('HoneySens\app\models\entities\EventFilterCondition');
         $forUpdate = array();
         $toAdd = array();
         foreach($conditions as $conditionData) {

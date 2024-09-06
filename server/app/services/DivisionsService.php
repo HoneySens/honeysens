@@ -74,7 +74,7 @@ class DivisionsService extends Service {
      */
     public function create(string $name, array $users, array $contacts): Division {
         // Name duplication check
-        if($this->getDivisionByName($name) != null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
+        if($this->getDivisionByName($name) !== null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
         // Persistence
         $division = new Division();
         $division->setName($name);

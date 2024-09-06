@@ -1,11 +1,9 @@
 <?php
 namespace HoneySens\app\controllers;
 
-use Exception;
-use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\services\TasksService;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Respect\Validation\Validator as V;
 
 class Tasks extends RESTResource {
 
@@ -17,50 +15,40 @@ class Tasks extends RESTResource {
         $api->delete('/{id:\d+}', [Tasks::class, 'delete']);
     }
 
-    public function get(Response $response, TasksService $service, $id = null) {
+    public function get(Response $response, TasksService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $criteria = array(
-            'userID' => $this->getSessionUserID(),
-            'id' => $id);
-        try {
-            $result = $service->get($criteria);
-        } catch(Exception $e) {
-            throw new NotFoundException();
-        }
+        $result = $service->get($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function downloadResult(TasksService $service, $id, $delete = 0) {
+    public function downloadResult(TasksService $service, int $id, $delete = 0): Response {
         $this->assureAllowed('get');
-        [$filePath, $fileName, $callback] = $service->downloadResult($id, $this->getSessionUser(), boolval($delete));
+        V::intVal()->between(0, 1)->check($delete);
+        [$filePath, $fileName, $callback] = $service->downloadResult($this->getSessionUser(), $id, boolval($delete));
         $this->offerFile($filePath, $fileName, $callback);
     }
 
-    public function getStatus(Response $response, TasksService $service) {
+    public function getStatus(Response $response, TasksService $service): Response {
         $this->assureAllowed('get');
-        try {
-            $result = array('queue_length' => $service->getBrokerQueueLength());
-            $response->getBody()->write(json_encode($result));
-            return $response;
-        } catch(Exception $e) {
-            throw new NotFoundException();
-        }
+        $result = array('queue_length' => $service->getBrokerQueueLength());
+        $response->getBody()->write(json_encode($result));
+        return $response;
     }
 
     /**
-     * Generic endpoint to upload files, returns the ID of the associated verification task.
+     * Generic endpoint to upload files, returns the associated verification task's state.
      */
-    public function upload(Response $response, TasksService $service) {
+    public function upload(Response $response, TasksService $service): Response {
         $this->assureAllowed('upload');
         $state = $service->upload($this->getSessionUser());
         $response->getBody()->write(json_encode($state));
         return $response;
     }
 
-    public function delete(Response $response, TasksService $service, $id) {
+    public function delete(Response $response, TasksService $service, int $id): Response {
         $this->assureAllowed('delete');
-        $service->delete($id, $this->getSessionUser());
+        $service->delete($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode([]));
         return $response;
     }

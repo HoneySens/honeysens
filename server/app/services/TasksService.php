@@ -2,6 +2,7 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use HoneySens\app\adapters\TaskAdapter;
@@ -10,8 +11,9 @@ use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
+use HoneySens\app\models\exceptions\NotFoundException;
+use HoneySens\app\models\exceptions\SystemException;
 use HoneySens\app\models\Utils;
-use Respect\Validation\Validator as V;
 
 class TasksService extends Service {
 
@@ -30,84 +32,100 @@ class TasksService extends Service {
     }
 
     /**
-     * Fetches tasks from the DB by various criteria:
-     * - userID: return only tasks that belong to the user with the given id
-     * - id: return the task with the given id
-     * If no criteria are given, all tasks are returned.
+     * Fetches tasks from the DB.
      *
-     * @param $criteria
-     * @return array
-     * @throws NoResultException
-     * @throws NonUniqueResultException
-     * @throws ForbiddenException
+     * @param User $user User for which to retrieve associated entities; admins receive all entities
+     * @param int|null $id ID of a specific task to fetch
+     * @throws NotFoundException
      */
-    public function get($criteria) {
+    public function get(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('t')->from('HoneySens\app\models\entities\Task', 't');
-        if(V::key('userID', V::intType())->validate($criteria)) {
+        if($user->getRole() !== User::ROLE_ADMIN) {
             $qb->join('t.user', 'u')
                 ->andWhere('u.id = :user')
-                ->setParameter('user', $criteria['userID']);
+                ->setParameter('user', $user->getId());
         }
-        if(V::key('id', V::intVal())->validate($criteria)) {
-            $qb->andWhere('t.id = :id')
-                ->setParameter('id', $criteria['id']);
-            return $qb->getQuery()->getSingleResult()->getState();
-        } else {
-            // Hide system tasks (that don't belong to any particular user)
-            $qb->andWhere('t.user IS NOT NULL');
-            $tasks = array();
-            foreach($qb->getQuery()->getResult() as $task) {
-                $tasks[] = $task->getState();
+        try {
+            if ($id !== null) {
+                $qb->andWhere('t.id = :id')
+                    ->setParameter('id', $id);
+                return $qb->getQuery()->getSingleResult()->getState();
+            } else {
+                // Hide system tasks (that don't belong to any particular user)
+                $qb->andWhere('t.user IS NOT NULL');
+                $tasks = array();
+                foreach ($qb->getQuery()->getResult() as $task) {
+                    $tasks[] = $task->getState();
+                }
+                return $tasks;
             }
-            return $tasks;
+        } catch (NonUniqueResultException|NoResultException) {
+            throw new NotFoundException();
         }
     }
 
     /**
-     * Attempts to download the result of the given task.
+     * Attempts to download a task result.
      * If there is no downloadable result, this will return an exception.
-     * Set $delete to true to delete the resource that was downloaded afterwards.
+     * Returns a tuple [<local_result_path>, <file_name>, <callback_after_download>].
      *
-     * @param $id
-     * @param bool $delete
+     * @param User $sessionUser User as which to initiate the download. Only a task's owner or admins can download the result.
+     * @param int $id Task ID to download
+     * @param bool $delete If true, also delete the task resource after a successful download
      * @throws BadRequestException
      * @throws ForbiddenException
+     * @throws SystemException
      */
-    public function downloadResult($id, User $sessionUser, bool $delete=false) {
-        $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($id);
-        V::objectType()->check($task);
-        if($task->getUser() != $sessionUser) throw new ForbiddenException();
+    public function downloadResult(User $sessionUser, int $id, bool $delete=false): array {
+        try {
+            $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($id);
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        if($task === null) throw new BadRequestException();
+        if($task->getUser() !== $sessionUser && $sessionUser->getRole() !== User::ROLE_ADMIN) throw new ForbiddenException();
         $result = $task->getResult();
         $tasksService = $this;
         $deleteFunc = function() use ($tasksService, $id, $sessionUser) {
-            $tasksService->delete($id, $sessionUser);
+            $tasksService->delete($sessionUser, $id);
         };
-        if($task->getStatus() == Task::STATUS_DONE && array_key_exists('path', $result)) {
-            $filepath = sprintf("%s/tasks/%s/%s", DATA_PATH, $id, $result['path']);
-            if($delete) return [$filepath, $result['path'], $deleteFunc];
-            else return [$filepath, $result['path'], null];
-        } else throw new BadRequestException();
+        if($task->getStatus() !== Task::STATUS_DONE || !array_key_exists('path', $result))
+            throw new BadRequestException();
+        $filepath = sprintf("%s/tasks/%s/%s", DATA_PATH, $id, $result['path']);
+        if($delete) return [$filepath, $result['path'], $deleteFunc];
+        else return [$filepath, $result['path'], null];
     }
 
     /**
-     * Queries the task worker for availability.
-     *
-     * @return bool
-     * @throws ForbiddenException
+     * Returns the number of tasks currently waiting in the task worker's job queue.
      */
-    public function getBrokerQueueLength() {
+    public function getBrokerQueueLength(): int {
         return $this->taskAdapter->getQueueLength();
     }
 
     /**
-     * Application-wide upload endpoint.
-     * Supports chunked uploads and launches a new verification task for each uploaded file.
+     * Application-wide generic upload endpoint.
+     * Expects chunked uploads and launches a new verification task for each uploaded file.
+     * Uploaded file data is read from $_FILES['fileBlob'] and typically a result of
+     * POST requests with content-type "multipart/form-data" or "application/x-www-form-urlencoded".
+     * Additional metadata is expected to be supplied with the request as POST vars:
+     * - chunkIndex: The index of the currently transmitted chunk
+     * - chunkCount: The total number of chunks available
+     * - fileName: Original upload file name
+     * - fileSize: Total size of the uploaded file
      *
-     * @return array
-     * @throws ForbiddenException
+     * Returns for individual chunks an array with the following keys:
+     * - chunkIndex: Acknowledges the currently processed chunk
+     * - append: Always true, expected by some frontend libraries to support chunked uploads
+     *
+     * After having successfully received the final chunk, the returned array also contains:
+     * - task: Serialized upload verification Task state
+     *
+     * @param User $sessionUser User as which to initiate the upload. Will be owner of the resulting verification task.
+     * @throws SystemException
      */
-    public function upload(User $sessionUser) {
+    public function upload(User $sessionUser): array {
         $uploadDir = realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH));
         $fileBlob = 'fileBlob';
         if(!isset($_FILES[$fileBlob]) || !isset($_POST['token']))
@@ -159,23 +177,25 @@ class TasksService extends Service {
      * Cleans up and deletes a scheduled or finished task.
      * It's not possible to delete tasks that are currently running.
      *
-     * @param $id
+     * @param User $sessionUser Session user that calls this service. Non-admin users can only delete their own tasks.
+     * @param int $id ID of a task to delete
      * @throws BadRequestException
      * @throws ForbiddenException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws SystemException
      */
-    public function delete($id, User $sessionUser) {
-        // Validation
-        V::intVal()->check($id);
-        $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($id);
-        V::objectType()->check($task);
-        if($task->getUser() != $sessionUser) throw new ForbiddenException();
+    public function delete(User $sessionUser, int $id): void {
+        try {
+            $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($id);
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        if($task === null) throw new BadRequestException();
+        if($task->getUser() !== $sessionUser && $sessionUser->getRole() !== User::ROLE_ADMIN) throw new ForbiddenException();
         // Running tasks can't be interrupted
-        if($task->getStatus() == Task::STATUS_RUNNING) throw new BadRequestException();
+        if($task->getStatus() === Task::STATUS_RUNNING) throw new BadRequestException();
         // Recursively remove temporary task files
-        $result = $task->getResult();
         $dir = sprintf("%s/tasks/%s", DATA_PATH, $id);
-        if(($task->getStatus() == Task::STATUS_DONE || $task->getStatus() == Task::STATUS_ERROR) && file_exists($dir)) {
+        if(($task->getStatus() === Task::STATUS_DONE || $task->getStatus() === Task::STATUS_ERROR) && file_exists($dir)) {
             Utils::recursiveDelete($dir);
         }
         // Attempt to remove artifacts from the upload directory
@@ -184,7 +204,11 @@ class TasksService extends Service {
             $uploadArtifact = sprintf('%s/%s/%s', DATA_PATH, self::UPLOAD_PATH, $params['path']);
             if(file_exists($uploadArtifact)) unlink($uploadArtifact);
         }
-        $this->em->remove($task);
-        $this->em->flush();
+        try {
+            $this->em->remove($task);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
     }
 }
