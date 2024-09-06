@@ -198,7 +198,7 @@ class State extends RESTResource {
                 case 'tasks':
                     try {
                         $this->assureAllowed('get', 'tasks');
-                        $result[$table['name']] = $tasksService->get($attributes);
+                        $result[$table['name']] = $tasksService->get($sessionUser);
                     } catch(\Exception $e) {}
                     break;
             }
