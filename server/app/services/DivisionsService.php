@@ -45,20 +45,20 @@ class DivisionsService extends Service {
             $qb->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $user->getId());
         }
-        try {
-            if ($id !== null) {
-                $qb->andWhere('d.id = :id')
-                    ->setParameter('id', $id);
+        if($id !== null) {
+            $qb->andWhere('d.id = :id')
+                ->setParameter('id', $id);
+            try {
                 return $qb->getQuery()->getSingleResult()->getState();
-            } else {
-                $divisions = array();
-                foreach ($qb->getQuery()->getResult() as $division) {
-                    $divisions[] = $division->getState();
-                }
-                return $divisions;
+            } catch(NoResultException|NonUniqueResultException) {
+                throw new NotFoundException();
             }
-        } catch (NonUniqueResultException|NoResultException) {
-            throw new NotFoundException();
+        } else {
+            $divisions = array();
+            foreach ($qb->getQuery()->getResult() as $division) {
+                $divisions[] = $division->getState();
+            }
+            return $divisions;
         }
     }
 

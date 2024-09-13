@@ -162,7 +162,7 @@ class State extends RESTResource {
                 case 'users':
                     try {
                         $this->assureAllowed('get', 'users');
-                        $result[$table['name']] = $usersService->get($attributes);
+                        $result[$table['name']] = $usersService->get($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'divisions':

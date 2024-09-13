@@ -2,15 +2,17 @@
 namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use HoneySens\app\controllers\Users;
 use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
-use HoneySens\app\models\Utils;
+use HoneySens\app\models\exceptions\SystemException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
-use Respect\Validation\Validator as V;
 
 class UsersService extends Service {
 
@@ -24,34 +26,31 @@ class UsersService extends Service {
     }
 
     /**
-     * Fetches Users from the DB by various criteria:
-     * - userID: return only users that belong to divisions this user is allowed to access
-     * - id: return the user with the given id
-     * If no criteria are given, all users are returned.
+     * Fetches users from the DB.
      *
-     * @param array $criteria
-     * @return array
-     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     * @param User $user User for which to retrieve associated entities; admins receive all entities
+     * @param int|null $id ID of a specific user to fetch
+     * @throws NotFoundException
      */
-    public function get($criteria) {
+    public function get(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('u')->from('HoneySens\app\models\entities\User', 'u');
-        if(V::key('userID', V::intType())->validate($criteria)) {
+        if($user->getRole() !== User::ROLE_ADMIN) {
             $qb->join('u.divisions', 'd')
                 ->andWhere(':userid MEMBER OF d.users')
-                ->setParameter('userid', $criteria['userID']);
+                ->setParameter('userid', $user->getId());
         }
-        if(V::key('id', V::intVal())->validate($criteria)) {
+        if($id !== null) {
             $qb->andWhere('u.id = :id')
-                ->setParameter('id', $criteria['id']);
+                ->setParameter('id', $id);
             try {
                 return $this->getStateWithPermissionConfig($qb->getQuery()->getSingleResult());
-            } catch(\Exception $e) {
+            } catch (NoResultException|NonUniqueResultException) {
                 throw new NotFoundException();
             }
         } else {
             $users = array();
-            foreach($qb->getQuery()->getResult() as $user) {
+            foreach ($qb->getQuery()->getResult() as $user) {
                 $users[] = $this->getStateWithPermissionConfig($user);
             }
             return $users;
@@ -59,166 +58,186 @@ class UsersService extends Service {
     }
 
     /**
-     * Creates and persists a new User object.
-     * The following parameters are required:
-     * - name: Login name of the user
-     * - email: E-Mail address
-     * - password: User password
-     * - role: User role, determining his permissions (0 to 3)
-     * - notifyOnSystemState: Whether this user should receive system state notifications (bool)
+     * Creates and persists a new user.
      *
-     * @param array $data
-     * @return User
-     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     * @param string $name Login name of the user
+     * @param int $domain Authentication domain (Local or LDAP)
+     * @param string $email User's e-mail address
+     * @param int $role User role, determines granted permissions
+     * @param bool $notifyOnSystemState Whether this user should receive system state notifications
+     * @param bool $requirePasswordChange Whether this user is prompted to set a new password on next login
+     * @param string|null $fullName Detailed user name, for display purposes only
+     * @param string|null $password User password (only for Local authentication)
+     * @throws BadRequestException
+     * @throws SystemException
      */
-    public function create($data) {
-        // Validation
-        V::arrayType()
-            ->key('name', V::alnum()->length(1, 255))
-            ->key('domain', V::intVal()->between(0, 1))
-            ->key('fullName', V::stringType()->length(1, 255), false)
-            ->key('email', Utils::emailValidator())
-            ->key('role', V::intVal()->between(1, 3))
-            ->key('notifyOnSystemState', V::boolVal())
-            ->key('requirePasswordChange', V::boolVal())
-            ->check($data);
-        // Password is optional if another domain than the local one is used
-        V::key('password', V::stringType()->length(6, 255), $data['domain'] == User::DOMAIN_LOCAL)
-            ->check($data);
+    public function create(string $name,
+                           int $domain,
+                           string $email,
+                           int $role,
+                           bool $notifyOnSystemState,
+                           bool $requirePasswordChange,
+                           ?string $fullName = null,
+                           ?string $password = null): User {
         // Name duplication check
-        if($this->getUserByName($data['name']) != null) throw new BadRequestException(Users::ERROR_DUPLICATE);
+        if($this->getUserByName($name) !== null) throw new BadRequestException(Users::ERROR_DUPLICATE);
         // Persistence
         $user = new User();
-        $user->setName($data['name'])
-            ->setDomain($data['domain'])
-            ->setEmail($data['email'])
-            ->setRole($data['role'])
-            ->setNotifyOnSystemState($data['notifyOnSystemState'])
-            ->setRequirePasswordChange($data['requirePasswordChange']);
-        if(V::key('password')->validate($data))
-            $user->setPassword($data['password']);
-        if(V::key('fullName')->validate($data)) $user->setFullName($data['fullName']);
-        $this->em->persist($user);
-        $this->em->flush();
+        $user->setName($name)
+            ->setDomain($domain)
+            ->setEmail($email)
+            ->setRole($role)
+            ->setNotifyOnSystemState($notifyOnSystemState)
+            ->setRequirePasswordChange($requirePasswordChange);
+        if($domain === User::DOMAIN_LOCAL) {
+            if($password === null) throw new BadRequestException();
+            $user->setPassword($password);
+        }
+        if($fullName !== null) $user->setFullName($fullName);
+        try {
+            $this->em->persist($user);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
         $this->logger->log(sprintf('User %s (ID %d) created', $user->getName(), $user->getId()), LogResource::USERS, $user->getId());
         return $user;
     }
 
     /**
-     * Updates an existing User object.
-     * The following parameters are required:
-     * - name: Login name of the user
-     * - email: E-Mail address
-     * - password: User password
-     * - role: User role, determining his permissions (0 to 3)
-     * - notifyOnSystemState: Whether this user should receive system state notifications (bool)     *
+     * Updates an existing user.
      *
-     * @param int $id
-     * @param array $data
-     * @return User
-     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     * @param int $id User ID to update
+     * @param string $name Login name of the user
+     * @param int $domain Authentication domain (Local or LDAP)
+     * @param string $email User's e-mail address
+     * @param int $role User role, determines granted permissions
+     * @param bool $notifyOnSystemState Whether this user should receive system state notifications
+     * @param bool $requirePasswordChange Whether this user is prompted to set a new password on next login
+     * @param string|null $fullName Detailed user name, for display purposes only
+     * @param string|null $password User password. If null, the existing password will be kept.
+     * @throws BadRequestException
+     * @throws SystemException
      */
-    public function update($id, $data) {
-        // Validation
-        V::intVal()->check($id);
-        V::arrayType()
-            ->key('name', V::alnum()->length(1, 255))
-            ->key('domain', V::intVal()->between(0, 1))
-            ->key('fullName', V::stringType()->length(1, 255), false)
-            ->key('email', Utils::emailValidator())
-            ->key('role', V::intVal()->between(1, 3))
-            ->key('notifyOnSystemState', V::boolVal())
-            ->key('requirePasswordChange', V::boolVal())
-            ->check($data);
+    public function update(int $id,
+                           string $name,
+                           int $domain,
+                           string $email,
+                           int $role,
+                           bool $notifyOnSystemState,
+                           bool $requirePasswordChange,
+                           ?string $fullName = null,
+                           ?string $password = null): User {
         $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($id);
-        V::objectType()->check($user);
-        // Only require a password if the user didn't have one previously (e.g. due to it being created as an LDAP account)
-        $requirePassword = $data['domain'] == User::DOMAIN_LOCAL && $user->getPassword() == null && $user->getLegacyPassword() == null;
-        V::key('password', V::stringType()->length(6, 255), $requirePassword)
-            ->check($data);
+        if($user === null) throw new BadRequestException();
+        // Require a password if the user uses local authentication and hasn't one set yet
+        if($domain === User::DOMAIN_LOCAL && $user->getPassword() === null && $user->getLegacyPassword() === null && $password === null)
+            throw new BadRequestException();
         // Name duplication check
-        $duplicate = $this->getUserByName($data['name']);
-        if($duplicate != null && $duplicate->getId() != $user->getId())
+        $duplicate = $this->getUserByName($name);
+        if($duplicate !== null && $duplicate->getId() !== $user->getId())
             throw new BadRequestException(Users::ERROR_DUPLICATE);
+        // Force the first user to remain an admin
+        if($user->getId() === 1 && $role !== User::ROLE_ADMIN) throw new BadRequestException();
         // Persistence
-        $user->setName($data['name'])
-            ->setDomain($data['domain'])
-            ->setEmail($data['email'])
-            ->setNotifyOnSystemState($data['notifyOnSystemState'])
-            ->setRequirePasswordChange($data['requirePasswordChange']);
-        // Set role, but force the first user to be an admin
-        if($user->getId() != 1) $user->setRole($data['role']);
-        // Set optional password
-        if(V::key('password')->validate($data)) {
-            $user->setPassword($data['password'])
-                ->setLegacyPassword(null);
-        };
-        // Set optional full name
-        if(V::key('fullName')->validate($data)) $user->setFullName($data['fullName']);
-        else $user->setFullName(null);
-        $this->em->flush();
+        $user->setName($name)
+            ->setDomain($domain)
+            ->setEmail($email)
+            ->setRole($role)
+            ->setNotifyOnSystemState($notifyOnSystemState)
+            ->setRequirePasswordChange($requirePasswordChange)
+            ->setFullName($fullName);
+        if($domain === User::DOMAIN_LOCAL) {
+            if($password !== null) $user->setPassword($password)->setLegacyPassword(null);
+        } else $user->setPassword(null)->setLegacyPassword(null);
+        try {
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
         $this->logger->log(sprintf('User %s (ID %d) updated', $user->getName(), $user->getId()), LogResource::USERS, $user->getId());
         return $user;
     }
 
     /**
-     * Updates the user the current session belongs to, e.g. allows logged-in users to change their own password.
+     * Updates just the password of a specific user, e.g. for self-service password changes.
      *
-     * @param array $data
-     * @return User
-     * @throws \HoneySens\app\models\exceptions\ForbiddenException
+     * @param int $id User ID to update
+     * @param string $password New password, has to be different than the existing one
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws SystemException
      */
-    public function updateSelf($data) {
-        $sessionUser = $this->em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
-        if($sessionUser == null || !$sessionUser->getRequirePasswordChange()) throw new ForbiddenException();
-        // Validation
-        V::arrayType()->key('password', V::stringType()->length(6, 255))->check($data);
-        if($sessionUser->getPassword() != null && password_verify($data['password'], $sessionUser->getPassword())) throw new BadRequestException(Users::ERROR_REQUIRE_PASSWORD_CHANGE);
+    public function updatePassword(int $id, string $password): User {
+        $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($id);
+        if($user === null || !$user->getRequirePasswordChange()) throw new ForbiddenException();
+        // Enforce an actual password change, don't accept the existing password as a new one
+        if($user->getPassword() !== null && password_verify($password, $user->getPassword()))
+            throw new BadRequestException(Users::ERROR_REQUIRE_PASSWORD_CHANGE);
         // Persistence
-        $sessionUser->setPassword($data['password'])
+        $user->setPassword($password)
             ->setLegacyPassword(null)
             ->setRequirePasswordChange(false);
-        $this->em->flush();
-        $this->logger->log(sprintf('Password of user %s (ID %d) updated', $sessionUser->getName(), $sessionUser->getId()), LogResource::USERS, $sessionUser->getId());
-        return $sessionUser;
+        try {
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
+        $this->logger->log(sprintf('Password of user %s (ID %d) updated', $user->getName(), $user->getId()), LogResource::USERS, $user->getId());
+        return $user;
     }
 
-    public function delete($id) {
-        // Validation: never remove the user with ID 1, who is always an admin
-        V::intVal()->not(V::equals(1))->check($id);
-        // Persistence
+    /**
+     * Removes a user entity. It's not possible to remove the primary admin,
+     * which is always the first account on any deployment.
+     *
+     * @param int $id User ID to delete
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws SystemException
+     */
+    public function delete(int $id): void {
+        // Never remove the user with ID 1, which is the primary admin account
+        if($id === 1) throw new ForbiddenException();
         $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($id);
-        V::objectType()->check($user);
+        if($user === null) throw new BadRequestException();
         $uid = $user->getId();
-        $this->em->remove($user);
-        $this->em->flush();
+        try {
+            $this->em->remove($user);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
+        }
         $this->logger->log(sprintf('User %s (ID %d) deleted', $user->getName(), $uid), LogResource::USERS, $uid);
     }
 
     /**
-     * Returns the state of a user as array and mixes in additional permission configuration, such as role restrictions.
-     * This is meant as an intermediate solution on the way to custom role/permission definitions.
+     * Enriches the state of a user with additional permission configuration, such as role restrictions.
+     * Returns the resulting state as array.
      *
      * @param User $user
-     * @return array
      */
-    public function getStateWithPermissionConfig(User $user) {
+    public function getStateWithPermissionConfig(User $user): array {
         $state = $user->getState();
         // Incorporate role restrictions
-        if($user->getRole() == User::ROLE_MANAGER) {
+        if($user->getRole() === User::ROLE_MANAGER) {
             if($this->config->getBoolean('misc', 'prevent_event_deletion_by_managers'))
                 $state['permissions']['events'] = array_values(array_diff($state['permissions']['events'], ['delete']));
             if($this->config->getBoolean('misc', 'prevent_sensor_deletion_by_managers'))
                 $state['permissions']['sensors'] = array_values(array_diff($state['permissions']['sensors'], ['delete']));
         }
-        // Enable API logging if the module is enabled and $user is an administrator
-        if($user->getRole() == User::ROLE_ADMIN && $this->logger->isEnabled()) {
+        // Enable API logging if the logging module is enabled and $user is an administrator
+        if($user->getRole() === User::ROLE_ADMIN && $this->logger->isEnabled())
             $state['permissions']['logs'] = array('get');
-        }
         return $state;
     }
 
-    private function getUserByName($name) {
+    /**
+     * Fetches a user by login/user name.
+     *
+     * @param string $name A user (login) name
+     */
+    private function getUserByName(string $name): ?User {
         return $this->em->getRepository('HoneySens\app\models\entities\User')->findOneBy(array('name' => $name));
     }
 }

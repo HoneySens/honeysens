@@ -1,9 +1,12 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use HoneySens\app\models\entities\User;
+use HoneySens\app\models\Utils;
 use HoneySens\app\services\UsersService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Respect\Validation\Validator as V;
 
 class Users extends RESTResource {
 
@@ -18,41 +21,87 @@ class Users extends RESTResource {
         $api->delete('/{id:\d+}', [Users::class, 'delete']);
     }
 
-    public function get(Response $response, UsersService $service, $id = null) {
+    public function get(Response $response, UsersService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $criteria = array(
-            'userID' => $this->getSessionUserID(),
-            'id' => $id);
-        $result = $service->get($criteria);
+        $result = $service->get($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function post(Request $request, Response $response, UsersService $service) {
+    public function post(Request $request, Response $response, UsersService $service): Response {
         $this->assureAllowed('create');
-        $user = $service->create($request->getParsedBody());
+        $data = $request->getParsedBody();
+        $this->assertValidUser($data);
+        $fullName = $data['fullName'] ?? null;
+        // A password is only mandatory if the user is authenticating against the Local domain
+        $password = null;
+        if($data['domain'] === User::DOMAIN_LOCAL) {
+            V::key('password')->check($data);
+            $password = $data['password'];
+        }
+        $user = $service->create(
+            $data['name'],
+            $data['domain'],
+            $data['email'],
+            intval($data['role']),
+            $data['notifyOnSystemState'],
+            $data['requirePasswordChange'],
+            $fullName,
+            $password);
         $response->getBody()->write(json_encode($user->getState()));
         return $response;
     }
 
-    public function put(Request $request, Response $response, UsersService $service, $id) {
+    public function put(Request $request, Response $response, UsersService $service, int $id): Response {
         $this->assureAllowed('update');
-        $user = $service->update($id, $request->getParsedBody());
+        $data = $request->getParsedBody();
+        $this->assertValidUser($data);
+        $fullName = $data['fullName'] ?? null;
+        $password = $data['password'] ?? null;
+        $user = $service->update(
+            $id,
+            $data['name'],
+            $data['domain'],
+            $data['email'],
+            intval($data['role']),
+            $data['notifyOnSystemState'],
+            $data['requirePasswordChange'],
+            $fullName,
+            $password
+        );
         $response->getBody()->write(json_encode($user->getState()));
         return $response;
     }
 
-    public function updateSelf(Request $request, Response $response, UsersService $service) {
+    /**
+     * Enables logged-in users to change their own password.
+     */
+    public function updateSelf(Request $request, Response $response, UsersService $service): Response {
         $this->assureAllowed('updateSelf');
-        $user = $service->updateSelf($request->getParsedBody());
+        $data = $request->getParsedBody();
+        V::arrayType()->key('password', V::stringType()->length(6, 255))->check($data);
+        $user = $service->updatePassword($this->getSessionUser()->getId(), $data['password']);
         $response->getBody()->write(json_encode($user->getState()));
         return $response;
     }
 
-    public function delete(Response $response, UsersService $service, $id) {
+    public function delete(Response $response, UsersService $service, int $id): Response {
         $this->assureAllowed('delete');
         $service->delete($id);
         $response->getBody()->write(json_encode([]));
         return $response;
+    }
+
+    private function assertValidUser(array $data): void {
+        V::arrayType()
+            ->key('name', V::alnum()->length(1, 255))
+            ->key('domain', V::intType()->between(0, 1))
+            ->key('fullName', V::stringType()->length(1, 255), false)
+            ->key('email', Utils::emailValidator())
+            ->key('role', V::intVal()->between(1, 3))
+            ->key('notifyOnSystemState', V::boolType())
+            ->key('requirePasswordChange', V::boolType())
+            ->key('password', V::stringType()->length(6, 255), false)
+            ->check($data);
     }
 }
