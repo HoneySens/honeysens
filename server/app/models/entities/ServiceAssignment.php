@@ -1,35 +1,33 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\OneToOne;
+use Doctrine\ORM\Mapping\Table;
 
 /**
  * Associative class that assign a specific service (with a specific revision) to a sensor.
- *
- * @ORM\Entity
- * @ORM\Table(name="service_assignments")
  */
+#[Entity]
+#[Table(name: "service_assignments")]
 class ServiceAssignment {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Sensor", inversedBy="sensors")
-     */
+    #[ManyToOne(targetEntity: Sensor::class, inversedBy: "sensors")]
     protected $sensor;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Service", inversedBy="assignments")
-     */
+    #[ManyToOne(targetEntity: Service::class, inversedBy: "assignments")]
     protected $service;
 
-    /**
-     * @ORM\OneToOne(targetEntity="HoneySens\app\models\entities\ServiceRevision")
-     */
+    #[OneToOne(targetEntity: ServiceRevision::class)]
     protected $revision;
 
     /**

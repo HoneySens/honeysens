@@ -1,17 +1,19 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 
 /**
- * Class Task
- *
  * This class represents a specific task that is performed by an external task queue, such as celery.
  * Tasks are owned and fully controlled by a user, although administrators can request and modify all tasks.
- *
- * @ORM\Entity
- * @ORM\Table(name="tasks")
- * @package HoneySens\app\models\entities
  */
+#[Entity]
+#[Table(name: "tasks")]
 class Task {
 
     const STATUS_SCHEDULED = 0;
@@ -26,42 +28,33 @@ class Task {
     const TYPE_EVENT_FORWARDER = 4;
     const TYPE_EMAIL_EMITTER = 6;
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
     /**
      * The user who submitted this task.
-     *
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\User", inversedBy="tasks")
      */
+    #[ManyToOne(targetEntity: User::class, inversedBy: "tasks")]
     protected $user;
 
     /**
      * The type of task that should be executed, currently amongst a set of hardcoded values.
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $type;
 
     /**
      * The status flag determines whether this task is currently scheduled, running or completed.
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $status = self::STATUS_SCHEDULED;
 
-    /**
-     * @ORM\Column(type="json", nullable=true)
-     */
+    #[Column(type: Types::JSON, nullable: true)]
     protected ?array $params = array();
 
-    /**
-     * @ORM\Column(type="json", nullable=true)
-     */
+    #[Column(type: Types::JSON, nullable: true)]
     protected ?array $result = array();
 
     /**

@@ -1,34 +1,31 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\Table;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="certs")
- */
+#[Entity]
+#[Table(name: "certs")]
 class SSLCert{
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[Column(type: Types::TEXT)]
     protected $content;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[Column(type: Types::TEXT, nullable: true)]
     protected $privateKey;
 
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId() {
         return $this->id;

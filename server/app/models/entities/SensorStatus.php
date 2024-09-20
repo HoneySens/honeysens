@@ -1,86 +1,72 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\constants\SensorStatusFlag;
 use stdClass;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="statuslogs")
- */
+#[Entity]
+#[Table(name: "statuslogs")]
 class SensorStatus {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Sensor", inversedBy="status")
-     */
+    #[ManyToOne(targetEntity: Sensor::class, inversedBy: "status")]
     protected $sensor;
 
-    /**
-     * @ORM\Column(type="datetime")
-     */
+    #[Column(type: Types::DATETIME_MUTABLE)]
     protected $timestamp;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $status;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $ip;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[Column(type: Types::INTEGER, nullable: true)]
     protected $freeMem;
 
     /**
      * Disk usage in Megabytes.
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[Column(type: Types::INTEGER, nullable: true)]
     protected $diskUsage;
 
     /**
      * Total disk size in Megabytes.
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[Column(type: Types::INTEGER, nullable: true)]
     protected $diskTotal;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $swVersion;
 
     /**
      * JSON-serialized associative array that stores service status data as
      * reported by the sensor: {service_name: service_status, ...}.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $serviceStatus;
 
     /**
      * Timestamp that depicts when this sensor originally went "online" (after its last disconnection).
      * This timestamp is copied over from one SensorStatus to the next as long as the sensor is online without interruption.
-     *
-     * @ORM\Column(type="datetime", nullable=true)
      */
+    #[Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     protected $runningSince;
 
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId() {
         return $this->id;
@@ -100,7 +86,7 @@ class SensorStatus {
     /**
      * Get sensor
      *
-     * @return \HoneySens\app\models\entities\Sensor 
+     * @return \HoneySens\app\models\entities\Sensor
      */
     public function getSensor() {
         return $this->sensor;
@@ -120,12 +106,12 @@ class SensorStatus {
     /**
      * Get timestamp
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getTimestamp() {
         return $this->timestamp;
     }
-    
+
     /**
      * Set current status
      */
@@ -133,7 +119,7 @@ class SensorStatus {
         $this->status = $status->value;
         return $this;
     }
-    
+
     /**
      * Get current status
      */

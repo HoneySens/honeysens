@@ -1,64 +1,65 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\DiscriminatorColumn;
+use Doctrine\ORM\Mapping\DiscriminatorMap;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\InheritanceType;
+use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\ORM\Mapping\OneToOne;
+use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\exceptions\NotFoundException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
 /**
  * Hardware platform abstraction.
- *
- * @ORM\Entity
- * @ORM\InheritanceType("SINGLE_TABLE")
- * @ORM\Table(name="platforms")
- * @ORM\DiscriminatorColumn(name="discr", type="string")
- * @ORM\DiscriminatorMap({
- *     "bbb" = "HoneySens\app\models\platforms\BeagleBoneBlack",
- *     "docker_x86" = "HoneySens\app\models\platforms\DockerX86"
- * })
  */
+#[Entity]
+#[Table(name: "platforms")]
+#[InheritanceType("SINGLE_TABLE")]
+#[DiscriminatorColumn(name: "discr", type: Types::STRING)]
+#[DiscriminatorMap([
+    "bbb" => "HoneySens\app\models\platforms\BeagleBoneBlack",
+    "docker_x86" => "HoneySens\app\models\platforms\DockerX86"]
+)]
 abstract class Platform {
 
     const FIRMWARE_PATH = 'firmware';
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
     /**
      * Unique, lower-case name for this platform (also used as a reference by external parties, e.g. services).
-     *
-     * @ORM\Column(type="string", nullable=false)
      */
+    #[Column(type: Types::STRING, nullable: false)]
     protected $name;
 
     /**
      * Informal name of this platform.
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $title;
 
     /**
      * General description of this platform.
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $description;
 
     /**
      * References the firmware revisions that are registered for this platform.
-     *
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\Firmware", mappedBy="platform", cascade={"remove"})
      */
+    #[OneToMany(targetEntity: Firmware::class, mappedBy: "platform", cascade: ["remove"])]
     protected $firmwareRevisions;
 
-    /**
-     * @ORM\OneToOne(targetEntity="HoneySens\app\models\entities\Firmware")
-     */
+    #[OneToOne(targetEntity: Firmware::class)]
     protected $defaultFirmwareRevision;
 
     public function __construct($name, $title) {

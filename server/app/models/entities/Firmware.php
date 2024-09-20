@@ -1,68 +1,64 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="firmware")
- */
+#[Entity]
+#[Table(name: "firmware")]
 class Firmware {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
     /**
      * The name of this sensor image
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: "string")]
     protected $name;
 
     /**
      * Version string of this image
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: "string")]
     protected $version;
 
     /**
      * A short description of this image
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: "string")]
     protected $description;
 
     /**
      * The long description of changes that occured within this version
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: "string")]
     protected $changelog;
 
     /**
      * Deprecated: Denotes the file name of the firmware file.
      * If set to null, getSource() will return a named based on the ID of this firmware.
      * This property is still there to support older server versions that used a different naming scheme.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: "string", nullable: true)]
     protected $source;
 
     /**
      * The platform this firmware revision belongs to.
-     *
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Platform", inversedBy="firmwareRevisions")
      */
+    #[ManyToOne(targetEntity: Platform::class, inversedBy: "firmwareRevisions")]
     protected $platform;
 
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId() {
         return $this->id;

@@ -1,111 +1,93 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\Index;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 
 /**
  * Archived read-only event.
  * Attributes match the one of Event, except for relationships: Those are replaced with static values.
- *
- * @ORM\Entity
- * @ORM\Table(name="archived_events",indexes={@ORM\Index(name="timestamp_idx", columns={"timestamp"})})
  */
+#[Entity]
+#[Table(name: "archived_events")]
+#[Index(name: "timestamp_idx", columns: ["timestamp"])]
 class ArchivedEvent {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
     /**
      * Original ID of this event.
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $oid;
 
-    /**
-     * @ORM\Column(type="datetime")
-     */
+    #[Column(type: Types::DATETIME_MUTABLE)]
     protected $timestamp;
 
     /**
      * Plaintext name of the sensor this event was collected by
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $sensor;
 
     /**
      * Division this event belongs to. In case the division doesn't exist anymore, this will be null.
      * In such cases, the $divisionName attribute will refer to the old plaintext division name.
-     *
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Division")
      */
+    #[ManyToOne(targetEntity: Division::class)]
     protected $division;
 
     /**
      * If this event isn't associated with a division anymore, this field holds the last known division name.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $divisionName;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $service;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $classification;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $source;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $summary;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $status = 0;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $comment;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
+    #[Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     protected $lastModificationTime;
 
     /**
      * Timestamp of when this event was archived.
-     *
-     * @ORM\Column(type="datetime")
      */
+    #[Column(type: Types::DATETIME_MUTABLE)]
     protected $archiveTime;
 
     /**
      * Holds event details as JSON structure.
-     *
-     * @ORM\Column(type="text")
      */
+    #[Column(type: Types::TEXT)]
     protected $details;
 
     /**
      * Holds event packets as JSON structure.
-     *
-     * @ORM\Column(type="text")
      */
+    #[Column(type: Types::TEXT)]
     protected $packets;
 
     /**

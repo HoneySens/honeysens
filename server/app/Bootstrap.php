@@ -1,5 +1,4 @@
 <?php
-use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use \DI\Bridge\Slim\Bridge;
 use \DI\Container;
@@ -88,11 +87,13 @@ function initClassLoading() {
 }
 
 function initDatabase() {
-    $config = new Configuration();
+    $config = \Doctrine\ORM\ORMSetup::createAttributeMetadataConfiguration(
+        paths: [APPLICATION_PATH . '/models/entities'],
+        isDevMode: false
+    );
     $config->setMetadataCache(new PhpFilesAdapter('doctrine_metadata'));
     $config->setQueryCache(new PhpFilesAdapter('doctrine_queries'));
     $config->setResultCache(new PhpFilesAdapter('doctrine_results'));
-    $config->setMetadataDriverImpl($config->newDefaultAnnotationDriver(APPLICATION_PATH . '/models/entities', false));
     $config->setProxyDir(APPLICATION_PATH . '/../cache');
     $config->setAutoGenerateProxyClasses(true);
     $config->setProxyNamespace('HoneySens\Cache\Proxies');

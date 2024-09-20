@@ -2,12 +2,8 @@
 namespace HoneySens\app\models\entities;
 
 /**
- * Class Template
- *
  * Textual system template with token substitution for E-Mail notifications.
  * Can be overridden by a TemplateOverlay.
- *
- * @package HoneySens\app\models\entities
  */
 class Template {
 

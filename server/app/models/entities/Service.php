@@ -1,61 +1,57 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\ORM\Mapping\Table;
 
 /**
  * Abstraction class for dockerized honeypot services.
- *
- * @ORM\Entity
- * @ORM\Table(name="services")
  */
+#[Entity]
+#[Table(name: "services")]
 class Service {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
     /**
      * Informal title of this service.
-     *
-     * @ORM\Column(type="string", nullable=false)
      */
+    #[Column(type: Types::STRING, nullable: false)]
     protected $name;
 
     /**
      * General description of this service.
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $description;
 
     /**
      * Docker repository that relates to this service, e.g. "honeysens/cowrie"
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $repository;
 
     /**
      * References the docker image tags for this service
-     *
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\ServiceRevision", mappedBy="service", cascade={"remove"})
      */
+    #[OneToMany(targetEntity: ServiceRevision::class, mappedBy: "service", cascade: ["remove"])]
     protected $revisions;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $defaultRevision;
 
     /**
      * The service assignment that this service is associated with.
-     *
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\ServiceAssignment", mappedBy="service", cascade={"remove"})
      */
+    #[OneToMany(targetEntity: ServiceAssignment::class, mappedBy: "service", cascade: ["remove"])]
     protected $assignments;
 
     public function __construct() {
