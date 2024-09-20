@@ -1,65 +1,61 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\Utils;
 
 /**
  * An IP packet that belongs to a certain event.
- *
- * @ORM\Entity
- * @ORM\Table(name="event_packets")
  */
+#[Entity]
+#[Table(name: "event_packets")]
 class EventPacket {
 
     const PROTOCOL_UNKNOWN = 0;
     const PROTOCOL_TCP = 1;
     const PROTOCOL_UDP = 2;
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Event", inversedBy="packets")
-     */
+    #[ManyToOne(targetEntity: Event::class, inversedBy: "packets")]
     protected $event;
 
     /**
      * When this event took place/packet was received
-     *
-     * @ORM\Column(type="datetime")
      */
+    #[Column(type: Types::DATETIME_MUTABLE)]
     protected $timestamp;
 
     /**
      * The layer-4 protocol of this packet, currently TCP and UDP are supported.
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $protocol;
 
     /**
      * IP port number of this packet
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $port;
 
     /**
      * Relevant header fields of this packet, stored as a serialized JSON string.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $headers;
 
     /**
      * The packet binary payload, encoded in base64.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $payload;
 
     /**

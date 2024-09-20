@@ -1,12 +1,18 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\JoinTable;
+use Doctrine\ORM\Mapping\ManyToMany;
+use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\ORM\Mapping\Table;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="users")
- */
+#[Entity]
+#[Table(name: "users")]
 class User {
 
     const ROLE_GUEST = 0;
@@ -17,30 +23,24 @@ class User {
     const DOMAIN_LOCAL = 0;
     const DOMAIN_LDAP = 1;
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $name;
 
     /**
      * The E-Mail address that belongs to this user
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $email;
 
     /**
      * Hashed password of this user (using bcrypt).
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $password;
 
     /**
@@ -49,62 +49,52 @@ class User {
      * This attribute will be removed in future versions.
      *
      * @deprecated
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $legacyPassword;
 
     /**
      * If true, this user will be prompted for a password change after the next login.
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $requirePasswordChange = false;
 
     /**
      * The domain that this user is authenticated against
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $domain = self::DOMAIN_LOCAL;
 
     /**
      * Full name or description of this user
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $fullName;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $role;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="HoneySens\app\models\entities\Division", inversedBy="users")
-     * @ORM\JoinTable(name="users_divisions")
-     */
+    #[ManyToMany(targetEntity: Division::class, inversedBy: "users")]
+    #[JoinTable(name: "users_divisions")]
     protected $divisions;
 
     /**
      * This reference is only made to ensure cascading events in case a user is removed.
      * It's not made public as an attribute of the entity.
-     *
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\IncidentContact", mappedBy="user", cascade={"remove"})
      */
+    #[OneToMany(targetEntity: IncidentContact::class, mappedBy: "user", cascade: ["remove"])]
     protected $incidentContacts;
 
     /**
      * References the tasks this user has submitted.
-     *
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\Task", mappedBy="user", cascade={"remove"})
      */
+    #[OneToMany(targetEntity: Task::class, mappedBy: "user", cascade: ["remove"])]
     protected $tasks;
 
     /**
      * Whether to send system state notifications (e.g. high load, CA expiration) to the E-Mail address of this user.
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $notifyOnSystemState = false;
 
     public function __construct() {

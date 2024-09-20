@@ -1,49 +1,47 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\constants\EventFilterConditionField;
 use HoneySens\app\models\constants\EventFilterConditionType;
 
 /**
  * A filter condition that belongs to a certain filter.
  * Conditions always belong to a single event attribute and store a regular expression that is used to check the condition.
- *
- * @ORM\Entity
- * @ORM\Table(name="event_filter_conditions")
  */
+#[Entity]
+#[Table(name: "event_filter_conditions")]
 class EventFilterCondition {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\EventFilter", inversedBy="conditions")
-     */
+    #[ManyToOne(targetEntity: EventFilter::class, inversedBy: "conditions")]
     protected $filter;
 
     /**
      * Specifies the event attribute that should be tested by this condition
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $field;
 
     /**
      * The condition type specifies the way the value should be interpreted
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $type;
 
     /**
      * The filter value of this condition, e.g. an regular expression or a string
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $value;
 
     /**

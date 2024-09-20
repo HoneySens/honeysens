@@ -1,11 +1,10 @@
 <?php
 namespace HoneySens\app\models\platforms;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Entity;
 use HoneySens\app\models\entities\Platform;
 
 /**
  * The BeagleBone Black platform
- *
- * @ORM\Entity
  */
+#[Entity]
 class BeagleBoneBlack extends Platform {}

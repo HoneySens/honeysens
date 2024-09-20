@@ -1,11 +1,10 @@
 <?php
 namespace HoneySens\app\models\platforms;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Entity;
 use HoneySens\app\models\entities\Platform;
 
 /**
  * Dockerized sensor platform
- *
- * @ORM\Entity
  */
+#[Entity]
 class DockerX86 extends Platform {}

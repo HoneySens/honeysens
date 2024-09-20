@@ -1,17 +1,23 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\ORM\Mapping\OneToOne;
+use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\constants\SensorEAPOLMode;
 use HoneySens\app\models\constants\SensorNetworkIPMode;
 use HoneySens\app\models\constants\SensorNetworkMACMode;
 use HoneySens\app\models\constants\SensorProxyMode;
 use HoneySens\app\models\constants\SensorServerEndpointMode;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="sensors")
- */
+#[Entity]
+#[Table(name: "sensors")]
 class Sensor {
 
     const CONFIG_ARCHIVE_STATUS_UNAVAILABLE = 0;
@@ -19,201 +25,144 @@ class Sensor {
     const CONFIG_ARCHIVE_STATUS_CREATING = 2;
     const CONFIG_ARCHIVE_STATUS_AVAILABLE = 3;
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $name;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $location;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $secret;
 
-    /**
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\SensorStatus", mappedBy="sensor", cascade={"remove"})
-     */
+    #[OneToMany(targetEntity: SensorStatus::class, mappedBy: "sensor", cascade: ["remove"])]
     protected $status;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="sensors")
-     */
+    #[ManyToOne(targetEntity: Division::class, inversedBy: "sensors")]
     protected $division;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $serverEndpointMode;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $serverEndpointHost;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[Column(type: Types::INTEGER, nullable: true)]
     protected $serverEndpointPortHTTPS;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $networkIPMode;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $networkIPAddress;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $networkIPNetmask;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $networkIPGateway;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $networkIPDNS;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $networkMACMode;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $networkMACAddress;
 
     /**
      * Optional desired hostname to include within DHCP requests.
      * If null, no hostname is sent to the DHCP server.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $networkDHCPHostname;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $proxyMode;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $proxyHost;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[Column(type: Types::INTEGER, nullable: true)]
     protected $proxyPort;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $proxyUser;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $proxyPassword;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[Column(type: Types::INTEGER)]
     protected $configArchiveStatus = 0;
 
     /**
      * Custom update interval in minutes.
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[Column(type: Types::INTEGER, nullable: true)]
     protected $updateInterval = null;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Firmware")
-     */
+    #[ManyToOne(targetEntity: Firmware::class)]
     protected $firmware;
 
     /**
      * The services that are configured to run on this sensor.
-     *
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\ServiceAssignment", mappedBy="sensor", cascade={"remove"})
      */
+    #[OneToMany(targetEntity: ServiceAssignment::class, mappedBy: "sensor", cascade: ["remove"])]
     protected $services;
 
     /**
      * Custom service network to use on that sensor.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $serviceNetwork = null;
 
     /**
      * Sensor authentication status/mode.
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $EAPOLMode = 0;
 
     /**
      * Identity used for EAPOL authentication.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $EAPOLIdentity = null;
 
     /**
      * Password used for EAPOL authentication.
      * Only required for certain EAPOL modes.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $EAPOLPassword = null;
 
     /**
      * Anonymous identity used during EAPOL authentication.
      * Optional.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $EAPOLAnonymousIdentity = null;
 
     /**
      * CA certificate used for EAPOL TLS authentication.
-     *
-     * @ORM\OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", cascade={"remove"})
      */
+    #[OneToOne(targetEntity: SSLCert::class, cascade: ["remove"])]
     protected $EAPOLCACert;
 
     /**
      * Client certificate used for EAPOL TLS authentication.
-     *
-     * @ORM\OneToOne(targetEntity="HoneySens\app\models\entities\SSLCert", cascade={"remove"})
      */
+    #[OneToOne(targetEntity: SSLCert::class, cascade: ["remove"])]
     protected $EAPOLClientCert;
 
     /**
      * Passphrase for the client key, if any.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $EAPOLClientCertPassphrase;
 
     public function __construct() {
@@ -225,7 +174,7 @@ class Sensor {
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId() {
         return $this->id;
@@ -254,7 +203,7 @@ class Sensor {
     /**
      * Get name
      *
-     * @return string 
+     * @return string
      */
     public function getName() {
         return $this->name;
@@ -274,7 +223,7 @@ class Sensor {
     /**
      * Get location
      *
-     * @return string 
+     * @return string
      */
     public function getLocation() {
         return $this->location;

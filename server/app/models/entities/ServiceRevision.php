@@ -1,47 +1,45 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="service_revisions")
- */
+#[Entity]
+#[Table(name: "service_revisions")]
 class ServiceRevision {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
     /**
      * Revision string of this service, equals the "tag" of this particular docker image.
-     *
-     * @ORM\Column(type="string", nullable=false)
      */
+    #[Column(type: Types::STRING, nullable: false)]
     protected $revision;
 
     /**
      * The CPU architecture this service revision relies on.
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $architecture;
 
     /**
      * Whether this revision requires raw network access (handled by the sensor).
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $rawNetworkAccess;
 
     /**
      * Whether this revision acts as an catch-all service for packets that haven't been handled
      * by other services.
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $catchAll;
 
     /**
@@ -49,21 +47,17 @@ class ServiceRevision {
      * Currently saved as JSON object string to just pass to the client.
      * Example: "{2222: 22}"
      * TODO This should be specific to service assignments
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $portAssignment;
 
     /**
      * Description of this particular revision, mainly used to distinguish it from others.
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $description;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Service", inversedBy="revisions")
-     */
+    #[ManyToOne(targetEntity: Service::class, inversedBy: "revisions")]
     protected $service;
 
     /**

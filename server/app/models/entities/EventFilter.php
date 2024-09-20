@@ -1,64 +1,57 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\ORM\Mapping\Table;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="event_filters")
- */
+#[Entity]
+#[Table(name: "event_filters")]
 class EventFilter {
 
     const TYPE_WHITELIST = 0;
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="eventFilters")
-     */
+    #[ManyToOne(targetEntity: Division::class, inversedBy: "eventFilters")]
     protected $division;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $name;
 
     /**
      * The type of this filter
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $type;
 
     /**
      * Free-form text field describing this filter.
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $description;
 
     /**
      * Counts the collected packages that were collected by this filter
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $count = 0;
 
-    /**
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\EventFilterCondition", mappedBy="filter", cascade={"remove"})
-     */
+    #[OneToMany(targetEntity: EventFilterCondition::class, mappedBy: "filter", cascade: ["remove"])]
     protected $conditions;
 
     /**
      * Whether this filter is currently evaluated when processing incoming events.
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $enabled = true;
 
     public function __construct() {

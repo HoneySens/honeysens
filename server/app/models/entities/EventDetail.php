@@ -1,48 +1,44 @@
 <?php
 namespace HoneySens\app\models\entities;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="event_details")
- */
+#[Entity]
+#[Table(name: "event_details")]
 class EventDetail {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Event", inversedBy="details")
-     */
+    #[ManyToOne(targetEntity: Event::class, inversedBy: "details")]
     protected $event;
 
     /**
      * An optional timestamp to track the attacker-sensor interaction
-     *
-     * @ORM\Column(type="datetime", nullable=true)
      */
+    #[Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     protected $timestamp;
 
     /**
      * The type of data of these event details
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $type;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $data;
 
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId() {
         return $this->id;
@@ -62,7 +58,7 @@ class EventDetail {
     /**
      * Get event
      *
-     * @return \HoneySens\app\models\entities\Event 
+     * @return \HoneySens\app\models\entities\Event
      */
     public function getEvent() {
         return $this->event;
@@ -82,7 +78,7 @@ class EventDetail {
     /**
      * Get timestamp
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
     public function getTimestamp() {
         return $this->timestamp;
@@ -102,7 +98,7 @@ class EventDetail {
     /**
      * Get type
      *
-     * @return integer 
+     * @return integer
      */
     public function getType() {
         return $this->type;
@@ -122,7 +118,7 @@ class EventDetail {
     /**
      * Get data
      *
-     * @return string 
+     * @return string
      */
     public function getData() {
         return $this->data;

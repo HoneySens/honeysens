@@ -1,44 +1,37 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToMany;
+use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\ORM\Mapping\Table;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="divisions")
- */
+#[Entity]
+#[Table(name: "divisions")]
 class Division {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[Column(type: Types::STRING)]
     protected $name;
 
-    /**
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\Sensor", mappedBy="division")
-     */
+    #[OneToMany(targetEntity: Sensor::class, mappedBy: "division")]
     protected $sensors;
 
-    /**
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\IncidentContact", mappedBy="division", cascade={"remove"})
-     */
+    #[OneToMany(targetEntity: IncidentContact::class, mappedBy: "division", cascade: ["remove"])]
     protected $incidentContacts;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="User", mappedBy="divisions")
-     */
+    #[ManyToMany(targetEntity: User::class, mappedBy: "divisions")]
     protected $users;
 
-    /**
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\EventFilter", mappedBy="division", cascade={"remove"})
-     */
+    #[OneToMany(targetEntity: EventFilter::class, mappedBy: "division", cascade: ["remove"])]
     protected $eventFilters;
 
     public function __construct() {

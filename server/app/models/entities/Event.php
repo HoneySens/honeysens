@@ -1,13 +1,20 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\Index;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\OneToMany;
+use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\constants\EventStatus;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="events",indexes={@ORM\Index(name="timestamp_idx", columns={"timestamp"})})
- */
+#[Entity]
+#[Table(name: "events")]
+#[Index(name: "timestamp_idx", columns: ["timestamp"])]
 class Event {
 
     const SERVICE_RECON = 0;
@@ -20,84 +27,69 @@ class Event {
     const CLASSIFICATION_LOW_HP = 3;
     const CLASSIFICATION_PORTSCAN = 4;
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
-    /**
-     * @ORM\Column(type="datetime")
-     */
+    #[Column(type: Types::DATETIME_MUTABLE)]
     protected $timestamp;
 
     /**
      * The sensor this event was collected by
-     *
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Sensor")
      */
+    #[ManyToOne(targetEntity: Sensor::class)]
     protected $sensor;
 
     /**
      * The sensor service that generated this event
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $service;
 
     /**
      * Classification is done on the server side
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $classification;
 
     /**
      * Source IP address
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $source;
 
     /**
      * Most of the time a one-liner to summarize the event
-     *
-     * @ORM\Column(type="string")
      */
+    #[Column(type: Types::STRING)]
     protected $summary;
 
     /**
      * Configurable display-only status
-     *
-     * @ORM\Column(type="integer")
      */
+    #[Column(type: Types::INTEGER)]
     protected $status = EventStatus::UNEDITED->value;
 
     /**
      * Comment for the guy who works on the event
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $comment;
 
     /**
      * Timestamp that indicates the date and time of the last status or comment update.
-     *
-     * @ORM\Column(type="datetime", nullable=true)
      */
+    #[Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     protected $lastModificationTime;
 
-    /**
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\EventDetail", mappedBy="event", cascade={"remove"})
-     */
+    #[OneToMany(targetEntity: EventDetail::class, mappedBy: "event", cascade: ["remove"])]
     protected $details;
 
     /**
      * List of IP packets that belong to this event.
-     *
-     * @ORM\OneToMany(targetEntity="HoneySens\app\models\entities\EventPacket", mappedBy="event", cascade={"remove"})
      */
+    #[OneToMany(targetEntity: EventPacket::class, mappedBy: "event", cascade: ["remove"])]
     protected $packets;
 
     public function __construct() {

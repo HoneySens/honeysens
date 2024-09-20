@@ -1,68 +1,62 @@
 <?php
 namespace HoneySens\app\models\entities;
 
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\constants\ContactType;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="contacts")
- */
+#[Entity]
+#[Table(name: "contacts")]
 class IncidentContact {
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[Id]
+    #[Column(type: Types::INTEGER)]
+    #[GeneratedValue]
     protected $id;
 
     /**
      * The E-Mail address to send messages to
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[Column(type: Types::STRING, nullable: true)]
     protected $email;
 
     /**
      * The user that is acting as the contact for a particular division. This association is represented by this entity.
      * Messages will be sent to the E-Mail address that belongs to this user.
-     *
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\User", inversedBy="incidentContacts")
      */
+    #[ManyToOne(targetEntity: User::class, inversedBy: "incidentContacts")]
     protected $user;
 
     /**
      * Whether to send weekly summaries to this contact
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $sendWeeklySummary;
 
     /**
      * Whether to send instant critical event notifications to this contact
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $sendCriticalEvents;
 
     /**
      * Whether to send notifications about ALL events to this contact
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $sendAllEvents;
 
     /**
      * Whether to send a notification whenever a sensor in this division exceeds its timeout interval.
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[Column(type: Types::BOOLEAN)]
     protected $sendSensorTimeouts;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="HoneySens\app\models\entities\Division", inversedBy="incidentContacts")
-     */
+    #[ManyToOne(targetEntity: Division::class, inversedBy: "incidentContacts")]
     protected $division;
 
     public function getId(): int {
