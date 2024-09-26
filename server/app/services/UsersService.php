@@ -6,7 +6,9 @@ use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use HoneySens\app\controllers\Users;
+use HoneySens\app\models\constants\AuthDomain;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -35,7 +37,7 @@ class UsersService extends Service {
     public function get(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('u')->from('HoneySens\app\models\entities\User', 'u');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $qb->join('u.divisions', 'd')
                 ->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $user->getId());
@@ -61,9 +63,9 @@ class UsersService extends Service {
      * Creates and persists a new user.
      *
      * @param string $name Login name of the user
-     * @param int $domain Authentication domain (Local or LDAP)
+     * @param AuthDomain $domain Domain against which to authenticate the new user
      * @param string $email User's e-mail address
-     * @param int $role User role, determines granted permissions
+     * @param UserRole $role User role, determines granted permissions
      * @param bool $notifyOnSystemState Whether this user should receive system state notifications
      * @param bool $requirePasswordChange Whether this user is prompted to set a new password on next login
      * @param string|null $fullName Detailed user name, for display purposes only
@@ -72,9 +74,9 @@ class UsersService extends Service {
      * @throws SystemException
      */
     public function create(string $name,
-                           int $domain,
+                           AuthDomain $domain,
                            string $email,
-                           int $role,
+                           UserRole $role,
                            bool $notifyOnSystemState,
                            bool $requirePasswordChange,
                            ?string $fullName = null,
@@ -83,24 +85,24 @@ class UsersService extends Service {
         if($this->getUserByName($name) !== null) throw new BadRequestException(Users::ERROR_DUPLICATE);
         // Persistence
         $user = new User();
-        $user->setName($name)
-            ->setDomain($domain)
-            ->setEmail($email)
-            ->setRole($role)
-            ->setNotifyOnSystemState($notifyOnSystemState)
-            ->setRequirePasswordChange($requirePasswordChange);
-        if($domain === User::DOMAIN_LOCAL) {
+        $user->name = $name;
+        $user->domain = $domain;
+        $user->email = $email;
+        $user->requirePasswordChange = $requirePasswordChange;
+        $user->notifyOnSystemState = $notifyOnSystemState;
+        $user->role = $role;
+        if($domain === AuthDomain::LOCAL) {
             if($password === null) throw new BadRequestException();
             $user->setPassword($password);
         }
-        if($fullName !== null) $user->setFullName($fullName);
+        if($fullName !== null) $user->fullName = $fullName;
         try {
             $this->em->persist($user);
             $this->em->flush();
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('User %s (ID %d) created', $user->getName(), $user->getId()), LogResource::USERS, $user->getId());
+        $this->logger->log(sprintf('User %s (ID %d) created', $user->name, $user->getId()), LogResource::USERS, $user->getId());
         return $user;
     }
 
@@ -109,9 +111,9 @@ class UsersService extends Service {
      *
      * @param int $id User ID to update
      * @param string $name Login name of the user
-     * @param int $domain Authentication domain (Local or LDAP)
+     * @param AuthDomain $domain Authentication domain (Local or LDAP)
      * @param string $email User's e-mail address
-     * @param int $role User role, determines granted permissions
+     * @param UserRole $role User role, determines granted permissions
      * @param bool $notifyOnSystemState Whether this user should receive system state notifications
      * @param bool $requirePasswordChange Whether this user is prompted to set a new password on next login
      * @param string|null $fullName Detailed user name, for display purposes only
@@ -121,9 +123,9 @@ class UsersService extends Service {
      */
     public function update(int $id,
                            string $name,
-                           int $domain,
+                           AuthDomain $domain,
                            string $email,
-                           int $role,
+                           UserRole $role,
                            bool $notifyOnSystemState,
                            bool $requirePasswordChange,
                            ?string $fullName = null,
@@ -131,23 +133,23 @@ class UsersService extends Service {
         $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($id);
         if($user === null) throw new BadRequestException();
         // Require a password if the user uses local authentication and hasn't one set yet
-        if($domain === User::DOMAIN_LOCAL && $user->getPassword() === null && $user->getLegacyPassword() === null && $password === null)
+        if($domain === AuthDomain::LOCAL && $user->getHashedPassword() === null && $user->getLegacyPassword() === null && $password === null)
             throw new BadRequestException();
         // Name duplication check
         $duplicate = $this->getUserByName($name);
         if($duplicate !== null && $duplicate->getId() !== $user->getId())
             throw new BadRequestException(Users::ERROR_DUPLICATE);
         // Force the first user to remain an admin
-        if($user->getId() === 1 && $role !== User::ROLE_ADMIN) throw new BadRequestException();
+        if($user->getId() === 1 && $role !== UserRole::ADMIN) throw new BadRequestException();
         // Persistence
-        $user->setName($name)
-            ->setDomain($domain)
-            ->setEmail($email)
-            ->setRole($role)
-            ->setNotifyOnSystemState($notifyOnSystemState)
-            ->setRequirePasswordChange($requirePasswordChange)
-            ->setFullName($fullName);
-        if($domain === User::DOMAIN_LOCAL) {
+        $user->name = $name;
+        $user->fullName = $fullName;
+        $user->email = $email;
+        $user->domain = $domain;
+        $user->requirePasswordChange = $requirePasswordChange;
+        $user->notifyOnSystemState = $notifyOnSystemState;
+        $user->role = $role;
+        if($domain === AuthDomain::LOCAL) {
             if($password !== null) $user->setPassword($password)->setLegacyPassword(null);
         } else $user->setPassword(null)->setLegacyPassword(null);
         try {
@@ -155,7 +157,7 @@ class UsersService extends Service {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('User %s (ID %d) updated', $user->getName(), $user->getId()), LogResource::USERS, $user->getId());
+        $this->logger->log(sprintf('User %s (ID %d) updated', $user->name, $user->getId()), LogResource::USERS, $user->getId());
         return $user;
     }
 
@@ -170,20 +172,20 @@ class UsersService extends Service {
      */
     public function updatePassword(int $id, string $password): User {
         $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($id);
-        if($user === null || !$user->getRequirePasswordChange()) throw new ForbiddenException();
+        if($user === null || !$user->requirePasswordChange) throw new ForbiddenException();
         // Enforce an actual password change, don't accept the existing password as a new one
-        if($user->getPassword() !== null && password_verify($password, $user->getPassword()))
+        if($user->getHashedPassword() !== null && password_verify($password, $user->getHashedPassword()))
             throw new BadRequestException(Users::ERROR_REQUIRE_PASSWORD_CHANGE);
         // Persistence
-        $user->setPassword($password)
-            ->setLegacyPassword(null)
-            ->setRequirePasswordChange(false);
+        $user->setPassword($password);
+        $user->setLegacyPassword(null);
+        $user->requirePasswordChange = false;
         try {
             $this->em->flush();
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Password of user %s (ID %d) updated', $user->getName(), $user->getId()), LogResource::USERS, $user->getId());
+        $this->logger->log(sprintf('Password of user %s (ID %d) updated', $user->name, $user->getId()), LogResource::USERS, $user->getId());
         return $user;
     }
 
@@ -208,7 +210,7 @@ class UsersService extends Service {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('User %s (ID %d) deleted', $user->getName(), $uid), LogResource::USERS, $uid);
+        $this->logger->log(sprintf('User %s (ID %d) deleted', $user->name, $uid), LogResource::USERS, $uid);
     }
 
     /**
@@ -220,14 +222,14 @@ class UsersService extends Service {
     public function getStateWithPermissionConfig(User $user): array {
         $state = $user->getState();
         // Incorporate role restrictions
-        if($user->getRole() === User::ROLE_MANAGER) {
+        if($user->role === UserRole::MANAGER) {
             if($this->config->getBoolean('misc', 'prevent_event_deletion_by_managers'))
                 $state['permissions']['events'] = array_values(array_diff($state['permissions']['events'], ['delete']));
             if($this->config->getBoolean('misc', 'prevent_sensor_deletion_by_managers'))
                 $state['permissions']['sensors'] = array_values(array_diff($state['permissions']['sensors'], ['delete']));
         }
         // Enable API logging if the logging module is enabled and $user is an administrator
-        if($user->getRole() === User::ROLE_ADMIN && $this->logger->isEnabled())
+        if($user->role === UserRole::ADMIN && $this->logger->isEnabled())
             $state['permissions']['logs'] = array('get');
         return $state;
     }

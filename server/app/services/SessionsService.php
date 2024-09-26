@@ -3,7 +3,9 @@ namespace HoneySens\app\services;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Exception\ORMException;
+use HoneySens\app\models\constants\AuthDomain;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\SystemException;
@@ -47,11 +49,11 @@ class SessionsService extends Service {
         }
         if($user === null) throw new ForbiddenException();
         // The validation procedure heavily depends on the user's domain
-        switch($user->getDomain()) {
-            case User::DOMAIN_LOCAL:
+        switch($user->domain) {
+            case AuthDomain::LOCAL:
                 // Update password in case this user still relies on the deprecated hashing scheme
-                if($user->getLegacyPassword() != null) {
-                    if($user->getLegacyPassword() == sha1($password)) {
+                if($user->getLegacyPassword() !== null) {
+                    if($user->getLegacyPassword() === sha1($password)) {
                         // Password match - update scheme
                         $user->setPassword($password);
                         $user->setLegacyPassword(null);
@@ -63,20 +65,20 @@ class SessionsService extends Service {
                     } else throw new ForbiddenException();
                 }
                 // Check password
-                if($user->getPassword() != null && password_verify($password, $user->getPassword())) {
-                    if($user->getRequirePasswordChange()) {
+                if($user->getHashedPassword() != null && password_verify($password, $user->getHashedPassword())) {
+                    if($user->requirePasswordChange) {
                         // User is not permitted to do anything except change his/her password
                         $guestUser = new User();
-                        $guestUser->setRole(USER::ROLE_GUEST); // Temporarily assign guest permissions within this ession
+                        $guestUser->role = UserRole::GUEST; // Temporarily assign guest permissions within this ession
                         $userState = $this->usersService->getStateWithPermissionConfig($user);
                         $userState['permissions'] = $guestUser->getState()['permissions'];
                         $userState['permissions']['users'] = array('updateSelf');
                         $sessionTimeout = self::SESSION_TIMEOUT_CHANGEPW;
-                        $this->logger->log(sprintf('Password change request sent to user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
+                        $this->logger->log(sprintf('Password change request sent to user %s (ID %d)', $user->name, $user->getId()), LogResource::SESSIONS, null, $user->getId());
                     } else {
                         $userState = $this->usersService->getStateWithPermissionConfig($user);
                         $sessionTimeout = self::SESSION_TIMEOUT_DEFAULT;
-                        $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
+                        $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->name, $user->getId()), LogResource::SESSIONS, null, $user->getId());
                     }
                     session_regenerate_id(true);
                     $_SESSION['user'] = $userState;
@@ -86,7 +88,7 @@ class SessionsService extends Service {
                     return $userState;
                 } else throw new ForbiddenException();
                 break;
-            case User::DOMAIN_LDAP:
+            case AuthDomain::LDAP:
                 if($this->config['ldap']['enabled'] == 'true') {
                     $ldapSchema = $this->config['ldap']['encryption'] == '2' ? 'ldaps' : 'ldap';
                     if($ldapHandle = ldap_connect(sprintf('%s://%s:%s', $ldapSchema, $this->config['ldap']['server'], $this->config['ldap']['port']))) {
@@ -100,7 +102,7 @@ class SessionsService extends Service {
                                 $_SESSION['user'] = $userState;
                                 $_SESSION['authenticated'] = true;
                                 $_SESSION['last_activity'] = time();
-                                $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
+                                $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->name, $user->getId()), LogResource::SESSIONS, null, $user->getId());
                                 return $userState;
                             } else throw new ForbiddenException();
                         } catch(\Exception $e) {
@@ -123,8 +125,8 @@ class SessionsService extends Service {
      */
     public function delete(User $user): User {
         $guestUser = new User();
-        $guestUser->setRole(User::ROLE_GUEST);
-        $this->logger->log(sprintf('Logout by user %s (ID %d)', $user->getName(), $user->getId()), LogResource::SESSIONS, null, $user->getId());
+        $guestUser->role = UserRole::GUEST;
+        $this->logger->log(sprintf('Logout by user %s (ID %d)', $user->name, $user->getId()), LogResource::SESSIONS, null, $user->getId());
         session_destroy();
         return $guestUser;
     }

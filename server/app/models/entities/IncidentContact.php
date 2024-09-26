@@ -87,7 +87,7 @@ class IncidentContact {
      */
     public function getEMail() {
         if($this->getType() === ContactType::USER) {
-            return $this->user->getEmail();
+            return $this->user->email;
         } else return $this->email;
     }
 

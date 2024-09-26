@@ -3,6 +3,7 @@ namespace HoneySens\app\controllers;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query\ResultSetMapping;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\services\DivisionsService;
@@ -180,7 +181,7 @@ class State extends RESTResource {
                 case 'settings':
                     try {
                         $this->assureAllowed('get', 'settings');
-                        $result[$table['name']] = $settingsService->get($sessionUser->getRole() === User::ROLE_ADMIN);
+                        $result[$table['name']] = $settingsService->get($sessionUser->role === UserRole::ADMIN);
                     } catch(\Exception $e) {}
                     break;
                 case 'event_filters':

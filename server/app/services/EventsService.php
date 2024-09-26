@@ -13,6 +13,7 @@ use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\EventDetailType;
 use HoneySens\app\models\constants\EventStatus;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\ArchivedEvent;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventDetail;
@@ -366,7 +367,7 @@ class EventsService extends Service {
         $qb = $this->em->createQueryBuilder();
         $entity = $type === EventDetailType::GENERIC ? 'HoneySens\app\models\entities\EventDetail' : 'HoneySens\app\models\entities\EventPacket';
         $qb->select('entity')->from($entity, 'entity')->join('entity.event', 'e');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $qb->join('e.sensor', 's')
                 ->join('s.division', 'd')
                 ->andWhere(':userid MEMBER OF d.users')
@@ -392,7 +393,7 @@ class EventsService extends Service {
         $qb = $this->em->createQueryBuilder()
             ->select('e')
             ->from('HoneySens\app\models\entities\ArchivedEvent', 'e');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             // Only join with division in case a non-admin user ID was provided so that the
             // user/event/division association can be verified. ArchivedEvents may have no longer
             // an associated division. In that case, joining with divisions eagerly would return no results.

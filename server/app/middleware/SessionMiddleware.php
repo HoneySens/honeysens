@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\middleware;
 
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\User;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -25,7 +26,7 @@ class SessionMiddleware implements MiddlewareInterface {
         }
         if(!isset($_SESSION['authenticated']) || !isset($_SESSION['user'])) {
             $guestUser = new User();
-            $guestUser->setRole(User::ROLE_GUEST);
+            $guestUser->role = UserRole::GUEST;
             $_SESSION['authenticated'] = false;
             $_SESSION['user'] = $guestUser->getState();
         }

@@ -1,14 +1,13 @@
 <?php
 namespace HoneySens\app\services;
 
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\OptimisticLockException;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\LogEntry;
-use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\exceptions\SystemException;
 
@@ -93,7 +92,7 @@ class LogService extends Service {
      * @throws SystemException
      */
     private function getSessionUserID(): ?int {
-        if($_SESSION['user']['role'] == User::ROLE_GUEST) return null;
+        if($_SESSION['user']['role'] === UserRole::GUEST) return null;
         try {
             $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
         } catch(ORMException $e) {

@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
@@ -10,38 +11,35 @@ use Doctrine\ORM\Mapping\JoinTable;
 use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\Table;
+use HoneySens\app\models\constants\AuthDomain;
+use HoneySens\app\models\constants\UserRole;
 
 #[Entity]
 #[Table(name: "users")]
 class User {
 
-    const ROLE_GUEST = 0;
-    const ROLE_OBSERVER = 1;
-    const ROLE_MANAGER = 2;
-    const ROLE_ADMIN = 3;
-
-    const DOMAIN_LOCAL = 0;
-    const DOMAIN_LDAP = 1;
-
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
-
-    #[Column(type: Types::STRING)]
-    protected $name;
+    protected int $id;
 
     /**
-     * The E-Mail address that belongs to this user
+     * Short user login name.
      */
     #[Column(type: Types::STRING)]
-    protected $email;
+    public string $name;
 
     /**
-     * Hashed password of this user (using bcrypt).
+     * An e-mail address that belongs to this user.
+     */
+    #[Column(type: Types::STRING)]
+    public string $email;
+
+    /**
+     * Hashed user password (uses bcrypt).
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $password;
+    private ?string $password;
 
     /**
      * SHA1-hashed password used prior to upgrading to bcrypt hashes.
@@ -51,310 +49,122 @@ class User {
      * @deprecated
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $legacyPassword;
+    private ?string $legacyPassword;
 
     /**
      * If true, this user will be prompted for a password change after the next login.
      */
     #[Column(type: Types::BOOLEAN)]
-    protected $requirePasswordChange = false;
+    public bool $requirePasswordChange = false;
 
     /**
-     * The domain that this user is authenticated against
+     * The domain this user is authenticated against.
      */
-    #[Column(type: Types::INTEGER)]
-    protected $domain = self::DOMAIN_LOCAL;
+    #[Column()]
+    public AuthDomain $domain = AuthDomain::LOCAL;
 
     /**
-     * Full name or description of this user
+     * Full name or description of this user.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $fullName;
+    public ?string $fullName;
 
-    #[Column(type: Types::INTEGER)]
-    protected $role;
+    /**
+     * A user's role determines the set of granted permissions
+     * when interacting with the API.
+     */
+    #[Column()]
+    public UserRole $role;
 
     #[ManyToMany(targetEntity: Division::class, inversedBy: "users")]
     #[JoinTable(name: "users_divisions")]
-    protected $divisions;
+    private Collection $divisions;
 
     /**
      * This reference is only made to ensure cascading events in case a user is removed.
      * It's not made public as an attribute of the entity.
      */
-    #[OneToMany(targetEntity: IncidentContact::class, mappedBy: "user", cascade: ["remove"])]
-    protected $incidentContacts;
+    #[OneToMany(mappedBy: "user", targetEntity: IncidentContact::class, cascade: ["remove"])]
+    private Collection $incidentContacts;
 
     /**
      * References the tasks this user has submitted.
      */
-    #[OneToMany(targetEntity: Task::class, mappedBy: "user", cascade: ["remove"])]
-    protected $tasks;
+    #[OneToMany(mappedBy: "user", targetEntity: Task::class, cascade: ["remove"])]
+    private Collection $tasks;
 
     /**
      * Whether to send system state notifications (e.g. high load, CA expiration) to the E-Mail address of this user.
      */
     #[Column(type: Types::BOOLEAN)]
-    protected $notifyOnSystemState = false;
+    public bool $notifyOnSystemState = false;
 
     public function __construct() {
         $this->divisions = new ArrayCollection();
         $this->tasks = new ArrayCollection();
     }
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Set name
-     *
-     * @param string $name
-     * @return User
+     * Sets a new password for this user.
      */
-    public function setName($name) {
-        $this->name = $name;
-        return $this;
+    public function setPassword(?string $password): void {
+        $this->password = $password === null ? null : password_hash($password, PASSWORD_BCRYPT);
     }
 
     /**
-     * Get name
-     *
-     * @return string
+     * Returns the hashed user password, if one is set. Null otherwise.
      */
-    public function getName() {
-        return $this->name;
-    }
-
-    /**
-     * Set domain
-     *
-     * @param integer $domain
-     * @return User
-     */
-    public function setDomain($domain) {
-        $this->domain = $domain;
-        return $this;
-    }
-
-    /**
-     * Get domain
-     *
-     * @return integer
-     */
-    public function getDomain() {
-        return $this->domain;
-    }
-
-    /**
-     * Set the full name or description
-     *
-     * @param string $fullName
-     * @return $this
-     */
-    public function setFullName($fullName) {
-        $this->fullName = $fullName == null ? null : $fullName;
-        return $this;
-    }
-
-    /**
-     * Get full name or description
-     *
-     * @return string
-     */
-    public function getFullName() {
-        return $this->fullName;
-    }
-
-    /**
-     * Set E-Mail address
-     *
-     * @param string $email
-     * @return $this
-     */
-    public function setEmail($email) {
-        $this->email = $email;
-        return $this;
-    }
-
-    /**
-     * Get E-Mail address
-     *
-     * @return string
-     */
-    public function getEmail() {
-        return $this->email;
-    }
-
-    /**
-     * Set password
-     *
-     * @param string $password
-     * @return User
-     */
-    public function setPassword($password) {
-        $this->password = $password == null ? null : password_hash($password, PASSWORD_BCRYPT);
-        return $this;
-    }
-
-    /**
-     * Get password
-     *
-     * @return string
-     */
-    public function getPassword() {
+    public function getHashedPassword(): ?string {
         return $this->password;
     }
 
     /**
-     * Set the legacy password, which means a SHA1 hash.
-     *
-     * @param string $password
-     * @return $this
+     * Sets or unsets the legacy password, which is a SHA1 hash.
      */
-    public function setLegacyPassword($password) {
+    public function setLegacyPassword(?string $password): void {
         $this->legacyPassword = $password == null ? null : sha1($password);
-        return $this;
     }
 
     /**
-     * Get the legacy password, if set. Null otherwise.
-     *
-     * @return mixed
+     * Returns the legacy password, if set. Null otherwise.
      */
-    public function getLegacyPassword() {
+    public function getLegacyPassword(): ?string {
         return $this->legacyPassword;
     }
 
     /**
-     * Sets whether a password change is required upon the next login.
-     *
-     * @param boolean $require
-     * @return $this
+     * Adds this user to an existing division.
      */
-    public function setRequirePasswordChange($require) {
-        $this->requirePasswordChange = $require;
-        return $this;
-    }
-
-    /**
-     * Whether a password change is required upon the next login.
-     *
-     * @return boolean
-     */
-    public function getRequirePasswordChange() {
-        return $this->requirePasswordChange;
-    }
-
-    /**
-     * Set role
-     *
-     * @param integer $role
-     * @return User
-     */
-    public function setRole($role) {
-        $this->role = $role;
-        return $this;
-    }
-
-    /**
-     * Get role
-     *
-     * @return integer
-     */
-    public function getRole() {
-        return $this->role;
-    }
-
-    /**
-     * Add this user to an existing division
-     *
-     * @param Division $division
-     * @return $this
-     */
-    public function addToDivision(Division $division) {
+    public function addToDivision(Division $division): void {
         $division->addUser($this);
         $this->divisions[] = $division;
-        return $this;
     }
 
     /**
-     * Remove this user from a division
-     *
-     * @param Division $division
-     * @return $this
+     * Removes this user from a division.
      */
-    public function removeFromDivision(Division $division) {
+    public function removeFromDivision(Division $division): void {
         $division->removeUser($this);
         $this->divisions->removeElement($division);
-        return $this;
     }
 
     /**
-     * Register a task with this user.
-     *
-     * @param Task $task
-     * @return $this
+     * Associates a task with this user.
      */
-    public function addTask(Task $task) {
+    public function addTask(Task $task): void {
         $this->tasks[] = $task;
         $task->setUser($this);
-        return $this;
     }
 
     /**
-     * Disassociates a task from this user.
-     *
-     * @param Task $task
-     * @return $this
+     * Returns an array of service permissions for this user
+     * in the form array('<SERVICE>' => array('<OPERATION>', ...), ...)
      */
-    public function removeTask(Task $task) {
-        $this->tasks->removeElement($task);
-        $task->setUser(null);
-        return $this;
-    }
-
-    /**
-     * Get all tasks associated with this user.
-     *
-     * @return ArrayCollection
-     */
-    public function getTasks() {
-        return $this->tasks;
-    }
-
-    /**
-     * Enable or disable notifications in case of CA expiration or high system load for this user.
-     *
-     * @param boolean $notify
-     * @return $this
-     */
-    public function setNotifyOnSystemState($notify) {
-        $this->notifyOnSystemState = $notify;
-        return $this;
-    }
-
-    /**
-     * Whether this user receives notifications about the system state.
-     *
-     * @return boolean
-     */
-    public function getNotifyOnSystemState() {
-        return $this->notifyOnSystemState;
-    }
-
-    /**
-     * Returns an array of controller permissions for this user
-     * of the form array('<CONTROLLER>' => array('<METHOD>', ...), ...)
-     *
-     * @return array
-     */
-    public function getPermissions() {
+    public function getPermissions(): array {
         $permissions = array('certs' => array(),
             'eventdetails' => array(),
             'events' => array(),
@@ -372,14 +182,14 @@ class User {
             'state' => array(),
             'tasks' => array());
         switch($this->role) {
-            case $this::ROLE_ADMIN:
+            case UserRole::ADMIN:
                 array_push($permissions['divisions'], 'create', 'update', 'delete');
                 array_push($permissions['users'], 'create', 'update', 'delete');
                 array_push($permissions['settings'], 'create', 'update', 'delete');
                 array_push($permissions['platforms'], 'create', 'update', 'delete');
                 array_push($permissions['services'], 'create', 'update', 'delete');
                 array_push($permissions['tasks'], 'upload');
-            case $this::ROLE_MANAGER:
+            case UserRole::MANAGER:
                 array_push($permissions['certs'], 'create', 'delete');
                 array_push($permissions['events'], 'update', 'archive', 'delete');
                 array_push($permissions['eventfilters'], 'create', 'update', 'delete');
@@ -387,7 +197,7 @@ class User {
                 array_push($permissions['sensors'], 'create', 'update', 'delete', 'downloadConfig');
                 array_push($permissions['users'], 'get');
                 array_push($permissions['contacts'], 'create', 'update', 'delete');
-            case $this::ROLE_OBSERVER:
+            case UserRole::OBSERVER:
                 array_push($permissions['certs'], 'get');
                 array_push($permissions['eventdetails'], 'get');
                 array_push($permissions['events'], 'get', 'getByLastID');
@@ -402,29 +212,29 @@ class User {
                 array_push($permissions['stats'], 'get');
                 array_push($permissions['tasks'], 'get', 'create', 'update', 'delete');
                 array_push($permissions['users'], 'updateSelf');
-            case $this::ROLE_GUEST:
+            case UserRole::GUEST:
                 array_push($permissions['state'], 'get');
                 break;
         }
         return $permissions;
     }
 
-    public function getState() {
+    public function getState(): array {
         $divisions = array();
         foreach($this->divisions as $division) {
             $divisions[] = $division->getId();
         }
         return array(
-            'id' => $this->getId(),
-            'name' => $this->getName(),
-            'domain' => $this->getDomain(),
-            'full_name' => $this->getFullName(),
-            'email' => $this->getEmail(),
-            'require_password_change' => $this->getRequirePasswordChange(),
-            'role' => $this->getRole(),
+            'id' => $this->id ?? null,
+            'name' => $this->name ?? null,
+            'domain' => $this->domain->value,
+            'full_name' => $this->fullName ?? null,
+            'email' => $this->email ?? null,
+            'require_password_change' => $this->requirePasswordChange,
+            'role' => $this->role->value,
             'permissions' => $this->getPermissions(),
             'divisions' => $divisions,
-            'notify_on_system_state' => $this->getNotifyOnSystemState()
+            'notify_on_system_state' => $this->notifyOnSystemState
         );
     }
 }

@@ -9,6 +9,7 @@ use Doctrine\Persistence\Mapping\MappingException;
 use HoneySens\app\controllers\Divisions;
 use HoneySens\app\models\constants\ContactType;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\IncidentContact;
 use HoneySens\app\models\entities\User;
@@ -41,7 +42,7 @@ class DivisionsService extends Service {
     public function get(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('d')->from('HoneySens\app\models\entities\Division', 'd');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $qb->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $user->getId());
         }
@@ -235,7 +236,7 @@ class DivisionsService extends Service {
     public function getContact(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $qb->join('c.division', 'd')
                 ->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $user->getId());
