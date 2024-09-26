@@ -23,7 +23,7 @@ class Template {
 
     /**
      * Template content. Templates use the following string substitutions to fill in dynamic parts:
-     * {{SUMMARY}} - Key-value-style summary of basic event properties (
+     * {{SUMMARY}} - Key-value-style summary of basic event properties
      *
      * @var string
      */

@@ -7,6 +7,7 @@ use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
@@ -41,7 +42,7 @@ class TasksService extends Service {
     public function get(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('t')->from('HoneySens\app\models\entities\Task', 't');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $qb->join('t.user', 'u')
                 ->andWhere('u.id = :user')
                 ->setParameter('user', $user->getId());
@@ -84,7 +85,7 @@ class TasksService extends Service {
             throw new SystemException($e);
         }
         if($task === null) throw new BadRequestException();
-        if($task->getUser() !== $sessionUser && $sessionUser->getRole() !== User::ROLE_ADMIN) throw new ForbiddenException();
+        if($task->getUser() !== $sessionUser && $sessionUser->role !== UserRole::ADMIN) throw new ForbiddenException();
         $result = $task->getResult();
         $tasksService = $this;
         $deleteFunc = function() use ($tasksService, $id, $sessionUser) {
@@ -190,7 +191,7 @@ class TasksService extends Service {
             throw new SystemException($e);
         }
         if($task === null) throw new BadRequestException();
-        if($task->getUser() !== $sessionUser && $sessionUser->getRole() !== User::ROLE_ADMIN) throw new ForbiddenException();
+        if($task->getUser() !== $sessionUser && $sessionUser->role !== UserRole::ADMIN) throw new ForbiddenException();
         // Running tasks can't be interrupted
         if($task->getStatus() === Task::STATUS_RUNNING) throw new BadRequestException();
         // Recursively remove temporary task files

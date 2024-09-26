@@ -13,6 +13,7 @@ use HoneySens\app\models\constants\SensorNetworkIPMode;
 use HoneySens\app\models\constants\SensorNetworkMACMode;
 use HoneySens\app\models\constants\SensorProxyMode;
 use HoneySens\app\models\constants\SensorServerEndpointMode;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\SensorStatus;
@@ -52,7 +53,7 @@ class SensorsService extends Service {
     public function get(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('s')->from('HoneySens\app\models\entities\Sensor', 's');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $qb->join('s.division', 'd')
                 ->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $user->getId());
@@ -89,7 +90,7 @@ class SensorsService extends Service {
         try {
             $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($params->divisionID);
             if ($division === null) throw new NotFoundException();
-            if($user->getRole() !== User::ROLE_ADMIN)
+            if($user->role !== UserRole::ADMIN)
                 $this->assureUserAffiliation($division->getId(), $user->getId());
             $sensor = new Sensor();
             $this->em->persist($sensor);
@@ -121,7 +122,7 @@ class SensorsService extends Service {
             if ($sensor === null) throw new NotFoundException();
             $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($params->divisionID);
             if ($division === null) throw new NotFoundException();
-            if($user->getRole() !== User::ROLE_ADMIN)
+            if($user->role !== UserRole::ADMIN)
                 $this->assureUserAffiliation($division->getId(), $user->getId());
             $this->updateSensorFromParams($sensor, $params, $division);
             // Update sensor services
@@ -185,7 +186,7 @@ class SensorsService extends Service {
         try {
             $sensor = $this->em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
             if ($sensor === null) throw new BadRequestException();
-            if($user->getRole() !== User::ROLE_ADMIN)
+            if($user->role !== UserRole::ADMIN)
                 $this->assureUserAffiliation($sensor->getDivision()->getId(), $user->getId());
             // (Archive and) Remove all events that belong to this sensor
             $events = $this->em->getRepository('HoneySens\app\models\entities\Event')->findBy(array('sensor' => $sensor));
@@ -217,7 +218,7 @@ class SensorsService extends Service {
             $qb = $this->em->createQueryBuilder();
             $qb->select('ss')->from('HoneySens\app\models\entities\SensorStatus', 'ss')
                 ->join('ss.sensor', 's');
-            if ($user->getRole() !== User::ROLE_ADMIN) {
+            if ($user->role !== UserRole::ADMIN) {
                 $qb->join('s.division', 'd')
                     ->andWhere(':userid MEMBER OF d.users')
                     ->setParameter('userid', $user->getId());
@@ -248,7 +249,7 @@ class SensorsService extends Service {
             throw new SystemException($e);
         }
         if($sensor === null) throw new NotFoundException();
-        if($user->getRole() !== User::ROLE_ADMIN)
+        if($user->role !== UserRole::ADMIN)
             $this->assureUserAffiliation($sensor->getDivision()->getId(), $user->getId());
         // Enqueue a new task and return it, it's the client's obligation to check that task's status and download the result
         $taskParams = $this->getSensorState($sensor);

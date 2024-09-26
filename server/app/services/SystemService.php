@@ -7,7 +7,9 @@ use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\ToolsException;
+use HoneySens\app\models\constants\AuthDomain;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
@@ -78,7 +80,7 @@ class SystemService extends Service {
      * @throws SystemException
      */
     public function removeAllEvents(User $user): void {
-        if($user->getRole() !== User::ROLE_ADMIN) throw new ForbiddenException();
+        if($user->role !== UserRole::ADMIN) throw new ForbiddenException();
         // QueryBuilder seems to ignore the cascade on delete specifications and fails with constraint checks,
         // if we just delete events here. As a workaround we will manually do the cascade stuff by deleting
         // referenced event details and packets first.
@@ -108,7 +110,7 @@ class SystemService extends Service {
      * @throws SystemException
      */
     public function refreshCertificates(User $user): void {
-        if($user->getRole() !== User::ROLE_ADMIN) throw new ForbiddenException();
+        if($user->role !== UserRole::ADMIN) throw new ForbiddenException();
         $caKeyPath = APPLICATION_PATH . '/../data/CA/ca.key';
         if(!file_exists($caKeyPath)) throw new BadRequestException();
         // Create new CA cert from existing private key
@@ -180,14 +182,13 @@ class SystemService extends Service {
         $this->em->persist($division);
         // Default admin user
         $admin = new User();
-        $admin
-            ->setName('admin')
-            ->setPassword($adminPassword)
-            ->setDomain(User::DOMAIN_LOCAL)
-            ->setFullName('Administrator')
-            ->setEmail($adminEMail)
-            ->setRole($admin::ROLE_ADMIN)
-            ->addToDivision($division);
+        $admin->setPassword($adminPassword);
+        $admin->name = 'admin';
+        $admin->fullName = 'Administrator';
+        $admin->domain = AuthDomain::LOCAL;
+        $admin->email = $adminEMail;
+        $admin->role = UserRole::ADMIN;
+        $admin->addToDivision($division);
         $this->em->persist($admin);
         // Add Platforms
         $connection = $this->em->getConnection();

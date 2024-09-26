@@ -1,6 +1,8 @@
 <?php
 namespace HoneySens\app\controllers;
 
+use HoneySens\app\models\constants\AuthDomain;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\Utils;
 use HoneySens\app\services\UsersService;
@@ -35,15 +37,16 @@ class Users extends RESTResource {
         $fullName = $data['fullName'] ?? null;
         // A password is only mandatory if the user is authenticating against the Local domain
         $password = null;
-        if($data['domain'] === User::DOMAIN_LOCAL) {
+        $authDomain = AuthDomain::from($data['domain']);
+        if($authDomain === AuthDomain::LOCAL) {
             V::key('password')->check($data);
             $password = $data['password'];
         }
         $user = $service->create(
             $data['name'],
-            $data['domain'],
+            $authDomain,
             $data['email'],
-            intval($data['role']),
+            UserRole::from($data['role']),
             $data['notifyOnSystemState'],
             $data['requirePasswordChange'],
             $fullName,
@@ -61,9 +64,9 @@ class Users extends RESTResource {
         $user = $service->update(
             $id,
             $data['name'],
-            $data['domain'],
+            AuthDomain::from($data['domain']),
             $data['email'],
-            intval($data['role']),
+            UserRole::from($data['role']),
             $data['notifyOnSystemState'],
             $data['requirePasswordChange'],
             $fullName,

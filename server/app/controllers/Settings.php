@@ -3,6 +3,7 @@ namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\constants\TransportEncryptionType;
 use HoneySens\app\models\constants\TransportProtocol;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\Utils;
 use HoneySens\app\services\dto\SettingsParams;
@@ -22,7 +23,7 @@ class Settings extends RESTResource {
 
     public function get(Response $response, SettingsService $service): Response {
         $this->assureAllowed('get');
-        $settings = $service->get($this->getSessionUser()->getRole() === User::ROLE_ADMIN);
+        $settings = $service->get($this->getSessionUser()->role === UserRole::ADMIN);
         $response->getBody()->write(json_encode($settings));
         return $response;
     }

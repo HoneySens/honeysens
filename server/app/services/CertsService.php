@@ -1,10 +1,10 @@
 <?php
 namespace HoneySens\app\services;
 
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query\Expr\Join as Join;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\NotFoundException;
@@ -21,7 +21,7 @@ class CertsService extends Service {
     public function get(User $user, ?int $id): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('c')->from('HoneySens\app\models\entities\SSLCert', 'c');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $qb->join(Sensor::class, 's', Join::WITH, 's.EAPOLCACert = c')
                 ->join('s.division', 'd')
                 ->andWhere(':userid MEMBER OF d.users')

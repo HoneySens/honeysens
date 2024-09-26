@@ -2,6 +2,7 @@
 namespace HoneySens\app\controllers;
 
 use Doctrine\ORM\EntityManager;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
@@ -69,7 +70,7 @@ abstract class RESTResource {
      * @deprecated
      */
     public function getSessionUserID() {
-        if($_SESSION['user']['role'] == User::ROLE_ADMIN) {
+        if($_SESSION['user']['role'] === UserRole::ADMIN) {
             return null;
         } else return $_SESSION['user']['id'];
     }
@@ -83,7 +84,7 @@ abstract class RESTResource {
      * @throws ForbiddenException
      */
     public function getSessionUser() {
-        if($_SESSION['user']['role'] == User::ROLE_GUEST) throw new ForbiddenException();
+        if(UserRole::from($_SESSION['user']['role']) === UserRole::GUEST) throw new ForbiddenException();
         return $this->em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
     }
 

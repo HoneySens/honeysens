@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\services;
 
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\User;
 
 class StatsService extends Service {
@@ -44,7 +45,7 @@ class StatsService extends Service {
                 ->setParameter('year', $year);
 
         }
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $timelineQB->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $user->getId());
         }
@@ -67,7 +68,7 @@ class StatsService extends Service {
             $classificationQB->andWhere($classificationQB->expr()->eq('MONTH(e.timestamp)', ':month'))
                 ->setParameter('month', $month);
         }
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $classificationQB->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $user->getId());
         }

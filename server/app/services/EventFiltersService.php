@@ -8,6 +8,7 @@ use Doctrine\ORM\NoResultException;
 use HoneySens\app\models\constants\EventFilterConditionField;
 use HoneySens\app\models\constants\EventFilterConditionType;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\EventFilter;
 use HoneySens\app\models\entities\EventFilterCondition;
 use HoneySens\app\models\entities\User;
@@ -36,7 +37,7 @@ class EventFiltersService extends Service {
     public function get(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('f')->from('HoneySens\app\models\entities\EventFilter', 'f');
-        if($user->getRole() !== User::ROLE_ADMIN) {
+        if($user->role !== UserRole::ADMIN) {
             $qb->join('f.division', 'd')
                 ->andWhere(':userid MEMBER OF d.users')
                 ->setParameter('userid', $user->getId());
@@ -72,7 +73,7 @@ class EventFiltersService extends Service {
      * @throws ForbiddenException
      */
     public function create(User $user, string $name, int $type, int $divisionID, array $conditions, ?string $description): EventFilter {
-        if($user->getRole() !== User::ROLE_ADMIN)
+        if($user->role !== UserRole::ADMIN)
             $this->assureUserAffiliation($divisionID, $user->getId());
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($divisionID);
         if($division === null) throw new BadRequestException();
@@ -120,7 +121,7 @@ class EventFiltersService extends Service {
             throw new SystemException($e);
         }
         if($filter === null) throw new BadRequestException();
-        $userIsAdmin = $user->getRole() === User::ROLE_ADMIN;
+        $userIsAdmin = $user->role === UserRole::ADMIN;
         if(!$userIsAdmin)
             $this->assureUserAffiliation($filter->getDivision()->getId(), $user->getId());
         if($filter->getDivision()->getId() !== $divisionID && !$userIsAdmin)

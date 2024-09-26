@@ -2,6 +2,7 @@
 namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\constants\EventStatus;
+use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\services\dto\EventFilterConditions;
@@ -90,7 +91,7 @@ class Events extends RESTResource {
 
     public static function validateEventFilterConditions(User $user, array $data): EventFilterConditions {
         $result = new EventFilterConditions();
-        if($user->getRole() !== User::ROLE_ADMIN) $result->user = $user;
+        if($user->role !== UserRole::ADMIN) $result->user = $user;
         if(array_key_exists('archived', $data)) {
             $result->archived = V::key('archived', V::trueVal())->validate($data) && $data['archived'];
         }
