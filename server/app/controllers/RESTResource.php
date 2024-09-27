@@ -6,24 +6,21 @@ use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\ForbiddenException;
-use HoneySens\app\services\LogService;
 use Respect\Validation\Validator as V;
 use Slim\Interfaces\RouteCollectorProxyInterface;
 
 abstract class RESTResource {
 
-    const HEADER_HMAC = 'x-hs-auth';
-    const HEADER_HMAC_ALGO = 'x-hs-type';
-    const HEADER_SENSOR = 'x-hs-sensor';
-    const HEADER_TIMESTAMP = 'x-hs-ts';
-    const SERVER_TLS_CERT_PATH = '/srv/tls/https.crt';
+    const string HEADER_HMAC = 'x-hs-auth';
+    const string HEADER_HMAC_ALGO = 'x-hs-type';
+    const string HEADER_SENSOR = 'x-hs-sensor';
+    const string HEADER_TIMESTAMP = 'x-hs-ts';
+    const string SERVER_TLS_CERT_PATH = '/srv/tls/https.crt';
 
     private EntityManager $em;
-    private LogService $logger;
 
-    public function __construct(EntityManager $em, LogService $logger) {
+    public function __construct(EntityManager $em) {
         $this->em = $em;
-        $this->logger = $logger;
     }
 
     abstract static function registerRoutes(RouteCollectorProxyInterface $api);

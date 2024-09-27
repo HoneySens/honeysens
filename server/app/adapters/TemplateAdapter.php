@@ -3,10 +3,12 @@ namespace HoneySens\app\adapters;
 
 use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
 use HoneySens\app\models\constants\TemplateType;
 use HoneySens\app\models\entities\Template;
 use HoneySens\app\models\entities\TemplateOverlay;
 use HoneySens\app\models\exceptions\NotFoundException;
+use HoneySens\app\models\exceptions\SystemException;
 use Predis;
 
 /**
@@ -16,8 +18,8 @@ use Predis;
  */
 class TemplateAdapter {
 
-    private $em;
-    private $templates;
+    private EntityManager $em;
+    private array $templates;
 
     public function __construct(EntityManager $em) {
         $this->em = $em;
@@ -30,12 +32,12 @@ class TemplateAdapter {
         ));
         foreach(json_decode($broker->get('templates'), true) as $type => $template)
             $this->templates[$type] = new Template(
-                $type, $template['name'], $template['template'], $template['variables'], $template['preview']);
+                TemplateType::from($type), $template['name'], $template['template'], $template['variables'], $template['preview']);
         // Fetch and link overlays from the database
         try {
             foreach ($this->em->getRepository('HoneySens\app\models\entities\TemplateOverlay')->findAll() as $overlay) {
-                if (array_key_exists($overlay->getType(), $this->templates)) {
-                    $this->templates[$overlay->getType()]->setOverlay($overlay);
+                if (array_key_exists($overlay->type->value, $this->templates)) {
+                    $this->templates[$overlay->type->value]->overlay = $overlay;
                 }
             };
         } catch(TableNotFoundException) {
@@ -45,62 +47,65 @@ class TemplateAdapter {
 
     /**
      * Returns all templates, factoring in potential overlays.
-     *
-     * @return array
      */
-    public function getTemplates() {
+    public function getTemplates(): array {
         return array_values($this->templates);
     }
 
     /**
-     * Returns the template of the given type.
+     * Returns a specific template.
      *
-     * @param TemplateType $type
-     * @return Template|null
+     * @param TemplateType $type The type of the template to return
      * @throws NotFoundException
      */
-    public function getTemplate(TemplateType $type) {
+    public function getTemplate(TemplateType $type): Template {
         if(in_array($type->value, array_keys($this->templates), true)) {
             return $this->templates[$type->value];
         } else throw new NotFoundException();
     }
 
     /**
-     * Sets the given overlay string (or null) as the overlay for a given template type.
+     * Sets the given overlay string (or null) as new overlay for a specific template type.
      *
-     * @param TemplateType int $type
-     * @param string|null $overlay
+     * @param TemplateType $type The type of the template to update with the new overlay
+     * @param string|null $overlay New overlay content or null to remove any existing overlay
      * @throws NotFoundException
+     * @throws SystemException
      */
-    public function setOverlay(TemplateType $type, $overlay) {
+    public function setOverlay(TemplateType $type, ?string $overlay): void {
         $template = $this->getTemplate($type);
-        if($template->getOverlay() != null) {
-            // Update/delete existing overlay
-            if($overlay != null) {
-                $template->getOverlay()->setTemplate($overlay);
-            } else {
-                $this->em->remove($template->getOverlay());
-                $template->setOverlay(null);
+        try {
+            if ($template->overlay != null) {
+                // Update/delete existing overlay
+                if ($overlay != null) {
+                    $template->overlay->template = $overlay;
+                } else {
+                    $this->em->remove($template->overlay);
+                    $template->overlay = null;
+                }
+            } elseif ($overlay != null) {
+                // Add new overlay
+                $templateOverlay = new TemplateOverlay();
+                $templateOverlay->type = $type;
+                $templateOverlay->template = $overlay;
+                $this->em->persist($templateOverlay);
+                $template->overlay = $templateOverlay;
             }
-        } elseif($overlay != null) {
-            // Add new overlay
-            $templateOverlay = new TemplateOverlay();
-            $templateOverlay->setType($type->value)->setTemplate($overlay);
-            $this->em->persist($templateOverlay);
-            $template->setOverlay($templateOverlay);
+            $this->em->flush();
+        } catch(ORMException $e) {
+            throw new SystemException($e);
         }
-        $this->em->flush();
     }
 
     /**
      * Processes the given template by substituting all template variables with the values set in $data
      * and returning the result.
      *
-     * @param $type
-     * @param array $data
+     * @param TemplateType $type The type of the template to process
+     * @param array $data Substitution data for the template variables
      * @return string
      */
-    public function processTemplate(TemplateType $type, array $data) {
+    public function processTemplate(TemplateType $type, array $data): string {
        $template = $this->templates[$type->value];
        $result = $template->getActiveTemplate();
        foreach($data as $var => $val) $result = str_replace('{{' . $var . '}}', $val, $result);

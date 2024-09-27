@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\Table;
+use HoneySens\app\models\constants\TemplateType;
 
 /**
  * User-defined template overlay.
@@ -19,59 +20,19 @@ class TemplateOverlay {
      * Therefore, template overlays use the 'type' of system templates as their primary key.
      */
     #[Id]
-    #[Column(type: Types::INTEGER)]
-    protected $type;
+    #[Column()]
+    public TemplateType $type;
 
     /**
-     * Overridden user-defined template content.
+     * Overridden user-defined template content, which is a string including substitution variables.
      */
     #[Column(type: Types::TEXT)]
-    protected $template;
+    public string $template;
 
-    /**
-     * Specifies which system template is overridden.
-     *
-     * @param int $type
-     * @return TemplateOverlay
-     */
-    public function setType($type) {
-        $this->type = $type;
-        return $this;
-    }
-
-    /**
-     * Returns the type of this template overlay.
-     *
-     * @return int
-     */
-    public function getType() {
-        return $this->type;
-    }
-
-    /**
-     * Sets the actual template content, which is a string including some substitution variables.
-     *
-     * @param string $template
-     * @return TemplateOverlay
-     */
-    public function setTemplate($template) {
-        $this->template = $template;
-        return $this;
-    }
-
-    /**
-     * Returns the raw template content.
-     *
-     * @return string
-     */
-    public function getTemplate() {
-        return $this->template;
-    }
-
-    public function getState() {
+    public function getState(): array {
         return array(
-            'type' => $this->getType(),
-            'template' => $this->getTemplate()
+            'type' => $this->type->value,
+            'template' => $this->template
         );
     }
 }
