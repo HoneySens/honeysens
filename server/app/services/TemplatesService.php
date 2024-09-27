@@ -44,11 +44,11 @@ class TemplatesService extends Service {
         if($content === null) {
             $this->templateAdapter->setOverlay($type, null);
             $this->logger->log(sprintf('Template "%s" (ID %s) reset to system default',
-                $template->getName(), $template->getType()), LogResource::SETTINGS, $template->getType());
+                $template->name, $template->type->value), LogResource::SETTINGS, $template->type->value);
         } else {
             $this->templateAdapter->setOverlay($type, $content);
             $this->logger->log(sprintf('Template "%s" (ID %s) updated with custom content',
-                $template->getName(), $template->getType()), LogResource::SETTINGS, $template->getType());
+                $template->name, $template->type->value), LogResource::SETTINGS, $template->type->value);
         }
         return $template;
     }

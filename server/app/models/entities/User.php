@@ -21,7 +21,7 @@ class User {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected int $id;
+    private int $id;
 
     /**
      * Short user login name.
