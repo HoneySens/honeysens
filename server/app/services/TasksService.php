@@ -7,6 +7,8 @@ use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\TaskStatus;
+use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
@@ -85,13 +87,13 @@ class TasksService extends Service {
             throw new SystemException($e);
         }
         if($task === null) throw new BadRequestException();
-        if($task->getUser() !== $sessionUser && $sessionUser->role !== UserRole::ADMIN) throw new ForbiddenException();
-        $result = $task->getResult();
+        if($task->user !== $sessionUser && $sessionUser->role !== UserRole::ADMIN) throw new ForbiddenException();
+        $result = $task->result;
         $tasksService = $this;
         $deleteFunc = function() use ($tasksService, $id, $sessionUser) {
             $tasksService->delete($sessionUser, $id);
         };
-        if($task->getStatus() !== Task::STATUS_DONE || !array_key_exists('path', $result))
+        if($task->status !== TaskStatus::DONE || !array_key_exists('path', $result))
             throw new BadRequestException();
         $filepath = sprintf("%s/tasks/%s/%s", DATA_PATH, $id, $result['path']);
         if($delete) return [$filepath, $result['path'], $deleteFunc];
@@ -167,7 +169,7 @@ class TasksService extends Service {
         // Verify archive content
         $task = $this->taskAdapter->enqueue(
             $sessionUser,
-            Task::TYPE_UPLOAD_VERIFIER,
+            TaskType::UPLOAD_VERIFIER,
             array('path' => $finalFileName));
         $result['task'] = $task->getState();
         $this->logger->log(sprintf('File "%s" uploaded as "%s"', $fileName, $finalFileName), LogResource::TASKS);
@@ -191,16 +193,16 @@ class TasksService extends Service {
             throw new SystemException($e);
         }
         if($task === null) throw new BadRequestException();
-        if($task->getUser() !== $sessionUser && $sessionUser->role !== UserRole::ADMIN) throw new ForbiddenException();
+        if($task->user !== $sessionUser && $sessionUser->role !== UserRole::ADMIN) throw new ForbiddenException();
         // Running tasks can't be interrupted
-        if($task->getStatus() === Task::STATUS_RUNNING) throw new BadRequestException();
+        if($task->status === TaskStatus::RUNNING) throw new BadRequestException();
         // Recursively remove temporary task files
         $dir = sprintf("%s/tasks/%s", DATA_PATH, $id);
-        if(($task->getStatus() === Task::STATUS_DONE || $task->getStatus() === Task::STATUS_ERROR) && file_exists($dir)) {
+        if(($task->status === TaskStatus::DONE || $task->status === TaskStatus::ERROR) && file_exists($dir)) {
             Utils::recursiveDelete($dir);
         }
         // Attempt to remove artifacts from the upload directory
-        $params = $task->getParams();
+        $params = $task->params;
         if(array_key_exists('path', $params)) {
             $uploadArtifact = sprintf('%s/%s/%s', DATA_PATH, self::UPLOAD_PATH, $params['path']);
             if(file_exists($uploadArtifact)) unlink($uploadArtifact);

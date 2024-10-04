@@ -7,6 +7,8 @@ use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\OptimisticLockException;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\TaskStatus;
+use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\entities\Firmware;
 use HoneySens\app\models\entities\Platform;
 use HoneySens\app\models\entities\Task;
@@ -94,10 +96,10 @@ class PlatformsService extends Service {
         try {
             $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($taskId);
             if($task === null) throw new NotFoundException();
-            if($task->getUser() !== $user) throw new ForbiddenException();
-            if($task->getType() != Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() != Task::STATUS_DONE)
+            if($task->user !== $user) throw new ForbiddenException();
+            if($task->type !== TaskType::UPLOAD_VERIFIER || $task->status !== TaskStatus::DONE)
                 throw new BadRequestException();
-            $taskResult = $task->getResult();
+            $taskResult = $task->result;
             if($taskResult === null) throw new BadRequestException();
             if(!$taskResult['valid'] || $taskResult['type'] != TasksService::UPLOAD_TYPE_PLATFORM_ARCHIVE)
                 throw new BadRequestException();
@@ -129,7 +131,7 @@ class PlatformsService extends Service {
         }
         $platform->registerFirmware(
             $firmware,
-            sprintf('%s/%s/%s', DATA_PATH, TasksService::UPLOAD_PATH, $task->getParams()['path']),
+            sprintf('%s/%s/%s', DATA_PATH, TasksService::UPLOAD_PATH, $task->params['path']),
             $this->config);
         // Remove upload verification task
         $this->tasksService->delete($task->getId(), $user);
