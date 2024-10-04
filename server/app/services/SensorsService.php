@@ -265,10 +265,10 @@ class SensorsService extends Service {
         $taskParams['proxy_password'] = $sensor->getProxyPassword();
         $taskParams['eapol_password'] = $sensor->getEAPOLPassword();
         $taskParams['eapol_client_key_password'] = $sensor->getEAPOLClientCertPassphrase();
-        if($sensor->getEAPOLCACert() !== null) $taskParams['eapol_ca_cert'] = $sensor->getEAPOLCACert()->getContent();
+        if($sensor->getEAPOLCACert() !== null) $taskParams['eapol_ca_cert'] = $sensor->getEAPOLCACert()->content;
         if($sensor->getEAPOLClientCert() !== null) {
-            $taskParams['eapol_client_cert'] = $sensor->getEAPOLClientCert()->getContent();
-            $taskParams['eapol_client_key'] = $sensor->getEAPOLClientCert()->getKey();
+            $taskParams['eapol_client_cert'] = $sensor->getEAPOLClientCert()->content;
+            $taskParams['eapol_client_key'] = $sensor->getEAPOLClientCert()->key;
         } else $taskParams['eapol_client_key'] = null;
         $task = $this->taskAdapter->enqueue($user, TaskType::SENSORCFG_CREATOR, $taskParams);
         return $task;
@@ -387,13 +387,13 @@ class SensorsService extends Service {
         // If the EAPOL CA cert fingerprint was sent and differs, include updated cert
         $caCertFP = $sensor->getEAPOLCACert()?->getFingerprint();
         if($eapolCaCrtFp && $caCertFP !== $eapolCaCrtFp)
-            $sensorState['eapol_ca_cert'] = $sensor->getEAPOLCACert()?->getContent();
+            $sensorState['eapol_ca_cert'] = $sensor->getEAPOLCACert()?->content;
         else unset($sensorState['eapol_ca_cert']);
         // If the EAPOL TLS cert fingerprint was sent and differs, include updated cert and key
         $clientCertFP = $sensor->getEAPOLClientCert()?->getFingerprint();
         if($eapolClientCrtFp && $clientCertFP !== $eapolClientCrtFp) {
-            $sensorState['eapol_client_cert'] = $sensor->getEAPOLClientCert()?->getContent();
-            $sensorState['eapol_client_key'] = $sensor->getEAPOLClientCert()?->getKey();
+            $sensorState['eapol_client_cert'] = $sensor->getEAPOLClientCert()?->content;
+            $sensorState['eapol_client_key'] = $sensor->getEAPOLClientCert()?->key;
         } else unset($sensorState['eapol_client_cert']);
         return $sensorState;
     }
@@ -644,7 +644,7 @@ class SensorsService extends Service {
                         if ($eapolCACErt !== null) {
                             $certData = $this->verifyCertificate($eapolCACErt);
                             $caCert = new SSLCert();
-                            $caCert->setContent($certData);
+                            $caCert->content = $certData;
                             $this->em->persist($caCert);
                             $sensor->setEAPOLCACert($caCert);
                         }
@@ -666,7 +666,8 @@ class SensorsService extends Service {
                             }
                             // Create new client cert
                             $clientCert = new SSLCert();
-                            $clientCert->setContent($cert)->setKey($key);
+                            $clientCert->content = $cert;
+                            $clientCert->key = $key;
                             $this->em->persist($clientCert);
                             $sensor->setEAPOLClientCert($clientCert);
                             // Reset unused parameters

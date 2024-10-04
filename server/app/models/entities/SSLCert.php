@@ -7,6 +7,13 @@ use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\Table;
 
+/**
+ * Representation of a X.509 PEM-encoded certificate and
+ * an optional key. Originally used to store sensor credentials
+ * back when sensors authenticated via TLS client certificates.
+ * Currently, certificates can be associated with sensors in the
+ * context of EAPOL/802.1X authentication.
+ */
 #[Entity]
 #[Table(name: "certs")]
 class SSLCert{
@@ -14,74 +21,29 @@ class SSLCert{
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private $id;
 
     #[Column(type: Types::TEXT)]
-    protected $content;
+    public string $content;
 
     #[Column(type: Types::TEXT, nullable: true)]
-    protected $privateKey;
+    public string $privateKey;
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Set certificate content
-     *
-     * @param string $content
-     * @return SSLCert
+     * Calculates and returns the certificate SHA256 fingerprint of this certificate.
      */
-    public function setContent($content) {
-        $this->content = $content;
-        return $this;
+    public function getFingerprint(): string {
+        return openssl_x509_fingerprint($this->content, 'sha256');
     }
 
-    /**
-     * Get certificate content
-     *
-     * @return string
-     */
-    public function getContent() {
-        return $this->content;
-    }
-
-    /**
-     * Set private key
-     *
-     * @param string $key
-     * @return SSLCert
-     */
-    public function setKey($key) {
-        $this->privateKey = $key;
-        return $this;
-    }
-
-    /**
-     * Get private key
-     *
-     * @return string
-     */
-    public function getKey() {
-        return $this->privateKey;
-    }
-
-    /**
-     * Returns the certificate fingerprint
-     */
-    public function getFingerprint() {
-        return openssl_x509_fingerprint($this->getContent(), 'sha256');
-    }
-
-    public function getState() {
+    public function getState(): array {
         return array(
             'id' => $this->getId(),
-            'content' => $this->getContent(),
+            'content' => $this->content,
             'fingerprint' => $this->getFingerprint()
         );
     }
