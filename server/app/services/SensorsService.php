@@ -13,6 +13,7 @@ use HoneySens\app\models\constants\SensorNetworkIPMode;
 use HoneySens\app\models\constants\SensorNetworkMACMode;
 use HoneySens\app\models\constants\SensorProxyMode;
 use HoneySens\app\models\constants\SensorServerEndpointMode;
+use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Division;
 use HoneySens\app\models\entities\Sensor;
@@ -269,7 +270,7 @@ class SensorsService extends Service {
             $taskParams['eapol_client_cert'] = $sensor->getEAPOLClientCert()->getContent();
             $taskParams['eapol_client_key'] = $sensor->getEAPOLClientCert()->getKey();
         } else $taskParams['eapol_client_key'] = null;
-        $task = $this->taskAdapter->enqueue($user, Task::TYPE_SENSORCFG_CREATOR, $taskParams);
+        $task = $this->taskAdapter->enqueue($user, TaskType::SENSORCFG_CREATOR, $taskParams);
         return $task;
     }
 

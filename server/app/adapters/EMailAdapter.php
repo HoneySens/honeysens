@@ -2,11 +2,11 @@
 namespace HoneySens\app\adapters;
 
 use HoneySens\app\models\constants\EventDetailType;
+use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\constants\TemplateType;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventPacket;
 use HoneySens\app\models\entities\Task;
-use HoneySens\app\models\entities\Template;
 
 class EMailAdapter {
 
@@ -148,7 +148,7 @@ class EMailAdapter {
         // Notify each contact
         foreach($contacts as $contact) {
             $taskParams['to'] = $contact->getEMail();
-            $this->taskAdapter->enqueue(null, Task::TYPE_EMAIL_EMITTER, $taskParams);
+            $this->taskAdapter->enqueue(null, TaskType::EMAIL_EMITTER, $taskParams);
         }
         return array('success' => true);
     }
@@ -170,6 +170,6 @@ class EMailAdapter {
             $taskParams['smtp_user'] = $smtpUser;
             $taskParams['smtp_password'] = $smtpPassword;
         }
-        return $this->taskAdapter->enqueue($user, Task::TYPE_EMAIL_EMITTER, $taskParams);
+        return $this->taskAdapter->enqueue($user, TaskType::EMAIL_EMITTER, $taskParams);
     }
 }

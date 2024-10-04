@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManager;
 use HoneySens\app\adapters\EMailAdapter;
 use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\constants\TransportEncryptionType;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
@@ -208,7 +209,7 @@ class SettingsService extends Service {
             'status' => 0,
             'comment' => ''
         );
-        $this->taskAdapter->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('event' => $ev));
+        $this->taskAdapter->enqueue(null, TaskType::EVENT_FORWARDER, array('event' => $ev));
         $this->logger->log('Syslog test event forwarded', LogResource::SESSIONS);
         return $ev;
     }

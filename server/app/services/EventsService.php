@@ -13,6 +13,7 @@ use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\EventDetailType;
 use HoneySens\app\models\constants\EventStatus;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\ArchivedEvent;
 use HoneySens\app\models\entities\Event;
@@ -65,7 +66,7 @@ class EventsService extends Service {
                 $qb->setFirstResult(0)
                     ->setMaxResults($totalCount);
                 $taskParams = array('query' => Utils::getFullSQL($qb->getQuery()));
-                $task = $this->taskAdapter->enqueue($user, Task::TYPE_EVENT_EXTRACTOR, $taskParams);
+                $task = $this->taskAdapter->enqueue($user, TaskType::EVENT_EXTRACTOR, $taskParams);
                 return $task->getState();
             }
             // JSON output
@@ -218,7 +219,7 @@ class EventsService extends Service {
             if ($this->config->getBoolean('syslog', 'enabled')) {
                 foreach ($events as $event) {
                     if ($this->em->contains($event))
-                        $this->taskAdapter->enqueue(null, Task::TYPE_EVENT_FORWARDER, array('id' => $event->getId()));
+                        $this->taskAdapter->enqueue(null, TaskType::EVENT_FORWARDER, array('id' => $event->getId()));
                 }
             }
             // Send mails for each incident

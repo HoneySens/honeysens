@@ -157,7 +157,7 @@ class User {
      */
     public function addTask(Task $task): void {
         $this->tasks[] = $task;
-        $task->setUser($this);
+        $task->user = $this;
     }
 
     /**

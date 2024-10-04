@@ -7,6 +7,8 @@ use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\Table;
+use HoneySens\app\models\constants\TaskStatus;
+use HoneySens\app\models\constants\TaskType;
 
 /**
  * This class represents a specific task that is performed by an external task queue, such as celery.
@@ -16,142 +18,53 @@ use Doctrine\ORM\Mapping\Table;
 #[Table(name: "tasks")]
 class Task {
 
-    const STATUS_SCHEDULED = 0;
-    const STATUS_RUNNING = 1;
-    const STATUS_DONE = 2;
-    const STATUS_ERROR = 3;
-
-    const TYPE_SENSORCFG_CREATOR = 0;
-    const TYPE_UPLOAD_VERIFIER = 1;
-    const TYPE_REGISTRY_MANAGER = 2;
-    const TYPE_EVENT_EXTRACTOR = 3;
-    const TYPE_EVENT_FORWARDER = 4;
-    const TYPE_EMAIL_EMITTER = 6;
-
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private $id;
 
     /**
      * The user who submitted this task.
      */
     #[ManyToOne(targetEntity: User::class, inversedBy: "tasks")]
-    protected $user;
+    public User $user;
 
     /**
      * The type of task that should be executed, currently amongst a set of hardcoded values.
      */
-    #[Column(type: Types::INTEGER)]
-    protected $type;
+    #[Column()]
+    public TaskType $type;
 
     /**
-     * The status flag determines whether this task is currently scheduled, running or completed.
+     * The status field determines whether this task is currently scheduled, running or completed.
      */
-    #[Column(type: Types::INTEGER)]
-    protected $status = self::STATUS_SCHEDULED;
-
-    #[Column(type: Types::JSON, nullable: true)]
-    protected ?array $params = array();
-
-    #[Column(type: Types::JSON, nullable: true)]
-    protected ?array $result = array();
+    #[Column()]
+    public TaskStatus $status = TaskStatus::SCHEDULED;
 
     /**
-     * @return integer
+     * Arbitrary task-specific parameters to hand over to the task executor.
      */
-    public function getId() {
+    #[Column(type: Types::JSON, nullable: true)]
+    public ?array $params = array();
+
+    /**
+     * After successful execution, this field holds arbitrary task-specific result data.
+     */
+    #[Column(type: Types::JSON, nullable: true)]
+    public ?array $result = array();
+
+    public function getId(): int {
         return $this->id;
     }
 
-    /**
-     * @param User|null $user
-     * @return $this
-     */
-    public function setUser(User $user = null) {
-        $this->user = $user;
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getUser() {
-        return $this->user;
-    }
-
-    /**
-     * @param $type
-     * @return $this
-     */
-    public function setType($type) {
-        $this->type = $type;
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getType() {
-        return $this->type;
-    }
-
-    /**
-     * @param int $status
-     * @return $this
-     */
-    public function setStatus($status) {
-        $this->status = $status;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getStatus() {
-        return $this->status;
-    }
-
-    /**
-     * @param ?array $params
-     * @return $this
-     */
-    public function setParams($params) {
-        $this->params = $params;
-        return $this;
-    }
-
-    /**
-     * @return ?array
-     */
-    public function getParams() {
-        return $this->params;
-    }
-
-    /**
-     * @param ?array $result
-     * @return $this
-     */
-    public function setResult($result) {
-        $this->result = $result;
-        return $this;
-    }
-
-    /**
-     * @return ?array
-     */
-    public function getResult() {
-        return $this->result;
-    }
-
-    public function getState() {
+    public function getState(): array {
         return array(
             'id' => $this->getId(),
-            'user' => $this->getUser() ? $this->getUser()->getId() : null,
-            'type' => $this->getType(),
-            'status' => $this->getStatus(),
-            'params' => $this->getParams(),
-            'result' => $this->getResult()
+            'user' => $this->user?->getId(),
+            'type' => $this->type->value,
+            'status' => $this->status->value,
+            'params' => $this->params,
+            'result' => $this->result
         );
     }
 }

@@ -8,6 +8,8 @@ use Doctrine\ORM\NoResultException;
 use HoneySens\app\adapters\RegistryAdapter;
 use HoneySens\app\adapters\TaskAdapter;
 use HoneySens\app\models\constants\LogResource;
+use HoneySens\app\models\constants\TaskStatus;
+use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\entities\ServiceRevision;
 use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
@@ -82,10 +84,10 @@ class SensorServicesService extends Service {
             throw new SystemException($e);
         }
         if($task === null) throw new BadRequestException();
-        if($task->getUser() !== $user) throw new ForbiddenException();
-        if($task->getType() !== Task::TYPE_UPLOAD_VERIFIER || $task->getStatus() !== Task::STATUS_DONE)
+        if($task->user !== $user) throw new ForbiddenException();
+        if($task->type !== TaskType::UPLOAD_VERIFIER || $task->status !== TaskStatus::DONE)
             throw new BadRequestException();
-        $taskResult = $task->getResult();
+        $taskResult = $task->result;
         if($taskResult === null ||
             !array_key_exists('valid', $taskResult) ||
             !$taskResult['valid'] ||
@@ -126,14 +128,14 @@ class SensorServicesService extends Service {
             }
             $service->addRevision($serviceRevision);
             // Remove upload verification task, but keep the uploaded file for the next task
-            $taskResult['path'] = $task->getParams()['path'];
+            $taskResult['path'] = $task->params['path'];
             $this->em->remove($task);
             $this->em->flush();
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
         // Enqueue registry upload task
-        $task = $this->taskAdapter->enqueue($user, Task::TYPE_REGISTRY_MANAGER, $taskResult);
+        $task = $this->taskAdapter->enqueue($user, TaskType::REGISTRY_MANAGER, $taskResult);
         $this->logger->log(sprintf('Service %s:%s (%s) added', $service->getName(), $serviceRevision->getRevision(),
             $serviceRevision->getArchitecture()), LogResource::SERVICES, $service->getId());
         return $task;
