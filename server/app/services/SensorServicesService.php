@@ -109,21 +109,21 @@ class SensorServicesService extends Service {
         }
         // Persist revision
         $serviceRevision = new ServiceRevision();
-        $serviceRevision->setRevision($taskResult['revision'])
-            ->setArchitecture($taskResult['architecture'])
-            ->setRawNetworkAccess($taskResult['rawNetworkAccess'])
-            ->setCatchAll($taskResult['catchAll'])
-            ->setPortAssignment($taskResult['portAssignment'])
-            ->setDescription($taskResult['revisionDescription']);
+        $serviceRevision->revision = $taskResult['revision'];
+        $serviceRevision->architecture = $taskResult['architecture'];
+        $serviceRevision->rawNetworkAccess = $taskResult['rawNetworkAccess'];
+        $serviceRevision->catchAll = $taskResult['catchAll'];
+        $serviceRevision->portAssignment = $taskResult['portAssignment'];
+        $serviceRevision->description = $taskResult['revisionDescription'];
         try {
             $this->em->persist($serviceRevision);
             // Persist service if necessary
             if ($service === null) {
                 $service = new \HoneySens\app\models\entities\Service();
-                $service->setName($taskResult['name'])
-                    ->setDescription($taskResult['description'])
-                    ->setRepository($taskResult['repository'])
-                    ->setDefaultRevision($serviceRevision->getRevision());
+                $service->name = $taskResult['name'];
+                $service->description = $taskResult['description'];
+                $service->repository = $taskResult['repository'];
+                $service->defaultRevision = $serviceRevision->revision;
                 $this->em->persist($service);
             }
             $service->addRevision($serviceRevision);
@@ -136,8 +136,8 @@ class SensorServicesService extends Service {
         }
         // Enqueue registry upload task
         $task = $this->taskAdapter->enqueue($user, TaskType::REGISTRY_MANAGER, $taskResult);
-        $this->logger->log(sprintf('Service %s:%s (%s) added', $service->getName(), $serviceRevision->getRevision(),
-            $serviceRevision->getArchitecture()), LogResource::SERVICES, $service->getId());
+        $this->logger->log(sprintf('Service %s:%s (%s) added', $service->name, $serviceRevision->revision,
+            $serviceRevision->architecture), LogResource::SERVICES, $service->getId());
         return $task;
     }
 
@@ -157,12 +157,12 @@ class SensorServicesService extends Service {
                 ->getRepository('HoneySens\app\models\entities\ServiceRevision')
                 ->findOneBy(array('revision' => $defaultRevision));
             if($targetRevision === null) throw new NotFoundException();
-            $service->setDefaultRevision($defaultRevision);
+            $service->defaultRevision = $defaultRevision;
             $this->em->flush();
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Default revision for service %s set to %s', $service->getName(), $defaultRevision), LogResource::SERVICES, $service->getId());
+        $this->logger->log(sprintf('Default revision for service %s set to %s', $service->name, $defaultRevision), LogResource::SERVICES, $service->getId());
         return $service;
     }
 
@@ -178,7 +178,7 @@ class SensorServicesService extends Service {
         if($service === null) throw new NotFoundException();
         // Remove revisions and service from the registry
         foreach($service->getRevisions() as $revision) $this->removeServiceRevision($revision);
-        $this->registryAdapter->removeRepository($service->getRepository());
+        $this->registryAdapter->removeRepository($service->repository);
         try {
             // Remove service from the db
             $this->em->remove($service);
@@ -186,7 +186,7 @@ class SensorServicesService extends Service {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Service %s and all associated revisions deleted', $service->getName()), LogResource::SERVICES, $id);
+        $this->logger->log(sprintf('Service %s and all associated revisions deleted', $service->name), LogResource::SERVICES, $id);
     }
 
     /**
@@ -201,15 +201,15 @@ class SensorServicesService extends Service {
         $serviceRevision = $this->em->getRepository('HoneySens\app\models\entities\ServiceRevision')->find($id);
         if($serviceRevision === null) throw new NotFoundException();
         // Don't remove the default revision
-        $service = $serviceRevision->getService();
-        if($serviceRevision->getRevision() === $service->getDefaultRevision()) throw new BadRequestException();
+        $service = $serviceRevision->service;
+        if($serviceRevision->revision === $service->defaultRevision) throw new BadRequestException();
         try {
             $this->removeServiceRevision($serviceRevision);
             $this->em->flush();
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Revision %s (%s) of service %s deleted', $serviceRevision->getRevision(), $serviceRevision->getArchitecture(), $service->getName()), LogResource::SERVICES, $service->getId());
+        $this->logger->log(sprintf('Revision %s (%s) of service %s deleted', $serviceRevision->revision, $serviceRevision->architecture, $service->name), LogResource::SERVICES, $service->getId());
     }
 
     /**
@@ -252,10 +252,10 @@ class SensorServicesService extends Service {
     public function getServiceStatus(int $id): array {
         $service = $this->em->getRepository('HoneySens\app\models\entities\Service')->find($id);
         if($service === null) throw new NotFoundException();
-        $tags = $this->registryAdapter->getTags($service->getRepository());
+        $tags = $this->registryAdapter->getTags($service->repository);
         $result = array();
         foreach($service->getRevisions() as $revision) {
-            $result[$revision->getId()] = in_array(sprintf('%s-%s', $revision->getArchitecture(), $revision->getRevision()), $tags);
+            $result[$revision->getId()] = in_array(sprintf('%s-%s', $revision->architecture, $revision->revision), $tags);
         }
         return $result;
     }
@@ -268,10 +268,10 @@ class SensorServicesService extends Service {
      * @throws SystemException
      */
     private function removeServiceRevision(ServiceRevision $serviceRevision) {
-        $repository = $serviceRevision->getService()->getRepository();
+        $repository = $serviceRevision->service->repository;
         try {
             $this->registryAdapter
-                ->removeTag($repository, sprintf('%s-%s', $serviceRevision->getArchitecture(), $serviceRevision->getRevision()));
+                ->removeTag($repository, sprintf('%s-%s', $serviceRevision->architecture, $serviceRevision->revision));
         } catch (NotFoundException $e) {
             // The registry is online, but doesn't contain this image (anymore)
         }

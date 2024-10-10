@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
@@ -10,7 +11,10 @@ use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\Table;
 
 /**
- * Abstraction class for dockerized honeypot services.
+ * Represents a dockerized honeypot service.
+ * Implementations are associated as revisions to support switching between
+ * different versions of this service. Distribution of service revisions to
+ * sensors is represented by service assignments.
  */
 #[Entity]
 #[Table(name: "services")]
@@ -19,165 +23,87 @@ class Service {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private int $id;
 
     /**
      * Informal title of this service.
      */
     #[Column(type: Types::STRING, nullable: false)]
-    protected $name;
+    public string $name;
 
     /**
      * General description of this service.
      */
     #[Column(type: Types::STRING)]
-    protected $description;
+    public string $description;
 
     /**
-     * Docker repository that relates to this service, e.g. "honeysens/cowrie"
+     * Docker repository that relates to this service, e.g. "honeysens/cowrie".
      */
     #[Column(type: Types::STRING)]
-    protected $repository;
+    public string $repository;
 
     /**
-     * References the docker image tags for this service
+     * References the docker image tags for this service.
      */
     #[OneToMany(targetEntity: ServiceRevision::class, mappedBy: "service", cascade: ["remove"])]
-    protected $revisions;
+    private Collection $revisions;
 
+    /**
+     * The revision that this service defaults to. It is used
+     * in all service assignments that don't specify their own revision.
+     */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $defaultRevision;
+    public string $defaultRevision;
 
     /**
      * The service assignment that this service is associated with.
      */
     #[OneToMany(targetEntity: ServiceAssignment::class, mappedBy: "service", cascade: ["remove"])]
-    protected $assignments;
+    private Collection $assignments;
 
     public function __construct() {
         $this->revisions = new ArrayCollection();
         $this->assignments = new ArrayCollection();
     }
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Set name
-     *
-     * @param string $name
-     * @return $this
+     * Returns a label based on the repository name of this service,
+     * which may be used on the sensor as service identifier.
      */
-    public function setName($name) {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * Get name
-     *
-     * @return string
-     */
-    public function getName() {
-        return $this->name;
-    }
-
-    /**
-     * Returns a label based on the repository name of this service, which may be used on the sensor as service identifier.
-     *
-     * @return string
-     */
-    public function getLabel() {
+    public function getLabel(): string {
         $nameParts = explode('/', $this->repository);
         return $nameParts[sizeof($nameParts) - 1];
     }
 
     /**
-     * Set the generic description of this service.
-     *
-     * @param string $description
-     * @return $this
-     */
-    public function setDescription($description) {
-        $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * Get description of this service.
-     */
-    public function getDescription() {
-        return $this->description;
-    }
-
-    /**
-     * Set the repository location of this service.
-     *
-     * @param string $repository
-     * @return $this
-     */
-    public function setRepository($repository) {
-        $this->repository = $repository;
-        return $this;
-    }
-
-    /**
-     * Get repository location of this service.
-     */
-    public function getRepository() {
-        return $this->repository;
-    }
-
-    /**
      * Add a revision to this service.
-     *
-     * @param ServiceRevision $revision
-     * @return $this
      */
-    public function addRevision(ServiceRevision $revision) {
+    public function addRevision(ServiceRevision $revision): void {
         $this->revisions[] = $revision;
-        $revision->setService($this);
-        return $this;
-    }
-
-    /**
-     * Remove a revision from this service.
-     *
-     * @param ServiceRevision $revision
-     * @return $this
-     */
-    public function removeRevision(ServiceRevision $revision) {
-        $this->revisions->removeElement($revision);
-        $revision->setService(null);
-        return $this;
+        $revision->service = $this;
     }
 
     /**
      * Get all revisions associated with this service.
-     *
-     * @return ArrayCollection
      */
-    public function getRevisions() {
+    public function getRevisions(): Collection {
         return $this->revisions;
     }
 
     /**
      * Returns all distinct revisions and their respective architectures in the form
      * array($rev1 => array($arch1 => $r1, $arch2 => $r2, ...), ...)
-     *
-     * @return array
      */
-    public function getDistinctRevisions() {
+    public function getDistinctRevisions(): array {
         $result = array();
         foreach($this->revisions as $r) {
-            $rev = $r->getRevision();
-            $arch = $r->getArchitecture();
+            $rev = $r->revision;
+            $arch = $r->architecture;
             if(!array_key_exists($rev, $result)) $result[$rev] = array();
             if(!array_key_exists($arch, $result[$rev])) $result[$rev][$arch] = $r;
         }
@@ -185,59 +111,22 @@ class Service {
     }
 
     /**
-     * Set the default revision for this service.
-     *
-     * @param string $revision
-     * @return $this
+     * Assign this service with a specific sensor, causing it to run there.
      */
-    public function setDefaultRevision($revision) {
-        $this->defaultRevision = $revision;
-        return $this;
-    }
-
-    /**
-     * Returns the revision that this service defaults to.
-     *
-     * @return string
-     */
-    public function getDefaultRevision() {
-        return $this->defaultRevision;
-    }
-
-    /**
-     * Assign this service with a specific sensor, causing it to run there
-     *
-     * @param ServiceAssignment $assignment
-     * @return $this
-     */
-    public function addAssignment(ServiceAssignment $assignment) {
+    public function addAssignment(ServiceAssignment $assignment): void {
         $this->assignments[] = $assignment;
-        $assignment->setService($this);
-        return $this;
+        $assignment->service = $this;
     }
 
     /**
-     * Removes the assignment of this service from a specific sensor, causing it to no longer run there
-     *
-     * @param ServiceAssignment $assignment
-     * @return $this
+     * Removes the assignment of this service from a specific sensor, causing it to no longer run there.
      */
-    public function removeAssignment(ServiceAssignment $assignment) {
+    public function removeAssignment(ServiceAssignment $assignment): void {
         $this->assignments->removeElement($assignment);
-        $assignment->setService(null);
-        return $this;
+        //$assignment->service = null;
     }
 
-    /**
-     * Get all assignments that belong to this service.
-     *
-     * @return ArrayCollection
-     */
-    public function getAssignments() {
-        return $this->assignments;
-    }
-
-    public function getState() {
+    public function getState(): array {
         // Returns revisions grouped by version
         $versions = array();
         foreach($this->getDistinctRevisions() as $version => $r) {
@@ -255,11 +144,11 @@ class Service {
         }
         return array(
             'id' => $this->getId(),
-            'name' => $this->getName(),
-            'description' => $this->getDescription(),
-            'repository' => $this->getRepository(),
+            'name' => $this->name,
+            'description' => $this->description,
+            'repository' => $this->repository,
             'versions' => $versions,
-            'default_revision' => $this->getDefaultRevision(),
+            'default_revision' => $this->defaultRevision,
             'assignments' => $assignments
         );
     }

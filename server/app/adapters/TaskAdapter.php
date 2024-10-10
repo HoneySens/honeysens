@@ -20,11 +20,11 @@ use Smuuf\CeleryForPhp\TaskSignature;
  */
 class TaskAdapter {
 
-    private $broker;
-    private $broker_host;
-    private $broker_port;
-    private $celery;
-    private $em;
+    private Predis\Client $broker;
+    private string $broker_host;
+    private string $broker_port;
+    private Celery $celery;
+    private EntityManager $em;
 
     public function __construct(EntityManager $em) {
         $this->broker_host = getenv('HS_BROKER_HOST');

@@ -523,7 +523,7 @@ class Sensor {
      */
     public function addService(ServiceAssignment $service) {
         $this->services[] = $service;
-        $service->setSensor($this);
+        $service->sensor = $this;
         return $this;
     }
 
@@ -535,7 +535,7 @@ class Sensor {
      */
     public function removeService(ServiceAssignment $service) {
         $this->services->removeElement($service);
-        $service->setSensor(null);
+        //$service->sensor = null;
         return $this;
     }
 

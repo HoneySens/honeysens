@@ -19,92 +19,30 @@ class ServiceAssignment {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private int $id;
 
     #[ManyToOne(targetEntity: Sensor::class, inversedBy: "sensors")]
-    protected $sensor;
+    public Sensor $sensor;
 
     #[ManyToOne(targetEntity: Service::class, inversedBy: "assignments")]
-    protected $service;
-
-    #[OneToOne(targetEntity: ServiceRevision::class)]
-    protected $revision;
+    public Service $service;
 
     /**
-     * Get id
-     *
-     * @return integer
+     * Optional service revision in case this assignment should use a different
+     * revision than this service's default one.
      */
-    public function getId() {
+    #[OneToOne(targetEntity: ServiceRevision::class)]
+    public ?ServiceRevision $revision = null;
+
+    public function getId(): int {
         return $this->id;
     }
 
-    /**
-     * Set the sensor that this service assignment refers to.
-     *
-     * @param Sensor|null $sensor
-     * @return $this
-     */
-    public function setSensor(Sensor $sensor = null) {
-        $this->sensor = $sensor;
-        return $this;
-    }
-
-    /**
-     * Get the sensor that belongs to this service assignment.
-     *
-     * @return Sensor
-     */
-    public function getSensor() {
-        return $this->sensor;
-    }
-
-    /**
-     * Set the service that this service assignment refers to.
-     *
-     * @param Service|null $service
-     * @return $this
-     */
-    public function setService(Service $service = null) {
-        $this->service = $service;
-        return $this;
-    }
-
-    /**
-     * Get the service that belongs to this service assignment.
-     *
-     * @return Service
-     */
-    public function getService() {
-        return $this->service;
-    }
-
-    /**
-     * Set the revision that this service assignment is supposed to use.
-     *
-     * @param ServiceRevision|null $revision
-     * @return $this
-     */
-    public function setRevision(ServiceRevision $revision = null) {
-        $this->revision = $revision;
-        return $this;
-    }
-
-    /**
-     * Get the revision that this service assignment is supposed to use.
-     *
-     * @return mixed
-     */
-    public function getRevision() {
-        return $this->revision;
-    }
-
-    public function getState() {
-        $revision = $this->getRevision() ? $this->getRevision()->getId() : null;
+    public function getState(): array {
         return array(
-            'sensor' => $this->getSensor()->getId(),
-            'service' => $this->getService()->getId(),
-            'revision' => $revision
+            'sensor' => $this->sensor->getId(),
+            'service' => $this->service->getId(),
+            'revision' => $this->revision?->getId()
         );
     }
 }
