@@ -143,10 +143,10 @@ class SensorsService extends Service {
                 // TODO Check if revision belongs to service
                 // Update existing assignment
                 foreach($assignments as $assignment) {
-                    if($assignment->getService()->getId() === $service->getId()) {
+                    if($assignment->service->getId() === $service->getId()) {
                         $assigned = true;
                         $handledAssignments[] = $assignment;
-                        $assignment->setRevision($revision);
+                        $assignment->revision = $revision;
                     }
                 }
                 // Add so far unassigned services
@@ -154,15 +154,15 @@ class SensorsService extends Service {
                     $newAssignment = new ServiceAssignment();
                     $sensor->addService($newAssignment);
                     $service->addAssignment($newAssignment);
-                    $newAssignment->setRevision($revision);
+                    $newAssignment->revision = $revision;
                     $this->em->persist($newAssignment);
                 }
             }
             // Deletion of remaining service assignments
             foreach(array_udiff($assignments, $handledAssignments, function($a, $b) {return strcmp(spl_object_hash($a), spl_object_hash($b));}) as $deletionCandidate) {
-                $deletionCandidate->getSensor()->removeService($deletionCandidate);
-                $deletionCandidate->getService()->removeAssignment($deletionCandidate);
-                $deletionCandidate->setRevision(null);
+                $deletionCandidate->sensor->removeService($deletionCandidate);
+                $deletionCandidate->service->removeAssignment($deletionCandidate);
+                $deletionCandidate->revision = null;
                 $this->em->remove($deletionCandidate);
             }
             $this->em->flush();
@@ -340,16 +340,16 @@ class SensorsService extends Service {
             $service = $serviceRepository->find($serviceAssignment['service']);
             $revisions = $service->getDistinctRevisions();
             // TODO getDefaultRevision() returns a string, $serviceAssignment['revision'] returns int IDs (so far unused)
-            $targetRevision = $serviceAssignment['revision'] ?? $service->getDefaultRevision();
+            $targetRevision = $serviceAssignment['revision'] ?? $service->defaultRevision;
             $serviceData = array();
             if(array_key_exists($targetRevision, $revisions)) {
                 foreach($revisions[$targetRevision] as $arch => $r) {
                     $serviceData[$arch] = array(
                         'label' => $service->getLabel(),
-                        'uri' => sprintf('%s:%s-%s', $service->getRepository(), $r->getArchitecture(), $r->getRevision()),
-                        'rawNetworkAccess' => $r->getRawNetworkAccess(),
-                        'catchAll' => $r->getCatchAll(),
-                        'portAssignment' => $r->getPortAssignment()
+                        'uri' => sprintf('%s:%s-%s', $service->repository, $r->architecture, $r->revision),
+                        'rawNetworkAccess' => $r->rawNetworkAccess,
+                        'catchAll' => $r->catchAll,
+                        'portAssignment' => $r->portAssignment
                     );
                 }
             }

@@ -21,7 +21,7 @@ class Task {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    private $id;
+    private int $id;
 
     /**
      * The user who submitted this task.
@@ -59,7 +59,7 @@ class Task {
 
     public function getState(): array {
         return array(
-            'id' => $this->getId(),
+            'id' => $this->id ?? null,
             'user' => $this->user?->getId(),
             'type' => $this->type->value,
             'status' => $this->status->value,
