@@ -183,7 +183,7 @@ class PlatformsService extends Service {
                 ->where('s.firmware = :firmware')
                 ->setParameter('firmware', $firmware);
             foreach ($qb->getQuery()->getResult() as $sensor) {
-                $sensor->setFirmware(null);
+                $sensor->firmware = null;
             }
             $platform->unregisterFirmware($firmware, $this->config);
             $this->em->remove($firmware);

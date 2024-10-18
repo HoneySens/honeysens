@@ -96,12 +96,11 @@ class SensorsService extends Service {
             $sensor = new Sensor();
             $this->em->persist($sensor);
             $this->updateSensorFromParams($sensor, $params, $division);
-            $sensor->setConfigArchiveStatus(Sensor::CONFIG_ARCHIVE_STATUS_SCHEDULED);
             $this->em->flush();
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Sensor %s (ID %d) created', $sensor->getName(), $sensor->getId()), LogResource::SENSORS, $sensor->getId());
+        $this->logger->log(sprintf('Sensor %s (ID %d) created', $sensor->name, $sensor->getId()), LogResource::SENSORS, $sensor->getId());
         return $sensor;
     }
 
@@ -166,7 +165,7 @@ class SensorsService extends Service {
                 $this->em->remove($deletionCandidate);
             }
             $this->em->flush();
-            $this->logger->log(sprintf('Sensor %s (ID %d) updated', $sensor->getName(), $sensor->getId()), LogResource::SENSORS, $sensor->getId());
+            $this->logger->log(sprintf('Sensor %s (ID %d) updated', $sensor->name, $sensor->getId()), LogResource::SENSORS, $sensor->getId());
             return $sensor;
         } catch(ORMException $e) {
             throw new SystemException($e);
@@ -188,7 +187,7 @@ class SensorsService extends Service {
             $sensor = $this->em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
             if ($sensor === null) throw new BadRequestException();
             if($user->role !== UserRole::ADMIN)
-                $this->assureUserAffiliation($sensor->getDivision()->getId(), $user->getId());
+                $this->assureUserAffiliation($sensor->division->getId(), $user->getId());
             // (Archive and) Remove all events that belong to this sensor
             $events = $this->em->getRepository('HoneySens\app\models\entities\Event')->findBy(array('sensor' => $sensor));
             if ($archive) {
@@ -204,7 +203,7 @@ class SensorsService extends Service {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Sensor %s (ID %d) deleted', $sensor->getName(), $sid), LogResource::SENSORS, $sid);
+        $this->logger->log(sprintf('Sensor %s (ID %d) deleted', $sensor->name, $sid), LogResource::SENSORS, $sid);
     }
 
     /**
@@ -251,24 +250,24 @@ class SensorsService extends Service {
         }
         if($sensor === null) throw new NotFoundException();
         if($user->role !== UserRole::ADMIN)
-            $this->assureUserAffiliation($sensor->getDivision()->getId(), $user->getId());
+            $this->assureUserAffiliation($sensor->division->getId(), $user->getId());
         // Enqueue a new task and return it, it's the client's obligation to check that task's status and download the result
         $taskParams = $this->getSensorState($sensor);
-        $taskParams['secret'] = $sensor->getSecret();
+        $taskParams['secret'] = $sensor->secret;
         // If this sensor doesn't have a custom service network defined, we rely on the system-wide configuration
-        $taskParams['service_network'] = $sensor->getServiceNetwork() != null ? $sensor->getServiceNetwork() : $this->config['sensors']['service_network'];
-        if($sensor->getServerEndpointMode() === SensorServerEndpointMode::DEFAULT) {
+        $taskParams['service_network'] = $sensor->serviceNetwork !== null ? $sensor->serviceNetwork : $this->config['sensors']['service_network'];
+        if($sensor->serverEndpointMode === SensorServerEndpointMode::DEFAULT) {
             $taskParams['server_endpoint_host'] = $this->config['server']['host'];
             $taskParams['server_endpoint_port_https'] = $this->config['server']['portHTTPS'];
         }
         $taskParams['server_endpoint_name'] = $this->config['server']['host'];
-        $taskParams['proxy_password'] = $sensor->getProxyPassword();
-        $taskParams['eapol_password'] = $sensor->getEAPOLPassword();
-        $taskParams['eapol_client_key_password'] = $sensor->getEAPOLClientCertPassphrase();
-        if($sensor->getEAPOLCACert() !== null) $taskParams['eapol_ca_cert'] = $sensor->getEAPOLCACert()->content;
-        if($sensor->getEAPOLClientCert() !== null) {
-            $taskParams['eapol_client_cert'] = $sensor->getEAPOLClientCert()->content;
-            $taskParams['eapol_client_key'] = $sensor->getEAPOLClientCert()->key;
+        $taskParams['proxy_password'] = $sensor->proxyPassword;
+        $taskParams['eapol_password'] = $sensor->EAPOLPassword;
+        $taskParams['eapol_client_key_password'] = $sensor->EAPOLClientCertPassphrase;
+        if($sensor->EAPOLCACert !== null) $taskParams['eapol_ca_cert'] = $sensor->EAPOLCACert->content;
+        if($sensor->EAPOLClientCert !== null) {
+            $taskParams['eapol_client_cert'] = $sensor->EAPOLClientCert->content;
+            $taskParams['eapol_client_key'] = $sensor->EAPOLClientCert->privateKey;
         } else $taskParams['eapol_client_key'] = null;
         $task = $this->taskAdapter->enqueue($user, TaskType::SENSORCFG_CREATOR, $taskParams);
         return $task;
@@ -292,8 +291,8 @@ class SensorsService extends Service {
                 $result[$platform->getName()] = $platform->getFirmwareURI($platform->getDefaultFirmwareRevision());
             }
         }
-        if($sensor->hasFirmware()) {
-            $firmware = $sensor->getFirmware();
+        if($sensor->firmware !== null) {
+            $firmware = $sensor->firmware;
             $platform = $firmware->getPlatform();
             $result[$platform->getName()] = $platform->getFirmwareURI($firmware);
         }
@@ -326,14 +325,14 @@ class SensorsService extends Service {
             throw new SystemException($e);
         }
         $sensorState = $this->getSensorState($sensor);
-        if($sensor->getServerEndpointMode() === SensorServerEndpointMode::DEFAULT) {
+        if($sensor->serverEndpointMode === SensorServerEndpointMode::DEFAULT) {
             $sensorState['server_endpoint_host'] = $this->config['server']['host'];
             $sensorState['server_endpoint_port_https'] = $this->config['server']['portHTTPS'];
         }
         // Replace the update interval with the global default if no custom value was set for the sensor
-        $sensorState['update_interval'] = $sensor->getUpdateInterval() ?? $this->config['sensors']['update_interval'];
+        $sensorState['update_interval'] = $sensor->updateInterval ?? $this->config['sensors']['update_interval'];
         // Replace the service network with the global default if no custom value was set for the sensor
-        $sensorState['service_network'] = $sensor->getServiceNetwork() ?? $this->config['sensors']['service_network'];
+        $sensorState['service_network'] = $sensor->serviceNetwork ?? $this->config['sensors']['service_network'];
         // Replace service assignments with elaborate service data for each architecture
         $services = array();
         foreach($sensorState['services'] as $serviceAssignment) {
@@ -360,9 +359,9 @@ class SensorsService extends Service {
         // Clients expect an associative array here.
         $sensorState['services'] = count($services) > 0 ? $services : new \StdClass;
         // Send credentials exclusively to the sensors (they aren't shown inside of the web interface)
-        $sensorState['proxy_password'] = $sensor->getProxyPassword();
-        $sensorState['eapol_password'] = $sensor->getEAPOLPassword();
-        $sensorState['eapol_client_key_password'] = $sensor->getEAPOLClientCertPassphrase();
+        $sensorState['proxy_password'] = $sensor->proxyPassword;
+        $sensorState['eapol_password'] = $sensor->EAPOLPassword;
+        $sensorState['eapol_client_key_password'] = $sensor->EAPOLClientCertPassphrase;
         // Attach firmware versioning information for all platforms
         $firmware = array();
         foreach($platformRepository->findAll() as $platform) {
@@ -373,8 +372,8 @@ class SensorsService extends Service {
             }
         }
         // Sensor firmware overwrite
-        if($sensor->hasFirmware()) {
-            $f = $sensor->getFirmware();
+        if($sensor->firmware !== null) {
+            $f = $sensor->firmware;
             $firmware[$f->getPlatform()->getName()] = array('revision' => $f->getVersion(),
                 'uri' => $f->getPlatform()->getFirmwareURI($f));
         }
@@ -385,15 +384,15 @@ class SensorsService extends Service {
         if($srvCrtFp !== null && openssl_x509_fingerprint($srvCert, 'sha256') !== $srvCrtFp)
             $sensorState['server_crt'] = $srvCert;
         // If the EAPOL CA cert fingerprint was sent and differs, include updated cert
-        $caCertFP = $sensor->getEAPOLCACert()?->getFingerprint();
+        $caCertFP = $sensor->EAPOLCACert?->getFingerprint();
         if($eapolCaCrtFp && $caCertFP !== $eapolCaCrtFp)
-            $sensorState['eapol_ca_cert'] = $sensor->getEAPOLCACert()?->content;
+            $sensorState['eapol_ca_cert'] = $sensor->EAPOLCACert?->content;
         else unset($sensorState['eapol_ca_cert']);
         // If the EAPOL TLS cert fingerprint was sent and differs, include updated cert and key
-        $clientCertFP = $sensor->getEAPOLClientCert()?->getFingerprint();
+        $clientCertFP = $sensor->EAPOLClientCert?->getFingerprint();
         if($eapolClientCrtFp && $clientCertFP !== $eapolClientCrtFp) {
-            $sensorState['eapol_client_cert'] = $sensor->getEAPOLClientCert()?->content;
-            $sensorState['eapol_client_key'] = $sensor->getEAPOLClientCert()?->key;
+            $sensorState['eapol_client_cert'] = $sensor->EAPOLClientCert?->content;
+            $sensorState['eapol_client_key'] = $sensor->EAPOLClientCert?->privateKey;
         } else unset($sensorState['eapol_client_cert']);
         return $sensorState;
     }
@@ -473,7 +472,7 @@ class SensorsService extends Service {
     private function addSensorStatus(Sensor $sensor, \HoneySens\app\services\dto\SensorStatus $statusData): void {
         // Check timestamp validity: only accept timestamps that aren't older than two minutes
         $now = new \DateTime();
-        if(($sensor->getLastStatus() !== null && $statusData->timestamp < $sensor->getLastStatus()->getTimestamp()->format('U'))
+        if(($sensor->getLastStatus() !== null && $statusData->timestamp < $sensor->getLastStatus()->timestamp->format('U'))
             || $statusData->timestamp < ($now->format('U') - 120)) {
             // TODO Consider a separate invalid timestamp return value
             throw new BadRequestException();
@@ -483,18 +482,18 @@ class SensorsService extends Service {
         $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         // Set runningSince timestamp depending on previous sensor status
         $lastStatus = $sensor->getLastStatus();
-        if($lastStatus !== null && $lastStatus->getRunningSince() !== null) {
+        if($lastStatus !== null && $lastStatus->runningSince !== null) {
             // Last status exists and wasn't a timeout: inherit its value
-            $status->setRunningSince($lastStatus->getRunningSince());
-        } else $status->setRunningSince($timestamp);
-        $status->setTimestamp($timestamp)
-            ->setStatus($statusData->status)
-            ->setIP($statusData->ip)
-            ->setFreeMem($statusData->freeMem)
-            ->setDiskUsage($statusData->diskUsage)
-            ->setDiskTotal($statusData->diskSize)
-            ->setSWVersion($statusData->swVersion)
-            ->setServiceStatus($statusData->serviceStatus);
+            $status->runningSince = $lastStatus->runningSince;
+        } else $status->runningSince = $timestamp;
+        $status->timestamp = $timestamp;
+        $status->status = $statusData->status;
+        $status->ip = $statusData->ip;
+        $status->freeMem = $statusData->freeMem;
+        $status->diskUsage = $statusData->diskUsage;
+        $status->diskTotal = $statusData->diskSize;
+        $status->swVersion = $statusData->swVersion;
+        $status ->setServiceStatus($statusData->serviceStatus);
         $sensor->addStatus($status);
         try {
             $this->em->persist($status);
@@ -516,7 +515,7 @@ class SensorsService extends Service {
         $allStatus = $sensor->getStatus();
         foreach($allStatus as $key => $status) {
             $statusSorted[$key] = $status;
-            $timestamps[$key] = $status->getTimestamp();
+            $timestamps[$key] = $status->timestamp;
         }
         if(count($statusSorted) > $keep) {
             try {
@@ -547,166 +546,166 @@ class SensorsService extends Service {
      * @throws SystemException
      */
     private function updateSensorFromParams(Sensor $sensor, SensorParams $params, Division $division): void {
-        $sensor->setName($params->name)
-            ->setLocation($params->location)
-            ->setDivision($division)
-            ->setEAPOLMode($params->eapolMode)
-            ->setServerEndpointMode($params->serverEndpointMode)
-            ->setNetworkIPMode($params->ipMode)
-            ->setNetworkMACMode($params->macMode)
-            ->setProxyMode($params->proxyMode)
-            ->setUpdateInterval($params->updateInterval)
-            ->setServiceNetwork($params->serviceNetwork);
+        $sensor->name = $params->name;
+        $sensor->location = $params->location;
+        $sensor->division = $division;
+        $sensor->EAPOLMode = $params->eapolMode;
+        $sensor->serverEndpointMode = $params->serverEndpointMode;
+        $sensor->networkIPMode = $params->ipMode;
+        $sensor->networkMACMode = $params->macMode;
+        $sensor->proxyMode = $params->proxyMode;
+        $sensor->updateInterval = $params->updateInterval;
+        $sensor->serviceNetwork = $params->serviceNetwork;
         try {
             $firmware = null;
             if ($params->firmwareID !== null) {
                 $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($params->firmwareID);
                 if ($firmware === null) throw new NotFoundException();
             }
-            $sensor->setFirmware($firmware);
-            if ($sensor->getServerEndpointMode() === SensorServerEndpointMode::CUSTOM) {
-                $sensor->setServerEndpointHost($params->serverEndpointHost)
-                    ->setServerEndpointPortHTTPS($params->serverEndpointPort);
+            $sensor->firmware = $firmware;
+            if ($sensor->serverEndpointMode === SensorServerEndpointMode::CUSTOM) {
+                $sensor->serverEndpointHost = $params->serverEndpointHost;
+                $sensor->serverEndpointPortHTTPS = $params->serverEndpointPort;
             } else {
-                $sensor->setServerEndpointHost(null)
-                    ->setServerEndpointPortHTTPS(null);
+                $sensor->serverEndpointHost = null;
+                $sensor->serverEndpointPortHTTPS = null;
             }
-            if ($sensor->getNetworkIPMode() === SensorNetworkIPMode::STATIC) {
-                $sensor->setNetworkIPAddress($params->ipAddress)
-                    ->setNetworkIPNetmask($params->ipNetmask)
-                    ->setNetworkIPGateway($params->ipGateway)
-                    ->setNetworkIPDNS($params->ipDNS);
+            if ($sensor->networkIPMode === SensorNetworkIPMode::STATIC) {
+                $sensor->networkIPAddress = $params->ipAddress;
+                $sensor->networkIPNetmask = $params->ipNetmask;
+                $sensor->networkIPGateway = $params->ipGateway;
+                $sensor->networkIPDNS = $params->ipDNS;
             } else {
-                $sensor->setNetworkIPAddress(null)
-                    ->setNetworkIPNetmask(null)
-                    ->setNetworkIPGateway(null)
-                    ->setNetworkIPDNS(null);
+                $sensor->networkIPAddress = null;
+                $sensor->networkIPNetmask = null;
+                $sensor->networkIPGateway = null;
+                $sensor->networkIPDNS = null;
             }
-            if ($sensor->getNetworkIPMode() === SensorNetworkIPMode::DHCP) {
-                $sensor->setNetworkDHCPHostname($params->dhcpHostname);
+            if ($sensor->networkIPMode === SensorNetworkIPMode::DHCP) {
+                $sensor->networkDHCPHostname = $params->dhcpHostname;
             } else {
-                $sensor->setNetworkDHCPHostname(null);
+                $sensor->networkDHCPHostname = null;
             }
-            if ($sensor->getNetworkMACMode() === SensorNetworkMACMode::CUSTOM) {
-                $sensor->setNetworkMACAddress($params->macAddress);
+            if ($sensor->networkMACMode === SensorNetworkMACMode::CUSTOM) {
+                $sensor->networkMACAddress = $params->macAddress;
             } else {
-                $sensor->setNetworkMACAddress(null);
+                $sensor->networkMACAddress = null;
             }
-            if ($sensor->getProxyMode() === SensorProxyMode::ENABLED) {
-                $sensor->setProxyHost($params->proxyHost)
-                    ->setProxyPort($params->proxyPort)
-                    ->setProxyUser($params->proxyUser);
+            if ($sensor->proxyMode === SensorProxyMode::ENABLED) {
+                $sensor->proxyHost = $params->proxyHost;
+                $sensor->proxyPort = $params->proxyPort;
+                $sensor->proxyUser = $params->proxyUser;
                 if ($params->proxyUser !== null) {
                     try {
-                        $sensor->setProxyPassword($params->proxyPassword);
+                        $sensor->proxyPassword = $params->proxyPassword;
                     } catch (\Error) {
                         // Only set a new password if one was explicitly submitted
                     }
                 } else {
-                    $sensor->setProxyUser(null);
-                    $sensor->setProxyPassword(null);
+                    $sensor->proxyUser = null;
+                    $sensor->proxyPassword = null;
                 }
             } else {
-                $sensor->setProxyHost(null)
-                    ->setProxyPort(null)
-                    ->setProxyUser(null)
-                    ->setProxyPassword(null);
+                $sensor->proxyHost = null;
+                $sensor->proxyPort = null;
+                $sensor->proxyUser = null;
+                $sensor->proxyPassword = null;
             }
-            if ($sensor->getEAPOLMode() !== SensorEAPOLMode::DISABLED) {
-                $sensor->setEAPOLIdentity($params->eapolIdentity);
-                if ($sensor->getEAPOLMode() === SensorEAPOLMode::MD5) {
+            if ($sensor->EAPOLMode !== SensorEAPOLMode::DISABLED) {
+                $sensor->EAPOLIdentity = $params->eapolIdentity;
+                if ($sensor->EAPOLMode === SensorEAPOLMode::MD5) {
                     try {
-                        $sensor->setEAPOLPassword($params->eapolPassword);
+                        $sensor->EAPOLPassword = $params->eapolPassword;
                     } catch (\Error) {
                         // Only update the password if a new one was given. Otherwise, assert we already have a password.
-                        if ($sensor->getEAPOLPassword() === null) throw new BadRequestException();
+                        if ($sensor->EAPOLPassword === null) throw new BadRequestException();
                     }
                     // Reset remaining parameters
-                    $sensor->setEAPOLClientCertPassphrase(null)
-                        ->setEAPOLAnonymousIdentity(null);
-                    if ($sensor->getEAPOLCACert() !== null) {
-                        $this->em->remove($sensor->getEAPOLCACert());
-                        $sensor->setEAPOLCACert(null);
+                    $sensor->EAPOLAnonymousIdentity = null;
+                    $sensor->EAPOLClientCertPassphrase = null;
+                    if ($sensor->EAPOLCACert !== null) {
+                        $this->em->remove($sensor->EAPOLCACert);
+                        $sensor->EAPOLCACert = null;
                     }
-                    if ($sensor->getEAPOLClientCert() !== null) {
-                        $this->em->remove($sensor->getEAPOLClientCert());
-                        $sensor->setEAPOLClientCert(null);
+                    if ($sensor->EAPOLClientCert !== null) {
+                        $this->em->remove($sensor->EAPOLClientCert);
+                        $sensor->EAPOLClientCert = null;
                     }
                 } else {
                     // For the other modes, a CA cert is optional
                     try {
                         $eapolCACErt = $params->eapolCACert;  // Access CA cert field to trigger Error in case it's not set
                         // Remove existing CA cert
-                        if ($sensor->getEAPOLCACert() !== null) {
-                            $this->em->remove($sensor->getEAPOLCACert());
-                            $sensor->setEAPOLCACert(null);
+                        if ($sensor->EAPOLCACert !== null) {
+                            $this->em->remove($sensor->EAPOLCACert);
+                            $sensor->EAPOLCACert = null;
                         }
                         if ($eapolCACErt !== null) {
                             $certData = $this->verifyCertificate($eapolCACErt);
                             $caCert = new SSLCert();
                             $caCert->content = $certData;
                             $this->em->persist($caCert);
-                            $sensor->setEAPOLCACert($caCert);
+                            $sensor->EAPOLCACert = $caCert;
                         }
                     } catch (ORMException $e) {
                         throw new SystemException($e);
                     } catch (\Error) {
                         // If the cert attribute isn't set, keep the existing setting
                     }
-                    if ($sensor->getEAPOLMode() === SensorEAPOLMode::TLS) {
+                    if ($sensor->EAPOLMode === SensorEAPOLMode::TLS) {
                         try {
                             // Attempt to access all relevant parameters upfront. Only continue if all were supplied.
-                            $sensor->setEAPOLClientCertPassphrase($params->eapolClientKeyPassword);
+                            $sensor->EAPOLClientCertPassphrase = $params->eapolClientKeyPassword;
                             $cert = $this->verifyCertificate($params->eapolClientCert);
-                            $key = $this->verifyKey($params->eapolClientKey, $sensor->getEAPOLClientCertPassphrase() === null ? '' : $sensor->getEAPOLClientCertPassphrase());
+                            $key = $this->verifyKey($params->eapolClientKey, $sensor->EAPOLClientCertPassphrase === null ? '' : $sensor->EAPOLClientCertPassphrase);
                             // Remove existing client cert
-                            if ($sensor->getEAPOLClientCert() !== null) {
-                                $this->em->remove($sensor->getEAPOLClientCert());
-                                $sensor->setEAPOLClientCert(null);
+                            if ($sensor->EAPOLClientCert !== null) {
+                                $this->em->remove($sensor->EAPOLClientCert);
+                                $sensor->EAPOLClientCert = null;
                             }
                             // Create new client cert
                             $clientCert = new SSLCert();
                             $clientCert->content = $cert;
-                            $clientCert->key = $key;
+                            $clientCert->privateKey = $key;
                             $this->em->persist($clientCert);
-                            $sensor->setEAPOLClientCert($clientCert);
+                            $sensor->EAPOLClientCert = $clientCert;
                             // Reset unused parameters
-                            $sensor->setEAPOLPassword(null)
-                                ->setEAPOLAnonymousIdentity(null);
+                            $sensor->EAPOLPassword = null;
+                            $sensor->EAPOLAnonymousIdentity = null;
                         } catch (\Error) {
                             // If new cert attributes aren't set, assert we already have a client cert
-                            if ($sensor->getEAPOLClientCert() === null) throw new BadRequestException();
+                            if ($sensor->EAPOLClientCert === null) throw new BadRequestException();
                         }
                     } else {
                         // PEAP or TTLS
                         try {
-                            $sensor->setEAPOLPassword($params->eapolPassword);
+                            $sensor->EAPOLPassword = $params->eapolPassword;
                         } catch (\Error) {
                             // Only update the password if a new one was given. Otherwise, assert we already have a password.
-                            if ($sensor->getEAPOLPassword() === null) throw new BadRequestException();
+                            if ($sensor->EAPOLPassword === null) throw new BadRequestException();
                         }
-                        $sensor->setEAPOLAnonymousIdentity($params->eapolAnonIdentity);
+                        $sensor->EAPOLAnonymousIdentity = $params->eapolAnonIdentity;
                         // Reset unused parameters
-                        if ($sensor->getEAPOLClientCert() !== null) {
-                            $this->em->remove($sensor->getEAPOLClientCert());
-                            $sensor->setEAPOLClientCert(null);
+                        if ($sensor->EAPOLClientCert !== null) {
+                            $this->em->remove($sensor->EAPOLClientCert);
+                            $sensor->EAPOLClientCert = null;
                         }
-                        $sensor->setEAPOLClientCertPassphrase(null);
+                        $sensor->EAPOLClientCertPassphrase = null;
                     }
                 }
             } else {
                 // EAPOL disabled, reset all other parameters
-                $sensor->setEAPOLIdentity(null)
-                    ->setEAPOLPassword(null)
-                    ->setEAPOLClientCertPassphrase(null)
-                    ->setEAPOLAnonymousIdentity(null);
-                if ($sensor->getEAPOLCACert() !== null) {
-                    $this->em->remove($sensor->getEAPOLCACert());
-                    $sensor->setEAPOLCACert(null);
+                $sensor->EAPOLIdentity = null;
+                $sensor->EAPOLPassword = null;
+                $sensor->EAPOLAnonymousIdentity = null;
+                $sensor->EAPOLClientCertPassphrase = null;
+                if ($sensor->EAPOLCACert !== null) {
+                    $this->em->remove($sensor->EAPOLCACert);
+                    $sensor->EAPOLCACert = null;
                 }
-                if ($sensor->getEAPOLClientCert() !== null) {
-                    $this->em->remove($sensor->getEAPOLClientCert());
-                    $sensor->setEAPOLClientCert(null);
+                if ($sensor->EAPOLClientCert !== null) {
+                    $this->em->remove($sensor->EAPOLClientCert);
+                    $sensor->EAPOLClientCert = null;
                 }
             }
             $this->em->flush();

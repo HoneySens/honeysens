@@ -193,7 +193,7 @@ class EventsService extends Service {
             $events[] = $event;
         }
         // Apply filters
-        $filters = $sensor->getDivision()->getEventFilters();
+        $filters = $sensor->division->getEventFilters();
         foreach($events as $event) {
             foreach($filters as $filter) {
                 if($filter->isEnabled() && $filter->matches($event)) {

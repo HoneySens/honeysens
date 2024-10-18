@@ -110,7 +110,7 @@ abstract class RESTResource {
         $sensor = $this->em->getRepository('HoneySens\app\models\entities\Sensor')->find($headers[self::HEADER_SENSOR]);
         V::objectType()->check($sensor);
         if(!$this->isValidMAC($headers[self::HEADER_HMAC],
-            $sensor->getSecret(),
+            $sensor->secret,
             $headers[self::HEADER_HMAC_ALGO],
             intval($headers[self::HEADER_TIMESTAMP]),
             $method,
@@ -132,7 +132,7 @@ abstract class RESTResource {
         $algo = in_array($this::HEADER_HMAC_ALGO, $_SERVER) ? $_SERVER[$this::HEADER_HMAC_ALGO] : 'sha256';
         $now = time();
         $msg = sprintf('%u %s %s', $now, $method, $body);
-        $hmac = hash_hmac($algo, $msg, $sensor->getSecret(), false);
+        $hmac = hash_hmac($algo, $msg, $sensor->secret, false);
         header(sprintf('%s: %s', self::HEADER_HMAC, $hmac));
         header(sprintf('%s: %s', self::HEADER_HMAC_ALGO, $algo));
         header(sprintf('%s: %s', self::HEADER_TIMESTAMP, $now));

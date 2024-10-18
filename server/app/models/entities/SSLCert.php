@@ -21,7 +21,7 @@ class SSLCert{
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    private $id;
+    private int $id;
 
     #[Column(type: Types::TEXT)]
     public string $content;
@@ -42,7 +42,7 @@ class SSLCert{
 
     public function getState(): array {
         return array(
-            'id' => $this->getId(),
+            'id' => $this->id ?? null,
             'content' => $this->content,
             'fingerprint' => $this->getFingerprint()
         );
