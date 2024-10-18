@@ -54,7 +54,7 @@ class Service {
      * in all service assignments that don't specify their own revision.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    public string $defaultRevision;
+    public ?string $defaultRevision;
 
     /**
      * The service assignment that this service is associated with.
@@ -123,7 +123,6 @@ class Service {
      */
     public function removeAssignment(ServiceAssignment $assignment): void {
         $this->assignments->removeElement($assignment);
-        //$assignment->service = null;
     }
 
     public function getState(): array {
@@ -143,7 +142,7 @@ class Service {
             $assignments[] = $assignment->getId();
         }
         return array(
-            'id' => $this->getId(),
+            'id' => $this->id ?? null,
             'name' => $this->name,
             'description' => $this->description,
             'repository' => $this->repository,

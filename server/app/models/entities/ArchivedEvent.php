@@ -98,8 +98,8 @@ class ArchivedEvent {
     public function __construct(Event $e) {
         $this->oid = $e->getId();
         $this->timestamp = $e->getTimestamp();
-        $this->sensor = $e->getSensor()->getName();
-        $this->division = $e->getSensor()->getDivision();
+        $this->sensor = $e->getSensor()->name;
+        $this->division = $e->getSensor()->division;
         $this->divisionName = null;
         $this->service = $e->getService();
         $this->classification = $e->getClassification();

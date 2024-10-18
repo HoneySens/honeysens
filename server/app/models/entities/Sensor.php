@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
@@ -16,154 +17,239 @@ use HoneySens\app\models\constants\SensorNetworkMACMode;
 use HoneySens\app\models\constants\SensorProxyMode;
 use HoneySens\app\models\constants\SensorServerEndpointMode;
 
+/**
+ * A sensor is a virtual or physical device that is remotely
+ * managed by the HoneySens server and deployment target for
+ * honeypot services. These services report security-related
+ * events back to the server.
+ */
 #[Entity]
 #[Table(name: "sensors")]
 class Sensor {
 
-    const CONFIG_ARCHIVE_STATUS_UNAVAILABLE = 0;
-    const CONFIG_ARCHIVE_STATUS_SCHEDULED = 1;
-    const CONFIG_ARCHIVE_STATUS_CREATING = 2;
-    const CONFIG_ARCHIVE_STATUS_AVAILABLE = 3;
-
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private int $id;
 
+    /**
+     * Display name of this sensor.
+     */
     #[Column(type: Types::STRING)]
-    protected $name;
+    public string $name;
 
+    /**
+     * Sensor description, shown in frontend and intended to be used as
+     * location field so that admins don't forget where their physical
+     * sensors are located (e.g. via building and room numbers).
+     */
     #[Column(type: Types::STRING)]
-    protected $location;
+    public string $location;
 
+    /**
+     * Secret key used to authenticate with the server.
+     */
     #[Column(type: Types::STRING)]
-    protected $secret;
+    public string $secret;
 
-    #[OneToMany(targetEntity: SensorStatus::class, mappedBy: "sensor", cascade: ["remove"])]
-    protected $status;
+    /**
+     * Sensor system state snapshots to track sensor health.
+     */
+    #[OneToMany(mappedBy: "sensor", targetEntity: SensorStatus::class, cascade: ["remove"])]
+    private Collection $status;
 
+    /**
+     * The division this sensor is associated with.
+     */
     #[ManyToOne(targetEntity: Division::class, inversedBy: "sensors")]
-    protected $division;
+    public Division $division;
 
-    #[Column(type: Types::INTEGER)]
-    protected $serverEndpointMode;
+    /**
+     * Whether this sensor contacts the server via the global default configuration
+     * or individual sensor-specific settings ($server*).
+     */
+    #[Column()]
+    public SensorServerEndpointMode $serverEndpointMode;
 
+    /**
+     * Server hostname this sensor should use to connect to the server.
+     * Can be either a DNS-resolvable domain name or an IP address.
+     * Only evaluated if $serverEndpointMode is set to CUSTOM.
+     */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $serverEndpointHost;
+    public ?string $serverEndpointHost = null;
 
+    /**
+     * The TCP port the sensor should to connect to the server over HTTPS.
+     * Only evaluated if $serverEndpointMode is set to CUSTOM.
+     */
     #[Column(type: Types::INTEGER, nullable: true)]
-    protected $serverEndpointPortHTTPS;
+    public ?int $serverEndpointPortHTTPS = null;
 
-    #[Column(type: Types::INTEGER)]
-    protected $networkIPMode;
+    /**
+     * Determines how the sensor receives the IP address for its primary
+     * network interface.
+     */
+    #[Column()]
+    public SensorNetworkIPMode $networkIPMode;
 
+    /**
+     * IP address of the primary sensor network interface.
+     * Only evaluated if $networkIPMode is set to STATIC.
+     */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $networkIPAddress;
+    public ?string $networkIPAddress = null;
 
+    /**
+     * Netmask of the primary sensor network interface.
+     * Only evaluated if $networkIPMode is set to STATIC.
+     */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $networkIPNetmask;
+    public ?string $networkIPNetmask = null;
 
+    /**
+     * Gateway of the primary sensor network interface.
+     * Only evaluated if $networkIPMode is set to STATIC.
+     */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $networkIPGateway;
+    public ?string $networkIPGateway = null;
 
+    /**
+     * DNS server for the primary sensor network interface.
+     * Only evaluated if $networkIPMode is set to STATIC.
+     */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $networkIPDNS;
+    public ?string $networkIPDNS = null;
 
-    #[Column(type: Types::INTEGER)]
-    protected $networkMACMode;
+    /**
+     * Whether to use the built-in original MAC address
+     * for the primary sensor network interface or a custom one.
+     */
+    #[Column()]
+    public SensorNetworkMACMode $networkMACMode;
 
+    /**
+     * Custom MAC address for the primary sensor network interface.
+     * Only evaluated if $networkMACMode is set to CUSTOM.
+     */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $networkMACAddress;
+    public ?string $networkMACAddress = null;
 
     /**
      * Optional desired hostname to include within DHCP requests.
      * If null, no hostname is sent to the DHCP server.
+     * Only evaluated if $networkIPMode is set to DHCP.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $networkDHCPHostname;
-
-    #[Column(type: Types::INTEGER)]
-    protected $proxyMode;
-
-    #[Column(type: Types::STRING, nullable: true)]
-    protected $proxyHost;
-
-    #[Column(type: Types::INTEGER, nullable: true)]
-    protected $proxyPort;
-
-    #[Column(type: Types::STRING, nullable: true)]
-    protected $proxyUser;
-
-    #[Column(type: Types::STRING, nullable: true)]
-    protected $proxyPassword;
-
-    #[Column(type: Types::INTEGER)]
-    protected $configArchiveStatus = 0;
+    public ?string $networkDHCPHostname = null;
 
     /**
-     * Custom update interval in minutes.
+     * Whether the sensor should use a proxy to connect to its server.
+     */
+    #[Column()]
+    public SensorProxyMode $proxyMode;
+
+    /**
+     * Proxy server host address or name.
+     * Only evaluated if $proxyMode is ENABLED.
+     */
+    #[Column(type: Types::STRING, nullable: true)]
+    public ?string $proxyHost = null;
+
+    /**
+     * Proxy server TCP port.
+     * Only evaluated if $proxyMode is ENABLED.
      */
     #[Column(type: Types::INTEGER, nullable: true)]
-    protected $updateInterval = null;
+    public ?int $proxyPort = null;
 
+    /**
+     * User to authenticate as with the proxy server.
+     * Only evaluated if $proxyMode is ENABLED.
+     */
+    #[Column(type: Types::STRING, nullable: true)]
+    public ?string $proxyUser = null;
+
+    /**
+     * Password to authenticate with the proxy server.
+     * Only evaluated if $proxyMode is ENABLED.
+     */
+    #[Column(type: Types::STRING, nullable: true)]
+    public ?string $proxyPassword = null;
+
+    /**
+     * Custom sensor state update interval in minutes.
+     */
+    #[Column(type: Types::INTEGER, nullable: true)]
+    public ?int $updateInterval = null;
+
+    /**
+     * If set, designates a custom firmware revision to deploy to this sensor.
+     * Otherwise, the sensor uses the global default firmware.
+     */
     #[ManyToOne(targetEntity: Firmware::class)]
-    protected $firmware;
+    public ?Firmware $firmware = null;
 
     /**
-     * The services that are configured to run on this sensor.
+     * A collection of services that are configured to run on this sensor.
      */
-    #[OneToMany(targetEntity: ServiceAssignment::class, mappedBy: "sensor", cascade: ["remove"])]
-    protected $services;
+    #[OneToMany(mappedBy: "sensor", targetEntity: ServiceAssignment::class, cascade: ["remove"])]
+    private Collection $services;
 
     /**
-     * Custom service network to use on that sensor.
-     */
-    #[Column(type: Types::STRING, nullable: true)]
-    protected $serviceNetwork = null;
-
-    /**
-     * Sensor authentication status/mode.
-     */
-    #[Column(type: Types::INTEGER)]
-    protected $EAPOLMode = 0;
-
-    /**
-     * Identity used for EAPOL authentication.
+     * If set, the custom internal "service" network range to use on this sensor.
+     * Otherwise, the sensor uses the global default service network range.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $EAPOLIdentity = null;
+    public ?string $serviceNetwork = null;
+
+    /**
+     * Whether the sensor should use EAPOL to authenticate on its local network.
+     */
+    #[Column()]
+    public SensorEAPOLMode $EAPOLMode = SensorEAPOLMode::DISABLED;
+
+    /**
+     * Identity to use for EAPOL authentication.
+     * Only evaluated if $EAPOLMode is not DISABLED.
+     */
+    #[Column(type: Types::STRING, nullable: true)]
+    public ?string $EAPOLIdentity = null;
 
     /**
      * Password used for EAPOL authentication.
      * Only required for certain EAPOL modes.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $EAPOLPassword = null;
+    public ?string $EAPOLPassword = null;
 
     /**
      * Anonymous identity used during EAPOL authentication.
-     * Optional.
+     * Optional and only evaluated if $EAPOLMode is not DISABLED..
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $EAPOLAnonymousIdentity = null;
+    public ?string $EAPOLAnonymousIdentity = null;
 
     /**
      * CA certificate used for EAPOL TLS authentication.
+     * Only evaluated if $EAPOLMode is TLS or TTLS.
      */
     #[OneToOne(targetEntity: SSLCert::class, cascade: ["remove"])]
-    protected $EAPOLCACert;
+    public ?SSLCert $EAPOLCACert = null;
 
     /**
      * Client certificate used for EAPOL TLS authentication.
+     * Only evaluated if $EAPOLMode is TLS or TTLS.
      */
     #[OneToOne(targetEntity: SSLCert::class, cascade: ["remove"])]
-    protected $EAPOLClientCert;
+    public ?SSLCert $EAPOLClientCert = null;
 
     /**
-     * Passphrase for the client key, if any.
+     * Passphrase for the EAPOL client key, if any.
+     * Only evaluated if $EAPOLMode is TLS or TTLS.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $EAPOLClientCertPassphrase;
+    public ?string $EAPOLClientCertPassphrase = null;
 
     public function __construct() {
         $this->secret = $this->generateSecret();
@@ -171,122 +257,48 @@ class Sensor {
         $this->services = new ArrayCollection();
     }
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
      * Sensors use their id as hostname, preceded by an string, to conform to host and domain name conventions
-     *
-     * @return string
      */
-    public function getHostname() {
+    public function getHostname(): string {
         return 's' . $this->id;
     }
 
     /**
-     * Set name
-     *
-     * @param string $name
-     * @return Sensor
+     * Adds a system state snapshot to this sensor.
      */
-    public function setName($name) {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * Get name
-     *
-     * @return string
-     */
-    public function getName() {
-        return $this->name;
-    }
-
-    /**
-     * Set location
-     *
-     * @param string $location
-     * @return Sensor
-     */
-    public function setLocation($location) {
-        $this->location = $location;
-        return $this;
-    }
-
-    /**
-     * Get location
-     *
-     * @return string
-     */
-    public function getLocation() {
-        return $this->location;
-    }
-
-    /**
-     * Set secret/key
-     *
-     * @param string $secret
-     * @return Sensor
-     */
-    public function setSecret($secret) {
-        $this->secret = $secret;
-        return $this;
-    }
-
-    /**
-     * Get secret/key
-     *
-     * @return string
-     */
-    public function getSecret() {
-        return $this->secret;
-    }
-
-    /**
-     * Add status info
-     *
-     * @param \HoneySens\app\models\entities\SensorStatus $status
-     * @return Sensor
-     */
-    public function addStatus(\HoneySens\app\models\entities\SensorStatus $status) {
+    public function addStatus(SensorStatus $status): void {
         $this->status[] = $status;
-        $status->setSensor($this);
-        return $this;
+        $status->sensor = $this;
     }
 
     /**
-     * Remove status info
-     *
-     * @param \HoneySens\app\models\entities\SensorStatus $status
-     * @return Sensor
+     * Removes a system state snapshot from this sensor.
      */
-    public function removeStatus(\HoneySens\app\models\entities\SensorStatus $status) {
+    public function removeStatus(SensorStatus $status): void {
         $this->status->removeElement($status);
-        $status->setSensor(null);
-        return $this;
     }
 
     /**
-     * Get all status info
-     *
-     * @return \HoneySens\app\models\entities\SensorStatus
+     * Returns all stored system state snapshots of this sensor.
      */
-    public function getStatus() {
+    public function getStatus(): Collection {
         return $this->status;
     }
 
-    public function getLastStatus() {
+    /**
+     * Returns the last known system state snapshot for this sensor
+     * of null in case no snapshots are available.
+     */
+    public function getLastStatus(): ?SensorStatus {
         $statusSorted = array();
         foreach($this->status as $key => $status) {
             $statusSorted[$key] = $status;
-            $timestamps[$key] = $status->getTimestamp();
+            $timestamps[$key] = $status->timestamp;
         }
         if(count($statusSorted) > 0) {
             array_multisort($timestamps, SORT_DESC, $statusSorted);
@@ -295,440 +307,51 @@ class Sensor {
     }
 
     /**
-     * Set division
-     *
-     * @param Division $division
-     * @return $this
+     * Adds a service assignment, meaning that this sensor is supposed to run the provided service.
      */
-    public function setDivision(Division $division = null) {
-        $this->division = $division;
-        return $this;
-    }
-
-    /**
-     * Get division
-     *
-     * @return mixed
-     */
-    public function getDivision() {
-        return $this->division;
-    }
-
-    public function setServerEndpointMode(SensorServerEndpointMode $mode): Sensor {
-        $this->serverEndpointMode = $mode->value;
-        return $this;
-    }
-
-    public function getServerEndpointMode(): SensorServerEndpointMode {
-        return SensorServerEndpointMode::from($this->serverEndpointMode);
-    }
-
-    public function setServerEndpointHost($host) {
-        $this->serverEndpointHost = $host;
-        return $this;
-    }
-
-    public function getServerEndpointHost() {
-        return $this->serverEndpointHost;
-    }
-
-    public function setServerEndpointPortHTTPS($port) {
-        $this->serverEndpointPortHTTPS = $port;
-        return $this;
-    }
-
-    public function getServerEndpointPortHTTPS() {
-        return $this->serverEndpointPortHTTPS;
-    }
-
-    public function setNetworkIPMode(SensorNetworkIPMode $mode): Sensor {
-        $this->networkIPMode = $mode->value;
-        return $this;
-    }
-
-    public function getNetworkIPMode(): SensorNetworkIPMode {
-        return SensorNetworkIPMode::from($this->networkIPMode);
-    }
-
-    public function setNetworkIPAddress($address) {
-        $this->networkIPAddress = $address;
-        return $this;
-    }
-
-    public function getNetworkIPAddress() {
-        return $this->networkIPAddress;
-    }
-
-    public function setNetworkIPNetmask($netmask) {
-        $this->networkIPNetmask = $netmask;
-        return $this;
-    }
-
-    public function getNetworkIPNetmask() {
-        return $this->networkIPNetmask;
-    }
-
-    public function setNetworkIPGateway($gateway) {
-        $this->networkIPGateway = $gateway;
-        return $this;
-    }
-
-    public function getNetworkIPGateway() {
-        return $this->networkIPGateway;
-    }
-
-    public function setNetworkIPDNS($dns) {
-        $this->networkIPDNS = $dns;
-        return $this;
-    }
-
-    public function getNetworkIPDNS() {
-        return $this->networkIPDNS;
-    }
-
-    public function setNetworkMACMode(SensorNetworkMACMode $mode): Sensor {
-        $this->networkMACMode = $mode->value;
-        return $this;
-    }
-
-    public function getNetworkMACMode(): SensorNetworkMACMode {
-        return SensorNetworkMACMode::from($this->networkMACMode);
-    }
-
-    public function setNetworkMACAddress($address) {
-        $this->networkMACAddress = $address;
-        return $this;
-    }
-
-    public function getNetworkMACAddress() {
-        return $this->networkMACAddress;
-    }
-
-    public function setNetworkDHCPHostname($hostname) {
-        $this->networkDHCPHostname = $hostname;
-        return $this;
-    }
-
-    public function getNetworkDHCPHostname() {
-        return $this->networkDHCPHostname;
-    }
-
-    public function setProxyMode(SensorProxyMode $mode): Sensor {
-        $this->proxyMode = $mode->value;
-        return $this;
-    }
-
-    public function getProxyMode(): SensorProxyMode {
-        return SensorProxyMode::from($this->proxyMode);
-    }
-
-    public function setProxyHost($host) {
-        $this->proxyHost = $host;
-        return $this;
-    }
-
-    public function getProxyHost() {
-        return $this->proxyHost;
-    }
-
-    public function setProxyPort($port) {
-        $this->proxyPort = $port;
-        return $this;
-    }
-
-    public function getProxyPort() {
-        return $this->proxyPort;
-    }
-
-    public function setProxyUser($user) {
-        $this->proxyUser = $user;
-        return $this;
-    }
-
-    public function getProxyUser() {
-        return $this->proxyUser;
-    }
-
-    public function setProxyPassword($password) {
-        $this->proxyPassword = $password;
-        return $this;
-    }
-
-    public function getProxyPassword() {
-        return $this->proxyPassword;
-    }
-
-    public function setConfigArchiveStatus($status) {
-        $this->configArchiveStatus = $status;
-        return $this;
-    }
-
-    public function getConfigArchiveStatus() {
-        return $this->configArchiveStatus;
-    }
-
-    /**
-     * Set updateInterval
-     *
-     * @param integer $updateInterval
-     * @return Sensor
-     */
-    public function setUpdateInterval($updateInterval) {
-        $this->updateInterval = $updateInterval;
-        return $this;
-    }
-
-    /**
-     * Get updateInterval
-     *
-     * @return integer|null
-     */
-    public function getUpdateInterval() {
-        return $this->updateInterval;
-    }
-
-    /**
-     * Set sensor firmware
-     *
-     * @return Sensor
-     */
-    public function setFirmware(\HoneySens\app\models\entities\Firmware $firmware = null) {
-        $this->firmware = $firmware;
-        return $this;
-    }
-
-    /**
-     * Get sensor firmware
-     *
-     * @return \HoneySens\app\models\entities\Firmware
-     */
-    public function getFirmware() {
-        return $this->firmware;
-    }
-
-    /**
-     * Returns true if a custom firmware is set for this sensor.
-     *
-     * @return bool
-     */
-    public function hasFirmware() {
-        return $this->firmware != null;
-    }
-
-    /**
-     * Add a service assignment, meaning that this sensor is supposed to run the provided service.
-     *
-     * @param ServiceAssignment $service
-     * @return $this
-     */
-    public function addService(ServiceAssignment $service) {
+    public function addService(ServiceAssignment $service): void {
         $this->services[] = $service;
         $service->sensor = $this;
-        return $this;
     }
 
     /**
-     * Remove a service assignment, causing this sensor to stop running the given service.
-     *
-     * @param ServiceAssignment $service
-     * @return $this
+     * Removes a service assignment, causing this sensor to stop running a service.
      */
-    public function removeService(ServiceAssignment $service) {
+    public function removeService(ServiceAssignment $service): void {
         $this->services->removeElement($service);
-        //$service->sensor = null;
-        return $this;
     }
 
     /**
      * Get all service assignments associated with this sensor.
-     *
-     * @return ArrayCollection
      */
-    public function getServices() {
+    public function getServices(): Collection {
         return $this->services;
     }
 
-    /**
-     * Set serviceNetwork
-     *
-     * @param string $serviceNetwork
-     * @return Sensor
-     */
-    public function setServiceNetwork($serviceNetwork) {
-        $this->serviceNetwork = $serviceNetwork;
-        return $this;
-    }
-
-    /**
-     * Get serviceNetwork
-     *
-     * @return string|null
-     */
-    public function getServiceNetwork() {
-        return $this->serviceNetwork;
-    }
-
-    /**
-     * Set the EAPOL mode
-     */
-    public function setEAPOLMode(SensorEAPOLMode $mode): Sensor {
-        $this->EAPOLMode = $mode->value;
-        return $this;
-    }
-
-    /**
-     * Get the current EAPOL mode
-     *
-     * @return integer
-     */
-    public function getEAPOLMode(): SensorEAPOLMode {
-        return SensorEAPOLMode::from($this->EAPOLMode);
-    }
-
-    /**
-     * Set the identity string used with EAPOL
-     *
-     * @param string $identity
-     * @return $this
-     */
-    public function setEAPOLIdentity($identity) {
-        $this->EAPOLIdentity = $identity;
-        return $this;
-    }
-
-    /**
-     * Get the identity used for EAPOL
-     *
-     * @return string|null
-     */
-    public function getEAPOLIdentity() {
-        return $this->EAPOLIdentity;
-    }
-
-    /**
-     * Set the password string used with EAPOL
-     *
-     * @param string $password
-     * @return $this
-     */
-    public function setEAPOLPassword($password) {
-        $this->EAPOLPassword = $password;
-        return $this;
-    }
-
-    /**
-     * Get the password used for EAPOL
-     *
-     * @return string|null
-     */
-    public function getEAPOLPassword() {
-        return $this->EAPOLPassword;
-    }
-
-    /**
-     * Set the anonymous identity string used with EAPOL
-     *
-     * @param string $identity
-     * @return $this
-     */
-    public function setEAPOLAnonymousIdentity($identity) {
-        $this->EAPOLAnonymousIdentity = $identity;
-        return $this;
-    }
-
-    /**
-     * Get the anonymous identity used for EAPOL
-     *
-     * @return string|null
-     */
-    public function getEAPOLAnonymousIdentity() {
-        return $this->EAPOLAnonymousIdentity;
-    }
-
-    /**
-     * Set the CA certificate used for EAPOL
-     *
-     * @param SSLCert|null $cert
-     * @return $this
-     */
-    public function setEAPOLCACert(SSLCert $cert = null) {
-        $this->EAPOLCACert = $cert;
-        return $this;
-    }
-
-    /**
-     * Get the CA certificate used for EAPOL
-     *
-     * @return SSLCert|null
-     */
-    public function getEAPOLCACert() {
-        return $this->EAPOLCACert;
-    }
-
-    /**
-     * Set the client certificate used for EAPOL
-     *
-     * @param SSLCert|null $cert
-     * @return $this
-     */
-    public function setEAPOLClientCert(SSLCert $cert = null) {
-        $this->EAPOLClientCert = $cert;
-        return $this;
-    }
-
-    /**
-     * Get the client certificate used for EAPOL
-     *
-     * @return SSLCert|null
-     */
-    public function getEAPOLClientCert() {
-        return $this->EAPOLClientCert;
-    }
-
-    /**
-     * Set the passphrase for the client key
-     *
-     * @param string|null $passphrase
-     * @return $this
-     */
-    public function setEAPOLClientCertPassphrase($passphrase) {
-        $this->EAPOLClientCertPassphrase = $passphrase;
-        return $this;
-    }
-
-    /**
-     * Get the passphrase for the client key
-     *
-     * @return string|null
-     */
-    public function getEAPOLClientCertPassphrase() {
-        return $this->EAPOLClientCertPassphrase;
-    }
-
-    public function getState() {
-        $eapol_ca_cert = $this->getEAPOLCACert() ? $this->getEAPOLCACert()->getFingerprint() : null;
-        $eapol_client_cert = $this->getEAPOLClientCert() ? $this->getEAPOLClientCert()->getFingerprint() : null;
+    public function getState(): array {
+        $eapol_ca_cert = $this->EAPOLCACert?->getFingerprint();
+        $eapol_client_cert = $this->EAPOLClientCert?->getFingerprint();
         $last_status = $this->getLastStatus();
-        $last_status_ts = $last_status ? $last_status->getTimestamp()->format('U') : null;
-        $last_status_code = $last_status ? $last_status->getStatus() : null;
-        $last_status_since = $last_status ? $last_status->getRunningSince() ? $last_status->getRunningSince()->format('U') : null : null;
-        $last_service_status = $last_status ? $last_status->getServiceStatus() : null;
-        $sw_version = $last_status ? $last_status->getSWVersion() : '';
-        $last_ip = $last_status ? $last_status->getIP() : null;
-        $firmware = $this->firmware ? $this->firmware->getId() : null;
+        $last_status_ts = $last_status?->timestamp->format('U');
+        $last_status_code = $last_status?->status;
+        $last_status_since = $last_status?->runningSince?->format('U');
+        $last_service_status = $last_status?->getServiceStatus();
+        $sw_version = $last_status ? $last_status->swVersion : '';
+        $last_ip = $last_status?->ip;
+        $firmware = $this->firmware?->getId();
         $services = array();
         foreach($this->services as $service) {
             $services[] = $service->getState();
         }
         return array(
-            'id' => $this->getId(),
+            'id' => $this->id ?? null,
             'hostname' => $this->getHostname(),
-            'name' => $this->getName(),
-            'location' => $this->getLocation(),
-            'division' => $this->getDivision()->getId(),
-            'eapol_mode' => $this->getEAPOLMode()->value,
-            'eapol_identity' => $this->getEAPOLIdentity(),
-            'eapol_anon_identity' => $this->getEAPOLAnonymousIdentity(),
+            'name' => $this->name,
+            'location' => $this->location,
+            'division' => $this->division->getId(),
+            'eapol_mode' => $this->EAPOLMode->value,
+            'eapol_identity' => $this->EAPOLIdentity,
+            'eapol_anon_identity' => $this->EAPOLAnonymousIdentity,
             'eapol_ca_cert' => $eapol_ca_cert,
             'eapol_client_cert' => $eapol_client_cert,
             'last_status' => $last_status_code,
@@ -737,30 +360,29 @@ class Sensor {
             'last_service_status' => $last_service_status,
             'sw_version' => $sw_version,
             'last_ip' => $last_ip,
-            'server_endpoint_mode' => $this->getServerEndpointMode()->value,
-            'server_endpoint_host' => $this->getServerEndpointHost(),
-            'server_endpoint_port_https' => $this->getServerEndpointPortHTTPS(),
-            'network_ip_mode' => $this->getNetworkIPMode()->value,
-            'network_ip_address' => $this->getNetworkIPAddress(),
-            'network_ip_netmask' => $this->getNetworkIPNetmask(),
-            'network_ip_gateway' => $this->getNetworkIPGateway(),
-            'network_ip_dns' => $this->getNetworkIPDNS(),
-            'network_mac_mode' => $this->getNetworkMACMode()->value,
-            'network_mac_address' => $this->getNetworkMACAddress(),
-            'network_dhcp_hostname' => $this->getNetworkDHCPHostname(),
-            'proxy_mode' => $this->getProxyMode()->value,
-            'proxy_host' => $this->getProxyHost(),
-            'proxy_port' => $this->getProxyPort(),
-            'proxy_user' => $this->getProxyUser(),
-            'config_archive_status' => $this->getConfigArchiveStatus(),
-            'update_interval' => $this->getUpdateInterval(),
+            'server_endpoint_mode' => $this->serverEndpointMode->value,
+            'server_endpoint_host' => $this->serverEndpointHost,
+            'server_endpoint_port_https' => $this->serverEndpointPortHTTPS,
+            'network_ip_mode' => $this->networkIPMode->value,
+            'network_ip_address' => $this->networkIPAddress,
+            'network_ip_netmask' => $this->networkIPNetmask,
+            'network_ip_gateway' => $this->networkIPGateway,
+            'network_ip_dns' => $this->networkIPDNS,
+            'network_mac_mode' => $this->networkMACMode->value,
+            'network_mac_address' => $this->networkMACAddress,
+            'network_dhcp_hostname' => $this->networkDHCPHostname,
+            'proxy_mode' => $this->proxyMode->value,
+            'proxy_host' => $this->proxyHost,
+            'proxy_port' => $this->proxyPort,
+            'proxy_user' => $this->proxyUser,
+            'update_interval' => $this->updateInterval,
             'firmware' => $firmware,
             'services' => $services,
-            'service_network' => $this->getServiceNetwork()
+            'service_network' => $this->serviceNetwork
         );
     }
 
-    private function generateSecret() {
+    private function generateSecret(): string {
         return bin2hex(openssl_random_pseudo_bytes(32));
     }
 }

@@ -60,7 +60,7 @@ class EMailAdapter {
     private function createEventSummary(Event $event) {
         $result = 'Datum: ' . $event->getTimestamp()->format('d.m.Y') . "\n";
         $result .= 'Zeit: ' . $event->getTimestamp()->format('H:i:s') . " (UTC)\n";
-        $result .= 'Sensor: ' . $event->getSensor()->getName() . "\n";
+        $result .= 'Sensor: ' . $event->getSensor()->name . "\n";
         $result .= 'Klassifikation: ' . $this->getEventClassificationText($event) . "\n";
         $result .= 'Quelle: ' . $event->getSource() . "\n";
         $result .= 'Details: ' . $event->getSummary();
@@ -120,7 +120,7 @@ class EMailAdapter {
     public function sendIncident($config, $em, $event) {
         if($config['smtp']['enabled'] != 'true') return;
         // Fetch associated contacts
-        $division = $event->getSensor()->getDivision();
+        $division = $event->getSensor()->division;
         $qb = $em->createQueryBuilder();
         $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c')
             ->where('c.division = :division')

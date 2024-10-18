@@ -77,7 +77,7 @@ class Division {
      */
     public function addSensor(Sensor $sensor) {
         $this->sensors[] = $sensor;
-        $sensor->setDivision($this);
+        $sensor->division = $this;
         return $this;
     }
 
@@ -89,7 +89,6 @@ class Division {
      */
     public function removeSensor(Sensor $sensor) {
         $this->sensors->removeElement($sensor);
-        $sensor->setDivision(null);
         return $this;
     }
 

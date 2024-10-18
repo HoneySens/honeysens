@@ -193,7 +193,6 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 'proxy_host': null,
                 'proxy_port': null,
                 'proxy_user': null,
-                'config_archive_status': 0,
                 'firmware': null,
                 'services': [],
                 'service_network': null

@@ -135,7 +135,8 @@ if config_version == '2.7.0':
     db_statements = [
         # TODO Delete preexisting tasks, conversion from LONGTEXT to JSON might fail
         'ALTER TABLE tasks MODIFY params LONGTEXT, MODIFY result LONGTEXT',
-        'ALTER TABLE tasks CHANGE params params JSON DEFAULT NULL, CHANGE result result JSON DEFAULT NULL'
+        'ALTER TABLE tasks CHANGE params params JSON DEFAULT NULL, CHANGE result result JSON DEFAULT NULL',
+        'ALTER TABLE sensors DROP configArchiveStatus'
     ]
     execute_sql(db, db_statements)
     db.commit()

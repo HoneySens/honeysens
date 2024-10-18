@@ -27,7 +27,7 @@ class Task {
      * The user who submitted this task.
      */
     #[ManyToOne(targetEntity: User::class, inversedBy: "tasks")]
-    public User $user;
+    public ?User $user;
 
     /**
      * The type of task that should be executed, currently amongst a set of hardcoded values.
