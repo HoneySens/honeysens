@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\DiscriminatorColumn;
@@ -13,10 +14,9 @@ use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\OneToOne;
 use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\exceptions\NotFoundException;
-use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
 /**
- * Hardware platform abstraction.
+ * Sensor deployment platform abstraction.
  */
 #[Entity]
 #[Table(name: "platforms")]
@@ -28,208 +28,124 @@ use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 )]
 abstract class Platform {
 
-    const FIRMWARE_PATH = 'firmware';
+    const string FIRMWARE_PATH = 'firmware';
 
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private int $id;
 
     /**
      * Unique, lower-case name for this platform (also used as a reference by external parties, e.g. services).
      */
     #[Column(type: Types::STRING, nullable: false)]
-    protected $name;
+    public string $name;
 
     /**
      * Informal name of this platform.
      */
     #[Column(type: Types::STRING)]
-    protected $title;
+    public string $title;
 
     /**
      * General description of this platform.
      */
     #[Column(type: Types::STRING)]
-    protected $description;
+    public string $description;
 
     /**
      * References the firmware revisions that are registered for this platform.
      */
-    #[OneToMany(targetEntity: Firmware::class, mappedBy: "platform", cascade: ["remove"])]
-    protected $firmwareRevisions;
+    #[OneToMany(mappedBy: "platform", targetEntity: Firmware::class, cascade: ["remove"])]
+    private Collection $firmwareRevisions;
 
+    /**
+     * The global default revision to use for all sensors of this platform type that don't
+     * overwrite this setting by specifying their own target firmware revision.
+     * This should only be null in case no firmware revisions exist yet for this platform.
+     */
     #[OneToOne(targetEntity: Firmware::class)]
-    protected $defaultFirmwareRevision;
+    public ?Firmware $defaultFirmwareRevision;
 
-    public function __construct($name, $title) {
+    public function __construct(string $name, string $title) {
         $this->name = $name;
         $this->title = $title;
         $this->firmwareRevisions = new ArrayCollection();
     }
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
-    }
-
-    public function getName() {
-        return $this->name;
-    }
-
-    public function getTitle() {
-        return $this->title;
-    }
-
-    public function getDescription() {
-        return $this->description;
-    }
-
-    public function setDescription($description) {
-        $this->description = $description;
     }
 
     /**
      * Add a firmware file to this platform.
      * Returns a string that uniquely identifies the firmware (e.g. its location on disk).
-     *
-     * @param Firmware $firmware
-     * @param string $filePath
-     * @param ConfigParser $config
      */
-    public function registerFirmware(Firmware $firmware, $filePath, ConfigParser $config) {
-        rename($filePath, sprintf('%s/%s', $this->getFirmwarePath($config), $firmware->getSource()));
-        $firmware->setSource(null);
+    public function registerFirmwareFile(Firmware $firmware, $filePath): void {
+        rename($filePath, sprintf('%s/%s', $this->getFirmwarePath(), $firmware->getSource()));
     }
 
     /**
      * Removes the firmware file (if any) from a given firmware revision.
-     *
-     * @param Firmware $firmware
-     * @param ConfigParser $config
      */
-    public function unregisterFirmware(Firmware $firmware, ConfigParser $config) {
-        if($this->isFirmwarePresent($firmware, $config))
-            unlink(sprintf('%s/%s', $this->getFirmwarePath($config), $firmware->getSource()));
+    public function unregisterFirmwareFile(Firmware $firmware): void {
+        if($this->isFirmwarePresent($firmware))
+            unlink(sprintf('%s/%s', $this->getFirmwarePath(), $firmware->getSource()));
     }
 
     /**
-     * Checks if the firmware data (source) is registered and available.
-     *
-     * @param Firmware $firmware
-     * @param ConfigParser $config
-     * @return bool
+     * Checks whether a data file (source) exists for a specific firmware revision.
      */
-    public function isFirmwarePresent(Firmware $firmware, ConfigParser $config) {
-        return $firmware->getSource() != null && file_exists(sprintf('%s/%s', $this->getFirmwarePath($config), $firmware->getSource()));
+    public function isFirmwarePresent(Firmware $firmware): bool {
+        return $firmware->getSource() !== null && file_exists(sprintf('%s/%s', $this->getFirmwarePath(), $firmware->getSource()));
     }
 
     /**
-     * Returns the URI that can be used to download the firmware from the server.
-     *
-     * @param Firmware $firmware
-     * @return string
+     * Returns a URI to download the firmware from the server.
      */
-    public function getFirmwareURI(Firmware $firmware) {
+    public function getFirmwareURI(Firmware $firmware): string {
         return 'api/platforms/firmware/' . $firmware->getId() . '/raw';
     }
 
     /**
-     * Returns the full path to the raw data file that belongs to this firmware.
-     *
-     * @param Firmware $firmware
-     * @param ConfigParser $config
-     * @return mixed
-     * @throws NotFoundException
+     * Returns the full path to the data file of a specific firmware.
      */
-    public function obtainFirmware(Firmware $firmware, ConfigParser $config) {
-        if(!$this->isFirmwarePresent($firmware, $config)) throw new NotFoundException();
-        return sprintf('%s/%s', $this->getFirmwarePath($config), $firmware->getSource());
+    public function obtainFirmware(Firmware $firmware): string {
+        if(!$this->isFirmwarePresent($firmware)) throw new NotFoundException();
+        return sprintf('%s/%s', $this->getFirmwarePath(), $firmware->getSource());
     }
 
     /**
      * Adds a firmware revision to this platform.
-     *
-     * @param Firmware $firmware
-     * @return $this
      */
-    public function addFirmwareRevision(Firmware $firmware) {
+    public function addFirmwareRevision(Firmware $firmware): void {
         $this->firmwareRevisions[] = $firmware;
-        $firmware->setPlatform($this);
-        return $this;
+        $firmware->platform = $this;
     }
 
     /**
      * Removes a firmware revision from this platform.
-     *
-     * @param Firmware $firmware
-     * @return $this
      */
-    public function removeFirmwareRevision(Firmware $firmware) {
+    public function removeFirmwareRevision(Firmware $firmware): void {
         $this->firmwareRevisions->removeElement($firmware);
-        $firmware->setPlatform(null);
-        return $this;
     }
 
-    /**
-     * Get all firmware revisions associated with this platform.
-     *
-     * @return ArrayCollection
-     */
-    public function getFirmwareRevisions() {
-        return $this->firmwareRevisions;
-    }
-
-    /**
-     * Set the default firmware revision for this platform.
-     *
-     * @param Firmware|null $revision
-     * @return $this
-     */
-    public function setDefaultFirmwareRevision($revision) {
-        $this->defaultFirmwareRevision = $revision;
-        return $this;
-    }
-
-    /**
-     * Returns the firmware revision that this service defaults to.
-     *
-     * @return Firmware
-     */
-    public function getDefaultFirmwareRevision() {
-        return $this->defaultFirmwareRevision;
-    }
-
-    /**
-     * Returns true if a default firmware revision is attached to this platform.
-     *
-     * @return bool
-     */
-    public function hasDefaultFirmwareRevision() {
-        return $this->defaultFirmwareRevision != null;
-    }
-
-    public function getState() {
+    public function getState(): array {
         $firmwareRevisions = array();
         foreach($this->firmwareRevisions as $revision) {
             $firmwareRevisions[] = $revision->getState();
         }
-        $defaultFirmwareRevision = $this->getDefaultFirmwareRevision() ? $this->getDefaultFirmwareRevision()->getId() : null;
         return array(
-            'id' => $this->getId(),
-            'name' => $this->getName(),
-            'title' => $this->getTitle(),
-            'description' => $this->getDescription(),
+            'id' => $this->id ?? null,
+            'name' => $this->name,
+            'title' => $this->title,
+            'description' => $this->description,
             'firmware_revisions' => $firmwareRevisions,
-            'default_firmware_revision' => $defaultFirmwareRevision
+            'default_firmware_revision' => $this->defaultFirmwareRevision?->getId()
         );
     }
 
-    private function getFirmwarePath($config) {
+    private function getFirmwarePath(): string {
         return sprintf('%s/%s', DATA_PATH, self::FIRMWARE_PATH);
     }
 }
