@@ -8,6 +8,9 @@ use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\Table;
 
+/**
+ * Represents a single firmware revision for a particular sensor platform.
+ */
 #[Entity]
 #[Table(name: "firmware")]
 class Firmware {
@@ -15,186 +18,58 @@ class Firmware {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private int $id;
 
     /**
-     * The name of this sensor image
+     * The name of this sensor firmware revision.
      */
     #[Column(type: "string")]
-    protected $name;
+    public string $name;
 
     /**
-     * Version string of this image
+     * Version string of this firmware revision.
      */
     #[Column(type: "string")]
-    protected $version;
+    public string $version;
 
     /**
-     * A short description of this image
+     * A short description of this firmware revision.
      */
     #[Column(type: "string")]
-    protected $description;
+    public string $description;
 
     /**
      * The long description of changes that occured within this version
      */
     #[Column(type: "string")]
-    protected $changelog;
+    public string $changelog;
 
     /**
-     * Deprecated: Denotes the file name of the firmware file.
-     * If set to null, getSource() will return a named based on the ID of this firmware.
-     * This property is still there to support older server versions that used a different naming scheme.
-     */
-    #[Column(type: "string", nullable: true)]
-    protected $source;
-
-    /**
-     * The platform this firmware revision belongs to.
+     * The platform this firmware revision is compatible with.
      */
     #[ManyToOne(targetEntity: Platform::class, inversedBy: "firmwareRevisions")]
-    protected $platform;
+    public Platform $platform;
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Set name
-     *
-     * @param string $name
-     * @return Firmware
-     */
-    public function setName($name) {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * Get name
-     *
-     * @return string
-     */
-    public function getName() {
-        return $this->name;
-    }
-
-    /**
-     * Set version
-     *
-     * @param string $version
-     * @return Firmware
-     */
-    public function setVersion($version) {
-        $this->version = $version;
-        return $this;
-    }
-
-    /**
-     * Get version
-     *
-     * @return string
-     */
-    public function getVersion() {
-        return $this->version;
-    }
-
-    /**
-     * Set description
-     *
-     * @param string $description
-     * @return Firmware
-     */
-    public function setDescription($description) {
-        $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * Get description
-     *
-     * @return string
-     */
-    public function getDescription() {
-        return $this->description;
-    }
-
-    /**
-     * Set change log
-     *
-     * @param string $changelog
-     * @return Firmware
-     */
-    public function setChangelog($changelog) {
-        $this->changelog = $changelog;
-        return $this;
-    }
-
-    /**
-     * Get change log
-     *
-     * @return string
-     */
-    public function getChangelog() {
-        return $this->changelog;
-    }
-
-    /**
-     * Set source reference
-     *
-     * @param string $source
-     * @return Firmware
-     */
-    public function setSource($source) {
-        $this->source = $source;
-        return $this;
-    }
-
-    /**
      * Get the file name of this firmware archive (as found on the disk within the firmware data directory).
-     * Returns a name based on the firmware ID if none other was set.
-     *
-     * @return string
+     * Returns a name based on the firmware ID.
      */
-    public function getSource() {
-        if($this->source == null) return sprintf('%s.tar.gz', $this->getId());
-        else return $this->source;
+    public function getSource(): string {
+        return sprintf('%s.tar.gz', $this->getId());
     }
 
-    /**
-     * Set the platform this firmware revision belongs to.
-     *
-     * @param Platform|null $platform
-     * @return $this
-     */
-    public function setPlatform(Platform $platform = null) {
-        $this->platform = $platform;
-        return $this;
-    }
-
-    /**
-     * Get the platform that belongs to this firmware revision.
-     *
-     * @return Platform
-     */
-    public function getPlatform() {
-        return $this->platform;
-    }
-
-    public function getState() {
+    public function getState(): array {
         return array(
             'id' => $this->getId(),
-            'name' => $this->getName(),
-            'version' => $this->getVersion(),
-            'description' => $this->getDescription(),
-            'changelog' => $this->getChangelog(),
-            'source' => $this->getSource(),
-            'platform' => $this->getPlatform()->getId()
+            'name' => $this->name,
+            'version' => $this->version,
+            'description' => $this->description,
+            'changelog' => $this->changelog,
+            'platform' => $this->platform->getId()
         );
     }
 }

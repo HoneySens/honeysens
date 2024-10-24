@@ -287,14 +287,14 @@ class SensorsService extends Service {
         }
         $result = array();
         foreach($platforms as $platform) {
-            if($platform->hasDefaultFirmwareRevision()) {
-                $result[$platform->getName()] = $platform->getFirmwareURI($platform->getDefaultFirmwareRevision());
+            if($platform->defaultFirmwareRevision) {
+                $result[$platform->name] = $platform->getFirmwareURI($platform->defaultFirmwareRevision);
             }
         }
         if($sensor->firmware !== null) {
             $firmware = $sensor->firmware;
-            $platform = $firmware->getPlatform();
-            $result[$platform->getName()] = $platform->getFirmwareURI($firmware);
+            $platform = $firmware->platform;
+            $result[$platform->name] = $platform->getFirmwareURI($firmware);
         }
         return $result;
     }
@@ -365,17 +365,17 @@ class SensorsService extends Service {
         // Attach firmware versioning information for all platforms
         $firmware = array();
         foreach($platformRepository->findAll() as $platform) {
-            if($platform->hasDefaultFirmwareRevision()) {
-                $revision = $platform->getDefaultFirmwareRevision();
-                $firmware[$platform->getName()] = array('revision' => $revision->getVersion(),
+            if($platform->defaultFirmwareRevision !== null) {
+                $revision = $platform->defaultFirmwareRevision;
+                $firmware[$platform->name] = array('revision' => $revision->version,
                     'uri' => $platform->getFirmwareURI($revision));
             }
         }
         // Sensor firmware overwrite
         if($sensor->firmware !== null) {
             $f = $sensor->firmware;
-            $firmware[$f->getPlatform()->getName()] = array('revision' => $f->getVersion(),
-                'uri' => $f->getPlatform()->getFirmwareURI($f));
+            $firmware[$f->platform->name] = array('revision' => $f->version,
+                'uri' => $f->platform->getFirmwareURI($f));
         }
         $sensorState['firmware'] = $firmware;
         // Unhandled event status data for physical LED indication

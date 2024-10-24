@@ -11,13 +11,11 @@ use HoneySens\app\models\constants\TaskStatus;
 use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\entities\Firmware;
 use HoneySens\app\models\entities\Platform;
-use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\exceptions\SystemException;
-use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
 class PlatformsService extends Service {
 
@@ -25,13 +23,11 @@ class PlatformsService extends Service {
     const CREATE_ERROR_UNKNOWN_PLATFORM = 1;
     const CREATE_ERROR_DUPLICATE = 2;
 
-    private ConfigParser $config;
     private LogService $logger;
     private TasksService $tasksService;
 
-    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger, TasksService $tasksService) {
+    public function __construct(EntityManager $em, LogService $logger, TasksService $tasksService) {
         parent::__construct($em);
-        $this->config = $config;
         $this->logger = $logger;
         $this->tasksService = $tasksService;
     }
@@ -113,29 +109,27 @@ class PlatformsService extends Service {
             if($firmware !== null) throw new BadRequestException(self::CREATE_ERROR_DUPLICATE);
             // Persistence
             $firmware = new Firmware();
-            $firmware->setName($taskResult['name'])
-                ->setVersion($taskResult['version'])
-                ->setPlatform($platform)
-                ->setDescription($taskResult['description'])
-                ->setChangelog('')
-                ->setPlatform($platform);
+            $firmware->name = $taskResult['name'];
+            $firmware->version = $taskResult['version'];
+            $firmware->description = $taskResult['description'];
+            $firmware->changelog = '';
+            $firmware->platform = $platform;
             $platform->addFirmwareRevision($firmware);
             // Set this firmware as default if there isn't a default yet
-            if(!$platform->hasDefaultFirmwareRevision()) {
-                $platform->setDefaultFirmwareRevision($firmware);
+            if($platform->defaultFirmwareRevision === null) {
+                $platform->defaultFirmwareRevision = $firmware;
             }
                 $this->em->persist($firmware);
                 $this->em->flush();
         } catch(OptimisticLockException|ORMException $e) {
             throw new SystemException($e);
         }
-        $platform->registerFirmware(
+        $platform->registerFirmwareFile(
             $firmware,
-            sprintf('%s/%s/%s', DATA_PATH, TasksService::UPLOAD_PATH, $task->params['path']),
-            $this->config);
+            sprintf('%s/%s/%s', DATA_PATH, TasksService::UPLOAD_PATH, $task->params['path']));
         // Remove upload verification task
-        $this->tasksService->delete($task->getId(), $user);
-        $this->logger->log(sprintf('Firmware revision %s for platform %s added', $firmware->getVersion(), $platform->getName()), LogResource::PLATFORMS, $platform->getId());
+        $this->tasksService->delete($user, $task->getId());
+        $this->logger->log(sprintf('Firmware revision %s for platform %s added', $firmware->version, $platform->name), LogResource::PLATFORMS, $platform->getId());
         return $firmware;
     }
 
@@ -153,12 +147,12 @@ class PlatformsService extends Service {
             if($platform === null) throw new NotFoundException();
             $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($defaultFirmwareRevision);
             if($firmware === null) throw new NotFoundException();
-            $platform->setDefaultFirmwareRevision($firmware);
+            $platform->defaultFirmwareRevision = $firmware;
             $this->em->flush();
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Default firmware revision for platform %s set to %s', $platform->getName(), $firmware->getVersion()), LogResource::PLATFORMS, $platform->getId());
+        $this->logger->log(sprintf('Default firmware revision for platform %s set to %s', $platform->name, $firmware->version), LogResource::PLATFORMS, $platform->getId());
         return $platform;
     }
 
@@ -174,9 +168,9 @@ class PlatformsService extends Service {
         try {
             $firmware = $this->em->getRepository('HoneySens\app\models\entities\Firmware')->find($id);
             if ($firmware === null) throw new NotFoundException();
-            $platform = $firmware->getPlatform();
+            $platform = $firmware->platform;
             // Don't remove the default firmware revision for this platform
-            if ($platform->getDefaultFirmwareRevision() === $firmware) throw new BadRequestException();
+            if ($platform->defaultFirmwareRevision === $firmware) throw new BadRequestException();
             // In case this revision is set as target firmware on some sensors, reset those back to their default revision
             $qb = $this->em->createQueryBuilder();
             $qb->select('s')->from('HoneySens\app\models\entities\Sensor', 's')
@@ -185,13 +179,14 @@ class PlatformsService extends Service {
             foreach ($qb->getQuery()->getResult() as $sensor) {
                 $sensor->firmware = null;
             }
-            $platform->unregisterFirmware($firmware, $this->config);
+            $platform->unregisterFirmwareFile($firmware);
+            $platform->removeFirmwareRevision($firmware);
             $this->em->remove($firmware);
             $this->em->flush();
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Firmware revision %s of platform %s deleted', $firmware->getVersion(), $platform->getName()), LogResource::PLATFORMS, $platform->getId());
+        $this->logger->log(sprintf('Firmware revision %s of platform %s deleted', $firmware->version, $platform->name), LogResource::PLATFORMS, $platform->getId());
     }
 
     /**
@@ -210,9 +205,9 @@ class PlatformsService extends Service {
             throw new SystemException($e);
         }
         if($firmware === null) throw new NotFoundException();
-        $platform = $firmware->getPlatform();
-        $firmwarePath = $platform->obtainFirmware($firmware, $this->config);
-        $downloadName = sprintf('%s-%s.tar.gz', preg_replace('/\s+/', '-', strtolower($firmware->getName())), preg_replace('/\s+/', '-', strtolower($firmware->getVersion())));
+        $platform = $firmware->platform;
+        $firmwarePath = $platform->obtainFirmware($firmware);
+        $downloadName = sprintf('%s-%s.tar.gz', preg_replace('/\s+/', '-', strtolower($firmware->name)), preg_replace('/\s+/', '-', strtolower($firmware->version)));
         if($firmwarePath === null) throw new BadRequestException();
         return [$firmwarePath, $downloadName];
     }
@@ -233,7 +228,7 @@ class PlatformsService extends Service {
             throw new SystemException($e);
         }
         if($platform === null) throw new NotFoundException();
-        $firmware = $platform->getDefaultFirmwareRevision();
+        $firmware = $platform->defaultFirmwareRevision;
         if($firmware === null) throw new NotFoundException();
         return $this->getFirmwareDownload($firmware->getId());
     }
