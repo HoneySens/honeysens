@@ -29,11 +29,11 @@ class LogService extends Service {
     public function log(string $message, LogResource $resourceType, ?int $resourceID = null, ?int $userID = null): void {
         if(!$this->isEnabled()) return;
         $logEntry = new LogEntry();
-        $logEntry->setTimestamp(new \DateTime())
-            ->setMessage($message)
-            ->setResourceType($resourceType)
-            ->setResourceID($resourceID)
-            ->setUserID($userID ?? $this->getSessionUserID());
+        $logEntry->timestamp = new \DateTime();
+        $logEntry->resourceID = $resourceID;
+        $logEntry->userID = $userID ?? $this->getSessionUserID();
+        $logEntry->resourceType = $resourceType;
+        $logEntry->message = $message;
         try {
             $this->em->persist($logEntry);
             $this->em->flush();
