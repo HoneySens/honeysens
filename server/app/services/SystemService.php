@@ -178,7 +178,7 @@ class SystemService extends Service {
         $this->addLastUpdatesTable();
         // Initial division
         $division = new Division();
-        $division->setName($divisionName);
+        $division->name = $divisionName;
         $this->em->persist($division);
         // Default admin user
         $admin = new User();
@@ -188,7 +188,7 @@ class SystemService extends Service {
         $admin->domain = AuthDomain::LOCAL;
         $admin->email = $adminEMail;
         $admin->role = UserRole::ADMIN;
-        $admin->addToDivision($division);
+        $division->addUser($admin);
         $this->em->persist($admin);
         // Add Platforms
         $connection = $this->em->getConnection();

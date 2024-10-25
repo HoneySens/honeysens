@@ -80,8 +80,8 @@ class EventFiltersService extends Service {
         $filter = new EventFilter();
         $filter->setName($name)
             ->setType($type)
-            ->setDescription($description)
-            ->setDivision($division);
+            ->setDescription($description);
+        $division->addEventFilter($filter);
         try {
             foreach ($conditions as $conditionData) {
                 $conditionField = EventFilterConditionField::from($conditionData['field']);
@@ -138,7 +138,7 @@ class EventFiltersService extends Service {
             throw new SystemException($e);
         }
         if($division === null) throw new BadRequestException();
-        $filter->setDivision($division);
+        $division->addEventFilter($filter);
         // Process condition association
         $forUpdate = array();
         $toAdd = array();
@@ -189,6 +189,7 @@ class EventFiltersService extends Service {
         $filter = $this->em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         if($filter === null) throw new BadRequestException();
         $this->assureUserAffiliation($filter->getDivision()->getId(), $user->getId());
+        $filter->division->removeEventFilter($filter);
         $fid = $filter->getId();
         try {
             $this->em->remove($filter);

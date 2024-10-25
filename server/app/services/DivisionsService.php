@@ -78,12 +78,12 @@ class DivisionsService extends Service {
         if($this->getDivisionByName($name) !== null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
         // Persistence
         $division = new Division();
-        $division->setName($name);
+        $division->name = $name;
         $userRepository = $this->em->getRepository('HoneySens\app\models\entities\User');
         foreach($users as $userId) {
             $user = $userRepository->find($userId);
             if($user === null) throw new BadRequestException();
-            $user->addToDivision($division);
+            $division->addUser($user);
         }
         try {
             foreach ($contacts as $contactData) {
@@ -106,7 +106,7 @@ class DivisionsService extends Service {
             throw new SystemException($e);
         }
         $this->logger->log(sprintf('Division %s (ID %d) created with %d users and %d contacts',
-            $division->getName(), $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
+            $division->name, $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
             LogResource::DIVISIONS, $division->getId());
         return $division;
     }
@@ -129,12 +129,12 @@ class DivisionsService extends Service {
         if($duplicate !== null && $duplicate->getId() !== $division->getId())
             throw new BadRequestException(Divisions::ERROR_DUPLICATE);
         // Persistence
-        $division->setName($name);
+        $division->name = $name;
         // Process user association
         $userRepository = $this->em->getRepository('HoneySens\app\models\entities\User');
         $tasks = Utils::updateCollection($division->getUsers(), $users, $userRepository);
-        foreach($tasks['add'] as $user) $user->addToDivision($division);
-        foreach($tasks['remove'] as $user) $user->removeFromDivision($division);
+        foreach($tasks['add'] as $user) $division->addUser($user);
+        foreach($tasks['remove'] as $user) $division->removeUser($user);
         // Process contact association
         $contactRepository = $this->em->getRepository('HoneySens\app\models\entities\IncidentContact');
         $forUpdate = array();
@@ -183,7 +183,7 @@ class DivisionsService extends Service {
             throw new SystemException($e);
         }
         $this->logger->log(sprintf('Division %s (ID %d) updated with %d users and %d contacts',
-            $division->getName(), $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
+            $division->name, $division->getId(), count($division->getUsers()), count($division->getIncidentContacts())),
             LogResource::DIVISIONS, $division->getId());
         return $division;
     }
@@ -200,9 +200,11 @@ class DivisionsService extends Service {
     public function delete(int $id, bool $archive, User $user): void {
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($id);
         if($division === null) throw new BadRequestException();
+        $did = $division->getId();
+        $dName = $division->name;
         // Delete sensors
         foreach($division->getSensors() as $sensor) {
-            $this->sensorsService->delete($sensor->getId(), $archive, $user->getId(), $this, $this->eventsService);
+            $this->sensorsService->delete($sensor->getId(), $archive, $user);
         }
         try {
             // Remove division associations from archived events
@@ -211,7 +213,7 @@ class DivisionsService extends Service {
                 ->set('e.division', ':null')
                 ->set('e.divisionName', ':dname')
                 ->where('e.division = :division')
-                ->setParameter('dname', $division->getName())
+                ->setParameter('dname', $division->name)
                 ->setParameter('division', $division)
                 ->setParameter('null', null)
                 ->getQuery()
@@ -223,7 +225,7 @@ class DivisionsService extends Service {
         } catch (ORMException|MappingException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Division %s (ID %d) and all associated users and sensors deleted. Events were %s.', $division->getName(), $division->getId(), $archive ? 'archived' : 'deleted'), LogResource::DIVISIONS, $division->getId());
+        $this->logger->log(sprintf('Division %s (ID %d) and all associated users and sensors deleted. Events were %s.', $dName, $did, $archive ? 'archived' : 'deleted'), LogResource::DIVISIONS, $did);
     }
 
     /**
@@ -273,16 +275,16 @@ class DivisionsService extends Service {
     private function createContact(ContactType $type, bool $sendWeeklySummary, bool $sendCriticalEvents, bool $sendAllEvents, bool $sendSensorTimeouts, ?string $email, ?int $userID): IncidentContact {
         $contact = new IncidentContact();
         if($type === ContactType::EMAIL) {
-            $contact->setEMail($email);
+            $contact->email = $email;
         } else {
             $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($userID);
             if($user === null) throw new BadRequestException();
-            $contact->setUser($user);
+            $contact->user = $user;
         }
-        $contact->setSendWeeklySummary($sendWeeklySummary)
-            ->setSendCriticalEvents($sendCriticalEvents)
-            ->setSendAllEvents($sendAllEvents)
-            ->setSendSensorTimeouts($sendSensorTimeouts);
+        $contact->sendWeeklySummary = $sendWeeklySummary;
+        $contact->sendCriticalEvents = $sendCriticalEvents;
+        $contact->sendAllEvents = $sendAllEvents;
+        $contact->sendSensorTimeouts = $sendSensorTimeouts;
         return $contact;
     }
 
@@ -301,18 +303,18 @@ class DivisionsService extends Service {
      */
     private function updateContact(IncidentContact $contact, ContactType $type, bool $sendWeeklySummary, bool $sendCriticalEvents, bool $sendAllEvents, bool $sendSensorTimeouts, ?string $email, ?int $userID): void {
         if($type === ContactType::EMAIL) {
-            $contact->setEMail($email);
-            $contact->setUser(null);
+            $contact->email = $email;
+            $contact->user = null;
         } else {
             $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($userID);
             if($user === null) throw new BadRequestException();
-            $contact->setUser($user);
-            $contact->setEMail(null);
+            $contact->user = $user;
+            $contact->email = null;
         }
-        $contact->setSendWeeklySummary($sendWeeklySummary)
-            ->setSendCriticalEvents($sendCriticalEvents)
-            ->setSendAllEvents($sendAllEvents)
-            ->setSendSensorTimeouts($sendSensorTimeouts);
+        $contact->sendWeeklySummary = $sendWeeklySummary;
+        $contact->sendCriticalEvents = $sendCriticalEvents;
+        $contact->sendAllEvents = $sendAllEvents;
+        $contact->sendSensorTimeouts = $sendSensorTimeouts;
     }
 
     /**

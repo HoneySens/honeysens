@@ -76,9 +76,15 @@ class User {
     #[Column()]
     public UserRole $role;
 
+    /**
+     * Divisions this user is associated with. In each division, this
+     * user has the same $role as defined on the User object.
+     * Note: Treat this collection as read-only. To add or remove users
+     * to/from divisions, use Division::addUser() Division::removeUser().
+     */
     #[ManyToMany(targetEntity: Division::class, inversedBy: "users")]
     #[JoinTable(name: "users_divisions")]
-    private Collection $divisions;
+    public Collection $divisions;
 
     /**
      * This reference is only made to ensure cascading events in case a user is removed.
@@ -134,22 +140,6 @@ class User {
      */
     public function getLegacyPassword(): ?string {
         return $this->legacyPassword;
-    }
-
-    /**
-     * Adds this user to an existing division.
-     */
-    public function addToDivision(Division $division): void {
-        $division->addUser($this);
-        $this->divisions[] = $division;
-    }
-
-    /**
-     * Removes this user from a division.
-     */
-    public function removeFromDivision(Division $division): void {
-        $division->removeUser($this);
-        $this->divisions->removeElement($division);
     }
 
     /**
