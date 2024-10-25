@@ -56,7 +56,7 @@ class LogEntry {
 
     public function getState() {
         return array(
-            'id' => $this->getId(),
+            'id' => $this->id ?? null,
             'timestamp' => $this->timestamp->format('U'),
             'user_id' => $this->userID,
             'resource_id' => $this->resourceID,

@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
@@ -10,6 +11,11 @@ use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\Table;
 
+/**
+ * Basic building block for multitenancy. All users, sensors, incident contacts,
+ * events and filters (and their downstream entities) are associated with exactly one division.
+ * Users can only interact with entities of their own divisions.
+ */
 #[Entity]
 #[Table(name: "divisions")]
 class Division {
@@ -17,22 +23,43 @@ class Division {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private int $id;
 
+    /**
+     * Short division name.
+     */
     #[Column(type: Types::STRING)]
-    protected $name;
+    public string $name;
 
-    #[OneToMany(targetEntity: Sensor::class, mappedBy: "division")]
-    protected $sensors;
+    /**
+     * Sensors associated with this division. Each sensor
+     * can only be associated with a single division.
+     */
+    #[OneToMany(mappedBy: "division", targetEntity: Sensor::class)]
+    private Collection $sensors;
 
-    #[OneToMany(targetEntity: IncidentContact::class, mappedBy: "division", cascade: ["remove"])]
-    protected $incidentContacts;
+    /**
+     * Incident contacts association with this division.
+     * Each contact can only be associated with a single division.
+     * They receive e-mail notifications upon various system events.
+     */
+    #[OneToMany(mappedBy: "division", targetEntity: IncidentContact::class, cascade: ["remove"])]
+    private Collection $incidentContacts;
 
+    /**
+     * Users associated with this division. Users can be associated
+     * with multiple divisions at the same time. Each user has the same
+     * role in all of its associated divisions.
+     */
     #[ManyToMany(targetEntity: User::class, mappedBy: "divisions")]
-    protected $users;
+    private Collection $users;
 
-    #[OneToMany(targetEntity: EventFilter::class, mappedBy: "division", cascade: ["remove"])]
-    protected $eventFilters;
+    /**
+     * Event filters associated with this division.
+     * Each filter can only be associated with a single division.
+     */
+    #[OneToMany(mappedBy: "division", targetEntity: EventFilter::class, cascade: ["remove"])]
+    private Collection $eventFilters;
 
     public function __construct() {
         $this->sensors = new ArrayCollection();
@@ -40,170 +67,91 @@ class Division {
         $this->users = new ArrayCollection();
     }
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Set name
-     *
-     * @param string $name
-     * @return Sensor
+     * Returns all sensors associated with this division.
      */
-    public function setName($name) {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * Get name
-     *
-     * @return string
-     */
-    public function getName() {
-        return $this->name;
-    }
-
-    /**
-     * Add a sensor to this division
-     *
-     * @param Sensor $sensor
-     * @return $this
-     */
-    public function addSensor(Sensor $sensor) {
-        $this->sensors[] = $sensor;
-        $sensor->division = $this;
-        return $this;
-    }
-
-    /**
-     * Remove a sensor from this division
-     *
-     * @param Sensor $sensor
-     * @return $this
-     */
-    public function removeSensor(Sensor $sensor) {
-        $this->sensors->removeElement($sensor);
-        return $this;
-    }
-
-    /**
-     * Get all sensors associated with this division
-     *
-     * @return \Doctrine\Common\Collections\ArrayCollection
-     */
-    public function getSensors() {
+    public function getSensors(): Collection {
         return $this->sensors;
     }
 
     /**
-     * Add a contact to this division
-     *
-     * @param IncidentContact $contact
-     * @return $this
+     * Add an incident contact to this division.
      */
-    public function addIncidentContact(IncidentContact $contact) {
+    public function addIncidentContact(IncidentContact $contact): void {
         $this->incidentContacts[] = $contact;
-        $contact->setDivision($this);
-        return $this;
+        $contact->division = $this;
     }
 
     /**
-     * Remove a contact from this division
-     *
-     * @param IncidentContact $contact
-     * @return $this
+     * Removes an incident contact from this division.
      */
-    public function removeIncidentContact(IncidentContact $contact) {
+    public function removeIncidentContact(IncidentContact $contact): void {
         $this->incidentContacts->removeElement($contact);
-        $contact->setDivision(null);
-        return $this;
     }
 
     /**
-     * Get all incident contacts associated with this division
-     *
-     * @return \Doctrine\Common\Collections\ArrayCollection
+     * Returns all incident contacts associated with this division.
      */
-    public function getIncidentContacts() {
+    public function getIncidentContacts(): Collection {
         return $this->incidentContacts;
     }
 
     /**
-     * Add an user association
-     *
-     * @param User $user
-     * @return $this
+     * Associates a user with this division.
      */
-    public function addUser(User $user) {
+    public function addUser(User $user): void {
         $this->users[] = $user;
-        return $this;
+        $user->divisions[] = $this;
     }
 
     /**
-     * Remove an user association
-     *
-     * @param User $user
-     * @return $this
+     * Dissociates a user from this division.
      */
-    public function removeUser(User $user) {
+    public function removeUser(User $user): void {
         $this->users->removeElement($user);
-        return $this;
+        $user->divisions->removeElement($this);
     }
 
     /**
-     * Get all users associated with this division
-     *
-     * @return \Doctrine\Common\Collections\ArrayCollection
+     * Returns all users associated with this division.
      */
-    public function getUsers() {
+    public function getUsers(): Collection {
         return $this->users;
     }
 
     /**
-     * Add an event filter
-     *
-     * @param EventFilter $filter
-     * @return $this
+     * Adds an event filter to this division.
      */
-    public function addEventFilter(EventFilter $filter) {
+    public function addEventFilter(EventFilter $filter): void {
         $this->eventFilters[] = $filter;
-        return $this;
     }
 
     /**
-     * Remove an event filter
-     *
-     * @param EventFilter $filter
-     * @return $this
+     * Removes an event filter from this division.
      */
-    public function removeEventFilter(EventFilter $filter) {
+    public function removeEventFilter(EventFilter $filter): void {
         $this->eventFilters->removeElement($filter);
-        return $this;
     }
 
     /**
-     * Get all event filters associated with this division
-     *
-     * @return ArrayCollection
+     * Returns all event filters associated with this division.
      */
-    public function getEventFilters() {
+    public function getEventFilters(): Collection {
         return $this->eventFilters;
     }
 
-    public function getState() {
+    public function getState(): array {
         $users = array();
         foreach($this->users as $user) {
             $users[] = $user->getId();
         }
         return array(
-            'id' => $this->getId(),
-            'name' => $this->getName(),
+            'id' => $this->id ?? null,
+            'name' => $this->name,
             'users' => $users
         );
     }

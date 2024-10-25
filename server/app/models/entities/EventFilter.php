@@ -22,7 +22,7 @@ class EventFilter {
     protected $id;
 
     #[ManyToOne(targetEntity: Division::class, inversedBy: "eventFilters")]
-    protected $division;
+    public Division $division;
 
     #[Column(type: Types::STRING)]
     protected $name;
@@ -65,17 +65,6 @@ class EventFilter {
      */
     public function getId() {
         return $this->id;
-    }
-
-    /**
-     * Set division
-     *
-     * @param Division $division
-     * @return $this
-     */
-    public function setDivision(Division $division = null) {
-        $this->division = $division;
-        return $this;
     }
 
     /**
