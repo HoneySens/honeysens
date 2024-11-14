@@ -196,13 +196,13 @@ class EventsService extends Service {
         $filters = $sensor->division->getEventFilters();
         foreach($events as $event) {
             foreach($filters as $filter) {
-                if($filter->isEnabled() && $filter->matches($event)) {
+                if($filter->enabled && $filter->matches($event)) {
                     try {
                         $this->em->remove($event);
                     } catch(ORMException|OptimisticLockException $e) {
                         throw new SystemException($e);
                     }
-                    $filter->addToCount(1);
+                    $filter->incrementCounter();
                     break;
                 }
             }

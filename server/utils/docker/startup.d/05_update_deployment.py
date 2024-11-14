@@ -137,7 +137,8 @@ if config_version == '2.7.0':
         'ALTER TABLE tasks MODIFY params LONGTEXT, MODIFY result LONGTEXT',
         'ALTER TABLE tasks CHANGE params params JSON DEFAULT NULL, CHANGE result result JSON DEFAULT NULL',
         'ALTER TABLE sensors DROP configArchiveStatus',
-        'ALTER TABLE firmware DROP source'
+        'ALTER TABLE firmware DROP source',
+        'ALTER TABLE event_filters DROP type'
     ]
     execute_sql(db, db_statements)
     db.commit()

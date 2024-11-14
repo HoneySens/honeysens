@@ -132,7 +132,6 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
             defaults: {
                 'division': null,
                 'name': null,
-                'type': 0,
                 'count': 0,
                 'conditions': [],
                 'enabled': true
@@ -145,10 +144,6 @@ define(['app/app', 'backbone.paginator'], function(HoneySens) {
                 return conditions;
             }
         });
-
-        Models.EventFilter.type = {
-            WHITELIST: 0
-        };
 
         Models.EventFilters = Backbone.PageableCollection.extend({
             model: Models.EventFilter,

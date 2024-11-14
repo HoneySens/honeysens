@@ -11,8 +11,9 @@ use HoneySens\app\models\constants\EventFilterConditionField;
 use HoneySens\app\models\constants\EventFilterConditionType;
 
 /**
- * A filter condition that belongs to a certain filter.
- * Conditions always belong to a single event attribute and store a regular expression that is used to check the condition.
+ * A single filter condition always belongs to an event filter.
+ * Conditions always reference a specific event attribute/field and
+ * an attribute-dependent expression that is used to evaluate the condition.
  */
 #[Entity]
 #[Table(name: "event_filter_conditions")]
@@ -21,125 +22,40 @@ class EventFilterCondition {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    protected int $id;
 
+    /**
+     * The higher-level filter this filter condition is associated with.
+     */
     #[ManyToOne(targetEntity: EventFilter::class, inversedBy: "conditions")]
-    protected $filter;
+    public EventFilter $filter;
 
     /**
-     * Specifies the event attribute that should be tested by this condition
+     * Specifies the event attribute that is tested by this condition.
      */
-    #[Column(type: Types::INTEGER)]
-    protected $field;
+    #[Column()]
+    public EventFilterConditionField $field;
 
     /**
-     * The condition type specifies the way the value should be interpreted
+     * The condition type specifies the way $value should be interpreted.
      */
-    #[Column(type: Types::INTEGER)]
-    protected $type;
+    #[Column()]
+    public EventFilterConditionType $type;
 
     /**
-     * The filter value of this condition, e.g. an regular expression or a string
+     * The filter value of this condition, e.g. a regular expression or a string.
      */
     #[Column(type: Types::STRING)]
-    protected $value;
+    public string $value;
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Set event filter this condition belongs to
-     *
-     * @param EventFilter|null $filter
-     * @return $this
+     * Tests an event against this filter condition and returns the comparison result.
      */
-    public function setFilter(EventFilter $filter = null) {
-        $this->filter = $filter;
-        return $this;
-    }
-
-    /**
-     * Get event filter this condition belongs to
-     *
-     * @return EventFilter|null
-     */
-    public function getFilter() {
-        return $this->filter;
-    }
-
-    /**
-     * Set the condition type
-     *
-     * @param $type
-     * @return $this
-     */
-    public function setType($type) {
-        $this->type = $type;
-        return $this;
-    }
-
-    /**
-     * Returns the condition type
-     *
-     * @return mixed
-     */
-    public function getType() {
-        return $this->type;
-    }
-
-    /**
-     * Set the event attribute this condition applies to
-     *
-     * @param string $name
-     * @return $this
-     */
-    public function setField($name) {
-        $this->field = $name;
-        return $this;
-    }
-
-    /**
-     * Return the event attribute this condition applies to
-     *
-     * @return string
-     */
-    public function getField() {
-        return $this->field;
-    }
-
-    /**
-     * Set the filter value
-     *
-     * @param string $value
-     * @return $this
-     */
-    public function setValue($value) {
-        $this->value = $value;
-        return $this;
-    }
-
-    /**
-     * Return the filter value
-     *
-     * @return string
-     */
-    public function getValue() {
-        return $this->value;
-    }
-
-    /**
-     * Applies this filter condition to the given event and returns the result
-     *
-     * @param Event $e
-     * @return bool
-     */
-    public function matches(Event $e) {
+    public function matches(Event $e): bool {
         switch($this->field) {
             case EventFilterConditionField::CLASSIFICATION:
                 return $e->getClassification() == $this->value;
@@ -148,11 +64,9 @@ class EventFilterCondition {
                 switch($this->type) {
                     case EventFilterConditionType::SOURCE_VALUE:
                         return $e->getSource() == $this->value;
-                        break;
                     case EventFilterConditionType::SOURCE_IPRANGE:
                         $value = explode("-", $this->value);
                         return $e->getSource() >= trim($value[0]) && $e->getSource() <= trim($value[1]);
-                        break;
                 }
                 break;
             case EventFilterConditionField::TARGET:
@@ -168,7 +82,6 @@ class EventFilterCondition {
                             }
                         }
                         return $port == $this->value;
-                        break;
                 }
                 break;
             case EventFilterConditionField::PROTOCOL:
@@ -187,14 +100,13 @@ class EventFilterCondition {
         return false;
     }
 
-    public function getState() {
-        $filter = $this->getFilter() == null ? null : $this->getFilter()->getId();
+    public function getState(): array {
         return array(
-            'id' => $this->getId(),
-            'filter' => $filter,
-            'field' => $this->getField(),
-            'type' => $this->getType(),
-            'value' => $this->getValue()
+            'id' => $this->id ?? null,
+            'filter' => $this->filter->getId(),
+            'field' => $this->field->value,
+            'type' => $this->type->value,
+            'value' => $this->value
         );
     }
 }

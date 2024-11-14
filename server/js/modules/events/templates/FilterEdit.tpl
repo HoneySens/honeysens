@@ -11,12 +11,6 @@
                         <div class="help-block with-errors"></div>
                     </div>
                     <div class="form-group">
-                        <label for="filtertyp" class="control-label">Typ</label>
-                        <select class="form-control" name="type" disabled>
-                            <option value="<%- _.templateHelpers.getModels().EventFilter.type.WHITELIST %>" <%- type === _.templateHelpers.getModels().EventFilter.type.WHITELIST ? 'selected' : void 0 %>>Whitelist</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label for="division" class="control-label">Gruppe</label>
                         <select class="form-control" name="division">
                             <% _(divisions).each(function(d) { %>
