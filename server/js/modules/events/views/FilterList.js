@@ -49,19 +49,6 @@ function(HoneySens, Models, Backgrid, FilterListTpl, FilterListStatusCellTpl, Fi
                     editable: false,
                     cell: 'string'
                 }, {
-                    label: 'Typ',
-                    editable: false,
-                    sortable: false,
-                    cell: Backgrid.Cell.extend({
-                        render: function() {
-                            switch(this.model.get('type')) {
-                                case Models.EventFilter.type.WHITELIST:
-                                    this.$el.html('Whitelist');
-                            }
-                            return this;
-                        }
-                    })
-                }, {
                     name: 'count',
                     label: 'Zähler',
                     editable: false,

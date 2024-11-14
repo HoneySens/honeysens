@@ -128,6 +128,7 @@ class Division {
      */
     public function addEventFilter(EventFilter $filter): void {
         $this->eventFilters[] = $filter;
+        $filter->division = $this;
     }
 
     /**

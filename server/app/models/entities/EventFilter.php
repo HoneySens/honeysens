@@ -1,6 +1,7 @@
 <?php
 namespace HoneySens\app\models\entities;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
@@ -10,208 +11,103 @@ use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\Table;
 
+/**
+ * Filters match hardcoded conditions such as source IP addresses or
+ * protocols against incoming event reports. Incoming events that match
+ * all conditions of a filter are silently discarded, but increase the
+ * filter event count (to monitor that the filter actually works).
+ * This facility is intended to be used in presence of recurring
+ * but irrelevant event reports that can't be suppressed by other means.
+ */
 #[Entity]
 #[Table(name: "event_filters")]
 class EventFilter {
 
-    const TYPE_WHITELIST = 0;
-
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private int $id;
 
+    /**
+     * The division this event filter is associated with.
+     */
     #[ManyToOne(targetEntity: Division::class, inversedBy: "eventFilters")]
     public Division $division;
 
-    #[Column(type: Types::STRING)]
-    protected $name;
-
     /**
-     * The type of this filter
+     * Display name of this event filter.
      */
-    #[Column(type: Types::INTEGER)]
-    protected $type;
+    #[Column(type: Types::STRING)]
+    public string $name;
 
     /**
-     * Free-form text field describing this filter.
+     * Free-form text field describing the purpose of this filter.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $description;
+    public ?string $description;
 
     /**
-     * Counts the collected packages that were collected by this filter
+     * Counts the collected events that were collected by
+     * this filter for monitoring purposes.
      */
     #[Column(type: Types::INTEGER)]
-    protected $count = 0;
+    public int $count = 0;
 
-    #[OneToMany(targetEntity: EventFilterCondition::class, mappedBy: "filter", cascade: ["remove"])]
-    protected $conditions;
+    /**
+     * A list of filter conditions. This filter applies only to
+     * events that match all conditions.
+     */
+    #[OneToMany(mappedBy: "filter", targetEntity: EventFilterCondition::class, cascade: ["remove"])]
+    private Collection $conditions;
 
     /**
      * Whether this filter is currently evaluated when processing incoming events.
      */
     #[Column(type: Types::BOOLEAN)]
-    protected $enabled = true;
+    public bool $enabled = true;
 
     public function __construct() {
         $this->conditions = new ArrayCollection();
     }
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Get division
-     *
-     * @return Division
+     * Increments the event counter for this filter by one.
      */
-    public function getDivision() {
-        return $this->division;
+    public function incrementCounter(): void {
+        $this->count += 1;
     }
 
     /**
-     * Set the name of this filter
-     *
-     * @param string $name
-     * @return $this
+     * Adds a condition to this event filter.
      */
-    public function setName($name) {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * Get the name of this filter
-     *
-     * @return string
-     */
-    public function getName() {
-        return $this->name;
-    }
-
-    /**
-     * Set the type of this event filter
-     *
-     * @param integer $type
-     * @return $this
-     */
-    public function setType($type) {
-        $this->type = $type;
-        return $this;
-    }
-
-    /**
-     * Return the type of this event filter
-     *
-     * @return integer
-     */
-    public function getType() {
-        return $this->type;
-    }
-
-    /**
-     * Set a description for this event filter.
-     *
-     * @param string $description
-     * @return $this
-     */
-    public function setDescription($description) {
-        $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * Returns the description of this event filter, if there is any.
-     *
-     * @return string
-     */
-    public function getDescription() {
-        return $this->description;
-    }
-
-    /**
-     * Adds an arbitrary number to the current counter value
-     *
-     * @param integer $amount
-     */
-    public function addToCount($amount) {
-        $this->count += $amount;
-    }
-
-    /**
-     * Returns the current packet coutner for this filter
-     *
-     * @return int
-     */
-    public function getCount() {
-        return $this->count;
-    }
-
-    /**
-     * Add a condition to this filter
-     *
-     * @param EventFilterCondition $condition
-     * @return $this
-     */
-    public function addCondition(EventFilterCondition $condition) {
+    public function addCondition(EventFilterCondition $condition): void {
         $this->conditions[] = $condition;
-        $condition->setFilter($this);
-        return $this;
+        $condition->filter = $this;
     }
 
     /**
-     * Remove a condition from this filter
-     *
-     * @param EventFilterCondition $condition
-     * @return $this
+     * Removes a condition from this event filter.
      */
-    public function removeCondition(EventFilterCondition $condition) {
+    public function removeCondition(EventFilterCondition $condition): void {
         $this->conditions->removeElement($condition);
-        $condition->setFilter(null);
-        return $this;
     }
 
     /**
-     * Returns all conditions associated with this filter
-     *
-     * @return ArrayCollection
+     * Returns all conditions associated with this event filter.
      */
-    public function getConditions() {
+    public function getConditions(): Collection {
         return $this->conditions;
     }
 
     /**
-     * Enable or disable this filter.
-     */
-    public function setEnabled($enabled) {
-        $this->enabled = $enabled;
-        return $this;
-    }
-
-    /**
-     * Returns the status (enabled/disabled) of this filter.
-     *
-     * @return boolean
-     */
-    public function isEnabled() {
-        return $this->enabled;
-    }
-
-    /**
-     * Runs all filter conditions against the given event.
+     * Evaluates all filter conditions against the given event.
      * Returns true if ALL conditions did match (logical AND) and there exists at least one condition.
-     *
-     * @param $event
-     * @return bool
      */
-    public function matches($event) {
+    public function matches(Event $event): bool {
         if(count($this->conditions) == 0) return false;
         foreach($this->conditions as $condition) {
             if(!$condition->matches($event)) return false;
@@ -219,21 +115,19 @@ class EventFilter {
         return true;
     }
 
-    public function getState() {
-        $division = $this->getDivision() == null ? null : $this->getDivision()->getId();
+    public function getState(): array {
         $conditions = array();
         foreach($this->conditions as $condition) {
             $conditions[] = $condition->getState();
         }
         return array(
             'id' => $this->getId(),
-            'division' => $division,
-            'name' => $this->getName(),
-            'type' => $this->getType(),
-            'description' => $this->getDescription(),
-            'count' => $this->getCount(),
+            'division' => $this->division->getId(),
+            'name' => $this->name,
+            'description' => $this->description,
+            'count' => $this->count,
             'conditions' => $conditions,
-            'enabled' => $this->isEnabled()
+            'enabled' => $this->enabled
         );
     }
 }

@@ -64,7 +64,6 @@ class EventFiltersService extends Service {
 
      * @param User $user The user which performs this operation
      * @param string $name Name of this filter
-     * @param int $type Type of this filter (currently only '0', whitelist, is supported)
      * @param int $divisionID The division this filter is created for
      * @param array $conditions Array specifying a list of filter conditions to add. Each item is another array specifying condition data.
      * @param string|null $description Free-form text that describes the filter's intention (can be null, depending on global settings)
@@ -72,15 +71,14 @@ class EventFiltersService extends Service {
      * @throws SystemException
      * @throws ForbiddenException
      */
-    public function create(User $user, string $name, int $type, int $divisionID, array $conditions, ?string $description): EventFilter {
+    public function create(User $user, string $name, int $divisionID, array $conditions, ?string $description): EventFilter {
         if($user->role !== UserRole::ADMIN)
             $this->assureUserAffiliation($divisionID, $user->getId());
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($divisionID);
         if($division === null) throw new BadRequestException();
         $filter = new EventFilter();
-        $filter->setName($name)
-            ->setType($type)
-            ->setDescription($description);
+        $filter->name = $name;
+        $filter->description = $description;
         $division->addEventFilter($filter);
         try {
             foreach ($conditions as $conditionData) {
@@ -95,7 +93,7 @@ class EventFiltersService extends Service {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Event filter %s (ID %d) created with %d condition(s)', $filter->getName(), $filter->getId(), sizeof($filter->getConditions())), LogResource::EVENTFILTERS, $filter->getId());
+        $this->logger->log(sprintf('Event filter %s (ID %d) created with %d condition(s)', $filter->name, $filter->getId(), sizeof($filter->getConditions())), LogResource::EVENTFILTERS, $filter->getId());
         return $filter;
     }
 
@@ -105,7 +103,6 @@ class EventFiltersService extends Service {
      * @param User $user Session user that calls this service
      * @param int $id Event  filter ID to update
      * @param string $name New name of this filter
-     * @param int $type New type of this filter (currently only '0', whitelist, is supported)
      * @param int $divisionID New division this filter should be associated with
      * @param array $conditions Array specifying a list of filter conditions. Each item is another array specifying condition data.
      * @param string|null $description Free-form text that describes the filter's intention (can be null, depending on global settings)
@@ -114,7 +111,7 @@ class EventFiltersService extends Service {
      * @throws ForbiddenException
      * @throws SystemException
      */
-    public function update(User $user, int $id, string $name, int $type, int $divisionID, array $conditions, ?string $description, bool $enabled): EventFilter {
+    public function update(User $user, int $id, string $name, int $divisionID, array $conditions, ?string $description, bool $enabled): EventFilter {
         try {
             $filter = $this->em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         } catch (ORMException $e) {
@@ -123,14 +120,13 @@ class EventFiltersService extends Service {
         if($filter === null) throw new BadRequestException();
         $userIsAdmin = $user->role === UserRole::ADMIN;
         if(!$userIsAdmin)
-            $this->assureUserAffiliation($filter->getDivision()->getId(), $user->getId());
-        if($filter->getDivision()->getId() !== $divisionID && !$userIsAdmin)
+            $this->assureUserAffiliation($filter->division->getId(), $user->getId());
+        if($filter->division->getId() !== $divisionID && !$userIsAdmin)
             // If division association changes, assert the user is associated with the new division
             $this->assureUserAffiliation($divisionID, $user->getId());
-        $filter->setName($name);
-        $filter->setType($type);
-        $filter->setDescription($description);
-        $filter->setEnabled($enabled);
+        $filter->name = $name;
+        $filter->description = $description;
+        $filter->enabled = $enabled;
         try {
             $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($divisionID);
             $conditionRepository = $this->em->getRepository('HoneySens\app\models\entities\EventFilterCondition');
@@ -150,10 +146,9 @@ class EventFiltersService extends Service {
         foreach($tasks['update'] as $condition) {
             foreach($conditions as $conditionData) {
                 if(array_key_exists('id', $conditionData) && $conditionData['id'] === $condition->getId())
-                    $condition
-                        ->setField($conditionData['field'])
-                        ->setType($conditionData['type'])
-                        ->setValue($conditionData['value']);
+                    $condition->field = EventFilterConditionField::from($conditionData['field']);
+                    $condition->type = EventFilterConditionType::from($conditionData['type']);
+                    $condition->value = $conditionData['value'];
             }
         }
         try {
@@ -172,7 +167,7 @@ class EventFiltersService extends Service {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Event filter %s (ID %d) updated with %d conditions', $filter->getName(), $filter->getId(), sizeof($filter->getConditions())), LogResource::EVENTFILTERS, $filter->getId());
+        $this->logger->log(sprintf('Event filter %s (ID %d) updated with %d conditions', $filter->name, $filter->getId(), sizeof($filter->getConditions())), LogResource::EVENTFILTERS, $filter->getId());
         return $filter;
     }
 
@@ -188,7 +183,7 @@ class EventFiltersService extends Service {
     public function delete(int $id, User $user): void {
         $filter = $this->em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         if($filter === null) throw new BadRequestException();
-        $this->assureUserAffiliation($filter->getDivision()->getId(), $user->getId());
+        $this->assureUserAffiliation($filter->division->getId(), $user->getId());
         $filter->division->removeEventFilter($filter);
         $fid = $filter->getId();
         try {
@@ -197,7 +192,7 @@ class EventFiltersService extends Service {
         } catch(ORMException $e) {
             throw new SystemException($e);
         }
-        $this->logger->log(sprintf('Event filter %s (ID %d) deleted', $filter->getName(), $fid), LogResource::EVENTFILTERS, $fid);
+        $this->logger->log(sprintf('Event filter %s (ID %d) deleted', $filter->name, $fid), LogResource::EVENTFILTERS, $fid);
     }
 
     /**
@@ -209,9 +204,9 @@ class EventFiltersService extends Service {
      */
     private function createCondition(EventFilterConditionField $field, EventFilterConditionType $type, mixed $value): EventFilterCondition {
         $condition = new EventFilterCondition();
-        $condition->setField($field->value)
-            ->setType($type->value)
-            ->setValue($value);
+        $condition->field = $field;
+        $condition->type = $type;
+        $condition->value = $value;
         return $condition;
     }
 }

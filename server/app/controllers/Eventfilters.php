@@ -33,7 +33,6 @@ class Eventfilters extends RESTResource {
         $filter = $service->create(
             $this->getSessionUser(),
             $data['name'],
-            $data['type'],
             $data['division'],
             $data['conditions'],
             $data['description']
@@ -50,7 +49,6 @@ class Eventfilters extends RESTResource {
             $this->getSessionUser(),
             $id,
             $data['name'],
-            $data['type'],
             $data['division'],
             $data['conditions'],
             $data['description'],
@@ -70,7 +68,6 @@ class Eventfilters extends RESTResource {
     private function assertValidFilter(array $data, ConfigParser $config, bool $isUpdate = false): void {
         V::arrayType()
             ->key('name', V::alnum('._-')->length(1, 255))
-            ->key('type', V::intVal()->equals(0))
             ->key('division', V::intVal())
             ->key('conditions', V::arrayType()->each(V::arrayType()))
             ->check($data);
