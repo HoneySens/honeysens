@@ -64,7 +64,7 @@ class Firmware {
 
     public function getState(): array {
         return array(
-            'id' => $this->getId(),
+            'id' => $this->id ?? null,
             'name' => $this->name,
             'version' => $this->version,
             'description' => $this->description,

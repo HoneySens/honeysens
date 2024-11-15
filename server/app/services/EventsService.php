@@ -10,7 +10,10 @@ use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\QueryBuilder;
 use HoneySens\app\adapters\EMailAdapter;
 use HoneySens\app\adapters\TaskAdapter;
+use HoneySens\app\models\constants\EventClassification;
 use HoneySens\app\models\constants\EventDetailType;
+use HoneySens\app\models\constants\EventPacketProtocol;
+use HoneySens\app\models\constants\EventService;
 use HoneySens\app\models\constants\EventStatus;
 use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\constants\TaskType;
@@ -20,7 +23,6 @@ use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventDetail;
 use HoneySens\app\models\entities\EventPacket;
 use HoneySens\app\models\entities\Sensor;
-use HoneySens\app\models\entities\Task;
 use HoneySens\app\models\entities\User;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\NotFoundException;
@@ -132,9 +134,9 @@ class EventsService extends Service {
                     $detailTimestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
                 }
                 $eventDetail = new EventDetail();
-                $eventDetail->setTimestamp($detailTimestamp)
-                    ->setType($detailData['type'])
-                    ->setData($detailData['data']);
+                $eventDetail->timestamp = $detailTimestamp;
+                $eventDetail->type = EventDetailType::from($detailData['type']);
+                $eventDetail->setData($detailData['data']);
                 $event->addDetails($eventDetail);
                 try {
                     $this->em->persist($eventDetail);
@@ -149,10 +151,10 @@ class EventsService extends Service {
                 $eventPacket = new EventPacket();
                 $timestamp = new \DateTime('@' . $packetData['timestamp']);
                 $timestamp->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-                $eventPacket->setTimestamp($timestamp)
-                    ->setProtocol($packetData['protocol'])
-                    ->setPort($packetData['port'])
-                    ->setPayload($packetData['payload']);
+                $eventPacket->timestamp = $timestamp;
+                $eventPacket->protocol = EventPacketProtocol::from($packetData['protocol']);
+                $eventPacket->port = $packetData['port'];
+                $eventPacket->setPayload($packetData['payload']);
                 foreach($packetData['headers'] as $field => $value) {
                     $eventPacket->addHeader($field, $value);
                 }
@@ -165,24 +167,24 @@ class EventsService extends Service {
                 $packets[] = $eventPacket;
             }
             // Save remaining event data
-            $event->setTimestamp($timestamp)
-                ->setService($eventData['service'])
-                ->setSource($eventData['source'])
-                ->setSummary($eventData['summary'])
-                ->setSensor($sensor);
+            $event->timestamp = $timestamp;
+            $event->sensor = $sensor;
+            $event->service = EventService::from($eventData['service']);
+            $event->source = $eventData['source'];
+            $event->summary = $eventData['summary'];
             // Do classification
             // TODO be more sophisticated here than simply matching service and classification
-            switch($event->getService()) {
-                case Event::SERVICE_RECON:
-                    if($event->getSummary() == 'Scan') $event->setClassification(Event::CLASSIFICATION_PORTSCAN);
-                    else $event->setClassification(Event::CLASSIFICATION_CONN_ATTEMPT);
+            switch($event->service) {
+                case EventService::RECON:
+                    if($event->summary === 'Scan') $event->classification = EventClassification::PORTSCAN;
+                    else $event->classification = EventClassification::CONN_ATTEMPT;
                     break;
-                case Event::SERVICE_DIONAEA:
-                case Event::SERVICE_KIPPO:
-                    $event->setClassification(Event::CLASSIFICATION_LOW_HP);
+                case EventService::DIONAEA:
+                case EventService::KIPPO:
+                    $event->classification = EventClassification::LOW_HP;
                     break;
                 default:
-                    $event->setClassification(Event::CLASSIFICATION_UNKNOWN);
+                    $event->classification = EventClassification::UNKNOWN;
             }
             try {
                 $this->em->persist($event);

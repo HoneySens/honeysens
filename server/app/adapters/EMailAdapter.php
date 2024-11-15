@@ -1,7 +1,9 @@
 <?php
 namespace HoneySens\app\adapters;
 
+use HoneySens\app\models\constants\EventClassification;
 use HoneySens\app\models\constants\EventDetailType;
+use HoneySens\app\models\constants\EventPacketProtocol;
 use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\constants\TemplateType;
 use HoneySens\app\models\entities\Event;
@@ -18,21 +20,21 @@ class EMailAdapter {
         $this->templateAdapter = $templateAdapter;
     }
 
-    private function getEventClassificationText($event) {
-        if($event->getClassification() == $event::CLASSIFICATION_UNKNOWN) return 'Unbekannt';
-        elseif($event->getClassification() == $event::CLASSIFICATION_ICMP) return 'ICMP-Paket';
-        elseif($event->getClassification() == $event::CLASSIFICATION_CONN_ATTEMPT) return 'Verbindungsversuch';
-        elseif($event->getClassification() == $event::CLASSIFICATION_LOW_HP) return 'Honeypot-Verbindung';
-        elseif($event->getClassification() == $event::CLASSIFICATION_PORTSCAN) return 'Portscan';
+    private function getEventClassificationText(Event $event) {
+        if($event->classification === EventClassification::UNKNOWN) return 'Unbekannt';
+        elseif($event->classification === EventClassification::ICMP) return 'ICMP-Paket';
+        elseif($event->classification === EventClassification::CONN_ATTEMPT) return 'Verbindungsversuch';
+        elseif($event->classification === EventClassification::LOW_HP) return 'Honeypot-Verbindung';
+        elseif($event->classification === EventClassification::PORTSCAN) return 'Portscan';
     }
 
     private function getPacketProtocolAndPort($packet) {
         $protocol = 'UNK';
-        switch($packet->getProtocol()) {
-            case EventPacket::PROTOCOL_TCP: $protocol = 'TCP'; break;
-            case EventPacket::PROTOCOL_UDP: $protocol = 'UDP'; break;
+        switch($packet->protocol) {
+            case EventPacketProtocol::TCP: $protocol = 'TCP'; break;
+            case EventPacketProtocol::UDP: $protocol = 'UDP'; break;
         }
-        return $protocol . '/' . $packet->getPort();
+        return $protocol . '/' . $packet->port;
     }
 
     private function getPacketFlags($packet) {
@@ -58,12 +60,12 @@ class EMailAdapter {
     }
 
     private function createEventSummary(Event $event) {
-        $result = 'Datum: ' . $event->getTimestamp()->format('d.m.Y') . "\n";
-        $result .= 'Zeit: ' . $event->getTimestamp()->format('H:i:s') . " (UTC)\n";
-        $result .= 'Sensor: ' . $event->getSensor()->name . "\n";
+        $result = 'Datum: ' . $event->timestamp->format('d.m.Y') . "\n";
+        $result .= 'Zeit: ' . $event->timestamp->format('H:i:s') . " (UTC)\n";
+        $result .= 'Sensor: ' . $event->sensor->name . "\n";
         $result .= 'Klassifikation: ' . $this->getEventClassificationText($event) . "\n";
-        $result .= 'Quelle: ' . $event->getSource() . "\n";
-        $result .= 'Details: ' . $event->getSummary();
+        $result .= 'Quelle: ' . $event->source . "\n";
+        $result .= 'Details: ' . $event->summary;
         return $result;
     }
 
@@ -75,8 +77,8 @@ class EMailAdapter {
         $interactionDetails = array();
         if(count($details) > 0) {
             foreach($details as $detail) {
-                if($detail->getType() == EventDetailType::GENERIC) $genericDetails[] = $detail;
-                elseif($detail->getType() == EventDetailType::INTERACTION) $interactionDetails[] = $detail;
+                if($detail->type === EventDetailType::GENERIC) $genericDetails[] = $detail;
+                elseif($detail->type === EventDetailType::INTERACTION) $interactionDetails[] = $detail;
             }
         }
         $detailBlockWritten = false;
@@ -97,7 +99,7 @@ class EMailAdapter {
             $result .= "Sensorinteraktion (Zeiten in UTC):\n----------------------------------\n";
             foreach($interactionDetails as $interactionDetail) {
                 $itemCount++;
-                $result .= $interactionDetail->getTimestamp()->format('H:i:s') . ': ' . $interactionDetail->getData();
+                $result .= $interactionDetail->timestamp->format('H:i:s') . ': ' . $interactionDetail->getData();
                 if($itemCount != count($interactionDetails)) $result .= "\n";
             }
             $detailBlockWritten = true;
@@ -109,7 +111,7 @@ class EMailAdapter {
             $result .= "Paketübersicht (Zeit in UTC | Protocol/Port | Flags | Payload):\n---------------------------------------------------------------\n";
             foreach($packets as $packet) {
                 $itemCount++;
-                $result .= $packet->getTimestamp()->format('H:i:s') . ': ' . $this->getPacketProtocolAndPort($packet) .
+                $result .= $packet->timestamp->format('H:i:s') . ': ' . $this->getPacketProtocolAndPort($packet) .
                     ' | ' . $this->getPacketFlags($packet) . ' | ' . $this->getPayload($packet);
                 if($itemCount != count($packets)) $result .= "\n";
             }
@@ -117,15 +119,15 @@ class EMailAdapter {
         return $result;
     }
 
-    public function sendIncident($config, $em, $event) {
+    public function sendIncident($config, $em, Event $event) {
         if($config['smtp']['enabled'] != 'true') return;
         // Fetch associated contacts
-        $division = $event->getSensor()->division;
+        $division = $event->sensor->division;
         $qb = $em->createQueryBuilder();
         $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c')
             ->where('c.division = :division')
             ->setParameter('division', $division);
-        if($event->getClassification() >= $event::CLASSIFICATION_LOW_HP) {
+        if($event->classification >= EventClassification::LOW_HP) {
             $qb->andWhere('c.sendAllEvents = :all OR c.sendCriticalEvents = :critical')
                 ->setParameter('all', true)
                 ->setParameter('critical', true);
@@ -136,7 +138,7 @@ class EMailAdapter {
         $contacts = $qb->getQuery()->getResult();
         if(count($contacts) == 0) return array('success' => true);
         // Prepare content
-        $subject = $event->getClassification() >= $event::CLASSIFICATION_LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
+        $subject = $event->classification >= EventClassification::LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
         $body = $this->templateAdapter->processTemplate(TemplateType::EMAIL_EVENT_NOTIFICATION, array(
             'ID' => $event->getId(),
             'SUMMARY' => $this->createEventSummary($event),

@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\Table;
 use HoneySens\app\models\constants\EventFilterConditionField;
 use HoneySens\app\models\constants\EventFilterConditionType;
+use HoneySens\app\models\constants\EventPacketProtocol;
 
 /**
  * A single filter condition always belongs to an event filter.
@@ -22,7 +23,7 @@ class EventFilterCondition {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected int $id;
+    private int $id;
 
     /**
      * The higher-level filter this filter condition is associated with.
@@ -58,15 +59,15 @@ class EventFilterCondition {
     public function matches(Event $e): bool {
         switch($this->field) {
             case EventFilterConditionField::CLASSIFICATION:
-                return $e->getClassification() == $this->value;
+                return $e->classification->value == $this->value;
                 break;
             case EventFilterConditionField::SOURCE:
                 switch($this->type) {
                     case EventFilterConditionType::SOURCE_VALUE:
-                        return $e->getSource() == $this->value;
+                        return $e->source == $this->value;
                     case EventFilterConditionType::SOURCE_IPRANGE:
                         $value = explode("-", $this->value);
-                        return $e->getSource() >= trim($value[0]) && $e->getSource() <= trim($value[1]);
+                        return $e->source >= trim($value[0]) && $e->source <= trim($value[1]);
                 }
                 break;
             case EventFilterConditionField::TARGET:
@@ -74,8 +75,8 @@ class EventFilterCondition {
                     case EventFilterConditionType::TARGET_PORT:
                         $port = null;
                         foreach($e->getPackets() as $packet) {
-                            if($port == null || $port == $packet->getPort()) {
-                                $port = $packet->getPort();
+                            if($port == null || $port == $packet->port) {
+                                $port = $packet->port;
                             } else {
                                 // more than two different target ports in packet list -> no match for a single port possible
                                 return false;
@@ -85,15 +86,18 @@ class EventFilterCondition {
                 }
                 break;
             case EventFilterConditionField::PROTOCOL:
-                $packetCounts = array(EventPacket::PROTOCOL_UNKNOWN => 0, EventPacket::PROTOCOL_TCP => 0, EventPacket::PROTOCOL_UDP => 0);
+                $packetCounts = array(
+                    EventPacketProtocol::UNKNOWN->value => 0,
+                    EventPacketProtocol::TCP->value => 0,
+                    EventPacketProtocol::UDP->value => 0);
                 $packets = $e->getPackets();
                 foreach($packets as $packet) {
-                    $packetCounts[$packet->getProtocol()] += 1;
+                    $packetCounts[$packet->protocol] += 1;
                 }
                 // only check if protocol is unique in the package list
-                if(($packetCounts[EventPacket::PROTOCOL_TCP] > 0 && $packetCounts[EventPacket::PROTOCOL_UDP] == 0 && $packetCounts[EventPacket::PROTOCOL_UNKNOWN] == 0)
-                    || ($packetCounts[EventPacket::PROTOCOL_UDP] > 0 && $packetCounts[EventPacket::PROTOCOL_TCP] == 0 && $packetCounts[EventPacket::PROTOCOL_UNKNOWN] == 0)) {
-                    return $packets[0]->getProtocol() == $this->value;
+                if(($packetCounts[EventPacketProtocol::TCP->value] > 0 && $packetCounts[EventPacketProtocol::UDP->value] == 0 && $packetCounts[EventPacketProtocol::UNKNOWN->value] == 0)
+                    || ($packetCounts[EventPacketProtocol::UDP->value] > 0 && $packetCounts[EventPacketProtocol::TCP->value] == 0 && $packetCounts[EventPacketProtocol::UNKNOWN->value] == 0)) {
+                    return $packets[0]->protocol == $this->value;
                 }
                 break;
         }
