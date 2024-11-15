@@ -121,7 +121,7 @@ class EventFilter {
             $conditions[] = $condition->getState();
         }
         return array(
-            'id' => $this->getId(),
+            'id' => $this->id ?? null,
             'division' => $this->division->getId(),
             'name' => $this->name,
             'description' => $this->description,

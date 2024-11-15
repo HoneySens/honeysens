@@ -8,87 +8,90 @@ use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\Index;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\Table;
+use HoneySens\app\models\constants\EventClassification;
+use HoneySens\app\models\constants\EventService;
+use HoneySens\app\models\constants\EventStatus;
 
 /**
  * Archived read-only event.
- * Attributes match the one of Event, except for relationships: Those are replaced with static values.
+ * Attributes match those of Event, except for relationships: They are replaced with static values.
  */
 #[Entity]
 #[Table(name: "archived_events")]
-#[Index(name: "timestamp_idx", columns: ["timestamp"])]
+#[Index(columns: ["timestamp"], name: "timestamp_idx")]
 class ArchivedEvent {
 
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
+    private int $id;
 
     /**
      * Original ID of this event.
      */
     #[Column(type: Types::INTEGER)]
-    protected $oid;
+    public int $oid;
 
     #[Column(type: Types::DATETIME_MUTABLE)]
-    protected $timestamp;
+    public \DateTime $timestamp;
 
     /**
-     * Plaintext name of the sensor this event was collected by
+     * Plaintext name of the sensor this event was collected by.
      */
     #[Column(type: Types::STRING)]
-    protected $sensor;
+    public string $sensor;
 
     /**
      * Division this event belongs to. In case the division doesn't exist anymore, this will be null.
-     * In such cases, the $divisionName attribute will refer to the old plaintext division name.
+     * In such cases, the $divisionName attribute will refer to the previous plaintext division name.
      */
     #[ManyToOne(targetEntity: Division::class)]
-    protected $division;
+    public ?Division $division;
 
     /**
      * If this event isn't associated with a division anymore, this field holds the last known division name.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $divisionName;
+    public ?string $divisionName;
 
-    #[Column(type: Types::INTEGER)]
-    protected $service;
+    #[Column()]
+    public EventService $service;
 
-    #[Column(type: Types::INTEGER)]
-    protected $classification;
-
-    #[Column(type: Types::STRING)]
-    protected $source;
+    #[Column()]
+    public EventClassification $classification;
 
     #[Column(type: Types::STRING)]
-    protected $summary;
+    public string $source;
 
-    #[Column(type: Types::INTEGER)]
-    protected $status = 0;
+    #[Column(type: Types::STRING)]
+    public string $summary;
+
+    #[Column()]
+    public EventStatus $status = EventStatus::UNEDITED;
 
     #[Column(type: Types::STRING, nullable: true)]
-    protected $comment;
+    public ?string $comment;
 
     #[Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    protected $lastModificationTime;
+    public ?\DateTime $lastModificationTime;
 
     /**
      * Timestamp of when this event was archived.
      */
     #[Column(type: Types::DATETIME_MUTABLE)]
-    protected $archiveTime;
+    public \DateTime $archiveTime;
 
     /**
-     * Holds event details as JSON structure.
+     * Holds event details as a base64-encoded JSON array.
      */
     #[Column(type: Types::TEXT)]
-    protected $details;
+    private string $details;
 
     /**
-     * Holds event packets as JSON structure.
+     * Holds event packets as base64-encoded JSON array.
      */
     #[Column(type: Types::TEXT)]
-    protected $packets;
+    private string $packets;
 
     /**
      * Creates a new archived event instance from the provided event's state.
@@ -97,17 +100,17 @@ class ArchivedEvent {
      */
     public function __construct(Event $e) {
         $this->oid = $e->getId();
-        $this->timestamp = $e->getTimestamp();
-        $this->sensor = $e->getSensor()->name;
-        $this->division = $e->getSensor()->division;
+        $this->timestamp = $e->timestamp;
+        $this->sensor = $e->sensor->name;
+        $this->division = $e->sensor->division;
         $this->divisionName = null;
-        $this->service = $e->getService();
-        $this->classification = $e->getClassification();
-        $this->source = $e->getSource();
-        $this->summary = $e->getSummary();
-        $this->status = $e->getStatus();
-        $this->comment = $e->getComment();
-        $this->lastModificationTime = $e->getLastModificationTime();
+        $this->service = $e->service;
+        $this->classification = $e->classification;
+        $this->source = $e->source;
+        $this->summary = $e->summary;
+        $this->status = $e->status;
+        $this->comment = $e->comment;
+        $this->lastModificationTime = $e->lastModificationTime;
         $this->archiveTime = new \DateTime();
         $details = array();
         $packets = array();
@@ -120,26 +123,24 @@ class ArchivedEvent {
     /**
      * Decodes and returns this event's details as array.
      */
-    public function getDetails() {
+    public function getDetails(): array {
         return json_decode($this->details);
     }
 
     /**
      * Decodes and returns this event's packets as array.
      */
-    public function getPackets() {
+    public function getPackets(): array {
         return json_decode($this->packets);
     }
 
-    public function getState() {
-        $division = $this->division == null ? null : $this->division->getId();
-        $lastmod = $this->lastModificationTime ? $this->lastModificationTime->format('U') : null;
+    public function getState(): array {
         return array(
-            'id' => $this->id,
+            'id' => $this->id ?? null,
             'oid' => $this->oid,
             'timestamp' => $this->timestamp->format('U'),
             'sensor' => $this->sensor,
-            'division' => $division,
+            'division' => $this->division?->getId(),
             'divisionName' => $this->divisionName,
             'service' => $this->service,
             'classification' => $this->classification,
@@ -147,7 +148,7 @@ class ArchivedEvent {
             'summary' => $this->summary,
             'status' => $this->status,
             'comment' => $this->comment,
-            'lastModificationTime' => $lastmod,
+            'lastModificationTime' => $this->lastModificationTime?->format('U'),
             'archiveTime' => $this->archiveTime->format('U'),
             'numberOfPackets' => sizeof($this->getPackets()),
             'numberOfDetails' => sizeof($this->getDetails()),

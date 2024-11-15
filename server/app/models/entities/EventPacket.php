@@ -7,212 +7,106 @@ use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\Table;
+use HoneySens\app\models\constants\EventPacketProtocol;
 use HoneySens\app\models\Utils;
 
 /**
- * An IP packet that belongs to a certain event.
+ * A timestamped network IP packet that
+ * was received and reported by a sensor service.
  */
 #[Entity]
 #[Table(name: "event_packets")]
 class EventPacket {
 
-    const PROTOCOL_UNKNOWN = 0;
-    const PROTOCOL_TCP = 1;
-    const PROTOCOL_UDP = 2;
-
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
-
-    #[ManyToOne(targetEntity: Event::class, inversedBy: "packets")]
-    protected $event;
+    private int $id;
 
     /**
-     * When this event took place/packet was received
+     * The event this network packet is associated with.
+     */
+    #[ManyToOne(targetEntity: Event::class, inversedBy: "packets")]
+    public Event $event;
+
+    /**
+     * When this event took place/packet was received.
      */
     #[Column(type: Types::DATETIME_MUTABLE)]
-    protected $timestamp;
+    public \DateTime $timestamp;
 
     /**
-     * The layer-4 protocol of this packet, currently TCP and UDP are supported.
+     * The layer-4 protocol of this packet, currently only TCP and UDP are supported.
+     * As fallback, this can be set to UNKNOWN in case a different protocol is reported.
      */
-    #[Column(type: Types::INTEGER)]
-    protected $protocol;
+    #[Column()]
+    public EventPacketProtocol $protocol;
 
     /**
-     * IP port number of this packet
+     * TCP/UDP port number of this packet.
      */
     #[Column(type: Types::INTEGER)]
-    protected $port;
+    public int $port;
 
     /**
      * Relevant header fields of this packet, stored as a serialized JSON string.
+     * Which headers are recorded depends on the sensor service that generated this
+     * event. For example, the recon service submits TCP flags.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $headers;
+    private ?string $headers = null;
 
     /**
      * The packet binary payload, encoded in base64.
      */
     #[Column(type: Types::STRING, nullable: true)]
-    protected $payload;
+    private ?string $payload;
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Set event
-     *
-     * @param Event $event
-     * @return EventPacket
+     * Adds a header field and value for this particular packet.
      */
-    public function setEvent(Event $event = null) {
-        $this->event = $event;
-        return $this;
-    }
-
-    /**
-     * Get event
-     *
-     * @return Event
-     */
-    public function getEvent() {
-        return $this->event;
-    }
-
-    /**
-     * Set timestamp
-     *
-     * @param \DateTime $timestamp
-     * @return EventPacket
-     */
-    public function setTimestamp(\DateTime $timestamp = null) {
-        $this->timestamp = $timestamp;
-        return $this;
-    }
-
-    /**
-     * Get timestamp
-     *
-     * @return \DateTime
-     */
-    public function getTimestamp() {
-        return $this->timestamp;
-    }
-
-    /**
-     * Set protocol
-     *
-     * @param integer $protocol
-     * @return EventPacket
-     */
-    public function setProtocol($protocol) {
-        $this->protocol = $protocol;
-        return $this;
-    }
-
-    /**
-     * Get protocol
-     *
-     * @return integer
-     */
-    public function getProtocol() {
-        return $this->protocol;
-    }
-
-    /**
-     * Set port number for this packet
-     *
-     * @param integer $port
-     * @return EventPacket
-     */
-    public function setPort($port) {
-        $this->port = $port;
-        return $this;
-    }
-
-    /**
-     * Get port number
-     *
-     * @return integer
-     */
-    public function getPort() {
-        return $this->port;
-    }
-
-    /**
-     * Add header field information
-     *
-     * @param string $field
-     * @param string $value
-     * @return EventPacket
-     */
-    public function addHeader($field, $value) {
+    public function addHeader(string $field, $value): void {
         $headers = json_decode($this->headers, true);
         $headers[$field] = $value;
         $this->headers = json_encode($headers);
-        return $this;
     }
 
     /**
-     * Remove header field information
-     *
-     * @param string $field
-     * @return EventPacket
+     * Returns all header fields and values as a JSON string.
      */
-    public function removeHeader($field) {
-        $headers = json_decode($this->headers, true);
-        unset($headers[$field]);
-        $this->headers = json_encode($headers);
-        return $this;
-    }
-
-    /**
-     * Returns all header fields and values as an JSON string
-     *
-     * @return array
-     */
-    public function getHeaders() {
+    public function getHeaders(): string {
         return $this->headers;
     }
 
     /**
-     * Sets payload data, which has to be already encoded as an base64 string
-     *
-     * @param string $payload
-     * @return EventPacket
+     * Sets payload data, which has to be an already encoded base64 string.
+     * Truncates the (decoded) data to a limit of 255 characters.
      */
-    public function setPayload($payload) {
-        $this->payload = Utils::shortenBase64(255, $payload);
-        return $this;
+    public function setPayload(?string $payload): void {
+        if($payload === null) $this->payload = null;
+        else $this->payload = Utils::shortenBase64(255, $payload);
     }
 
     /**
-     * Returns payload data as an base64 encoded string
-     *
-     * @return string
+     * Returns payload data as an base64 encoded string.
      */
-    public function getPayload() {
+    public function getPayload(): string {
         return $this->payload;
     }
 
-    public function getState() {
-        $event = $this->getEvent() == null ? null : $this->getEvent()->getId();
+    public function getState(): array {
         return array(
-            'id' => $this->getId(),
-            'event' => $event,
-            'timestamp' => $this->getTimestamp()->format('U'),
-            'protocol' => $this->getProtocol(),
-            'port' => $this->getPort(),
+            'id' => $this->id ?? null,
+            'event' => $this->event->getId(),
+            'timestamp' => $this->timestamp->format('U'),
+            'protocol' => $this->protocol->value,
+            'port' => $this->port,
             'headers' => $this->getHeaders(),
-            'payload' => $this->getPayload()
+            'payload' => $this->payload
         );
     }
 }

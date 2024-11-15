@@ -7,7 +7,14 @@ use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\Table;
+use HoneySens\app\models\constants\EventDetailType;
 
+/**
+ * Detailed event data, optionally timestamped. Either used to
+ * describe some interaction that happened as part of an event
+ * at a certain point in time or any other generic logging data,
+ * which is typically not timestamped (such as connection metadata).
+ */
 #[Entity]
 #[Table(name: "event_details")]
 class EventDetail {
@@ -15,122 +22,61 @@ class EventDetail {
     #[Id]
     #[Column(type: Types::INTEGER)]
     #[GeneratedValue]
-    protected $id;
-
-    #[ManyToOne(targetEntity: Event::class, inversedBy: "details")]
-    protected $event;
+    private int $id;
 
     /**
-     * An optional timestamp to track the attacker-sensor interaction
+     * The event this detailed data is associated with.
+     */
+    #[ManyToOne(targetEntity: Event::class, inversedBy: "details")]
+    public Event $event;
+
+    /**
+     * An optional timestamp to track attacker-sensor interaction.
      */
     #[Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    protected $timestamp;
+    public ?\DateTime $timestamp;
 
     /**
-     * The type of data of these event details
+     * The type of this event detail data. Can be either INTERACTION
+     * to represent a piece of data at a certain point in time or
+     * GENERIC to represent any event-specific metadata.
      */
-    #[Column(type: Types::INTEGER)]
-    protected $type;
+    #[Column()]
+    public EventDetailType $type;
 
+    /**
+     * The actual raw data as string. Is set by the sensor service
+     * that created the associated event.
+     */
     #[Column(type: Types::STRING)]
-    protected $data;
+    private string $data;
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId() {
+    public function getId(): int {
         return $this->id;
     }
 
     /**
-     * Set event
-     *
-     * @param \HoneySens\app\models\entities\Event $event
-     * @return EventDetails
+     * Sets raw event data, which will be cut off
+     * after 255 characters to prevent DoS via extremely
+     * long payloads sent by attackers to sensor services.
      */
-    public function setEvent(\HoneySens\app\models\entities\Event $event = null) {
-        $this->event = $event;
-        return $this;
-    }
-
-    /**
-     * Get event
-     *
-     * @return \HoneySens\app\models\entities\Event
-     */
-    public function getEvent() {
-        return $this->event;
-    }
-
-    /**
-     * Set timestamp
-     *
-     * @param \DateTime $timestamp
-     * @return EventDetails
-     */
-    public function setTimestamp(\DateTime $timestamp = null) {
-        $this->timestamp = $timestamp;
-        return $this;
-    }
-
-    /**
-     * Get timestamp
-     *
-     * @return \DateTime
-     */
-    public function getTimestamp() {
-        return $this->timestamp;
-    }
-
-    /**
-     * Set type
-     *
-     * @param integer $type
-     * @return EventDetails
-     */
-    public function setType($type) {
-        $this->type = $type;
-        return $this;
-    }
-
-    /**
-     * Get type
-     *
-     * @return integer
-     */
-    public function getType() {
-        return $this->type;
-    }
-
-    /**
-     * Set data
-     *
-     * @param string $data
-     * @return EventDetails
-     */
-    public function setData($data) {
+    public function setData(string $data): void {
         $this->data = substr($data, 0, 255);
-        return $this;
     }
 
     /**
-     * Get data
-     *
-     * @return string
+     * Returns the raw event data stored for this event.
      */
-    public function getData() {
+    public function getData(): string {
         return $this->data;
     }
 
-    public function getState() {
-        $timestamp = $this->getTimestamp() === null ? null : $this->getTimestamp()->format('U');
+    public function getState(): array {
         return array(
-            'id' => $this->getId(),
-            'timestamp' => $timestamp,
-            'type' => $this->getType(),
-            'data' => $this->getData()
+            'id' => $this->id ?? null,
+            'timestamp' => $this->timestamp?->format('U'),
+            'type' => $this->type->value,
+            'data' => $this->data
         );
     }
 }
