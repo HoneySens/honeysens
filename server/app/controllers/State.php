@@ -23,35 +23,31 @@ use Respect\Validation\Validator as V;
 
 class State extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('', [State::class, 'get']);
+    static function registerRoutes($api): void {
+        $api->get('', [State::class, 'getState']);
     }
 
     /**
      * Returns an array containing full current application state information (e.g. all entities)
      * that is accessible for the given user.
      */
-    public function get(Request $request,
-                        Response $response,
-                        EntityManager $em,
-                        DivisionsService $divisionsService,
-                        EventFiltersService $eventFiltersService,
-                        EventsService $eventsService,
-                        PlatformsService $platformsService,
-                        SensorsService $sensorsService,
-                        SensorServicesService $sensorServicesService,
-                        SettingsService $settingsService,
-                        SystemService $systemService,
-                        TasksService $tasksService,
-                        UsersService $usersService) {
+    public function getState(Request               $request,
+                             Response              $response,
+                             EntityManager         $em,
+                             DivisionsService      $divisionsService,
+                             EventFiltersService   $eventFiltersService,
+                             EventsService         $eventsService,
+                             PlatformsService      $platformsService,
+                             SensorsService        $sensorsService,
+                             SensorServicesService $sensorServicesService,
+                             SettingsService       $settingsService,
+                             SystemService         $systemService,
+                             TasksService $tasksService,
+                             UsersService $usersService): Response {
         $this->assureAllowed('get');
-        // Set $userID to null for admin users to avoid user-specific filtering
-        $userID = $this->getSessionUserID();
         $queryParams = $request->getQueryParams();
         $ts = $queryParams['ts'] ?? null;
         $lastEventId = $queryParams['last_id'] ?? null;
-        $stateParams = $queryParams;
-        $stateParams['userID'] = $userID;
         V::optional(V::intVal())->check($ts);
         V::optional(V::oneOf(V::intVal(), V::equals('null')))->check($lastEventId);
         $now = new \DateTime();
@@ -67,8 +63,7 @@ class State extends RESTResource {
                 $sensorServicesService,
                 $tasksService,
                 $this->getSessionUser(),
-                $ts,
-                $stateParams);
+                $ts);
         } catch(ForbiddenException) {
             // In case no user is logged in
             $state = array();
@@ -84,7 +79,7 @@ class State extends RESTResource {
                 // Return new events since the provided last event ID
                 $filterConditions = Events::validateEventFilterConditions($this->getSessionUser(), $queryParams);
                 $filterConditions->lastID = intval($lastEventId);
-                $events = $eventsService->get($this->getSessionUser(), $filterConditions)['items'];
+                $events = $eventsService->getEvents($this->getSessionUser(), $filterConditions)['items'];
             }
             $state['new_events'] = $events;
         }
@@ -94,7 +89,7 @@ class State extends RESTResource {
             $lastEventFilter->user = $this->getSessionUser();
             $lastEventFilter->sortBy = 'id';
             $lastEventFilter->sortOrder = 'desc';
-            $lastEvents = $eventsService->get($this->getSessionUser(), $lastEventFilter, perPage: 1)['items'];
+            $lastEvents = $eventsService->getEvents($this->getSessionUser(), $lastEventFilter, perPage: 1)['items'];
             $state['lastEventID'] = count($lastEvents) > 0 ? $lastEvents[0]['id'] : null;
         } catch(\Exception $e) {
             $state['lastEventID'] = null;
@@ -105,11 +100,7 @@ class State extends RESTResource {
     }
 
     /**
-     * Used to calculate an array of entities that have been changed since the given timestamp.
-     *
-     * @param $ts int UNIX timestamp
-     * @param $attributes array An optional array of attributes that is passed on to all affected controller methods
-     * @return array
+     * Calculates an array of entities that have been changed since the given timestamp.
      */
     private function getEntities(EntityManager $em,
                                  PlatformsService $platformsService,
@@ -121,8 +112,7 @@ class State extends RESTResource {
                                  SensorServicesService $sensorServicesService,
                                  TasksService $tasksService,
                                  User $sessionUser,
-                                 ?int $ts = null,
-                                 array $attributes = array()) {
+                                 ?int $ts = null): array {
         $result = array();
         if($ts === null) {
             $lastUpdates = [
@@ -151,25 +141,25 @@ class State extends RESTResource {
                 case 'platforms':
                     try {
                         $this->assureAllowed('get', 'platforms');
-                        $result[$table['name']] = $platformsService->get();
+                        $result[$table['name']] = $platformsService->getPlatforms();
                     } catch (\Exception $e) {}
                     break;
                 case 'sensors':
                     try {
                         $this->assureAllowed('get', 'sensors');
-                        $result[$table['name']] = $sensorsService->get($sessionUser);
+                        $result[$table['name']] = $sensorsService->getSensors($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'users':
                     try {
                         $this->assureAllowed('get', 'users');
-                        $result[$table['name']] = $usersService->get($sessionUser);
+                        $result[$table['name']] = $usersService->getUsers($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'divisions':
                     try {
                         $this->assureAllowed('get', 'divisions');
-                        $result[$table['name']] = $divisionsService->get($sessionUser);
+                        $result[$table['name']] = $divisionsService->getDivisions($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'contacts':
@@ -181,25 +171,25 @@ class State extends RESTResource {
                 case 'settings':
                     try {
                         $this->assureAllowed('get', 'settings');
-                        $result[$table['name']] = $settingsService->get($sessionUser->role === UserRole::ADMIN);
+                        $result[$table['name']] = $settingsService->getSettings($sessionUser->role === UserRole::ADMIN);
                     } catch(\Exception $e) {}
                     break;
                 case 'event_filters':
                     try {
                         $this->assureAllowed('get', 'eventfilters');
-                        $result[$table['name']] = $eventFiltersService->get($sessionUser);
+                        $result[$table['name']] = $eventFiltersService->getEventFilters($sessionUser);
                     } catch(\Exception $e) {}
                     break;
                 case 'services':
                     try {
                         $this->assureAllowed('get', 'services');
-                        $result[$table['name']] = $sensorServicesService->get();
+                        $result[$table['name']] = $sensorServicesService->getServices();
                     } catch(\Exception $e) {}
                     break;
                 case 'tasks':
                     try {
                         $this->assureAllowed('get', 'tasks');
-                        $result[$table['name']] = $tasksService->get($sessionUser);
+                        $result[$table['name']] = $tasksService->getTasks($sessionUser);
                     } catch(\Exception $e) {}
                     break;
             }

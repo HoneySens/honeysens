@@ -38,7 +38,7 @@ class PlatformsService extends Service {
      * @param int|null $id OD of a specific platform to fetch
      * @throws NotFoundException
      */
-    public function get(?int $id = null): array {
+    public function getPlatforms(?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('p')->from('HoneySens\app\models\entities\Platform', 'p');
         try {
@@ -128,7 +128,7 @@ class PlatformsService extends Service {
             $firmware,
             sprintf('%s/%s/%s', DATA_PATH, TasksService::UPLOAD_PATH, $task->params['path']));
         // Remove upload verification task
-        $this->tasksService->delete($user, $task->getId());
+        $this->tasksService->deleteTask($user, $task->getId());
         $this->logger->log(sprintf('Firmware revision %s for platform %s added', $firmware->version, $platform->name), LogResource::PLATFORMS, $platform->getId());
         return $firmware;
     }

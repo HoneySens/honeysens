@@ -34,7 +34,7 @@ class EventFiltersService extends Service {
      * @param int|null $id ID of a specific filter to fetch
      * @throws NotFoundException
      */
-    public function get(User $user, ?int $id = null): array {
+    public function getEventFilters(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('f')->from('HoneySens\app\models\entities\EventFilter', 'f');
         if($user->role !== UserRole::ADMIN) {
@@ -71,7 +71,7 @@ class EventFiltersService extends Service {
      * @throws SystemException
      * @throws ForbiddenException
      */
-    public function create(User $user, string $name, int $divisionID, array $conditions, ?string $description): EventFilter {
+    public function createEventFilter(User $user, string $name, int $divisionID, array $conditions, ?string $description): EventFilter {
         if($user->role !== UserRole::ADMIN)
             $this->assureUserAffiliation($divisionID, $user->getId());
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($divisionID);
@@ -111,7 +111,7 @@ class EventFiltersService extends Service {
      * @throws ForbiddenException
      * @throws SystemException
      */
-    public function update(User $user, int $id, string $name, int $divisionID, array $conditions, ?string $description, bool $enabled): EventFilter {
+    public function updateEventFilter(User $user, int $id, string $name, int $divisionID, array $conditions, ?string $description, bool $enabled): EventFilter {
         try {
             $filter = $this->em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         } catch (ORMException $e) {
@@ -180,7 +180,7 @@ class EventFiltersService extends Service {
      * @throws ForbiddenException
      * @throws SystemException
      */
-    public function delete(int $id, User $user): void {
+    public function deleteEventFilter(int $id, User $user): void {
         $filter = $this->em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         if($filter === null) throw new BadRequestException();
         $this->assureUserAffiliation($filter->division->getId(), $user->getId());

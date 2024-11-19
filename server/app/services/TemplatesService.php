@@ -23,7 +23,7 @@ class TemplatesService extends Service {
     /**
      * Returns all templates and corresponding overlays.
      */
-    public function get(): array {
+    public function getTemplates(): array {
         $templates = array();
         foreach($this->templateAdapter->getTemplates() as $template) {
             $templates[] = $template->getState();
@@ -39,7 +39,7 @@ class TemplatesService extends Service {
      * @throws NotFoundException
      * @throws SystemException
      */
-    public function update(TemplateType $type, ?string $content): Template {
+    public function updateTemplate(TemplateType $type, ?string $content): Template {
         $template = $this->templateAdapter->getTemplate($type);
         if($content === null) {
             $this->templateAdapter->setOverlay($type, null);

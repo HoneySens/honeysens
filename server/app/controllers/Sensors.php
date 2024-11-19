@@ -16,42 +16,42 @@ use Respect\Validation\Validator as V;
 
 class Sensors extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('[/{id:\d+}]', [Sensors::class, 'get']);
-        $api->post('', [Sensors::class, 'create']);
+    static function registerRoutes($api): void {
+        $api->get('[/{id:\d+}]', [Sensors::class, 'getSensors']);
+        $api->post('', [Sensors::class, 'createSensor']);
+        $api->put('/{id:\d+}', [Sensors::class, 'updateSensor']);
+        $api->delete('/{id:\d+}', [Sensors::class, 'deleteSensor']);
         $api->get('/status/by-sensor/{id:\d+}', [Sensors::class, 'getStatus']);
         $api->get('/config/{id:\d+}', [Sensors::class, 'requestConfigDownload']);
         $api->get('/firmware', [Sensors::class, 'getFirmware']);
         $api->post('/status', [Sensors::class, 'recordSensorStatus']);
-        $api->put('/{id:\d+}', [Sensors::class, 'put']);
-        $api->delete('/{id:\d+}', [Sensors::class, 'delete']);
     }
 
-    public function get(Response $response, SensorsService $service, ?int $id = null): Response {
+    public function getSensors(Response $response, SensorsService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $result = $service->get($this->getSessionUser(), $id);
+        $result = $service->getSensors($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function create(Request $request, Response $response, SensorsService $service): Response {
+    public function createSensor(Request $request, Response $response, SensorsService $service): Response {
         $this->assureAllowed('create');
         $sensorData = $this->validateSensorParams($request->getParsedBody());
-        $sensor = $service->create($this->getSessionUser(), $sensorData);
+        $sensor = $service->createSensor($this->getSessionUser(), $sensorData);
         $result = $service->getSensorState($sensor);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function put(Request $request, Response $response, SensorsService $service, int $id): Response {
+    public function updateSensor(Request $request, Response $response, SensorsService $service, int $id): Response {
         $this->assureAllowed('update');
-        $sensor = $service->update($id, $this->getSessionUser(), $this->validateSensorParams($request->getParsedBody(), true));
+        $sensor = $service->updateSensor($id, $this->getSessionUser(), $this->validateSensorParams($request->getParsedBody(), true));
         $result = $service->getSensorState($sensor);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function delete(Request $request, Response $response, SensorsService $service, int $id): Response {
+    public function deleteSensor(Request $request, Response $response, SensorsService $service, int $id): Response {
         $this->assureAllowed('delete');
         $criteria = $request->getParsedBody();
         try {
@@ -62,7 +62,7 @@ class Sensors extends RESTResource {
             $this->assureAllowed('archive', 'events');
             $archive = true;
         }
-        $service->delete($id, $archive, $this->getSessionUser());
+        $service->deleteSensor($id, $archive, $this->getSessionUser());
         $response->getBody()->write(json_encode([]));
         return $response;
     }

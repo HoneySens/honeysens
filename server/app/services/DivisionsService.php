@@ -6,7 +6,6 @@ use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\Mapping\MappingException;
-use HoneySens\app\controllers\Divisions;
 use HoneySens\app\models\constants\ContactType;
 use HoneySens\app\models\constants\LogResource;
 use HoneySens\app\models\constants\UserRole;
@@ -20,6 +19,8 @@ use HoneySens\app\models\exceptions\SystemException;
 use HoneySens\app\models\Utils;
 
 class DivisionsService extends Service {
+
+    const int ERROR_DUPLICATE = 1;
 
     private EventsService $eventsService;
     private LogService $logger;
@@ -39,7 +40,7 @@ class DivisionsService extends Service {
      * @param int|null $id ID of a specific division to fetch
      * @throws NotFoundException
      */
-    public function get(User $user, ?int $id = null): array {
+    public function getDivisions(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('d')->from('HoneySens\app\models\entities\Division', 'd');
         if($user->role !== UserRole::ADMIN) {
@@ -73,9 +74,9 @@ class DivisionsService extends Service {
      * @throws BadRequestException
      * @throws SystemException
      */
-    public function create(string $name, array $users, array $contacts): Division {
+    public function createDivision(string $name, array $users, array $contacts): Division {
         // Name duplication check
-        if($this->getDivisionByName($name) !== null) throw new BadRequestException(Divisions::ERROR_DUPLICATE);
+        if($this->getDivisionByName($name) !== null) throw new BadRequestException($this::ERROR_DUPLICATE);
         // Persistence
         $division = new Division();
         $division->name = $name;
@@ -121,13 +122,13 @@ class DivisionsService extends Service {
      * @throws BadRequestException
      * @throws SystemException
      */
-    public function update(int $id, string $name, array $users, array $contacts): Division {
+    public function updateDivision(int $id, string $name, array $users, array $contacts): Division {
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($id);
         if($division === null) throw new BadRequestException();
         // Name duplication check
         $duplicate = $this->getDivisionByName($name);
         if($duplicate !== null && $duplicate->getId() !== $division->getId())
-            throw new BadRequestException(Divisions::ERROR_DUPLICATE);
+            throw new BadRequestException($this::ERROR_DUPLICATE);
         // Persistence
         $division->name = $name;
         // Process user association
@@ -197,14 +198,14 @@ class DivisionsService extends Service {
      * @throws BadRequestException
      * @throws ForbiddenException
      */
-    public function delete(int $id, bool $archive, User $user): void {
+    public function deleteDivision(int $id, bool $archive, User $user): void {
         $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($id);
         if($division === null) throw new BadRequestException();
         $did = $division->getId();
         $dName = $division->name;
         // Delete sensors
         foreach($division->getSensors() as $sensor) {
-            $this->sensorsService->delete($sensor->getId(), $archive, $user);
+            $this->sensorsService->deleteSensor($sensor->getId(), $archive, $user);
         }
         try {
             // Remove division associations from archived events

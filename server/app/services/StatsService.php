@@ -15,7 +15,7 @@ class StatsService extends Service {
      * @param int|null $year Year for which to retrieve stats, uses current year if null
      * @param int|null $month If not null, breaks down the results for a single month
      */
-    public function get(User $user, ?int $divisionID = null, ?int $year = null, ?int $month = null): array {
+    public function getStats(User $user, ?int $divisionID = null, ?int $year = null, ?int $month = null): array {
         // Default to current year
         $year = $year ?? date('Y');
 

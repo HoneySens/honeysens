@@ -41,7 +41,7 @@ class TasksService extends Service {
      * @param int|null $id ID of a specific task to fetch
      * @throws NotFoundException
      */
-    public function get(User $user, ?int $id = null): array {
+    public function getTasks(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('t')->from('HoneySens\app\models\entities\Task', 't');
         if($user->role !== UserRole::ADMIN) {
@@ -91,7 +91,7 @@ class TasksService extends Service {
         $result = $task->result;
         $tasksService = $this;
         $deleteFunc = function() use ($tasksService, $id, $sessionUser) {
-            $tasksService->delete($sessionUser, $id);
+            $tasksService->deleteTask($sessionUser, $id);
         };
         if($task->status !== TaskStatus::DONE || !array_key_exists('path', $result))
             throw new BadRequestException();
@@ -128,7 +128,7 @@ class TasksService extends Service {
      * @param User $sessionUser User as which to initiate the upload. Will be owner of the resulting verification task.
      * @throws SystemException
      */
-    public function upload(User $sessionUser): array {
+    public function uploadFile(User $sessionUser): array {
         $uploadDir = realpath(sprintf('%s/%s', DATA_PATH, self::UPLOAD_PATH));
         $fileBlob = 'fileBlob';
         if(!isset($_FILES[$fileBlob]) || !isset($_POST['token']))
@@ -186,7 +186,7 @@ class TasksService extends Service {
      * @throws ForbiddenException
      * @throws SystemException
      */
-    public function delete(User $sessionUser, int $id): void {
+    public function deleteTask(User $sessionUser, int $id): void {
         try {
             $task = $this->em->getRepository('HoneySens\app\models\entities\Task')->find($id);
         } catch(ORMException $e) {

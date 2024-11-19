@@ -8,12 +8,12 @@ use Slim\Interfaces\RouteCollectorProxyInterface;
 class Certs extends RESTResource {
 
     static function registerRoutes(RouteCollectorProxyInterface $api): void {
-        $api->get('/{id:\d+}', [Certs::class, 'get']);
+        $api->get('/{id:\d+}', [Certs::class, 'getCert']);
     }
 
-    public function get(Response $response, CertsService $service, int $id): Response {
+    public function getCert(Response $response, CertsService $service, int $id): Response {
         $this->assureAllowed('get');
-        $result = $service->get($this->getSessionUser(), $id);
+        $result = $service->getCerts($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }

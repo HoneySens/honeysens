@@ -35,7 +35,7 @@ class SettingsService extends Service {
      * @param bool $includeAdminSettings Also include sensitive data only relevant for admins
      * @todo This silently returns nothing if the config is invalid
      */
-    public function get(bool $includeAdminSettings = false): array {
+    public function getSettings(bool $includeAdminSettings = false): array {
         $caCert = file_get_contents(APPLICATION_PATH . '/../data/CA/ca.crt');
         $settings = array(
             'id' => 0,
@@ -89,7 +89,7 @@ class SettingsService extends Service {
      * @param SettingsParams $params Updated system settings
      * @throws SystemException
      */
-    public function update(SettingsParams $params): array {
+    public function updateSettings(SettingsParams $params): array {
         $this->config->set('server', 'host', $params->serverHost);
         $this->config->set('server', 'portHTTPS', $params->serverPortHTTPS);
         $this->config->set('smtp', 'enabled', $params->smtpEnabled ? 'true' : 'false');

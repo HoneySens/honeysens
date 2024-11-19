@@ -14,23 +14,23 @@ use Respect\Validation\Validator as V;
 
 class Settings extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('', [Settings::class, 'get']);
-        $api->put('', [Settings::class, 'put']);
+    static function registerRoutes($api): void {
+        $api->get('', [Settings::class, 'getSettings']);
+        $api->put('', [Settings::class, 'updateSettings']);
         $api->post('/testmail', [Settings::class, 'sendtestMail']);
         $api->post('/testevent', [Settings::class, 'sendTestEvent']);
     }
 
-    public function get(Response $response, SettingsService $service): Response {
+    public function getSettings(Response $response, SettingsService $service): Response {
         $this->assureAllowed('get');
-        $settings = $service->get($this->getSessionUser()->role === UserRole::ADMIN);
+        $settings = $service->getSettings($this->getSessionUser()->role === UserRole::ADMIN);
         $response->getBody()->write(json_encode($settings));
         return $response;
     }
 
-    public function put(Request $request, Response $response, SettingsService $service): Response {
+    public function updateSettings(Request $request, Response $response, SettingsService $service): Response {
         $this->assureAllowed('update');
-        $settings = $service->update($this->validateSettingsParams($request->getParsedBody()));
+        $settings = $service->updateSettings($this->validateSettingsParams($request->getParsedBody()));
         $response->getBody()->write(json_encode($settings));
         return $response;
     }

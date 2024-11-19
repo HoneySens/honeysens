@@ -39,7 +39,7 @@ class SessionsService extends Service {
      * @throws ForbiddenException
      * @throws SystemException
      */
-    public function create(string $username, string $password): array {
+    public function createSession(string $username, string $password): array {
         // Disable login if the installer hasn't run yet
         if($this->systemService->installRequired()) throw new ForbiddenException();
         try {
@@ -123,7 +123,7 @@ class SessionsService extends Service {
      * @param User $user Just used to log the identity of the user that's in process of being logged out.
      * @throws SystemException
      */
-    public function delete(User $user): User {
+    public function deleteSession(User $user): User {
         $guestUser = new User();
         $guestUser->role = UserRole::GUEST;
         $this->logger->log(sprintf('Logout by user %s (ID %d)', $user->name, $user->getId()), LogResource::SESSIONS, null, $user->getId());

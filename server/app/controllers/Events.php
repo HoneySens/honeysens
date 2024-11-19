@@ -15,14 +15,14 @@ use Slim\Interfaces\RouteCollectorProxyInterface;
 
 class Events extends RESTResource {
 
-    static function registerRoutes(RouteCollectorProxyInterface $api) {
-        $api->get('[/{id:\d+}]', [Events::class, 'get']);
-        $api->post('', [Events::class, 'post']);
-        $api->put('[/{id:\d+}]', [Events::class, 'put']);
-        $api->delete('', [Events::class, 'delete']);
+    static function registerRoutes(RouteCollectorProxyInterface $api): void {
+        $api->get('[/{id:\d+}]', [Events::class, 'getEvents']);
+        $api->post('', [Events::class, 'createEvent']);
+        $api->put('[/{id:\d+}]', [Events::class, 'updateEvent']);
+        $api->delete('', [Events::class, 'deleteEvent']);
     }
 
-    public function get(Request $request, Response $response, EventsService $service, ?int $id = null): Response {
+    public function getEvents(Request $request, Response $response, EventsService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
         $queryParams = $request->getQueryParams();
         if($id !== null) $queryParams['id'] = $id;
@@ -38,23 +38,23 @@ class Events extends RESTResource {
             $format = ResponseFormat::tryFrom($queryParams['format']);
             if($format !== null) $optionalParams['format'] = $format;
         }
-        $result = $service->get($this->getSessionUser(), $filterConditions, ...$optionalParams);
+        $result = $service->getEvents($this->getSessionUser(), $filterConditions, ...$optionalParams);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function post(Request $request, Response $response, EventsService $service): Response {
+    public function createEvent(Request $request, Response $response, EventsService $service): Response {
         $requestBody = $request->getBody()->getContents();
         $sensor = $this->validateSensorRequest('create', $requestBody);
         // Parse sensor request as JSON even if no correct Content-Type header is set
         $requestBody = json_decode($requestBody, true);
         $eventsData = $this->validateEvents($requestBody);
-        $service->create($sensor, $eventsData);
+        $service->createEvent($sensor, $eventsData);
         $this->setMACHeaders($sensor, 'create');
         return $response;
     }
 
-    public function put(Request $request, Response $response, EventsService $service, ?int $id = null): Response {
+    public function updateEvent(Request $request, Response $response, EventsService $service, ?int $id = null): Response {
         $this->assureAllowed('update');
         $data = $request->getParsedBody();
         if($id !== null) $data['id'] = $id;
@@ -68,12 +68,12 @@ class Events extends RESTResource {
             $updateParams['newComment'] = $data['new_comment'];
         }
         $filterConditions = $this::validateEventFilterConditions($this->getSessionUser(), $data);
-        $service->update($filterConditions, ...$updateParams);
+        $service->updateEvent($filterConditions, ...$updateParams);
         $response->getBody()->write(json_encode([]));
         return $response;
     }
 
-    public function delete(Request $request, Response $response, EventsService $service): Response {
+    public function deleteEvent(Request $request, Response $response, EventsService $service): Response {
         // In case the current user can't delete events, force archiving
         $data = $request->getParsedBody();
         try {
@@ -84,7 +84,7 @@ class Events extends RESTResource {
             $archive = true;
         }
         $filterConditions = $this::validateEventFilterConditions($this->getSessionUser(), $data);
-        $service->delete($filterConditions, $archive);
+        $service->deleteEvent($filterConditions, $archive);
         $response->getBody()->write(json_encode([]));
         return $response;
     }

@@ -8,19 +8,19 @@ use Respect\Validation\Validator as V;
 
 class Services extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('[/{id:\d+}]', [Services::class, 'get']);
-        $api->post('', [Services::class, 'post']);
-        $api->put('/{id:\d+}', [Services::class, 'put']);
-        $api->delete('/{id:\d+}', [Services::class, 'delete']);
+    static function registerRoutes($api): void {
+        $api->get('[/{id:\d+}]', [Services::class, 'getServices']);
+        $api->post('', [Services::class, 'createService']);
+        $api->put('/{id:\d+}', [Services::class, 'updateService']);
+        $api->delete('/{id:\d+}', [Services::class, 'deleteService']);
         $api->delete('/revisions/{id:\d+}', [Services::class, 'deleteRevision']);
         $api->get('/status', [Services::class, 'getStatusSummary']);
         $api->get('/{id:\d+}/status', [Services::class, 'getStatus']);
     }
 
-    public function get(Response $response, SensorServicesService $service, ?int $id = null): Response {
+    public function getServices(Response $response, SensorServicesService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $result = $service->get($id);
+        $result = $service->getServices($id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
@@ -28,25 +28,25 @@ class Services extends RESTResource {
     /**
      * Requires a reference to a successfully completed verification task.
      */
-    public function post(Request $request, Response $response, SensorServicesService $service): Response {
+    public function createService(Request $request, Response $response, SensorServicesService $service): Response {
         $this->assureAllowed('create');
         $data = $request->getParsedBody();
         V::arrayType()->key('task', V::intVal())->check($data);
-        $task = $service->create($this->getSessionUser(), $data['task']);
+        $task = $service->createService($this->getSessionUser(), $data['task']);
         $response->getBody()->write(json_encode($task->getState()));
         return $response;
     }
 
-    public function put(Request $request, Response $response, SensorServicesService $service, int $id): Response {
+    public function updateService(Request $request, Response $response, SensorServicesService $service, int $id): Response {
         $this->assureAllowed('update');
         $data = $request->getParsedBody();
         V::arrayType()->key('default_revision', V::stringType())->check($data);
-        $sensorService = $service->update($id, $data['default_revision']);
+        $sensorService = $service->updateService($id, $data['default_revision']);
         $response->getBody()->write(json_encode($sensorService->getState()));
         return $response;
     }
 
-    public function delete(Response $response, SensorServicesService $service, int $id): Response {
+    public function deleteService(Response $response, SensorServicesService $service, int $id): Response {
         $this->assureAllowed('delete');
         $service->deleteService($id);
         $response->getBody()->write(json_encode([]));
