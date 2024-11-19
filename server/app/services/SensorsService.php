@@ -51,7 +51,7 @@ class SensorsService extends Service {
      * @param int|null $id ID of a specific sensor to fetch
      * @throws NotFoundException
      */
-    public function get(User $user, ?int $id = null): array {
+    public function getSensors(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('s')->from('HoneySens\app\models\entities\Sensor', 's');
         if($user->role !== UserRole::ADMIN) {
@@ -87,7 +87,7 @@ class SensorsService extends Service {
      * @throws SystemException
      * @todo Config archive status is deprecated, remove it
      */
-    public function create(User $user, SensorParams $params): Sensor {
+    public function createSensor(User $user, SensorParams $params): Sensor {
         try {
             $division = $this->em->getRepository('HoneySens\app\models\entities\Division')->find($params->divisionID);
             if ($division === null) throw new NotFoundException();
@@ -116,7 +116,7 @@ class SensorsService extends Service {
      * @throws NotFoundException
      * @throws SystemException
      */
-    public function update(int $id, User $user, SensorParams $params): Sensor {
+    public function updateSensor(int $id, User $user, SensorParams $params): Sensor {
         try {
             $sensor = $this->em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
             if ($sensor === null) throw new NotFoundException();
@@ -182,7 +182,7 @@ class SensorsService extends Service {
      * @throws ForbiddenException
      * @throws SystemException
      */
-    public function delete(int $id, bool $archive, User $user) {
+    public function deleteSensor(int $id, bool $archive, User $user) {
         try {
             $sensor = $this->em->getRepository('HoneySens\app\models\entities\Sensor')->find($id);
             if ($sensor === null) throw new BadRequestException();

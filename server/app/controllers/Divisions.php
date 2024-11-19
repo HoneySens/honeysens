@@ -10,45 +10,43 @@ use Slim\Interfaces\RouteCollectorProxyInterface;
 
 class Divisions extends RESTResource {
 
-    const ERROR_DUPLICATE = 1;
-
     static function registerRoutes(RouteCollectorProxyInterface $api): void {
-        $api->get('[/{id:\d+}]', [Divisions::class, 'get']);
-        $api->post('', [Divisions::class, 'post']);
-        $api->put('/{id:\d+}', [Divisions::class, 'put']);
-        $api->delete('/{id:\d+}', [Divisions::class, 'delete']);
+        $api->get('[/{id:\d+}]', [Divisions::class, 'getDivisions']);
+        $api->post('', [Divisions::class, 'createDivision']);
+        $api->put('/{id:\d+}', [Divisions::class, 'updateDivision']);
+        $api->delete('/{id:\d+}', [Divisions::class, 'deleteDivision']);
     }
 
-    public function get(Response $response, DivisionsService $service, ?int $id = null): Response {
+    public function getDivisions(Response $response, DivisionsService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $result = $service->get($this->getSessionUser(), $id);
+        $result = $service->getDivisions($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function post(Request $request, Response $response, DivisionsService $service): Response {
+    public function createDivision(Request $request, Response $response, DivisionsService $service): Response {
         $this->assureAllowed('create');
         $data = $request->getParsedBody();
         $this->assertValidDivision($data);
-        $division = $service->create($data['name'], $data['users'], $data['contacts']);
+        $division = $service->createDivision($data['name'], $data['users'], $data['contacts']);
         $response->getBody()->write(json_encode($division->getState()));
         return $response;
     }
 
-    public function put(Request $request, Response $response, DivisionsService $service, int $id): Response {
+    public function updateDivision(Request $request, Response $response, DivisionsService $service, int $id): Response {
         $this->assureAllowed('update');
         $data = $request->getParsedBody();
         $this->assertValidDivision($data, true);
-        $division = $service->update($id, $data['name'], $data['users'], $data['contacts']);
+        $division = $service->updateDivision($id, $data['name'], $data['users'], $data['contacts']);
         $response->getBody()->write(json_encode($division->getState()));
         return $response;
     }
 
-    public function delete(Request $request, Response $response, DivisionsService $service, int $id): Response {
+    public function deleteDivision(Request $request, Response $response, DivisionsService $service, int $id): Response {
         $this->assureAllowed('delete');
         $data = $request->getParsedBody();
         $archive = V::key('archive', V::boolType())->validate($data) && $data['archive'];
-        $service->delete($id, $archive, $this->getSessionUser());
+        $service->deleteDivision($id, $archive, $this->getSessionUser());
         $response->getBody()->write(json_encode([]));
         return $response;
     }

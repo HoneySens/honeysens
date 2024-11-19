@@ -42,7 +42,7 @@ class SensorServicesService extends Service {
      * @param int|null $id ID of a specific service to fetch
      * @throws NotFoundException
      */
-    public function get(?int $id = null): array {
+    public function getServices(?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('s')->from('HoneySens\app\models\entities\Service', 's');
         try {
@@ -75,7 +75,7 @@ class SensorServicesService extends Service {
      * @throws SystemException
      * @todo Let task results return a proper object
      */
-    public function create(User $user, int $taskId): Task {
+    public function createService(User $user, int $taskId): Task {
         try {
             $serviceRepository = $this->em->getRepository('HoneySens\app\models\entities\Service');
             $serviceRevisionRepository = $this->em->getRepository('HoneySens\app\models\entities\ServiceRevision');
@@ -149,7 +149,7 @@ class SensorServicesService extends Service {
      * @throws NotFoundException
      * @throws SystemException
      */
-    public function update(int $id, string $defaultRevision): \HoneySens\app\models\entities\Service {
+    public function updateService(int $id, string $defaultRevision): \HoneySens\app\models\entities\Service {
         try {
             $service = $this->em->getRepository('HoneySens\app\models\entities\Service')->find($id);
             if($service === null) throw new NotFoundException();

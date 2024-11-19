@@ -9,7 +9,7 @@ use Respect\Validation\Validator as V;
 
 class System extends RESTResource {
 
-    static function registerRoutes($api) {
+    static function registerRoutes($api): void {
         $api->get('', [System::class, 'getSystemInfo']);
         $api->get('/identify', function(Request $request, Response $response) {
             // Predictable endpoint used to test the server's reachability (useful to figure out if a proxy actually works)

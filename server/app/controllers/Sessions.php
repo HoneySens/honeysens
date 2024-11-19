@@ -8,7 +8,7 @@ use Respect\Validation\Validator as V;
 
 class Sessions extends RESTResource {
 
-    static function registerRoutes($api) {
+    static function registerRoutes($api): void {
         $api->post('', [Sessions::class, 'login']);
         $api->delete('', [Sessions::class, 'logout']);
     }
@@ -19,13 +19,13 @@ class Sessions extends RESTResource {
             ->key('username', V::stringType())
             ->key('password', V::stringType())
             ->check($data);
-        $userState = $service->create($data['username'], $data['password']);
+        $userState = $service->createSession($data['username'], $data['password']);
         $response->getBody()->write(json_encode($userState));
         return $response;
     }
 
     public function logout(Response $response, SessionsService $service): Response {
-        $user = $service->delete($this->getSessionUser());
+        $user = $service->deleteSession($this->getSessionUser());
         $response->getBody()->write(json_encode($user->getState()));
         return $response;
     }

@@ -9,8 +9,8 @@ use Respect\Validation\Validator as V;
 
 class Platforms extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('[/{id:\d+}]', [Platforms::class, 'get']);
+    static function registerRoutes($api): void {
+        $api->get('[/{id:\d+}]', [Platforms::class, 'getPlatforms']);
         $api->get('/firmware/{id:\d+}', [Platforms::class, 'getFirmware']);
         $api->post('/firmware', [Platforms::class, 'createFirmware']);
         $api->put('/{id:\d+}', [Platforms::class, 'updateFirmware']);
@@ -19,9 +19,9 @@ class Platforms extends RESTResource {
         $api->get('/{id:\d+}/firmware/current', [Platforms::class, 'downloadCurrentFirmware']);
     }
 
-    public function get(Response $response, PlatformsService $service, ?int $id = null): Response {
+    public function getPlatforms(Response $response, PlatformsService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $result = $service->get($id);
+        $result = $service->getPlatforms($id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
@@ -59,7 +59,7 @@ class Platforms extends RESTResource {
         return $response;
     }
 
-    public function downloadFirmware(PlatformsService $service, int $id): Response {
+    public function downloadFirmware(PlatformsService $service, int $id): void {
         // Authenticate either as sensor or with a user session
         try {
             $sensor = $this->validateSensorRequest('get');
@@ -71,7 +71,7 @@ class Platforms extends RESTResource {
         $this->offerFile($firmwarePath, $downloadName);
     }
 
-    public function downloadCurrentFirmware(PlatformsService $service, int $id): Response {
+    public function downloadCurrentFirmware(PlatformsService $service, int $id): void {
         $this->assureAllowed('download');
         [$firmwarePath, $downloadName] = $service->downloadCurrentFirmwareForPlatform($id);
         $this->offerFile($firmwarePath, $downloadName);

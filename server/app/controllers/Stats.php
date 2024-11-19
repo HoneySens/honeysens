@@ -8,17 +8,17 @@ use Respect\Validation\Validator as V;
 
 class Stats extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('', [Stats::class, 'get']);
+    static function registerRoutes($api): void {
+        $api->get('', [Stats::class, 'getStats']);
     }
 
-    public function get(Request $request, Response $response, StatsService $service): Response {
+    public function getStats(Request $request, Response $response, StatsService $service): Response {
         $this->assureAllowed('get');
         $criteria = $request->getQueryParams();
         $year = V::key('year', V::intVal()->between(1970, 2200))->validate($criteria) ? $criteria['year'] : null;
         $month = V::key('month', V::intVal()->between(0, 12))->validate($criteria) ? $criteria['month'] : null;
         $divisionID = V::key('division', V::intVal())->validate($criteria) ? $criteria['division'] : null;
-        $result = $service->get($this->getSessionUser(), $divisionID, $year, $month);
+        $result = $service->getStats($this->getSessionUser(), $divisionID, $year, $month);
         $response->getBody()->write(json_encode($result));
         return $response;
     }

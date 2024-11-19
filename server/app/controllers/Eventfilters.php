@@ -12,25 +12,25 @@ use Respect\Validation\Validator as V;
 
 class Eventfilters extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('[/{id:\d+}]', [Eventfilters::class, 'get']);
-        $api->post('', [Eventfilters::class, 'post']);
-        $api->put('/{id:\d+}', [Eventfilters::class, 'put']);
-        $api->delete('/{id:\d+}', [Eventfilters::class, 'delete']);
+    static function registerRoutes($api): void {
+        $api->get('[/{id:\d+}]', [Eventfilters::class, 'getEventFilters']);
+        $api->post('', [Eventfilters::class, 'createEventFilter']);
+        $api->put('/{id:\d+}', [Eventfilters::class, 'updateEventFilter']);
+        $api->delete('/{id:\d+}', [Eventfilters::class, 'deleteEventFilter']);
     }
 
-    public function get(Response $response, EventFiltersService $service, ?int $id = null): Response {
+    public function getEventFilters(Response $response, EventFiltersService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $result = $service->get($this->getSessionUser(), $id);
+        $result = $service->getEventFilters($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function post(Request $request, Response $response, ConfigParser $config, EventFiltersService $service): Response {
+    public function createEventFilter(Request $request, Response $response, ConfigParser $config, EventFiltersService $service): Response {
         $this->assureAllowed('create');
         $data = $request->getParsedBody();
         $this->assertValidFilter($data, $config);
-        $filter = $service->create(
+        $filter = $service->createEventFilter(
             $this->getSessionUser(),
             $data['name'],
             $data['division'],
@@ -41,11 +41,11 @@ class Eventfilters extends RESTResource {
         return $response;
     }
 
-    public function put(Request $request, Response $response, ConfigParser $config, EventFiltersService $service, int $id): Response {
+    public function updateEventFilter(Request $request, Response $response, ConfigParser $config, EventFiltersService $service, int $id): Response {
         $this->assureAllowed('update');
         $data = $request->getParsedBody();
         $this->assertValidFilter($data, $config, true);
-        $filter = $service->update(
+        $filter = $service->updateEventFilter(
             $this->getSessionUser(),
             $id,
             $data['name'],
@@ -58,9 +58,9 @@ class Eventfilters extends RESTResource {
         return $response;
     }
 
-    public function delete(Response $response, EventFiltersService $service, int $id): Response {
+    public function deleteEventFilter(Response $response, EventFiltersService $service, int $id): Response {
         $this->assureAllowed('delete');
-        $service->delete($id, $this->getSessionUser());
+        $service->deleteEventFilter($id, $this->getSessionUser());
         $response->getBody()->write(json_encode([]));
         return $response;
     }

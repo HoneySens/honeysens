@@ -3,7 +3,6 @@ namespace HoneySens\app\controllers;
 
 use HoneySens\app\models\constants\AuthDomain;
 use HoneySens\app\models\constants\UserRole;
-use HoneySens\app\models\entities\User;
 use HoneySens\app\models\Utils;
 use HoneySens\app\services\UsersService;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -15,22 +14,22 @@ class Users extends RESTResource {
     const ERROR_DUPLICATE = 1;
     const ERROR_REQUIRE_PASSWORD_CHANGE = 2;
 
-    static function registerRoutes($api) {
-        $api->get('[/{id:\d+}]', [Users::class, 'get']);
-        $api->post('', [Users::class, 'post']);
-        $api->put('/{id:\d+}', [Users::class, 'put']);
+    static function registerRoutes($api): void {
+        $api->get('[/{id:\d+}]', [Users::class, 'getUsers']);
+        $api->post('', [Users::class, 'createUser']);
+        $api->put('/{id:\d+}', [Users::class, 'updateUser']);
         $api->put('/session', [Users::class, 'updateSelf']);
-        $api->delete('/{id:\d+}', [Users::class, 'delete']);
+        $api->delete('/{id:\d+}', [Users::class, 'deleteUser']);
     }
 
-    public function get(Response $response, UsersService $service, ?int $id = null): Response {
+    public function getUsers(Response $response, UsersService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $result = $service->get($this->getSessionUser(), $id);
+        $result = $service->getUsers($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
 
-    public function post(Request $request, Response $response, UsersService $service): Response {
+    public function createUser(Request $request, Response $response, UsersService $service): Response {
         $this->assureAllowed('create');
         $data = $request->getParsedBody();
         $this->assertValidUser($data);
@@ -42,7 +41,7 @@ class Users extends RESTResource {
             V::key('password')->check($data);
             $password = $data['password'];
         }
-        $user = $service->create(
+        $user = $service->createUser(
             $data['name'],
             $authDomain,
             $data['email'],
@@ -55,13 +54,13 @@ class Users extends RESTResource {
         return $response;
     }
 
-    public function put(Request $request, Response $response, UsersService $service, int $id): Response {
+    public function updateUser(Request $request, Response $response, UsersService $service, int $id): Response {
         $this->assureAllowed('update');
         $data = $request->getParsedBody();
         $this->assertValidUser($data);
         $fullName = $data['fullName'] ?? null;
         $password = $data['password'] ?? null;
-        $user = $service->update(
+        $user = $service->updateUser(
             $id,
             $data['name'],
             AuthDomain::from($data['domain']),
@@ -88,9 +87,9 @@ class Users extends RESTResource {
         return $response;
     }
 
-    public function delete(Response $response, UsersService $service, int $id): Response {
+    public function deleteUser(Response $response, UsersService $service, int $id): Response {
         $this->assureAllowed('delete');
-        $service->delete($id);
+        $service->deleteUser($id);
         $response->getBody()->write(json_encode([]));
         return $response;
     }

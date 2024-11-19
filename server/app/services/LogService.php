@@ -52,7 +52,7 @@ class LogService extends Service {
      * @param int $perPage Number of results per page (only together with $page)
      * @throws NotFoundException
      */
-    public function get(?int $userID = null, ?LogResource $resource = null, ?int $resourceId = null, int $page = 0, int $perPage = 15): array {
+    public function getLogs(?int $userID = null, ?LogResource $resource = null, ?int $resourceId = null, int $page = 0, int $perPage = 15): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('COUNT(l.id)')->from('HoneySens\app\models\entities\LogEntry', 'l');
         if($userID !== null) {

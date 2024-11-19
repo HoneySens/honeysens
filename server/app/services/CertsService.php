@@ -18,7 +18,7 @@ class CertsService extends Service {
      * @param int|null $id ID of a specific cert to fetch
      * @throws NotFoundException
      */
-    public function get(User $user, ?int $id): array {
+    public function getCerts(User $user, ?int $id): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('c')->from('HoneySens\app\models\entities\SSLCert', 'c');
         if($user->role !== UserRole::ADMIN) {

@@ -9,11 +9,11 @@ use Respect\Validation\Validator as V;
 
 class Logs extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('/', [Logs::class, 'get']);
+    static function registerRoutes($api): void {
+        $api->get('/', [Logs::class, 'getLogs']);
     }
 
-    public function get(Request $request, Response $response, LogService $service): Response {
+    public function getLogs(Request $request, Response $response, LogService $service): Response {
         $this->assureAllowed('get');
         $optionalParams = array();
         $queryParams = $request->getQueryParams();
@@ -34,7 +34,7 @@ class Logs extends RESTResource {
             $optionalParams['page'] = $queryParams['page'];
             $optionalParams['perPage'] = $queryParams['per_page'];
         }
-        $logs = $service->get(...$optionalParams);
+        $logs = $service->getLogs(...$optionalParams);
         $response->getBody()->write(json_encode($logs));
         return $response;
     }

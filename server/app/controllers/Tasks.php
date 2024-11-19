@@ -7,17 +7,17 @@ use Respect\Validation\Validator as V;
 
 class Tasks extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('[/{id:\d+}]', [Tasks::class, 'get']);
+    static function registerRoutes($api): void {
+        $api->get('[/{id:\d+}]', [Tasks::class, 'getTasks']);
         $api->get('/{id:\d+}/result[/{delete:\d+}]', [Tasks::class, 'downloadResult']);
         $api->get('/status', [Tasks::class, 'getStatus']);
-        $api->post('/upload', [Tasks::class, 'upload']);
-        $api->delete('/{id:\d+}', [Tasks::class, 'delete']);
+        $api->post('/upload', [Tasks::class, 'uploadFile']);
+        $api->delete('/{id:\d+}', [Tasks::class, 'deleteTask']);
     }
 
-    public function get(Response $response, TasksService $service, ?int $id = null): Response {
+    public function getTasks(Response $response, TasksService $service, ?int $id = null): Response {
         $this->assureAllowed('get');
-        $result = $service->get($this->getSessionUser(), $id);
+        $result = $service->getTasks($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode($result));
         return $response;
     }
@@ -39,16 +39,16 @@ class Tasks extends RESTResource {
     /**
      * Generic endpoint to upload files, returns the associated verification task's state.
      */
-    public function upload(Response $response, TasksService $service): Response {
+    public function uploadFile(Response $response, TasksService $service): Response {
         $this->assureAllowed('upload');
-        $state = $service->upload($this->getSessionUser());
+        $state = $service->uploadFile($this->getSessionUser());
         $response->getBody()->write(json_encode($state));
         return $response;
     }
 
-    public function delete(Response $response, TasksService $service, int $id): Response {
+    public function deleteTask(Response $response, TasksService $service, int $id): Response {
         $this->assureAllowed('delete');
-        $service->delete($this->getSessionUser(), $id);
+        $service->deleteTask($this->getSessionUser(), $id);
         $response->getBody()->write(json_encode([]));
         return $response;
     }

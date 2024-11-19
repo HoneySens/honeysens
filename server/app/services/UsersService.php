@@ -34,7 +34,7 @@ class UsersService extends Service {
      * @param int|null $id ID of a specific user to fetch
      * @throws NotFoundException
      */
-    public function get(User $user, ?int $id = null): array {
+    public function getUsers(User $user, ?int $id = null): array {
         $qb = $this->em->createQueryBuilder();
         $qb->select('u')->from('HoneySens\app\models\entities\User', 'u');
         if($user->role !== UserRole::ADMIN) {
@@ -73,14 +73,14 @@ class UsersService extends Service {
      * @throws BadRequestException
      * @throws SystemException
      */
-    public function create(string $name,
-                           AuthDomain $domain,
-                           string $email,
-                           UserRole $role,
-                           bool $notifyOnSystemState,
-                           bool $requirePasswordChange,
-                           ?string $fullName = null,
-                           ?string $password = null): User {
+    public function createUser(string     $name,
+                               AuthDomain $domain,
+                               string     $email,
+                               UserRole   $role,
+                               bool       $notifyOnSystemState,
+                               bool       $requirePasswordChange,
+                               ?string    $fullName = null,
+                               ?string    $password = null): User {
         // Name duplication check
         if($this->getUserByName($name) !== null) throw new BadRequestException(Users::ERROR_DUPLICATE);
         // Persistence
@@ -121,15 +121,15 @@ class UsersService extends Service {
      * @throws BadRequestException
      * @throws SystemException
      */
-    public function update(int $id,
-                           string $name,
-                           AuthDomain $domain,
-                           string $email,
-                           UserRole $role,
-                           bool $notifyOnSystemState,
-                           bool $requirePasswordChange,
-                           ?string $fullName = null,
-                           ?string $password = null): User {
+    public function updateUser(int        $id,
+                               string     $name,
+                               AuthDomain $domain,
+                               string     $email,
+                               UserRole   $role,
+                               bool       $notifyOnSystemState,
+                               bool       $requirePasswordChange,
+                               ?string    $fullName = null,
+                               ?string    $password = null): User {
         $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($id);
         if($user === null) throw new BadRequestException();
         // Require a password if the user uses local authentication and hasn't one set yet
@@ -198,7 +198,7 @@ class UsersService extends Service {
      * @throws ForbiddenException
      * @throws SystemException
      */
-    public function delete(int $id): void {
+    public function deleteUser(int $id): void {
         // Never remove the user with ID 1, which is the primary admin account
         if($id === 1) throw new ForbiddenException();
         $user = $this->em->getRepository('HoneySens\app\models\entities\User')->find($id);

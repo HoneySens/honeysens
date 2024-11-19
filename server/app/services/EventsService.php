@@ -56,7 +56,7 @@ class EventsService extends Service {
      * @param int $perPage Number of results per page (only together with $page)
      * @throws NotFoundException
      */
-    public function get(User $user, EventFilterConditions $conditions, ResponseFormat $format = ResponseFormat::JSON, int $page = 0, int $perPage = 15): array {
+    public function getEvents(User $user, EventFilterConditions $conditions, ResponseFormat $format = ResponseFormat::JSON, int $page = 0, int $perPage = 15): array {
         $qb = $this->fetchEvents($conditions);
         try {
             // Calculate the total number of results by altering the query
@@ -117,7 +117,7 @@ class EventsService extends Service {
      * @param array $eventsData List of events
      * @throws SystemException
      */
-    public function create(Sensor $sensor, array $eventsData): array {
+    public function createEvent(Sensor $sensor, array $eventsData): array {
         $events = array();
         foreach($eventsData as $eventData) {
             // TODO make optional fields optional (e.g. packets and details)
@@ -249,7 +249,7 @@ class EventsService extends Service {
      * @throws BadRequestException
      * @throws SystemException
      */
-    public function update(EventFilterConditions $conditions, ?EventStatus $newStatus = null, ?string $newComment = null): void {
+    public function updateEvent(EventFilterConditions $conditions, ?EventStatus $newStatus = null, ?string $newComment = null): void {
         if($conditions->archived || ($newStatus === null && $newComment === null)) throw new BadRequestException();
         $qb = $this->fetchEvents($conditions);
         $qb->select('e.id');
@@ -290,7 +290,7 @@ class EventsService extends Service {
      * @throws BadRequestException
      * @throws SystemException
      */
-    public function delete(EventFilterConditions $conditions, bool $archive): void {
+    public function deleteEvent(EventFilterConditions $conditions, bool $archive): void {
         // We can't archive already archived events
         if($archive && $conditions->archived) throw new BadRequestException();
         $entity = $conditions->archived ? 'HoneySens\app\models\entities\ArchivedEvent' : 'HoneySens\app\models\entities\Event';

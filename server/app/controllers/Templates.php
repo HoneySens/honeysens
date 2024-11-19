@@ -9,24 +9,24 @@ use Respect\Validation\Validator as V;
 
 class Templates extends RESTResource {
 
-    static function registerRoutes($api) {
-        $api->get('', [Templates::class, 'get']);
-        $api->put('/{id:\d+}', [Templates::class, 'put']);
+    static function registerRoutes($api): void {
+        $api->get('', [Templates::class, 'getTemplates']);
+        $api->put('/{id:\d+}', [Templates::class, 'updateTemplate']);
     }
 
-    public function get(Response $response, TemplatesService $service): Response {
+    public function getTemplates(Response $response, TemplatesService $service): Response {
         $this->assureAllowed('get', 'settings');
-        $response->getBody()->write(json_encode($service->get()));
+        $response->getBody()->write(json_encode($service->getTemplates()));
         return $response;
     }
 
-    public function put(Request $request, Response $response, TemplatesService $service, int $id): Response {
+    public function updateTemplate(Request $request, Response $response, TemplatesService $service, int $id): Response {
         $this->assureAllowed('update', 'settings');
         $templateType = TemplateType::tryFrom($id);
         V::notEmpty()->check($templateType);
         $data = $request->getParsedBody();
         V::arrayType()->key('template', V::optional(V::stringType()))->check($data);
-        $template = $service->update($templateType, $data['template']);
+        $template = $service->updateTemplate($templateType, $data['template']);
         $response->getBody()->write(json_encode($template->getState()));
         return $response;
     }
