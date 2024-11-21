@@ -1,43 +1,131 @@
 <?php
 namespace HoneySens\app\adapters;
 
+use Doctrine\ORM\EntityManager;
 use HoneySens\app\models\constants\EventClassification;
 use HoneySens\app\models\constants\EventDetailType;
 use HoneySens\app\models\constants\EventPacketProtocol;
 use HoneySens\app\models\constants\TaskType;
 use HoneySens\app\models\constants\TemplateType;
+use HoneySens\app\models\constants\TransportEncryptionType;
 use HoneySens\app\models\entities\Event;
 use HoneySens\app\models\entities\EventPacket;
 use HoneySens\app\models\entities\Task;
+use HoneySens\app\models\entities\User;
+use HoneySens\app\models\exceptions\SystemException;
+use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
+/**
+ * Prepares and sends out e-mails for incidents or test e-mails
+ * via the external tasks queue.
+ */
 class EMailAdapter {
 
+    private ConfigParser $config;
+    private EntityManager $em;
     private TaskAdapter $taskAdapter;
     private TemplateAdapter $templateAdapter;
 
-    public function __construct(TaskAdapter $taskAdapter, TemplateAdapter $templateAdapter) {
+    public function __construct(ConfigParser $config, EntityManager $em, TaskAdapter $taskAdapter, TemplateAdapter $templateAdapter) {
+        $this->config = $config;
+        $this->em = $em;
         $this->taskAdapter = $taskAdapter;
         $this->templateAdapter = $templateAdapter;
     }
 
-    private function getEventClassificationText(Event $event) {
-        if($event->classification === EventClassification::UNKNOWN) return 'Unbekannt';
-        elseif($event->classification === EventClassification::ICMP) return 'ICMP-Paket';
+    /**
+     * Enqueues and returns a task to send an e-mail notification
+     * for a given Event to all contacts registered to be notified
+     * for that specific event within a given division.
+     *
+     * @param Event $event The event to notify contacts about
+     * @throws SystemException
+     */
+    public function sendIncident(Event $event): bool {
+        if($this->config['smtp']['enabled'] !== 'true') return false;
+        // Fetch associated contacts
+        $division = $event->sensor->division;
+        $qb = $this->em->createQueryBuilder();
+        $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c')
+            ->where('c.division = :division')
+            ->setParameter('division', $division);
+        if($event->classification >= EventClassification::LOW_HP) {
+            $qb->andWhere('c.sendAllEvents = :all OR c.sendCriticalEvents = :critical')
+                ->setParameter('all', true)
+                ->setParameter('critical', true);
+        } else {
+            $qb->andWhere('c.sendAllEvents = :all')
+                ->setParameter('all', true);
+        }
+        $contacts = $qb->getQuery()->getResult();
+        if(count($contacts) == 0) return true;
+        // Prepare content
+        $subject = $event->classification >= EventClassification::LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
+        $body = $this->templateAdapter->processTemplate(TemplateType::EMAIL_EVENT_NOTIFICATION, array(
+            'ID' => $event->getId(),
+            'SUMMARY' => $this->stringifyEventSummary($event),
+            'DETAILS' => $this->stringifyEventDetails($event)
+        ));
+        $taskParams = array(
+            'subject' => $subject,
+            'body' => $body);
+        // Notify each contact
+        foreach($contacts as $contact) {
+            $taskParams['to'] = $contact->getEMail();
+            $this->taskAdapter->enqueue(null, TaskType::EMAIL_EMITTER, $taskParams);
+        }
+        return true;
+    }
+
+    /**
+     * Enqueues and returns a task to send a test e-mail with the given parameters.
+     *
+     * @param User $user User to enqueue the task as
+     * @param string $from Sender e-mail address
+     * @param string $to Recipient e-mail address
+     * @param string $smtpServer Host name or IP address of the SMTP server to connect to
+     * @param int $smtpPort TCP port of the SMTP server to connect to
+     * @param TransportEncryptionType $smtpEncryption TCP transport encryption mode
+     * @param string $smtpUser User to authenticate as via SMTP
+     * @param string $smtpPassword Password to authenticate with via SMTP
+     * @throws SystemException
+     */
+    public function sendTestMail(User $user, string $from, string $to, string $smtpServer, int $smtpPort, TransportEncryptionType $smtpEncryption, string $smtpUser, string $smtpPassword): Task {
+        $taskParams = array(
+            'test_mail' => true,
+            'smtp_server' => $smtpServer,
+            'smtp_port' => $smtpPort,
+            'smtp_encryption' => $smtpEncryption->value,
+            'from' => $from,
+            'to' => $to,
+            'subject' => 'HoneySens Testnachricht',
+            'body' => 'Dies ist eine Testnachricht des HoneySens-Servers.');
+        if($smtpUser !== '') {
+            $taskParams['smtp_user'] = $smtpUser;
+            $taskParams['smtp_password'] = $smtpPassword;
+        }
+        return $this->taskAdapter->enqueue($user, TaskType::EMAIL_EMITTER, $taskParams);
+    }
+
+    private function stringifyEventClassificationText(Event $event): string {
+        if($event->classification === EventClassification::ICMP) return 'ICMP-Paket';
         elseif($event->classification === EventClassification::CONN_ATTEMPT) return 'Verbindungsversuch';
         elseif($event->classification === EventClassification::LOW_HP) return 'Honeypot-Verbindung';
         elseif($event->classification === EventClassification::PORTSCAN) return 'Portscan';
+        return "Unbekannt";
     }
 
-    private function getPacketProtocolAndPort($packet) {
+    private function stringifyPacketProtocolAndPort(EventPacket $packet): string {
         $protocol = 'UNK';
         switch($packet->protocol) {
             case EventPacketProtocol::TCP: $protocol = 'TCP'; break;
             case EventPacketProtocol::UDP: $protocol = 'UDP'; break;
+            case EventPacketProtocol::UNKNOWN: $protocol = 'Unknown'; break;
         }
         return $protocol . '/' . $packet->port;
     }
 
-    private function getPacketFlags($packet) {
+    private function stringifyPacketFlags(EventPacket $packet): string {
         $headers = $packet->getHeaders();
         if(!$headers) return '';
         $flags = json_decode($headers, true)[0]['flags'];
@@ -51,7 +139,7 @@ class EMailAdapter {
         return $result;
     }
 
-    private function getPayload($packet) {
+    private function stringifyPayload(EventPacket $packet): string {
         // Escape tabs and newlines
         $payload = $packet->getPayload();
         if($payload != null) {
@@ -59,17 +147,17 @@ class EMailAdapter {
         } else return '';
     }
 
-    private function createEventSummary(Event $event) {
+    private function stringifyEventSummary(Event $event): string {
         $result = 'Datum: ' . $event->timestamp->format('d.m.Y') . "\n";
         $result .= 'Zeit: ' . $event->timestamp->format('H:i:s') . " (UTC)\n";
         $result .= 'Sensor: ' . $event->sensor->name . "\n";
-        $result .= 'Klassifikation: ' . $this->getEventClassificationText($event) . "\n";
+        $result .= 'Klassifikation: ' . $this->stringifyEventClassificationText($event) . "\n";
         $result .= 'Quelle: ' . $event->source . "\n";
         $result .= 'Details: ' . $event->summary;
         return $result;
     }
 
-    private function createEventDetails(Event $event) {
+    private function stringifyEventDetails(Event $event): string {
         $result = '';
         $details = $event->getDetails();
         $packets = $event->getPackets();
@@ -111,67 +199,11 @@ class EMailAdapter {
             $result .= "Paketübersicht (Zeit in UTC | Protocol/Port | Flags | Payload):\n---------------------------------------------------------------\n";
             foreach($packets as $packet) {
                 $itemCount++;
-                $result .= $packet->timestamp->format('H:i:s') . ': ' . $this->getPacketProtocolAndPort($packet) .
-                    ' | ' . $this->getPacketFlags($packet) . ' | ' . $this->getPayload($packet);
+                $result .= $packet->timestamp->format('H:i:s') . ': ' . $this->stringifyPacketProtocolAndPort($packet) .
+                    ' | ' . $this->stringifyPacketFlags($packet) . ' | ' . $this->stringifyPayload($packet);
                 if($itemCount != count($packets)) $result .= "\n";
             }
         }
         return $result;
-    }
-
-    public function sendIncident($config, $em, Event $event) {
-        if($config['smtp']['enabled'] != 'true') return;
-        // Fetch associated contacts
-        $division = $event->sensor->division;
-        $qb = $em->createQueryBuilder();
-        $qb->select('c')->from('HoneySens\app\models\entities\IncidentContact', 'c')
-            ->where('c.division = :division')
-            ->setParameter('division', $division);
-        if($event->classification >= EventClassification::LOW_HP) {
-            $qb->andWhere('c.sendAllEvents = :all OR c.sendCriticalEvents = :critical')
-                ->setParameter('all', true)
-                ->setParameter('critical', true);
-        } else {
-            $qb->andWhere('c.sendAllEvents = :all')
-                ->setParameter('all', true);
-        }
-        $contacts = $qb->getQuery()->getResult();
-        if(count($contacts) == 0) return array('success' => true);
-        // Prepare content
-        $subject = $event->classification >= EventClassification::LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
-        $body = $this->templateAdapter->processTemplate(TemplateType::EMAIL_EVENT_NOTIFICATION, array(
-            'ID' => $event->getId(),
-            'SUMMARY' => $this->createEventSummary($event),
-            'DETAILS' => $this->createEventDetails($event)
-        ));
-        $taskParams = array(
-            'subject' => $subject,
-            'body' => $body);
-        // Notify each contact
-        foreach($contacts as $contact) {
-            $taskParams['to'] = $contact->getEMail();
-            $this->taskAdapter->enqueue(null, TaskType::EMAIL_EMITTER, $taskParams);
-        }
-        return array('success' => true);
-    }
-
-    /**
-     * Enqueues and returns a task to send a test E-Mail with the given parameters.
-     */
-    public function sendTestMail($user, $from, $to, $smtpServer, $smtpPort, $smtpEncryption, $smtpUser, $smtpPassword): Task {
-        $taskParams = array(
-            'test_mail' => true,
-            'smtp_server' => $smtpServer,
-            'smtp_port' => $smtpPort,
-            'smtp_encryption' => $smtpEncryption,
-            'from' => $from,
-            'to' => $to,
-            'subject' => 'HoneySens Testnachricht',
-            'body' => 'Dies ist eine Testnachricht des HoneySens-Servers.');
-        if($smtpUser != '') {
-            $taskParams['smtp_user'] = $smtpUser;
-            $taskParams['smtp_password'] = $smtpPassword;
-        }
-        return $this->taskAdapter->enqueue($user, TaskType::EMAIL_EMITTER, $taskParams);
     }
 }
