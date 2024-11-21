@@ -226,7 +226,7 @@ class EventsService extends Service {
             }
             // Send mails for each incident
             foreach ($events as $event) {
-                if ($this->em->contains($event)) $this->emailAdapter->sendIncident($this->config, $this->em, $event);
+                if ($this->em->contains($event)) $this->emailAdapter->sendIncident($event);
             }
         } catch(\Exception $e) {
             // If subsequent event handlers cause exceptions, fail gracefully and signal successful event creation to sensor
