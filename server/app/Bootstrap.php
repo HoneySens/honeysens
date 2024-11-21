@@ -41,7 +41,7 @@ define('APPLICATION_PATH', sprintf('%s/app', BASE_PATH));
 define('DATA_PATH', sprintf('%s/data', BASE_PATH));
 set_include_path(implode(PATH_SEPARATOR, array(realpath(APPLICATION_PATH . '/vendor'), get_include_path())));
 
-function initSlim(ContainerInterface $container) {
+function initSlim(ContainerInterface $container): \Slim\App {
     $debug = $container->get('NoiseLabs\ToolKit\ConfigParser\ConfigParser')->getBoolean('server', 'debug');
     $em = $container->get('Doctrine\ORM\EntityManager');
     $app = Bridge::create($container);
@@ -82,11 +82,11 @@ function initSlim(ContainerInterface $container) {
     return $app;
 }
 
-function initClassLoading() {
+function initClassLoading(): void {
     require_once('vendor/autoload.php');
 }
 
-function initDatabase() {
+function initDatabase(): EntityManager {
     $config = \Doctrine\ORM\ORMSetup::createAttributeMetadataConfiguration(
         paths: [APPLICATION_PATH . '/models/entities'],
         isDevMode: false
@@ -113,7 +113,7 @@ function initDatabase() {
     return $em;
 }
 
-function createDependencyContainer(EntityManager $em) {
+function createDependencyContainer(EntityManager $em): Container {
     return new Container([
         'NoiseLabs\ToolKit\ConfigParser\ConfigParser' => function() {
             $config = new ConfigParser();
@@ -128,10 +128,8 @@ function createDependencyContainer(EntityManager $em) {
 
 /**
  * URL route definitions
- *
- * @param $app Slim\Slim
  */
-function initRoutes($app) {
+function initRoutes(\Slim\App $app): void {
     // Deliver the web application
     $app->get('/', function(Request $request, Response $response) {
         $template = new LazyOpenStream(APPLICATION_PATH . '/templates/index.html', 'r');
@@ -201,7 +199,7 @@ function initRoutes($app) {
  * Primary entry point, initializes all components and routes, then runs the route dispatcher.
  * This method blocks until the request has been served.
  */
-function launch() {
+function launch(): void {
     initClassLoading();
     $em = initDatabase();
     $dependencyContainer = createDependencyContainer($em);
