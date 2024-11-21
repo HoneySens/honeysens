@@ -2,6 +2,7 @@
 namespace HoneySens\app\controllers;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\NotSupported;
 use HoneySens\app\models\constants\UserRole;
 use HoneySens\app\models\entities\Sensor;
 use HoneySens\app\models\entities\User;
@@ -23,9 +24,26 @@ abstract class RESTResource {
         $this->em = $em;
     }
 
-    abstract static function registerRoutes(RouteCollectorProxyInterface $api);
+    /**
+     * Each controller / REST resource has to supply at least this method
+     * to register its own routes with the provided API interface,
+     * which is scoped to each controller.
+     *
+     * @param RouteCollectorProxyInterface $api Controller-scoped interface
+     */
+    abstract static function registerRoutes(RouteCollectorProxyInterface $api): void;
 
-    protected function assureAllowed($method, $realm=null) {
+    /**
+     * Given a resource-specific method (typically get/create/update/delete)
+     * and a realm (application module, usually the name of the active controller),
+     * asserts the required permissions for the currently logged-in user. Raises
+     * ForbiddenException in case of missing permissions.
+     *
+     * @param string $method Resource-specific method name to check permission for
+     * @param string|null $realm Application module to check for. If null, defaults to the currently active controller.
+     * @throws ForbiddenException
+     */
+    protected function assureAllowed(string $method, string $realm=null): void {
         if($realm) {
             if(!in_array($method, $_SESSION['user']['permissions'][$realm])) throw new ForbiddenException();
         } else {
@@ -35,7 +53,15 @@ abstract class RESTResource {
         }
     }
 
-    protected function offerFile($path, $name, $callback=null) {
+    /**
+     * Reads the given file path and sends it to the client, labeled as $name (shown in browsers).
+     * Afterwards, calls the optional $callback function.
+     *
+     * @param string $path Local file name to send to client
+     * @param string $name Display name in browsers that receive the file
+     * @param callable|null $callback Optional function to call after the download offering succeeds
+     */
+    protected function offerFile(string $path, string $name, callable $callback=null): void {
         if(!file_exists($path)) {
             header('HTTP/1.0 400 Bad Request');
             exit;
@@ -53,23 +79,9 @@ abstract class RESTResource {
             header('Pragma: public');
             header('Content-Length: ' . filesize($path));
             readfile($path);
-            if($callback != null) call_user_func($callback);
+            if($callback !== null) call_user_func($callback);
             exit;
         }
-    }
-
-    /**
-     * Returns the user id of the currently logged in user or null in case of an admin user.
-     * This means that for both admin and guest users null is returned, which means that an additional permission check is
-     * required. This step is usually done inside of the resource classes/controllers.
-     *
-     * @return ?integer
-     * @deprecated
-     */
-    public function getSessionUserID() {
-        if($_SESSION['user']['role'] === UserRole::ADMIN) {
-            return null;
-        } else return $_SESSION['user']['id'];
     }
 
     /**
@@ -77,10 +89,10 @@ abstract class RESTResource {
      * In case no user is logged in, this throws an exception.
      * This never returns a user with a guest role.
      *
-     * @return User
      * @throws ForbiddenException
+     * @throws NotSupported
      */
-    public function getSessionUser() {
+    public function getSessionUser(): User {
         if(UserRole::from($_SESSION['user']['role']) === UserRole::GUEST) throw new ForbiddenException();
         return $this->em->getRepository('HoneySens\app\models\entities\User')->find($_SESSION['user']['id']);
     }
@@ -95,11 +107,12 @@ abstract class RESTResource {
      *
      * Returns Sensor instance in case of successful authentication or throws an exception for invalid requests.
      *
-     * @param $method string
-     * @param $body string
-     * @return Sensor
+     * @param $method string Requested method to execute (get/create))
+     * @param $body string Request body
+     * @throws ForbiddenException
+     * @throws NotSupported
      */
-    protected function validateSensorRequest($method, $body='') {
+    protected function validateSensorRequest(string $method, string $body=''): Sensor {
         $headers = $this->getNormalizedRequestHeaders();
         // Check MAC
         if(!V::key(self::HEADER_HMAC_ALGO, V::stringType())
@@ -122,13 +135,13 @@ abstract class RESTResource {
     }
 
     /**
-     * Sets the required HMAC headers (see validateSensorRequest()) for a response sent to a specific sensor.
+     * Sets all required HMAC headers (see validateSensorRequest()) for a response sent to a specific sensor.
      *
      * @param $sensor Sensor to calculate the MAC for
      * @param $method string HTTP request type
      * @param $body string HTTP body (optional)
      */
-    protected function setMACHeaders($sensor, $method, $body='') {
+    protected function setMACHeaders(Sensor $sensor, string $method, string $body=''): void {
         $algo = in_array($this::HEADER_HMAC_ALGO, $_SERVER) ? $_SERVER[$this::HEADER_HMAC_ALGO] : 'sha256';
         $now = time();
         $msg = sprintf('%u %s %s', $now, $method, $body);
@@ -148,26 +161,23 @@ abstract class RESTResource {
     /**
      * Validates the given MAC for a specific key and request.
      *
-     * @param $mac string The MAC to validate
-     * @param $key string
+     * @param $mac string MAC to validate
+     * @param $key string Sensor secret
      * @param $algo string Hashing algorithm to use
-     * @param $timestamp int
+     * @param $timestamp int Timestamp as replay protection
      * @param $method string HTTP request type
      * @param $body string HTTP body
-     * @return bool
      */
-    private function isValidMAC($mac, $key, $algo, $timestamp, $method, $body) {
-        if(!in_array($algo, array('sha256'))) return false;
+    private function isValidMAC(string $mac, string $key, string $algo, int $timestamp, string $method, string $body): bool {
+        if($algo !== 'sha256') return false;
         $msg = sprintf('%u %s %s', $timestamp, $method, $body);
         return $mac === hash_hmac($algo, $msg, $key, false);
     }
 
     /**
      * Normalizes and returns HTTP request headers by converting their keys to lowercase and replacing _ with -.
-     *
-     * @return array
      */
-    private function getNormalizedRequestHeaders() {
+    private function getNormalizedRequestHeaders(): array {
         $result = [];
         foreach(getallheaders() as $key => $val) {
             $nkey = str_replace('_', '-', strtolower($key));
