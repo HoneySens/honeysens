@@ -29,7 +29,7 @@ class State extends RESTResource {
 
     /**
      * Returns an array containing full current application state information (e.g. all entities)
-     * that is accessible for the given user.
+     * that is accessible for the currently logged-in user.
      */
     public function getState(Request               $request,
                              Response              $response,

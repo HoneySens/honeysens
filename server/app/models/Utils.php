@@ -2,19 +2,22 @@
 namespace HoneySens\app\models;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Query;
+use Doctrine\Persistence\ObjectRepository;
+use Respect\Validation\Validator;
 use Respect\Validation\Validator as V;
 
 class Utils {
 
     /**
-     * Shortens the given base64 string into the limit given by $characters.
+     * Shortens the given base64-encoded string to the limit given by $characters.
+     * Returns a base64-encoded string.
      *
-     * @param int $characters
-     * @param string $input
-     * @return string
+     * @param int $characters Maximum length
+     * @param string $input The base64-encoded input string to shorten
      */
-    static function shortenBase64($characters, $input) {
+    static function shortenBase64(int $characters, string $input): string {
         if(strlen($input) > $characters) {
             $maxSourceLength = floor($characters / 4) * 3;
             return base64_encode(substr(base64_decode($input), 0, $maxSourceLength));
@@ -22,13 +25,12 @@ class Utils {
     }
 
     /**
-     * Get SQL from query
+     * Turns a doctrine ORM Query into a SQL statement.
      *
-     * @param Query $query
-     * @return int
+     * @param Query $query ORM Query to process
      * @source https://stackoverflow.com/questions/2095394/doctrine-how-to-print-out-the-real-sql-not-just-the-prepared-statement
      */
-    static function getFullSQL($query) {
+    static function getFullSQL(Query $query): string {
         $sql = $query->getSql();
         $paramsList = Utils::getListParamsByDql($query->getDql());
         $paramsArr = Utils::getParamsArray($query->getParameters());
@@ -72,7 +74,7 @@ class Utils {
         return $fullSql;
     }
 
-    static function getParamsArray($paramObj) {
+    static function getParamsArray($paramObj): array {
         $parameters=array();
         foreach ($paramObj as $val){
             /* @var $val Doctrine\ORM\Query\Parameter */
@@ -81,7 +83,7 @@ class Utils {
         return $parameters;
     }
 
-    static function getListParamsByDql($dql) {
+    static function getListParamsByDql($dql): array {
         $parsedDql = preg_split("/:/", $dql);
         $length = count($parsedDql);
         $parmeters = array();
@@ -94,7 +96,7 @@ class Utils {
         return $parmeters;
     }
 
-    static function emailValidator() {
+    static function emailValidator(): Validator {
         // TLDs are optional in E-Mail addresses
         return V::regex('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$/');
     }
@@ -106,10 +108,10 @@ class Utils {
      *
      * @param $collection ArrayCollection of the entities to be updated
      * @param $ids array of entity IDs to update the collection with
-     * @param $repository \Doctrine\Persistence\ObjectRepository to fetch entities from
+     * @param $repository ObjectRepository to fetch entities from
      * @return array Specifies tasks to perform to perform the operation
      */
-    static function updateCollection($collection, &$ids, $repository) {
+    static function updateCollection(Collection $collection, array &$ids, ObjectRepository $repository): array {
         $tasks = array('add' => array(), 'update' => array(), 'remove' => array());
         foreach($collection as $entity) {
             if(in_array($entity->getId(), $ids)) {
@@ -129,7 +131,12 @@ class Utils {
         return $tasks;
     }
 
-    static function recursiveDelete($str) {
+    /**
+     * Recursively deletes all local files and directories at a given path.
+     *
+     * @param string $str The path to delete.
+     */
+    static function recursiveDelete(string $str): bool {
         if (is_file($str)) return unlink($str);
         if (is_dir($str)) {
             $scan = glob(rtrim($str, '/').'/*');
