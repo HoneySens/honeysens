@@ -13,6 +13,7 @@ ENV ACCESS_LOG=false \
     HS_DB_USER=honeysens \
     HS_DB_NAME=honeysens \
     HS_DB_PASSWORD=secret \
+    HS_DB_ROOT_PASSWORD=secret \
     HS_REGISTRY_HOST=registry \
     HS_REGISTRY_PORT=5000 \
     PLAIN_HTTP_API=false \
