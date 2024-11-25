@@ -8,6 +8,22 @@ import time
 
 
 # Utility functions
+def connect_to_db(host, port, user, password, db_name):
+    while True:
+        time.sleep(1)
+        try:
+            db = pymysql.connect(host=host, port=port, user=user, password=password, database=db_name)
+            c = db.cursor()
+            if c.connection:
+                return db
+            else:
+                print('Updater: Waiting for database')
+                continue
+        except Exception as e:
+            print('Updater: Waiting for database')
+            continue
+
+
 def execute_sql(db, statements):
     errors = 0
     statement_count = len(statements)
@@ -43,7 +59,7 @@ if not os.path.isdir(DATA_PATH):
 
 # Figure out server version
 server_version = None
-with open('{}/controllers/System.php'.format(APPLICATION_PATH)) as f:
+with open('{}/services/SystemService.php'.format(APPLICATION_PATH)) as f:
     for line in f:
         if 'const VERSION' in line:
             server_version = re.sub("';", '', re.sub("const VERSION = '", '', line.strip()))
@@ -71,21 +87,10 @@ if not all(v in os.environ for v in ['HS_DB_HOST', 'HS_DB_PORT', 'HS_DB_USER', '
 
 # Initiate database connection
 print('Updater: Connecting to database...')
-while True:
-    time.sleep(1)
-    try:
-        db = pymysql.connect(host=os.environ['HS_DB_HOST'], port=int(os.environ['HS_DB_PORT']),
-                             user=os.environ['HS_DB_USER'], passwd=os.environ['HS_DB_PASSWORD'],
-                             db=os.environ['HS_DB_NAME'])
-        c = db.cursor()
-        if c.connection:
-            break
-        else:
-            print('Updater: Waiting for database')
-            continue
-    except Exception as e:
-        print('Updater: Waiting for database')
-        continue
+time.sleep(10)
+db = connect_to_db(host=os.environ['HS_DB_HOST'], port=int(os.environ['HS_DB_PORT']),
+                   user=os.environ['HS_DB_USER'], password=os.environ['HS_DB_PASSWORD'],
+                   db_name=os.environ['HS_DB_NAME'])
 
 # 2.4.0 -> 2.5.0
 if config_version == '2.4.0':
@@ -132,9 +137,23 @@ if config_version == '2.6.1':
 # 2.7.0 -> 2.8.0
 if config_version == '2.7.0':
     print('Upgrading configuration 2.7.0 -> 2.8.0')
+    print('Migrating DB users to use the cached_sha2_password auth plugin')
+    db.close()
+    db_root = connect_to_db(host=os.environ['HS_DB_HOST'], port=int(os.environ['HS_DB_PORT']),
+                            user="root", password=os.environ['HS_DB_ROOT_PASSWORD'],
+                            db_name=os.environ['HS_DB_NAME'])
+    db_root_statements = [
+        f"ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY '{os.environ['HS_DB_ROOT_PASSWORD']}'",
+        f"ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '{os.environ['HS_DB_ROOT_PASSWORD']}'",
+        f"ALTER USER 'honeysens'@'%' IDENTIFIED WITH caching_sha2_password BY '{os.environ['HS_DB_PASSWORD']}'",
+    ]
+    execute_sql(db_root, db_root_statements)
+    db_root.close()
+
+    db = connect_to_db(host=os.environ['HS_DB_HOST'], port=int(os.environ['HS_DB_PORT']),
+                       user=os.environ['HS_DB_USER'], password=os.environ['HS_DB_PASSWORD'],
+                       db_name=os.environ['HS_DB_NAME'])
     db_statements = [
-        # TODO Delete preexisting tasks, conversion from LONGTEXT to JSON might fail
-        'ALTER TABLE tasks MODIFY params LONGTEXT, MODIFY result LONGTEXT',
         'ALTER TABLE tasks CHANGE params params JSON DEFAULT NULL, CHANGE result result JSON DEFAULT NULL',
         'ALTER TABLE sensors DROP configArchiveStatus',
         'ALTER TABLE firmware DROP source',
@@ -142,8 +161,8 @@ if config_version == '2.7.0':
     ]
     execute_sql(db, db_statements)
     db.commit()
-    config.set('server', 'config_version', '2.7.0')
-    config_version = '2.7.0'
+    config.set('server', 'config_version', '2.8.0')
+    config_version = '2.8.0'
 
 
 # Write new config file
