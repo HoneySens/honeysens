@@ -30,13 +30,9 @@
             </div>
             <div id="documentation" class="panel-collapse collapse">
                 <div class="panel-body">
-                    <div class="panelIcon pull-left"><span class="glyphicon glyphicon-book"></span></div>
-                    <p><a href="docs/user_manual.pdf" target="_blank">Benutzerhandbuch</a>
-                        <br />f&uuml;r die HoneySens-Version 2.x</p>
-                    <hr />
-                    <div class="panelIcon pull-left"><span class="glyphicon glyphicon-book"></span></div>
-                    <p><a href="docs/admin_manual.pdf" target="_blank">Administrationshandbuch</a>
-                        <br />Beschreibt Installation und Updates f&uuml;r Server</p>
+                    <div class="panelIcon pull-left"><span class="glyphicon glyphicon-globe"></span></div>
+                    <p><a href="https://honeysens.org/docs" target="_blank">Website</a>
+                        <br />Up-to-date documentation on design goals, architecture, setup procedure and operation.</p>
                 </div>
             </div>
         </div>
