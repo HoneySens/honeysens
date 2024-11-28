@@ -109,12 +109,6 @@ module.exports = function(grunt) {
                 dest: dstPrefix + '/public/js/',
                 src: '**'
             },
-            docs: {
-                files: [
-                    { expand: true, cwd: dstPrefix + '/docs/admin_manual/', dest: dstPrefix + '/public/docs/', src: 'admin_manual.pdf' },
-                    { expand: true, cwd: dstPrefix + '/docs/user_manual/', dest: dstPrefix + '/public/docs/', src: 'user_manual.pdf' }
-                ]
-            },
             php_vendor: {
                 expand: true,
                 cwd: srcPrefix + '/out/dev/',
@@ -146,24 +140,6 @@ module.exports = function(grunt) {
                     dest: dstPrefix + '/public/css/<%= pkg.name %>.css',
                     src: '<%= stylesheets %>'
                 }]
-            }
-        },
-        latex: {
-            admin_manual: {
-                options: {
-                    outputDirectory: dstPrefix + '/docs/admin_manual'
-                },
-                expand: true,
-                cwd: srcPrefix + '/key/admin_manual/',
-                src: 'admin_manual.tex'
-            },
-            user_manual: {
-                options: {
-                    outputDirectory: dstPrefix + '/docs/user_manual'
-                },
-                expand: true,
-                cwd: srcPrefix + '/docs/user_manual/',
-                src: 'user_manual.tex'
             }
         },
         chmod: {
@@ -262,11 +238,6 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.registerTask('docs', [
-        'latex',
-        'latex', // Invoke pdflatex a second time for indexing and layouting
-        'copy:docs'
-    ]);
     grunt.registerTask('default', [
         'mkdir',
         'copy:static',
