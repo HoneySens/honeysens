@@ -87,7 +87,6 @@ if not all(v in os.environ for v in ['HS_DB_HOST', 'HS_DB_PORT', 'HS_DB_USER', '
 
 # Initiate database connection
 print('Updater: Connecting to database...')
-time.sleep(10)
 db = connect_to_db(host=os.environ['HS_DB_HOST'], port=int(os.environ['HS_DB_PORT']),
                    user=os.environ['HS_DB_USER'], password=os.environ['HS_DB_PASSWORD'],
                    db_name=os.environ['HS_DB_NAME'])

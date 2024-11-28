@@ -11,7 +11,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
     grunt.loadNpmTasks('grunt-contrib-symlink');
-    grunt.loadNpmTasks('grunt-latex');
     grunt.loadNpmTasks('grunt-mkdir');
     grunt.loadNpmTasks('grunt-shell');
     // Watch task backends
@@ -289,7 +288,6 @@ module.exports = function(grunt) {
     grunt.registerTask('release', [
         'clean',
         'mkdir',
-        'docs',
         'copy:static',
         'copy:app',
         'copy:public',
