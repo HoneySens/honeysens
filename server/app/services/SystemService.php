@@ -20,7 +20,7 @@ use phpseclib3\File\X509;
 
 class SystemService extends Service {
 
-    const VERSION = '2.7.0';
+    const VERSION = '2.8.0';
     const ERR_CONFIG_WRITE = 1;
 
     private ConfigParser $config;

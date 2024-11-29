@@ -4,7 +4,7 @@
         <dt>Plattform</dt>
         <dd>HoneySens Server</dd>
         <dt>Revision</dt>
-        <dd>2.7.0</dd>
+        <dd>2.8.0</dd>
         <dt>Build-ID</dt>
         <dd><%- showBuildID() %></dd>
         <dt>Lizenz</dt>
@@ -44,6 +44,14 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.8.0</strong> - Dezember 2024<br/>
+                    <p>
+                    <ul>
+                        <li>Backend-Migration auf PHP8</li>
+                        <li>Überarbeitung aller API-Berechtigungsprüfungen</li>
+                    </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.7.0</strong> - Januar 2024<br/>
                     <p>
                     <ul>
