@@ -72,6 +72,12 @@ module.exports = function(grunt) {
             }
         },
         copy: {
+            favicon: {
+                expand: true,
+                cwd: srcPrefix + '/static/',
+                src: 'favicon.ico',
+                dest: dstPrefix + '/public/'
+            },
             static: {
                 expand: true,
                 cwd: srcPrefix + '/static/',
@@ -240,6 +246,7 @@ module.exports = function(grunt) {
 
     grunt.registerTask('default', [
         'mkdir',
+        'copy:favicon',
         'copy:static',
         'copy:app',
         'copy:public',
@@ -259,6 +266,7 @@ module.exports = function(grunt) {
     grunt.registerTask('release', [
         'clean',
         'mkdir',
+        'copy:favicon',
         'copy:static',
         'copy:app',
         'copy:public',
