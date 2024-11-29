@@ -14,10 +14,9 @@ configured for all registry URLs (currently `/v2/...`). Because of
 that configuration, the registry itself is set up using plain HTTP 
 instead of HTTPS. This allows easy access to the service from the 
 HoneySens server itself. For public access, the reverse proxy 
-guarantees access only via TLS and just for authenticated clients 
-(client-cert check). It is also necessary to restrict clients (sensors) 
-to just downloading service images. Other operations are forbidden
-by restricting the available HTTP operations.
+guarantees access only via TLS. It is also necessary to restrict 
+clients (sensors) to just downloading service images. Other operations 
+are forbidden by restricting the available HTTP operations on the proxy.
 
 The docker client on the sensors requires special configuration to
 trust the server certificate [2]. That certificate has to be a CA

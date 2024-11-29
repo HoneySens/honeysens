@@ -1,6 +1,6 @@
 {
   "name": "honeysens",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Honeypot-based Sensor Network",
   "author": "Pascal Brückner",
   "devDependencies": {
