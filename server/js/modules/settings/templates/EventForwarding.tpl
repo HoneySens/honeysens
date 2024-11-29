@@ -9,7 +9,7 @@
     </div>
     <div class="form-group has-feedback">
         <label for="syslogPort" class="control-label">Port</label>
-        <input type="number" name="syslogPort" class="form-control" placeholder="514" value="<%- syslogPort %>" <% if(syslogEnabled) { %>required<% } %> min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen" />
+        <input type="number" name="syslogPort" class="form-control" placeholder="514" value="<%- syslogPort %>" required min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen" />
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>

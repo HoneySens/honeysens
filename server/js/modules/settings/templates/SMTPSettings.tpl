@@ -7,7 +7,7 @@
     </div>
     <div class="form-group has-feedback">
         <label for="smtpPort" class="control-label">Port</label>
-        <input type="number" name="smtpPort" class="form-control" placeholder="25/587" value="<%- smtpPort %>" <% if(smtpEnabled) { %>required<% } %> min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen" />
+        <input type="number" name="smtpPort" class="form-control" placeholder="25/587" value="<%- smtpPort %>" required min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen" />
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>

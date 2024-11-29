@@ -15,8 +15,8 @@ function(HoneySens, ModalSettingsSaveView, EventArchiveTpl) {
 
                         view.model.save({
                             archivePrefer: view.$el.find('input[name="archivePrefer"]').is(':checked'),
-                            archiveMoveDays: view.$el.find('input[name="archiveMoveDays"]').val(),
-                            archiveKeepDays: view.$el.find('input[name="archiveKeepDays"]').val()
+                            archiveMoveDays: parseInt(view.$el.find('input[name="archiveMoveDays"]').val()),
+                            archiveKeepDays: parseInt(view.$el.find('input[name="archiveKeepDays"]').val())
                         }, {
                             success: function() {
                                 HoneySens.request('view:modal').show(new ModalSettingsSaveView());

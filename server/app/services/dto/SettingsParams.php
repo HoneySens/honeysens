@@ -37,9 +37,9 @@ class SettingsParams {
     // IP or hostname of a mail server
     public ?string $smtpServer = null;
     // TCP port to use for SMTP connections
-    public ?int $smtpPort = null;
+    public int $smtpPort;
     // SMTP transport encryption
-    public ?TransportEncryptionType $smtpEncryption = null;
+    public TransportEncryptionType $smtpEncryption;
     // E-Mail address to use as sender of system mails
     public ?string $smtpFrom = null;
     // SMTP Username to authenticate with
@@ -52,9 +52,9 @@ class SettingsParams {
     // IP or hostname of an LDAP server
     public ?string $ldapServer = null;
     // TCP port to use for LDAP connections
-    public ?int $ldapPort = null;
+    public int $ldapPort;
     // LDAP transport encryption (0: none, 1: STARTTLS, 2: TLS)
-    public ?TransportEncryptionType $ldapEncryption = null;
+    public TransportEncryptionType $ldapEncryption;
     // LDAP template string
     public ?string $ldapTemplate = null;
 
@@ -63,11 +63,11 @@ class SettingsParams {
     // IP or hostname of a syslog server
     public ?string $syslogServer = null;
     // Port to use for syslog connections
-    public ?int $syslogPort = null;
+    public int $syslogPort;
     // Transport protocol to use for syslog connection (0: UDP, 1: TCP)
-    public ?TransportProtocol $syslogTransport = null;
+    public TransportProtocol $syslogTransport;
     // Facility according to syslog protocol (between 0 and 23)
-    public ?int $syslogFacility = null;
+    public int $syslogFacility;
     // Priority according to syslog protocol (2, 3, 4, 6, 7)
-    public ?int $syslogPriority = null;
+    public int $syslogPriority;
 }

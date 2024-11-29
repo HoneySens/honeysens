@@ -40,10 +40,10 @@ class SettingsService extends Service {
         $settings = array(
             'id' => 0,
             'serverHost' => $this->config['server']['host'],
-            'serverPortHTTPS' => $this->config['server']['portHTTPS'],
-            'sensorsUpdateInterval' => $this->config['sensors']['update_interval'],
+            'serverPortHTTPS' => $this->config->getInt('server', 'portHTTPS'),
+            'sensorsUpdateInterval' => $this->config->getInt('sensors', 'update_interval'),
             'sensorsServiceNetwork' => $this->config['sensors']['service_network'],
-            'sensorsTimeoutThreshold' => $this->config['sensors']['timeout_threshold'],
+            'sensorsTimeoutThreshold' => $this->config->getInt('sensors', 'timeout_threshold'),
             'caFP' => openssl_x509_fingerprint($caCert),
             'caExpire' => openssl_x509_parse($caCert)['validTo_time_t'],
             'requireEventComment' => $this->config->getBoolean('misc', 'require_event_comment'),
@@ -57,28 +57,28 @@ class SettingsService extends Service {
             // SMTP
             $settings['smtpEnabled'] = $this->config->getBoolean('smtp', 'enabled');
             $settings['smtpServer'] = $this->config['smtp']['server'];
-            $settings['smtpPort'] = $this->config['smtp']['port'];
-            $settings['smtpEncryption'] = $this->config['smtp']['encryption'];
+            $settings['smtpPort'] = $this->config->getInt('smtp', 'port');
+            $settings['smtpEncryption'] = $this->config->getInt('smtp', 'encryption');
             $settings['smtpFrom'] = $this->config['smtp']['from'];
             $settings['smtpUser'] = $this->config['smtp']['user'];
             $settings['smtpPassword'] = $this->config['smtp']['password'];
             // LDAP
             $settings['ldapEnabled'] = $this->config->getBoolean('ldap', 'enabled');
             $settings['ldapServer'] = $this->config['ldap']['server'];
-            $settings['ldapPort'] = $this->config['ldap']['port'];
-            $settings['ldapEncryption'] = $this->config['ldap']['encryption'];
+            $settings['ldapPort'] = $this->config->getInt('ldap', 'port');
+            $settings['ldapEncryption'] = $this->config->getInt('ldap', 'encryption');
             $settings['ldapTemplate'] = $this->config['ldap']['template'];
             // Event Forwarding (syslog)
             $settings['syslogEnabled'] = $this->config->getBoolean('syslog', 'enabled');
             $settings['syslogServer'] = $this->config['syslog']['server'];
-            $settings['syslogPort'] = $this->config['syslog']['port'];
-            $settings['syslogTransport'] = $this->config['syslog']['transport'];
-            $settings['syslogFacility'] = $this->config['syslog']['facility'];
-            $settings['syslogPriority'] = $this->config['syslog']['priority'];
+            $settings['syslogPort'] = $this->config->getInt('syslog', 'port');
+            $settings['syslogTransport'] = $this->config->getInt('syslog', 'transport');
+            $settings['syslogFacility'] = $this->config->getInt('syslog', 'facility');
+            $settings['syslogPriority'] = $this->config->getInt('syslog', 'priority');
             // Misc
-            $settings['apiLogKeepDays'] = $this->config['misc']['api_log_keep_days'];
-            $settings['archiveMoveDays'] = $this->config['misc']['archive_move_days'];
-            $settings['archiveKeepDays'] = $this->config['misc']['archive_keep_days'];
+            $settings['apiLogKeepDays'] = $this->config->getInt('misc', 'api_log_keep_days');
+            $settings['archiveMoveDays'] = $this->config->getInt('misc', 'archive_move_days');
+            $settings['archiveKeepDays'] = $this->config->getInt('misc', 'archive_keep_days');
         }
         return $settings;
     }
@@ -95,7 +95,7 @@ class SettingsService extends Service {
         $this->config->set('smtp', 'enabled', $params->smtpEnabled ? 'true' : 'false');
         $this->config->set('smtp', 'server', $params->smtpServer);
         $this->config->set('smtp', 'port', $params->smtpPort);
-        $this->config->set('smtp', 'encryption', $params->smtpEncryption?->value);
+        $this->config->set('smtp', 'encryption', $params->smtpEncryption->value);
         $this->config->set('smtp', 'from', $params->smtpFrom);
         $this->config->set('smtp', 'user', $params->smtpUser);
         try {
@@ -106,12 +106,12 @@ class SettingsService extends Service {
         $this->config->set('ldap', 'enabled', $params->ldapEnabled ? 'true' : 'false');
         $this->config->set('ldap', 'server', $params->ldapServer);
         $this->config->set('ldap', 'port', $params->ldapPort);
-        $this->config->set('ldap', 'encryption', $params->ldapEncryption?->value);
+        $this->config->set('ldap', 'encryption', $params->ldapEncryption->value);
         $this->config->set('ldap', 'template', $params->ldapTemplate);
         $this->config->set('syslog', 'enabled', $params->syslogEnabled ? 'true' : 'false');
         $this->config->set('syslog', 'server', $params->syslogServer);
         $this->config->set('syslog', 'port', $params->syslogPort);
-        $this->config->set('syslog', 'transport', $params->syslogTransport?->value);
+        $this->config->set('syslog', 'transport', $params->syslogTransport->value);
         $this->config->set('syslog', 'facility', $params->syslogFacility);
         $this->config->set('syslog', 'priority', $params->syslogPriority);
         $this->config->set('sensors', 'update_interval', $params->sensorsUpdateInterval);
@@ -132,40 +132,7 @@ class SettingsService extends Service {
             throw new SystemException($e);
         }
         $this->logger->log('System settings updated', LogResource::SETTINGS);
-        return array(
-            'id' => 0,
-            'serverHost' => $this->config['server']['host'],
-            'serverPortHTTPS' => $this->config['server']['portHTTPS'],
-            'smtpEnabled' => $this->config->getBoolean('smtp', 'enabled'),
-            'smtpServer' => $this->config['smtp']['server'],
-            'smtpPort' => $this->config['smtp']['port'],
-            'smtpEncryption' => $this->config['smtp']['encryption'],
-            'smtpFrom' => $this->config['smtp']['from'],
-            'smtpUser' => $this->config['smtp']['user'],
-            'smtpPassword' => $this->config['smtp']['password'],
-            'ldapEnabled' => $this->config->getBoolean('ldap', 'enabled'),
-            'ldapServer' => $this->config['ldap']['server'],
-            'ldapPort' => $this->config['ldap']['port'],
-            'ldapEncryption' => $this->config['ldap']['encryption'],
-            'ldapTemplate' => $this->config['ldap']['template'],
-            'syslogEnabled' => $this->config->getBoolean('syslog', 'enabled'),
-            'syslogServer' => $this->config['syslog']['server'],
-            'syslogPort' => $this->config['syslog']['port'],
-            'syslogTransport' => $this->config['syslog']['transport'],
-            'syslogFacility' => $this->config['syslog']['facility'],
-            'syslogPriority' => $this->config['syslog']['priority'],
-            'sensorsUpdateInterval' => $this->config['sensors']['update_interval'],
-            'sensorsServiceNetwork' => $this->config['sensors']['service_network'],
-            'sensorsTimeoutThreshold' => $this->config['sensors']['timeout_threshold'],
-            'apiLogKeepDays' => $this->config['misc']['api_log_keep_days'],
-            'preventEventDeletionByManagers' => $this->config->getBoolean('misc', 'prevent_event_deletion_by_managers'),
-            'preventSensorDeletionByManagers' => $this->config->getBoolean('misc', 'prevent_sensor_deletion_by_managers'),
-            'requireEventComment' => $this->config->getBoolean('misc', 'require_event_comment'),
-            'requireFilterDescription' => $this->config->getBoolean('misc', 'require_filter_description'),
-            'archivePrefer' => $this->config->getBoolean('misc', 'archive_prefer'),
-            'archiveMoveDays' => $this->config['misc']['archive_move_days'],
-            'archiveKeepDays' => $this->config['misc']['archive_keep_days']
-        );
+        return $this->getSettings(true);
     }
 
     /**
