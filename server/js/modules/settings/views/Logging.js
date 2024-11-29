@@ -14,7 +14,7 @@ function(HoneySens, ModalSettingsSaveView, LoggingTpl) {
                     if(!e.isDefaultPrevented()) {
                         e.preventDefault();
 
-                        var keepDays = view.$el.find('input[name="keepDays"]').val();
+                        var keepDays = parseInt(view.$el.find('input[name="keepDays"]').val());
                         view.model.save({
                             apiLogKeepDays: keepDays}, {
                             success: function() {

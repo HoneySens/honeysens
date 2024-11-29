@@ -43,8 +43,8 @@ function(HoneySens, ModalSettingsSaveView, LDAPTpl) {
             getFormData: function() {
                 return {
                     ldapServer: this.$el.find('input[name="ldapServer"]').val(),
-                    ldapPort: this.$el.find('input[name="ldapPort"]').val(),
-                    ldapEncryption: this.$el.find('select[name="ldapEncryption"]').val(),
+                    ldapPort: parseInt(this.$el.find('input[name="ldapPort"]').val()),
+                    ldapEncryption: parseInt(this.$el.find('select[name="ldapEncryption"]').val()),
                     ldapTemplate: this.$el.find('input[name="ldapTemplate"]').val()
                 }
             }

@@ -160,6 +160,16 @@ if config_version == '2.7.0':
     ]
     execute_sql(db, db_statements)
     db.commit()
+    for section, key, default in [
+        ('ldap', 'port', 389),
+        ('smtp', 'port', 587),
+        ('syslog', 'transport', 0),
+        ('syslog', 'facility', 1),
+        ('syslog', 'port', 514),
+        ('syslog', 'priority', 6)
+    ]:
+        if config.get(section, key) == '':
+            config.set(section, key, str(default))
     config.set('server', 'config_version', '2.8.0')
     config_version = '2.8.0'
 

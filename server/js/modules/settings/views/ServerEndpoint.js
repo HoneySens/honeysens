@@ -15,7 +15,7 @@ function(HoneySens, ModalSettingsSaveView, ServerEndpointTpl) {
                         e.preventDefault();
                         
                         var serverHost = view.$el.find('input[name="serverHost"]').val();
-                        var serverPortHTTPS = view.$el.find('input[name="serverPortHTTPS"]').val();
+                        var serverPortHTTPS = parseInt(view.$el.find('input[name="serverPortHTTPS"]').val());
                         view.model.save({serverHost: serverHost, serverPortHTTPS: serverPortHTTPS}, {
                             success: function() {
                                 HoneySens.request('view:modal').show(new ModalSettingsSaveView());

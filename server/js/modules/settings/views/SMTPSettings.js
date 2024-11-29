@@ -65,8 +65,8 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
             getFormData: function() {
                 return {
                     smtpServer: this.$el.find('input[name="smtpServer"]').val(),
-                    smtpPort: this.$el.find('input[name="smtpPort"]').val(),
-                    smtpEncryption: this.$el.find('select[name="smtpEncryption"]').val(),
+                    smtpPort: parseInt(this.$el.find('input[name="smtpPort"]').val()),
+                    smtpEncryption: parseInt(this.$el.find('select[name="smtpEncryption"]').val()),
                     smtpFrom: this.$el.find('input[name="smtpFrom"]').val(),
                     smtpUser: this.$el.find('input[name="smtpUser"]').val(),
                     smtpPassword: this.$el.find('input[name="smtpPassword"]').val()

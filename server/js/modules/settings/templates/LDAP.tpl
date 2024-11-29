@@ -7,7 +7,7 @@
     </div>
     <div class="form-group has-feedback">
         <label for="ldapPort" class="control-label">Port</label>
-        <input type="number" name="ldapPort" class="form-control" placeholder="389" value="<%- ldapPort %>" <% if(ldapEnabled) { %>required<% } %> min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen" />
+        <input type="number" name="ldapPort" class="form-control" placeholder="389" value="<%- ldapPort %>" required min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen" />
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>

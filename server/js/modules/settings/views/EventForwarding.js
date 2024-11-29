@@ -37,10 +37,8 @@ function(HoneySens, Models, ModalSettingsSaveView, ModalForwardTestEvent, EventF
                 var view = this;
                 // Set selects from model
                 this.$el.find('select[name="syslogTransport"] option[value="' + this.model.get('syslogTransport') + '"]').prop('selected', true);
-                var syslogFacility = this.model.get('syslogFacility') === '' ? '1' : this.model.get('syslogFacility');
-                this.$el.find('select[name="syslogFacility"] option[value="' + syslogFacility + '"]').prop('selected', true);
-                var syslogPriority = this.model.get('syslogPriority') === '' ? '6' : this.model.get('syslogPriority');
-                this.$el.find('select[name="syslogPriority"] option[value="' + syslogPriority + '"]').prop('selected', true);
+                this.$el.find('select[name="syslogFacility"] option[value="' + this.model.get('syslogFacility') + '"]').prop('selected', true);
+                this.$el.find('select[name="syslogPriority"] option[value="' + this.model.get('syslogPriority')+ '"]').prop('selected', true);
                 // Submission handler
                 this.$el.find('form').validator().on('submit', function (e) {
                     if(!e.isDefaultPrevented()) {
@@ -66,10 +64,10 @@ function(HoneySens, Models, ModalSettingsSaveView, ModalForwardTestEvent, EventF
             getFormData: function() {
                 return {
                     syslogServer: this.$el.find('input[name="syslogServer"]').val(),
-                    syslogPort: this.$el.find('input[name="syslogPort"]').val(),
-                    syslogTransport: this.$el.find('select[name="syslogTransport"]').val(),
-                    syslogFacility: this.$el.find('select[name="syslogFacility"]').val(),
-                    syslogPriority: this.$el.find('select[name="syslogPriority"]').val(),
+                    syslogPort: parseInt(this.$el.find('input[name="syslogPort"]').val()),
+                    syslogTransport: parseInt(this.$el.find('select[name="syslogTransport"]').val()),
+                    syslogFacility: parseInt(this.$el.find('select[name="syslogFacility"]').val()),
+                    syslogPriority: parseInt(this.$el.find('select[name="syslogPriority"]').val()),
                 }
             }
         });
