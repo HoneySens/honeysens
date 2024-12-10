@@ -17,6 +17,9 @@ apt-get install -y software-properties-common screen python3-openssl python3-pym
 add-apt-repository -y ppa:ondrej/php
 apt-get -qq update
 apt-get install -y php8.3 php8.3-curl php8.3-mbstring php8.3-mysql php8.3-xml php8.3-ldap
+# Re-enable PHPs built-in session garbage collector
+sed -i -e 's/session.gc_probability.*/session.gc_probability = 1/' -e 's/session.gc_divisor.*/session.gc_divisor = 1000/' /etc/php/8.3/apache2/php.ini
+chmod go+r /var/lib/php/sessions
 
 # Apache
 sed -i -e 's/upload_max_filesize.*/upload_max_filesize = 100M/' -e 's/post_max_size.*/post_max_size = 100M/' /etc/php/8.3/apache2/php.ini
