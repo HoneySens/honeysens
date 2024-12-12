@@ -102,6 +102,7 @@ function(HoneySens, Models, FileUploadTpl) {
                 //view.$el.find('div.progress, span.progress-text').hide();
                 view.$el.find('div.loadingInline').html(spinner.el);
                 view.$el.find('#fileUpload').fileinput({
+                    'autoReplace': true,
                     'dropZoneEnabled': false,
                     'enableResumableUpload': true,
                     'maxFileCount': 1,
