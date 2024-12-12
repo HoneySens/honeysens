@@ -52,6 +52,7 @@ class State extends RESTResource {
         V::optional(V::oneOf(V::intVal(), V::equals('null')))->check($lastEventId);
         $now = new \DateTime();
         try {
+            $sessionUser = $this->getSessionUser();
             $state = $this->getEntities(
                 $em,
                 $platformsService,
@@ -62,7 +63,7 @@ class State extends RESTResource {
                 $eventFiltersService,
                 $sensorServicesService,
                 $tasksService,
-                $this->getSessionUser(),
+                $sessionUser,
                 $ts);
         } catch(ForbiddenException) {
             // In case no user is logged in
@@ -77,16 +78,16 @@ class State extends RESTResource {
             $events = array();
             if($lastEventId) {
                 // Return new events since the provided last event ID
-                $filterConditions = Events::validateEventFilterConditions($this->getSessionUser(), $queryParams);
+                $filterConditions = Events::validateEventFilterConditions($sessionUser, $queryParams);
                 $filterConditions->lastID = intval($lastEventId);
-                $events = $eventsService->getEvents($this->getSessionUser(), $filterConditions)['items'];
+                $events = $eventsService->getEvents($sessionUser, $filterConditions)['items'];
             }
             $state['new_events'] = $events;
         }
         try {
             // The lastEventID is only returned if a user is logged in, otherwise this will throw a ForbiddenException
             $lastEventFilter = new EventFilterConditions();
-            $lastEventFilter->user = $this->getSessionUser();
+            $lastEventFilter->user = $sessionUser->role !== UserRole::ADMIN ? $this->getSessionUser() : null;
             $lastEventFilter->sortBy = 'id';
             $lastEventFilter->sortOrder = 'desc';
             $lastEvents = $eventsService->getEvents($this->getSessionUser(), $lastEventFilter, perPage: 1)['items'];
