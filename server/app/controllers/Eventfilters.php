@@ -41,10 +41,10 @@ class Eventfilters extends RESTResource {
         return $response;
     }
 
-    public function updateEventFilter(Request $request, Response $response, ConfigParser $config, EventFiltersService $service, int $id): Response {
+    public function updateEventFilter(Request $request, Response $response, EventFiltersService $service, int $id): Response {
         $this->assureAllowed('update');
         $data = $request->getParsedBody();
-        $this->assertValidFilter($data, $config, true);
+        $this->assertValidFilter($data, true);
         $filter = $service->updateEventFilter(
             $this->getSessionUser(),
             $id,
@@ -65,16 +65,14 @@ class Eventfilters extends RESTResource {
         return $response;
     }
 
-    private function assertValidFilter(array $data, ConfigParser $config, bool $isUpdate = false): void {
+    private function assertValidFilter(array $data, bool $isUpdate = false): void {
         V::arrayType()
             ->key('name', V::alnum('._-')->length(1, 255))
             ->key('division', V::intVal())
             ->key('conditions', V::arrayType()->each(V::arrayType()))
+            ->key('description', V::optional(V::stringType()->length(1, 65535)))
             ->check($data);
         if($isUpdate) V::key('enabled', V::boolType())->check($data);
-        if($config->getBoolean('misc', 'require_filter_description'))
-            V::key('description', V::stringType()->length(1, 65535))->check($data);
-        else V::key('description', V::optional(V::stringType()->length(1, 65535)))->check($data);
         foreach($data['conditions'] as $condition) {
             V::key('field', V::intVal()->between(0, 3))
                 ->key('type', V::intVal()->between(0, 3))

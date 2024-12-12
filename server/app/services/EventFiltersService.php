@@ -17,13 +17,16 @@ use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\NotFoundException;
 use HoneySens\app\models\exceptions\SystemException;
 use HoneySens\app\models\Utils;
+use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 
 class EventFiltersService extends Service {
 
+    private ConfigParser $config;
     private LogService $logger;
 
-    public function __construct(EntityManager $em, LogService $logger) {
+    public function __construct(ConfigParser $config, EntityManager $em, LogService $logger) {
         parent::__construct($em);
+        $this->config = $config;
         $this->logger = $logger;
     }
 
@@ -124,6 +127,17 @@ class EventFiltersService extends Service {
         if($filter->division->getId() !== $divisionID && !$userIsAdmin)
             // If division association changes, assert the user is associated with the new division
             $this->assureUserAffiliation($divisionID, $user->getId());
+        if($this->config->getBoolean('misc', 'require_filter_description')
+            && ($description === null || strlen($description) == 0)) {
+            // If the description requirement isn't met, only update the 'enabled' flag
+            $filter->enabled = $enabled;
+            try {
+                $this->em->flush();
+            } catch (ORMException $e) {
+                throw new SystemException($e);
+            }
+            return $filter;
+        }
         $filter->name = $name;
         $filter->description = $description;
         $filter->enabled = $enabled;
@@ -183,7 +197,9 @@ class EventFiltersService extends Service {
     public function deleteEventFilter(int $id, User $user): void {
         $filter = $this->em->getRepository('HoneySens\app\models\entities\EventFilter')->find($id);
         if($filter === null) throw new BadRequestException();
-        $this->assureUserAffiliation($filter->division->getId(), $user->getId());
+        $userIsAdmin = $user->role === UserRole::ADMIN;
+        if(!$userIsAdmin)
+            $this->assureUserAffiliation($filter->division->getId(), $user->getId());
         $filter->division->removeEventFilter($filter);
         $fid = $filter->getId();
         try {
