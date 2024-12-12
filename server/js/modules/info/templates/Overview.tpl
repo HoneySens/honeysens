@@ -218,6 +218,9 @@
             </div>
             <div id="releasenotesBBB" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.6.0</strong> - Mai 2023<br/>
+                    <p>Base system updated</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong> - Mai 2022<br/>
                     <p>TLS authentication removed</p>
                     <hr />
@@ -267,6 +270,9 @@
             </div>
             <div id="releasenotesDocker" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.6.0</strong> - Mai 2023<br/>
+                    <p>Base system updated</p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong>Revision 2.5.0</strong> - Mai 2022<br/>
                     <p>TLS authentication removed</p>
                     <hr />

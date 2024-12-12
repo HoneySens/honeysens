@@ -7,7 +7,7 @@ function(HoneySens, ModalServerError, UserPasswordTpl) {
         Views.UserPassword = Marionette.ItemView.extend({
             template: UserPasswordTpl,
             errors: {
-                2: 'Das derzeitige Passwort kann nicht erneut verwendet werden, bitte vergeben Sie ein Neues.'
+                2: 'Das derzeitige Passwort kann nicht erneut verwendet werden, bitte vergeben Sie ein neues.'
             },
             events: {
                 'click button:submit': function(e) {
