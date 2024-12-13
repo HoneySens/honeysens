@@ -26,12 +26,12 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
                 },
                 'click button.reset': function() {
                     this.$el.find('form').trigger('reset');
+                    this.resetDropdownsFromModel();
                 }
             },
             onRender: function() {
                 var view = this;
-                // Set SMTP encryption from model
-                this.$el.find('select[name="smtpEncryption"] option[value="' + this.model.get('smtpEncryption') + '"]').prop('selected', true);
+                this.resetDropdownsFromModel();
                 // Submission handler
                 this.$el.find('form').validator().on('submit', function (e) {
                     if (!e.isDefaultPrevented()) {
@@ -71,6 +71,9 @@ function(HoneySens, ModalSettingsSaveView, ModalSendTestMail, SMTPSettingsTpl) {
                     smtpUser: this.$el.find('input[name="smtpUser"]').val(),
                     smtpPassword: this.$el.find('input[name="smtpPassword"]').val()
                 }
+            },
+            resetDropdownsFromModel: function() {
+                this.$el.find('select[name="smtpEncryption"] option[value="' + this.model.get('smtpEncryption') + '"]').prop('selected', true);
             }
         });
     });

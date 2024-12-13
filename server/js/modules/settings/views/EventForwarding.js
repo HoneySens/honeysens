@@ -12,6 +12,7 @@ function(HoneySens, Models, ModalSettingsSaveView, ModalForwardTestEvent, EventF
             events: {
                 'click button.reset': function() {
                     this.$el.find('form').trigger('reset');
+                    this.resetDropdownsFromModel();
                 },
                 'click button.sendTestEvent': function() {
                     this.enableSection();
@@ -35,10 +36,7 @@ function(HoneySens, Models, ModalSettingsSaveView, ModalForwardTestEvent, EventF
             },
             onRender: function() {
                 var view = this;
-                // Set selects from model
-                this.$el.find('select[name="syslogTransport"] option[value="' + this.model.get('syslogTransport') + '"]').prop('selected', true);
-                this.$el.find('select[name="syslogFacility"] option[value="' + this.model.get('syslogFacility') + '"]').prop('selected', true);
-                this.$el.find('select[name="syslogPriority"] option[value="' + this.model.get('syslogPriority')+ '"]').prop('selected', true);
+                this.resetDropdownsFromModel();
                 // Submission handler
                 this.$el.find('form').validator().on('submit', function (e) {
                     if(!e.isDefaultPrevented()) {
@@ -69,6 +67,11 @@ function(HoneySens, Models, ModalSettingsSaveView, ModalForwardTestEvent, EventF
                     syslogFacility: parseInt(this.$el.find('select[name="syslogFacility"]').val()),
                     syslogPriority: parseInt(this.$el.find('select[name="syslogPriority"]').val()),
                 }
+            },
+            resetDropdownsFromModel: function() {
+                this.$el.find('select[name="syslogTransport"] option[value="' + this.model.get('syslogTransport') + '"]').prop('selected', true);
+                this.$el.find('select[name="syslogFacility"] option[value="' + this.model.get('syslogFacility') + '"]').prop('selected', true);
+                this.$el.find('select[name="syslogPriority"] option[value="' + this.model.get('syslogPriority')+ '"]').prop('selected', true);
             }
         });
     });
