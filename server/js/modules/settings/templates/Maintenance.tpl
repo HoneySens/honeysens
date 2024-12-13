@@ -2,24 +2,6 @@
     <h3>Wartung</h3>
 </div>
 <div class="panel-group" id="maintenance">
-    <!-- DISABLED, THIS CAN ONLY BE PERFORMED WITH SYSTEM ACCESS (VIA BACKUP CONTAINER)
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h4 class="panel-title">
-                <a class="collapsed" data-toggle="collapse" data-parent="#maintenance" href="#dbreset">Datenbank zur&uuml;cksetzen</a>
-            </h4>
-        </div>
-        <div id="dbreset" class="panel-collapse collapse">
-            <div class="panel-body">
-                <div class="pull-right">
-                    <button type="button" class="resetDB btn btn-primary btn-sm" data-loading-text="In Arbeit...">Zur&uuml;cksetzen</button>
-                </div>
-                Achtung, wenn Sie diese Aktion durchf&uuml;hren, werden <strong>ALLE Datenbankinhalte unwiderruflich
-                verloren gehen!</strong> Das System wird anschlie&szlig;end neu initialisiert.
-            </div>
-        </div>
-    </div>
-    -->
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4 class="panel-title">
