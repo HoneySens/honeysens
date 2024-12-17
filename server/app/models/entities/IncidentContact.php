@@ -86,7 +86,7 @@ class IncidentContact {
      * Returns the e-mail address of this incident contact,
      * taken either from $email or $user.
      */
-    public function getEMail(): string {
+    public function getEMail(): ?string {
         if($this->getType() === ContactType::USER) {
             return $this->user->email;
         } else return $this->email;

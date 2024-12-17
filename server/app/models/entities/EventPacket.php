@@ -78,7 +78,7 @@ class EventPacket {
     /**
      * Returns all header fields and values as a JSON string.
      */
-    public function getHeaders(): string {
+    public function getHeaders(): ?string {
         return $this->headers;
     }
 
@@ -94,7 +94,7 @@ class EventPacket {
     /**
      * Returns payload data as an base64 encoded string.
      */
-    public function getPayload(): string {
+    public function getPayload(): ?string {
         return $this->payload;
     }
 
