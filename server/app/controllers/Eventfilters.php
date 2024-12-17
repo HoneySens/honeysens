@@ -26,10 +26,10 @@ class Eventfilters extends RESTResource {
         return $response;
     }
 
-    public function createEventFilter(Request $request, Response $response, ConfigParser $config, EventFiltersService $service): Response {
+    public function createEventFilter(Request $request, Response $response, EventFiltersService $service): Response {
         $this->assureAllowed('create');
         $data = $request->getParsedBody();
-        $this->assertValidFilter($data, $config);
+        $this->assertValidFilter($data);
         $filter = $service->createEventFilter(
             $this->getSessionUser(),
             $data['name'],
@@ -67,7 +67,7 @@ class Eventfilters extends RESTResource {
 
     private function assertValidFilter(array $data, bool $isUpdate = false): void {
         V::arrayType()
-            ->key('name', V::alnum('._-')->length(1, 255))
+            ->key('name', V::alnum('._- ')->length(1, 255))
             ->key('division', V::intVal())
             ->key('conditions', V::arrayType()->each(V::arrayType()))
             ->key('description', V::optional(V::stringType()->length(1, 65535)))

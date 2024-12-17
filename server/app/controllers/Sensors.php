@@ -132,7 +132,7 @@ class Sensors extends RESTResource {
     public function validateSensorParams(array $data, bool $isUpdate = false): SensorParams {
         $result = new SensorParams();
         V::arrayType()
-            ->key('name', V::alnum('_-.')->length(1, 50))
+            ->key('name', V::alnum('_-. ')->length(1, 50))
             ->key('location', V::stringType()->length(0, 255))
             ->key('division', V::intVal())
             ->key('eapol_mode', V::intVal()->between(0, 4))
