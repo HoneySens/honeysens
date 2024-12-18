@@ -59,12 +59,12 @@ class EventFilterCondition {
     public function matches(Event $e): bool {
         switch($this->field) {
             case EventFilterConditionField::CLASSIFICATION:
-                return $e->classification->value == $this->value;
+                return $e->classification->value === intval($this->value);
                 break;
             case EventFilterConditionField::SOURCE:
                 switch($this->type) {
                     case EventFilterConditionType::SOURCE_VALUE:
-                        return $e->source == $this->value;
+                        return $e->source === $this->value;
                     case EventFilterConditionType::SOURCE_IPRANGE:
                         $value = explode("-", $this->value);
                         return $e->source >= trim($value[0]) && $e->source <= trim($value[1]);
@@ -75,14 +75,14 @@ class EventFilterCondition {
                     case EventFilterConditionType::TARGET_PORT:
                         $port = null;
                         foreach($e->getPackets() as $packet) {
-                            if($port == null || $port == $packet->port) {
+                            if($port === null || $port === $packet->port) {
                                 $port = $packet->port;
                             } else {
                                 // more than two different target ports in packet list -> no match for a single port possible
                                 return false;
                             }
                         }
-                        return $port == $this->value;
+                        return $port === intval($this->value);
                 }
                 break;
             case EventFilterConditionField::PROTOCOL:
@@ -92,12 +92,12 @@ class EventFilterCondition {
                     EventPacketProtocol::UDP->value => 0);
                 $packets = $e->getPackets();
                 foreach($packets as $packet) {
-                    $packetCounts[$packet->protocol] += 1;
+                    $packetCounts[$packet->protocol->value] += 1;
                 }
                 // only check if protocol is unique in the package list
-                if(($packetCounts[EventPacketProtocol::TCP->value] > 0 && $packetCounts[EventPacketProtocol::UDP->value] == 0 && $packetCounts[EventPacketProtocol::UNKNOWN->value] == 0)
-                    || ($packetCounts[EventPacketProtocol::UDP->value] > 0 && $packetCounts[EventPacketProtocol::TCP->value] == 0 && $packetCounts[EventPacketProtocol::UNKNOWN->value] == 0)) {
-                    return $packets[0]->protocol == $this->value;
+                if(($packetCounts[EventPacketProtocol::TCP->value] > 0 && $packetCounts[EventPacketProtocol::UDP->value] === 0 && $packetCounts[EventPacketProtocol::UNKNOWN->value] === 0)
+                    || ($packetCounts[EventPacketProtocol::UDP->value] > 0 && $packetCounts[EventPacketProtocol::TCP->value] === 0 && $packetCounts[EventPacketProtocol::UNKNOWN->value] === 0)) {
+                    return $packets[0]->protocol->value === intval($this->value);
                 }
                 break;
         }
