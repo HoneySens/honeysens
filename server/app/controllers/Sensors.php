@@ -111,7 +111,7 @@ class Sensors extends RESTResource {
         $data = json_decode($requestBody, true);
         V::arrayType()
             ->key('status', V::stringType())
-            ->key('srv_crt_fp', V::stringType(), false)
+            ->key('srv_crt_fp', V::optional(V::stringType()), false)
             ->key('eapol_ca_crt_fp', V::optional(V::stringType()), false)
             ->key('eapol_client_crt_fp', V::optional(V::stringType()), false)
             ->check($data);
