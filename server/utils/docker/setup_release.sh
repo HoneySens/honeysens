@@ -2,7 +2,7 @@
 set -e
 
 # Apache
-chown -R hs:hs /opt/HoneySens/cache/ /opt/HoneySens/data/
+chown -R ubuntu:ubuntu /opt/HoneySens/cache/ /opt/HoneySens/data/
 cp -v /opt/HoneySens/utils/docker/apache.http.api.conf /etc/apache2/sites-available/honeysens_http_api.conf
 cp -v /opt/HoneySens/utils/docker/apache.http.redirect.conf /etc/apache2/sites-available/honeysens_http_redirect.conf
 cp -v /opt/HoneySens/utils/docker/apache.ssl.conf /etc/apache2/sites-available/honeysens_ssl.conf
@@ -20,7 +20,7 @@ cp -v /opt/HoneySens/utils/docker/run.sh /opt/
 # Create templates from the data directory to allow reinitialization of empty volumes
 mkdir -p /opt/HoneySens/templates
 cp -var /opt/HoneySens/data /opt/HoneySens/templates/
-chown -R hs:hs /opt/HoneySens/templates
+chown -R ubuntu:ubuntu /opt/HoneySens/templates
 
 # TLS key and certs
 ln -s /opt/HoneySens/data/https.chain.crt /srv/tls/https.crt

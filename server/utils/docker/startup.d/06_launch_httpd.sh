@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-export APACHE_RUN_USER=hs
-export APACHE_RUN_GROUP=hs
+export APACHE_RUN_USER=ubuntu
+export APACHE_RUN_GROUP=ubuntu
 export APACHE_LOG_DIR=/var/log/apache2
 export APACHE_LOCK_DIR=/var/lock/apache2
 export APACHE_PID_FILE=/var/run/apache2.pid

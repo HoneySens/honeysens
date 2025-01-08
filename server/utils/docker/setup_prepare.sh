@@ -6,16 +6,10 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get -qq update
 apt-get upgrade -y
 
-# Unprivileged user creation
-groupadd -g 1000 hs
-useradd -m -u 1000 -g 1000 hs
-
 # Basic dependencies
-apt-get install -y software-properties-common screen python3-openssl python3-pymysql curl openssl apache2 vim iproute2 netcat
+apt-get install -y software-properties-common screen python3-openssl python3-pymysql curl openssl apache2 vim iproute2 netcat-openbsd
 
 # PHP 8
-add-apt-repository -y ppa:ondrej/php
-apt-get -qq update
 apt-get install -y php8.3 php8.3-curl php8.3-mbstring php8.3-mysql php8.3-xml php8.3-ldap
 # Re-enable PHPs built-in session garbage collector
 sed -i -e 's/session.gc_probability.*/session.gc_probability = 1/' -e 's/session.gc_divisor.*/session.gc_divisor = 1000/' /etc/php/8.3/apache2/php.ini
@@ -33,4 +27,4 @@ chmod 755 /var/run/screen # see https://github.com/stucki/docker-cyanogenmod/iss
 mkdir -p /etc/startup.d /srv/data /srv/tls
 
 # Permissions
-chown -R hs:hs /etc/apache2 /var/lib/apache2 /var/log/apache2 /run /srv
+chown -R ubuntu:ubuntu /etc/apache2 /var/lib/apache2 /var/log/apache2 /run /srv
