@@ -1,13 +1,10 @@
-# IDE and VM
+# IDE
 .idea
 .project
 HoneySens.iml
-server/.vagrant/*
-server/.settings/*
 
 # Build artifaccts
 server/out/
-sensor/platforms/bbb/out/
-sensor/platforms/docker_x86/out/
+sensor/platforms/**/out/
 sensor/platforms/docker_x86/conf/
 sensor/services/**/out/
