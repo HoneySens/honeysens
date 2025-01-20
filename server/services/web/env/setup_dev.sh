@@ -12,8 +12,4 @@ echo -e "TLS_REQCERT\tnever" >> /etc/ldap/ldap.conf
 chown ubuntu:ubuntu /etc/startup.d
 
 # Create top-level node_modules symlink for mounted source directories
-ln -svf /srv/frontend/node_modules /mnt/node_modules
-
-# Create mount target for build artifacts
-mkdir -pv /mnt/build
-chown ubuntu:ubuntu /mnt/build
+ln -svf /srv/frontend/node_modules /node_modules

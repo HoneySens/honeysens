@@ -1,11 +1,9 @@
-version: "2.4"
 services:
-
   web:
     build:
       args:
         BID: dev
-      context: services/api
+      context: services/web
       dockerfile: Dockerfile.dev
     ports:
       - "443:8443"
@@ -20,9 +18,8 @@ services:
       - PLAIN_HTTP_API=false
       - TLS_FORCE_12=false
     volumes:
-      - honeysens_dev_data:/srv/data
-      - ../../services/api:/mnt/api
-      - ../../services/frontend:/mnt/frontend
+      - vol_data:/srv/data
+      - ./services/web:/mnt
 
   database:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --log-error-verbosity=1 --mysql-native-password=ON
@@ -36,7 +33,7 @@ services:
       - server
     user: "999:999"
     volumes:
-      - honeysens_dev_db:/var/lib/mysql
+      - vol_db:/var/lib/mysql
 
   broker:
     environment:
@@ -58,8 +55,8 @@ services:
     networks:
       - server
     volumes:
-      - honeysens_dev_data:/srv/data
-      - ../../services/tasks:/mnt
+      - vol_data:/srv/data
+      - ./services/tasks:/mnt
 
   registry:
     image: registry:2
@@ -69,7 +66,7 @@ services:
       - REGISTRY_STORAGE_DELETE_ENABLED=true
     user: "1000:1000"
     volumes:
-      - honeysens_dev_registry:/var/lib/registry
+      - vol_registry:/var/lib/registry
 
   backup:
     build:
@@ -86,15 +83,15 @@ services:
     networks:
       - server
     volumes:
-      - honeysens_dev_backup:/srv/backup
-      - honeysens_dev_data:/srv/data
-      - honeysens_dev_registry:/srv/registry
+      - vol_backup:/srv/backup
+      - vol_data:/srv/data
+      - vol_registry:/srv/registry
 
 volumes:
-  honeysens_dev_backup:
-  honeysens_dev_data:
-  honeysens_dev_db:
-  honeysens_dev_registry:
+  vol_backup:
+  vol_data:
+  vol_db:
+  vol_registry:
 
 networks:
   server:

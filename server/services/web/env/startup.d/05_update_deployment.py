@@ -35,10 +35,10 @@ def execute_sql(db, statements):
             errors += 1
     print('{} out of {} database statements performed successfully, {} errors'.format(statement_count - errors, statement_count, errors))
 
+
 # Global paths
-BASE_PATH = '/opt/HoneySens'
-APPLICATION_PATH = '{}/app'.format(BASE_PATH)
-DATA_PATH = '{}/data'.format(BASE_PATH)
+APPLICATION_PATH = os.environ['HS_APP_PATH']
+DATA_PATH = os.environ['HS_DATA_PATH']
 
 # Parse configuration
 config_file = '{}/config.cfg'.format(DATA_PATH)
@@ -59,7 +59,7 @@ if not os.path.isdir(DATA_PATH):
 
 # Figure out server version
 server_version = None
-with open('{}/services/SystemService.php'.format(APPLICATION_PATH)) as f:
+with open('{}/api/app/services/SystemService.php'.format(APPLICATION_PATH)) as f:
     for line in f:
         if 'const VERSION' in line:
             server_version = re.sub("';", '', re.sub("const VERSION = '", '', line.strip()))

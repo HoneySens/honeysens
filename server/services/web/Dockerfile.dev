@@ -6,7 +6,7 @@ ARG BID
 ENV ACCESS_LOG=false \
     BUILD_ID=$BID \
     DOMAIN=server \
-    HS_API_PATH=/mnt/api \
+    HS_APP_PATH=/mnt \
     HS_BROKER_HOST=broker \
     HS_BROKER_PORT=6379 \
     HS_DATA_PATH=/srv/data \
@@ -16,7 +16,6 @@ ENV ACCESS_LOG=false \
     HS_DB_NAME=honeysens \
     HS_DB_PASSWORD=secret \
     HS_DB_ROOT_PASSWORD=secret \
-    HS_FRONTEND_PATH=/mnt/frontend \
     HS_REGISTRY_HOST=registry \
     HS_REGISTRY_PORT=5000 \
     PLAIN_HTTP_API=false \

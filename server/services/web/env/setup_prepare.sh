@@ -23,7 +23,7 @@ a2dissite 000-default
 mkdir -vp /etc/apache2/conf
 chmod 755 /var/run/screen # see https://github.com/stucki/docker-cyanogenmod/issues/2
 
-# Init and TLS Directories
+# Container init and app Directories
 mkdir -vp /etc/startup.d /srv/data /srv/tls
 
 # Permissions

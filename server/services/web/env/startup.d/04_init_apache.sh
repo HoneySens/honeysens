@@ -5,11 +5,11 @@ set -e
 # A key will be missing when a certificate without key was mounted.
 if [[ ! -e /srv/tls/https.key ]]; then
   echo "Apache: No TLS private key, not serving HTTPS requests"
-  a2dissite honeysens_ssl
+  a2dissite honeysens_https
   echo -e "Listen 8080" >/etc/apache2/ports.conf
 else
   echo "Apache: Serving HTTPS requests"
-  a2ensite honeysens_ssl
+  a2ensite honeysens_https
   echo -e "Listen 8080\nListen 8443" >/etc/apache2/ports.conf
 fi
 
