@@ -12,18 +12,18 @@ fi
 
 echo "[*] Installing API dependencies"
 mkdir -vp /srv/api ${HS_API_PATH}/build/vendor
-ln -sfv ${HS_API_PATH}/app/composer.json /srv/api/composer.json
-ln -sfv ${HS_API_PATH}/app/composer.lock /srv/api/composer.lock
-ln -sfv ${HS_API_PATH}/build/vendor /srv/api/vendor
-ln -sfv ${HS_API_PATH}/app /srv/api/app
+ln -sfnv ${HS_API_PATH}/app/composer.json /srv/api/composer.json
+ln -sfnv ${HS_API_PATH}/app/composer.lock /srv/api/composer.lock
+ln -sfnv ${HS_API_PATH}/build/vendor /srv/api/vendor
+ln -sfnv ${HS_API_PATH}/app /srv/api/app
 composer -d /srv/api install
 
 echo "[*] Installing frontend dependencies"
 mkdir -vp /srv/frontend
 for p in app assets main.js package-lock.json package.json vendor webpack.config.js; do
-  ln -sfv ${HS_FRONTEND_PATH}/${p} /srv/frontend/${p}
+  ln -sfnv ${HS_FRONTEND_PATH}/${p} /srv/frontend/${p}
 done
-ln -sfv ${HS_FRONTEND_PATH}/build/dist /srv/frontend/dist
+ln -sfnv ${HS_FRONTEND_PATH}/build/dist /srv/frontend/dist
 npm --prefix /srv/frontend install
 
 # The environment variable BUILD_ONLY can be set if this container
