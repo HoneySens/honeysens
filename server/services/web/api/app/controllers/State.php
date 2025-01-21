@@ -51,6 +51,7 @@ class State extends RESTResource {
         V::optional(V::intVal())->check($ts);
         V::optional(V::oneOf(V::intVal(), V::equals('null')))->check($lastEventId);
         $now = new \DateTime();
+        $sessionUser = null;
         try {
             $sessionUser = $this->getSessionUser();
             $state = $this->getEntities(
@@ -76,7 +77,7 @@ class State extends RESTResource {
         } else {
             // Return incremental state
             $events = array();
-            if($lastEventId) {
+            if($lastEventId && $sessionUser !== null) {
                 // Return new events since the provided last event ID
                 $filterConditions = Events::validateEventFilterConditions($sessionUser, $queryParams);
                 $filterConditions->lastID = intval($lastEventId);
@@ -84,17 +85,15 @@ class State extends RESTResource {
             }
             $state['new_events'] = $events;
         }
-        try {
-            // The lastEventID is only returned if a user is logged in, otherwise this will throw a ForbiddenException
+        if($sessionUser !== null) {
+            // The lastEventID is only returned if a user is currently logged in
             $lastEventFilter = new EventFilterConditions();
             $lastEventFilter->user = $sessionUser->role !== UserRole::ADMIN ? $this->getSessionUser() : null;
             $lastEventFilter->sortBy = 'id';
             $lastEventFilter->sortOrder = 'desc';
             $lastEvents = $eventsService->getEvents($this->getSessionUser(), $lastEventFilter, perPage: 1)['items'];
             $state['lastEventID'] = count($lastEvents) > 0 ? $lastEvents[0]['id'] : null;
-        } catch(\Exception $e) {
-            $state['lastEventID'] = null;
-        }
+        } else $state['lastEventID'] = null;
         $state['timestamp'] = $now->format('U');
         $response->getBody()->write(json_encode($state));
         return $response;
