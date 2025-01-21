@@ -5,7 +5,13 @@ module.exports = {
     devServer: {
         server: 'http',
         port: 8081,
-        hot: true
+        hot: true,
+        client: {
+            webSocketURL: {
+                port: 443,
+                protocol: "wss"
+            }
+        }
     },
     entry: "./main.js",
     mode: "development",

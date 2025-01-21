@@ -51,6 +51,7 @@ cp -v ${HS_ENV_PATH}/apache/apache.frontend.proxy.conf /etc/apache2/conf/fronten
 cp -v ${HS_ENV_PATH}/apache/apache.web.conf /etc/apache2/conf/web.conf
 
 sed -i -e "s#/srv/api/#${HS_API_PATH}/#g" /etc/apache2/sites-available/*.conf
+a2enmod proxy_wstunnel
 ${HS_ENV_PATH}/startup.d/04_init_apache.sh
 ${HS_ENV_PATH}/startup.d/06_launch_httpd.sh &
 
