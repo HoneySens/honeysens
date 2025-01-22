@@ -3,7 +3,7 @@ define(['app/views/RootLayout',
 function(RootLayout, Marionette, Backbone, $, _) {
     var app = new Marionette.Application();
 
-    // Disabled AJAX request caching (fixes some bugs with Internet Explorer)
+    // Disable AJAX request caching (fixes some bugs with Internet Explorer)
     $.ajaxSetup({cache: false});
 
     // Controls the lifecycle of submodules

@@ -18,7 +18,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.tpl$/i,
+                test: /\.(html|tpl)$/i,
                 loader: "html-loader",
                 options: {
                     esModule: false  // Parse *.tpl file contents directly into string variables
@@ -29,9 +29,14 @@ module.exports = {
                 type: "asset/resource"
             },
             {
+                test: /loading.css$/i,
+                type: "asset/resource",
+            },
+            {
                 test: /\.css$/i,
+                exclude: /loading.css$/i,
                 use: ["style-loader", "css-loader"]
-            }
+            },
         ]
     },
     output: {

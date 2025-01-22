@@ -199,11 +199,6 @@ div.content div.row:first-of-type div.headerBar h3, div.content div.row.transiti
    Ensures that the click events can't be overtaken by other elements (e.g. forms) */
 div.content div.headerBar div.pull-right button {position: relative; z-index: 1}
 
-/* The loading page is displayed while the JS application loads */
-div#loading {background-color: #eee; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 1040}
-
-div#loading img {margin: 4.4em auto 0 auto}
-
 /* Login form */
 form.loginForm {margin: 0 auto; max-width: 284px}
 form.loginForm img {padding-bottom: 2em}
