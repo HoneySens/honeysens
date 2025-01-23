@@ -1,16 +1,14 @@
-define(['app/app',
-        'app/views/regions',
-        'app/modules/sensors/templates/Layout.tpl',
-        'app/views/common'],
-function(HoneySens, Regions, LayoutTpl) {
-    HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-        Views.Layout = Marionette.LayoutView.extend({
-            template: _.template(LayoutTpl),
-            regions: {
-                content: 'div.content'
-            }
-        });
-    });
+import HoneySens from 'app/app';
+import LayoutTpl from 'app/modules/sensors/templates/Layout.tpl';
+import 'app/views/common';
 
-    return HoneySens.Sensors.Views.Layout;
+HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
+    Views.Layout = Marionette.LayoutView.extend({
+        template: _.template(LayoutTpl),
+        regions: {
+            content: 'div.content'
+        }
+    });
 });
+
+export default HoneySens.Sensors.Views.Layout;

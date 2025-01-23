@@ -1,22 +1,21 @@
-define(['app/app',
-        'app/modules/events/templates/Layout.tpl'],
-function(HoneySens, LayoutTpl) {
-    HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-        Views.Layout = Marionette.LayoutView.extend({
-            template: _.template(LayoutTpl),
-            regions: {
-                content: 'div.content'
-            },
-            initialize: function() {
-                this.listenTo(HoneySens.vent, 'events:shown', function() {
-                    this.$el.find('span.title').html('Ereignisse');
-                });
-                this.listenTo(HoneySens.vent, 'events:filters:shown', function() {
-                    this.$el.find('span.title').html('Ereignisse &rsaquo; Filter');
-                });
-            }
-        });
-    });
+import HoneySens from 'app/app';
+import LayoutTpl from 'app/modules/events/templates/Layout.tpl';
 
-    return HoneySens.Events.Views.Layout;
+HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
+    Views.Layout = Marionette.LayoutView.extend({
+        template: _.template(LayoutTpl),
+        regions: {
+            content: 'div.content'
+        },
+        initialize: function() {
+            this.listenTo(HoneySens.vent, 'events:shown', function() {
+                this.$el.find('span.title').html('Ereignisse');
+            });
+            this.listenTo(HoneySens.vent, 'events:filters:shown', function() {
+                this.$el.find('span.title').html('Ereignisse &rsaquo; Filter');
+            });
+        }
+    });
 });
+
+export default HoneySens.Events.Views.Layout;

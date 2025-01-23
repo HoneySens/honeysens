@@ -1,17 +1,16 @@
-define(['app/app',
-        'app/modules/sensors/views/ModalSensorStatusItem',
-        'app/modules/sensors/templates/ModalSensorStatusList.tpl'],
-function(HoneySens, ModalSensorStatusItemView, ModalSensorStatusListTpl) {
-    HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-        Views.ModalSensorStatusList = Marionette.CompositeView.extend({
-            template: _.template(ModalSensorStatusListTpl),
-            childViewContainer: 'tbody',
-            childView: ModalSensorStatusItemView,
-            attachHtml: function(collectionView, childView) {
-                collectionView.$el.find(this.childViewContainer).prepend(childView.el);
-            }
-        });
-    });
+import HoneySens from 'app/app';
+import ModalSensorStatusItemView from 'app/modules/sensors/views/ModalSensorStatusItem';
+import ModalSensorStatusListTpl from 'app/modules/sensors/templates/ModalSensorStatusList.tpl';
 
-    return HoneySens.Sensors.Views.ModalSensorStatusList;
+HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
+    Views.ModalSensorStatusList = Marionette.CompositeView.extend({
+        template: _.template(ModalSensorStatusListTpl),
+        childViewContainer: 'tbody',
+        childView: ModalSensorStatusItemView,
+        attachHtml: function(collectionView, childView) {
+            collectionView.$el.find(this.childViewContainer).prepend(childView.el);
+        }
+    });
 });
+
+export default HoneySens.Sensors.Views.ModalSensorStatusList;
