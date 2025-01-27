@@ -91,8 +91,8 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             },
             showFlags: function() {
                 if(this.headers) {
-                    flags = JSON.parse(this.headers)[0].flags;
-                    flagString = '';
+                    var flags = JSON.parse(this.headers)[0].flags;
+                    var flagString = '';
                     if((flags & parseInt(1, 2)) > 0) flagString += 'F';
                     if((flags & parseInt(10, 2)) > 0) flagString += 'S';
                     if((flags & parseInt(100, 2)) > 0) flagString += 'R';
