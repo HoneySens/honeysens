@@ -12,11 +12,11 @@ class WeeklySummarizer(HandlerInterface):
 
     CRITICAL_EVENT_CAP = 100  # How many critical events to append (upper bound)
     EVENT_CLASSIFICATIONS = {
-        0: 'Unbekannt',
-        1: 'ICMP-Paket',
-        2: 'Verbindungsversuch',
-        3: 'Honeypot-Verbindung',
-        4: 'Portscan'
+        0: 'Unknown',
+        1: 'ICMP',
+        2: 'Connection attempt',
+        3: 'Honeypot connection',
+        4: 'Scan'
     }
 
     def perform(self, logger, db, config_path, storage_path, working_dir, job_data):
@@ -46,7 +46,7 @@ class WeeklySummarizer(HandlerInterface):
         for recipient, divisions in candidates.items():
             has_any_content = False
             division_summary = ''
-            subject = 'HoneySens: Zusammenfassung des Zeitraums vom {} bis {}'.format(range_start_str, range_end_str)
+            subject = 'HoneySens: Event summary for the period from {} to {}'.format(range_start_str, range_end_str)
             for d in divisions:
                 if d not in division_summaries:
                     division_summaries[d] = self._summarize_weekly_division(db, d)
@@ -86,18 +86,18 @@ class WeeklySummarizer(HandlerInterface):
                     critical_events.append(row)
         # Only return something if we found events
         if division_name is not None:
-            result = '### Gruppe "{}" ###\n'.format(division_name)
-            result += '  Ereignisse insgesamt: {}, davon {} kritisch\n'.format(len(events), len(critical_events))
-            result += '  Ereignisse pro Sensor:\n'
+            result = '### Group "{}" ###\n'.format(division_name)
+            result += '  Total events: {}, {} of which were critical\n'.format(len(events), len(critical_events))
+            result += '  Events per sensor:\n'
             for sensor, count in event_cnt_per_sensor.items():
                 result += '    {}: {}\n'.format(sensor, count)
-            result += '\n  Kritische Ereignisse:\n'
+            result += '\n  Critical events:\n'
             for event in critical_events[:self.CRITICAL_EVENT_CAP]:
                 date = event['timestamp'].strftime('%Y-%m-%d %H:%M:%S')
-                result += '    {} (ID {}, Sensor {}): {} von {} ({})\n'.format(date, event['id'], event['s.name'],
+                result += '    {} (ID {}, Sensor "{}"): {} from {} ({})\n'.format(date, event['id'], event['s.name'],
                                                                                self.EVENT_CLASSIFICATIONS[
                                                                                    event['classification']],
                                                                                event['source'], event['summary'])
             if len(critical_events) > self.CRITICAL_EVENT_CAP:
-                result += '    ... und {} weitere Ereignisse\n'.format(len(critical_events) - self.CRITICAL_EVENT_CAP)
+                result += '    ... and {} further events\n'.format(len(critical_events) - self.CRITICAL_EVENT_CAP)
             return result

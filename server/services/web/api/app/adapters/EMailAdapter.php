@@ -60,7 +60,7 @@ class EMailAdapter {
         $contacts = $qb->getQuery()->getResult();
         if(count($contacts) == 0) return true;
         // Prepare content
-        $subject = $event->classification >= EventClassification::LOW_HP ? "HoneySens: Kritischer Vorfall" : "HoneySens: Vorfall";
+        $subject = $event->classification >= EventClassification::LOW_HP ? 'HoneySens: Critical event #' . $event->getId(): 'HoneySens: Event #' . $event->getId();
         $body = $this->templateAdapter->processTemplate(TemplateType::EMAIL_EVENT_NOTIFICATION, array(
             'ID' => $event->getId(),
             'SUMMARY' => $this->stringifyEventSummary($event),
@@ -98,8 +98,8 @@ class EMailAdapter {
             'smtp_encryption' => $smtpEncryption->value,
             'from' => $from,
             'to' => $to,
-            'subject' => 'HoneySens Testnachricht',
-            'body' => 'Dies ist eine Testnachricht des HoneySens-Servers.');
+            'subject' => 'HoneySens test notification',
+            'body' => 'This is a test notification from the HoneySens server.');
         if($smtpUser !== '') {
             $taskParams['smtp_user'] = $smtpUser;
             $taskParams['smtp_password'] = $smtpPassword;
@@ -108,11 +108,11 @@ class EMailAdapter {
     }
 
     private function stringifyEventClassificationText(Event $event): string {
-        if($event->classification === EventClassification::ICMP) return 'ICMP-Paket';
-        elseif($event->classification === EventClassification::CONN_ATTEMPT) return 'Verbindungsversuch';
-        elseif($event->classification === EventClassification::LOW_HP) return 'Honeypot-Verbindung';
-        elseif($event->classification === EventClassification::PORTSCAN) return 'Portscan';
-        return "Unbekannt";
+        if($event->classification === EventClassification::ICMP) return 'ICMP';
+        elseif($event->classification === EventClassification::CONN_ATTEMPT) return 'Connection attempt';
+        elseif($event->classification === EventClassification::LOW_HP) return 'Honeypot connection';
+        elseif($event->classification === EventClassification::PORTSCAN) return 'Scan';
+        return 'Unknown';
     }
 
     private function stringifyPacketProtocolAndPort(EventPacket $packet): string {
@@ -148,11 +148,11 @@ class EMailAdapter {
     }
 
     private function stringifyEventSummary(Event $event): string {
-        $result = 'Datum: ' . $event->timestamp->format('d.m.Y') . "\n";
-        $result .= 'Zeit: ' . $event->timestamp->format('H:i:s') . " (UTC)\n";
+        $result = 'Date: ' . $event->timestamp->format('d.m.Y') . "\n";
+        $result .= 'Time: ' . $event->timestamp->format('H:i:s') . " (UTC)\n";
         $result .= 'Sensor: ' . $event->sensor->name . "\n";
-        $result .= 'Klassifikation: ' . $this->stringifyEventClassificationText($event) . "\n";
-        $result .= 'Quelle: ' . $event->source . "\n";
+        $result .= 'Classification: ' . $this->stringifyEventClassificationText($event) . "\n";
+        $result .= 'Source: ' . $event->source . "\n";
         $result .= 'Details: ' . $event->summary;
         return $result;
     }
@@ -172,7 +172,7 @@ class EMailAdapter {
         $detailBlockWritten = false;
         if(count($genericDetails) > 0) {
             $itemCount = 0;
-            $result .= "Zusätzliche Informationen:\n--------------------------\n";
+            $result .= "Additional information:\n--------------------------\n";
             foreach($genericDetails as $genericDetail) {
                 $itemCount++;
                 $result .= $genericDetail->getData();
@@ -184,7 +184,7 @@ class EMailAdapter {
             $itemCount = 0;
             # Add an additional newline in case a generic details block exists for visual separation
             if($detailBlockWritten) $result .= "\n";
-            $result .= "Sensorinteraktion (Zeiten in UTC):\n----------------------------------\n";
+            $result .= "Sensor interaction (Times in UTC):\n----------------------------------\n";
             foreach($interactionDetails as $interactionDetail) {
                 $itemCount++;
                 $result .= $interactionDetail->timestamp->format('H:i:s') . ': ' . $interactionDetail->getData();
@@ -196,7 +196,7 @@ class EMailAdapter {
             $itemCount = 0;
             # Add an additional newline in case a generic or interaction details block exists for visual separation
             if($detailBlockWritten) $result .= "\n";
-            $result .= "Paketübersicht (Zeit in UTC | Protocol/Port | Flags | Payload):\n---------------------------------------------------------------\n";
+            $result .= "Paket overview (Times in UTC | Protocol/Port | Flags | Payload):\n---------------------------------------------------------------\n";
             foreach($packets as $packet) {
                 $itemCount++;
                 $result .= $packet->timestamp->format('H:i:s') . ': ' . $this->stringifyPacketProtocolAndPort($packet) .

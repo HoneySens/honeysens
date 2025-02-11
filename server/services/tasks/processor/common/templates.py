@@ -12,28 +12,28 @@ class TemplateType(IntEnum):
 
 SYSTEM_NOTIFICATION_TEMPLATES = {
     TemplateType.EMAIL_EVENT_NOTIFICATION: {
-        'name': 'Ereignis-Benachrichtigung',
-        'template': '''Dies ist eine automatisch generierte Nachricht vom HoneySens-System, um auf einen Vorfall innerhalb des Sensornetzwerkes hinzuweisen. Details entnehmen Sie der nachfolgenden Auflistung.
+        'name': 'Event notification',
+        'template': '''This is an automatically generated notification to inform you of an event within the honeypot sensor network.
         
-####### Vorfall {{ID}} #######
+####### Event {{ID}} #######
 
 {{SUMMARY}}
 
 {{DETAILS}}''',
         'variables': {
-            'ID': 'Identifikationsnummer des Ereignisses',
-            'SUMMARY': 'Tabellarische Kurzzusammenfassung des Ereignisses',
-            'DETAILS': 'Ereignisspezifische Details'
+            'ID': 'Event identification number',
+            'SUMMARY': 'Brief tabular event summary',
+            'DETAILS': 'Event-specific details'
         },
         'preview': {
             'ID': '12345',
-            'SUMMARY': '''Datum: 12.08.2020
-Zeit: 13:26:00 (UTC)
-Sensor: Zentrale
-Klassifikation: Honeypot-Verbindung
-Quelle: 192.168.1.2
+            'SUMMARY': '''Date: 12.08.2020
+Time: 13:26:00 (UTC)
+Sensor: Head office
+Classification: Honeypot connection
+Source: 192.168.1.2
 Details: SSH''',
-            'DETAILS': '''Sensorinteraktion (Zeiten in UTC):
+            'DETAILS': '''Sensor interaction (Times in UTC):
 ----------------------------------
 13:26:00: SSH: Connection from 192.168.1.2:48102 
 13:26:02: SSH: Invalid login attempt (root/1234)
@@ -41,59 +41,59 @@ Details: SSH''',
         }
     },
     TemplateType.EMAIL_SENSOR_TIMEOUT: {
-        'name': 'Sensor-Timeout',
-        'template': '''Dies ist eine automatisch generierte Hinweismail über ein Ereignis im Sensornetzwerk.
+        'name': 'Sensor timeout',
+        'template': '''This is an automatically generated notification to inform you of an event within the honeypot sensor network.
 
-Der Sensor "{{SENSOR_NAME}}" mit der ID {{SENSOR_ID}} hat zu lange nicht mehr den Server kontaktiert und somit sein Update-Intervall von {{UPDATE_INTERVAL}} Minute(n) zzgl. der Toleranzzeit von {{TIMEOUT_TOLERANCE}} Minute(n) überschritten. Er ist nun offline.''',
+The sensor "{{SENSOR_NAME}}" with ID {{SENSOR_ID}} has exceeded its update interval of {{UPDATE_INTERVAL}} minute(s) and its tolerance of {{TIMEOUT_TOLERANCE}} minute(s) and therefore lost its connection to the server. It's now reported as offline.''',
         'variables': {
-            'SENSOR_NAME': 'Name des betroffenen Sensors',
-            'SENSOR_ID': 'ID des betroffenen Sensors',
-            'UPDATE_INTERVAL': 'Update-Intervall in Minuten',
-            'TIMEOUT_TOLERANCE': 'Toleranzzeit zzgl. zum Update-Intervall (in Minuten)'
+            'SENSOR_NAME': 'Sensor name',
+            'SENSOR_ID': 'Sensor ID',
+            'UPDATE_INTERVAL': 'Update interval in minutes',
+            'TIMEOUT_TOLERANCE': 'Tolerance (in minutes), in addition to the update interval'
         },
         'preview': {
-            'SENSOR_NAME': 'Zentrale',
+            'SENSOR_NAME': 'Head office',
             'SENSOR_ID': '3',
             'UPDATE_INTERVAL': '20',
             'TIMEOUT_TOLERANCE': '10'
         }
     },
     TemplateType.EMAIL_SUMMARY: {
-        'name': 'Wöchentliche Ereignisübersicht',
-        'template': '''Dies ist eine automatisch generierte Zusammenfassung der im Sensornetzwerk in Ihren Gruppen aufgetretenen Ereignisse der vergangenen Woche.
+        'name': 'Weekly event summary',
+        'template': '''This is an automatically generated summary of all events that occurred in the sensor network within your groups over the past week.
 
-Zeitraum: {{RANGE_FROM}} bis {{RANGE_TO}}
+Time period: {{RANGE_FROM}} to {{RANGE_TO}}
 
 {{EVENTS}}''',
         'variables': {
-            'RANGE_FROM': 'Start des Zeitraums der Zusammenfassung',
-            'RANGE_TO': 'Ende des Zeitraums der Zusammenfassung',
-            'EVENTS': 'Auflistung der aufgetretenen Ereignisse pro Gruppe'
+            'RANGE_FROM': 'Start of the summary period',
+            'RANGE_TO': 'End of the summary period',
+            'EVENTS': 'List of events that occurred per group'
         },
         'preview': {
             'RANGE_FROM': '03.02.2020',
             'RANGE_TO': '10.02.2020',
-            'EVENTS': '''### Gruppe "Verwaltung" ###
-  Ereignisse insgesamt: 13, davon 2 kritisch
-  Ereignisse pro Sensor:
-    Zentrale: 10
-    Keller: 3
+            'EVENTS': '''### Group "Management" ###
+  Total events: 13, 2 of which were critical
+  Events per sensor:
+    Head office: 10
+    Room C: 3
 
-  Kritische Ereignisse:
-    2020-02-05 15:29:05 (ID 9, Sensor Zentrale): Portscan von 172.26.0.1 (Scan)
-    2020-02-06 14:56:09 (ID 9, Sensor Zentrale): Honeypot-Verbindung von 172.26.0.1 (SSH)'''
+  Critical events:
+    2020-02-05 15:29:05 (ID 9, Sensor "Head office"): Scan from 172.26.0.1 (Scan)
+    2020-02-06 14:56:09 (ID 9, Sensor "Head office"): Honeypot connection from 172.26.0.1 (SSH)'''
         }
     },
     TemplateType.EMAIL_CA_EXPIRATION: {
-        'name': 'Ablauf des internen CA-Zertifikats',
-        'template': '''Dies ist eine automatisch generierte Hinweismail des HoneySens-Servers {{SERVER_NAME}}.
+        'name': 'Internal CA certificate expiration',
+        'template': '''This is an automatically generated notification sent by the HoneySens server {{SERVER_NAME}}.
 
-Das interne CA-Zertifikat läuft in {{EXPIRATION_TIME}} Tagen ab und sollte zuvor unbedingt erneuert werden. Melden Sie sich hierzu mit einem administrativen Account an der Weboberfläche des Servers an und folgen Sie den Anweisungen unter "System" -> "Certificate Authority".
+The internal CA certificate expires in {{EXPIRATION_TIME}} days and should be renewed in advance. To do this, log in to the server's web interface with an administrative account and follow the instructions under “System” -> "Internal Certificate Authority".
 
-Nach Ablauf des Zertifikats ohne rechtzeitige Verlängerung können die bestehenden Sensoren nicht mehr mit dem Server kommunizieren und müssen neu aufgesetzt werden.''',
+If the certificate expires without being renewed in time, the existing sensors may no longer be able to communicate with the server and require redeployment.''',
         'variables': {
-            'SERVER_NAME': 'Hostname dieses HoneySens-Servers',
-            'EXPIRATION_TIME': 'Zeitraum bis zum Ablauf des CA-Zertifikats in Tagen'
+            'SERVER_NAME': 'Hostname of this HoneySens server',
+            'EXPIRATION_TIME': 'Time in days until the current CA certificates expires.'
         },
         'preview': {
             'SERVER_NAME': 'honeysens.company.tld',
@@ -101,14 +101,14 @@ Nach Ablauf des Zertifikats ohne rechtzeitige Verlängerung können die bestehen
         }
     },
     TemplateType.EMAIL_HIGH_SYSTEM_LOAD: {
-        'name': 'Hohe Systemlast auf Server',
-        'template': '''Dies ist eine automatisch generierte Hinweismail des HoneySens-Servers {{SERVER_NAME}}.
+        'name': 'High system load',
+        'template': '''This is an automatically generated notification sent by the HoneySens server {{SERVER_NAME}}.
 
-Der Server ist stark ausgelastet, es befinden sich derzeit {{QUEUE_LENGTH}} unbearbeitete Aufgaben in der Warteschlange. Diese Warnung wurde versendet, da die Warteschlangenlänge den Grenzwert von {{QUEUE_THRESHOLD}} überschritten hat.''',
+The server is under heavy load, there are currently {{QUEUE_LENGTH}} unprocessed tasks in the queue. This warning was sent because the queue length has exceeded the threshold value of {{QUEUE_THRESHOLD}}.''',
         'variables': {
-            'SERVER_NAME': 'Hostname dieses HoneySens-Servers',
-            'QUEUE_LENGTH': 'Warteschlangenlänge zum Zeitpunkt des Alarms',
-            'QUEUE_THRESHOLD': 'Schwellwert der Warteschlangenlänge'
+            'SERVER_NAME': 'Hostname of this HoneySens server',
+            'QUEUE_LENGTH': 'Queue length at the time of alarm',
+            'QUEUE_THRESHOLD': 'Queue length threshold'
         },
         'preview': {
             'SERVER_NAME': 'honeysens.company.tld',
