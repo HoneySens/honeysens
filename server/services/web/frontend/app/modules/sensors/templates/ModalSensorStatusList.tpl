@@ -1,24 +1,22 @@
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header">
-            <h4>Sensorstatus</h4>
+            <h4><%= _.t("sensors:lastSensorStatus") %></h4>
         </div>
         <div class="modal-body">
             <table class="table table-striped">
                 <thead>
-                <th>Zeitpunkt</th>
-                <th>SW-Version</th>
-                <th>Freier RAM</th>
-                <th>Speicherplatz (genutzt)</th>
-                <th>Speicherplatz (max)</th>
+                    <th><%= _.t("timestamp") %></th>
+                    <th><%= _.t("sensors:sensorStatusVersion") %></th>
+                    <th><%= _.t("sensors:sensorStatusFreeRAM") %></th>
+                    <th><%= _.t("sensors:sensorStatusDiskUsed") %></th>
+                    <th><%= _.t("sensors:sensorStatusDiskMax") %></th>
                 </thead>
                 <tbody></tbody>
             </table>
         </div>
         <div class="modal-footer" style="clear: both">
-            <button type="button" class="btn btn-primary" data-dismiss="modal" autofocus>
-                <span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Schlie&szlig;en
-            </button>
+            <button type="button" class="btn btn-block btn-default" data-dismiss="modal" autofocus><%= _.t("close") %></button>
         </div>
     </div>
 </div>

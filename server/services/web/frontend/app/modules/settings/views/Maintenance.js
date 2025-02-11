@@ -22,7 +22,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
             'click button.removeEvents': function () {
                 HoneySens.request('view:modal').show(new ModalConfirmation({
                     model: new Backbone.Model({
-                        msg: 'Wenn Sie fortfahren, werden <strong>ALLE</strong> gespeicherten Ereignisse (auch archivierte) unwiderruflich entfernt!',
+                        msg: _.t('settings:removeAllEventsPrompt'),
                         onConfirm: function () {
                             $.ajax({
                                 type: 'DELETE',
@@ -41,7 +41,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                     view = this;
                 HoneySens.request('view:modal').show(new ModalConfirmation({
                     model: new Backbone.Model({
-                        msg: 'Wenn Sie fortfahren, werden alle Zertifikate dieser HoneySens-Installation erneuert. Anschließend wird die Webanwendung automatisch neu geladen.',
+                        msg: _.t('settings:internalCAPrompt'),
                         onConfirm: function () {
                             modal.$el.find('button.btn-primary').text('Bitte warten');
                             modal.$el.find('button').prop('disabled', true);

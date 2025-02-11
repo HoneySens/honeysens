@@ -23,14 +23,14 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         onRender: function() {
             var columns = [{
                 name: 'id',
-                label: 'ID',
+                label: _.t('id'),
                 editable: false,
                 cell: Backgrid.IntegerCell.extend({
                     orderSeparator: ''
                 })
             }, {
                 name: 'division',
-                label: 'Gruppe',
+                label: _.t('division'),
                 editable: false,
                 sortType: 'toggle',
                 cell: Backgrid.Cell.extend({
@@ -44,19 +44,19 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 })
             }, {
                 name: 'name',
-                label: 'Name',
+                label: _.t('name'),
                 editable: false,
                 cell: 'string'
             }, {
                 name: 'count',
-                label: 'Zähler',
+                label: _.t('events:filterListCounter'),
                 editable: false,
                 cell: Backgrid.IntegerCell.extend({
                     orderSeparator: ''
                 })
             }, {
                 name: 'enabled',
-                label: 'Status',
+                label: _.t('events:filterListStatus'),
                 editable: false,
                 cell: Backgrid.Cell.extend({
                     template: _.template(FilterListStatusCellTpl),
@@ -68,7 +68,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     }
                 })
             }, {
-                label: 'Aktionen',
+                label: _.t('actions'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -108,7 +108,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             this.list.show(grid);
             grid.sort('id', 'descending');
             // Division Filter
-            var divisions = _.union([{label: 'Alle', value: null}],
+            var divisions = _.union([{label: _.t('allDivisions'), value: null}],
                 HoneySens.data.models.divisions.map(function(division) {
                     return {label: division.get('name'), value: division.id};
                 })

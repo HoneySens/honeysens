@@ -180,7 +180,7 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                 error: function() {
                     HoneySens.request('view:modal').show(new ModalServerError({
                         model: new Backbone.Model({
-                            msg: 'Verbindung zum Server verloren, Website wird nach Klick auf \'OK\' neu geladen.',
+                            msg: _.t('layout:connectionLost'),
                             onClose: function() {
                                 window.location.reload();
                             }

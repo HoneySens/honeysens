@@ -36,18 +36,18 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                     sortable: false
                 },{
                     name: 'revision',
-                    label: 'Revision',
+                    label: _.t('services:serviceRevision'),
                     editable: false,
                     cell: 'string'
                 }, {
                     name: 'architecture',
-                    label: 'Architekturen',
+                    label: _.t('services:serviceArchitectures'),
                     editable: false,
                     sortable: false,
                     cell: 'string'
                 }, {
                     name: 'status',
-                    label: 'Status',
+                    label: _.t('services:serviceStatus'),
                     editable: false,
                     cell: Backgrid.Cell.extend({
                         template: _.template(RevisionListStatusCellTpl),
@@ -77,7 +77,7 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                         }
                     })
                 }, {
-                    label: 'Aktionen',
+                    label: _.t("actions"),
                     editable: false,
                     sortable: false,
                     cell: Backgrid.Cell.extend({
@@ -107,18 +107,18 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                     optionValues: subcolumns
                 }, {
                     name: 'id',
-                    label: 'Revision',
+                    label: _.t('services:serviceRevision'),
                     editable: false,
                     cell: 'string'
                 }, {
                     name: 'architectures',
-                    label: 'Architekturen',
+                    label: _.t('services:serviceArchitectures'),
                     editable: false,
                     sortable: false,
                     cell: 'string'
                 }, {
                     name: 'status',
-                    label: 'Status',
+                    label: _.t('services:serviceStatus'),
                     editable: false,
                     cell: Backgrid.Cell.extend({
                         template: _.template(RevisionListStatusCellTpl),
@@ -156,7 +156,7 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                         }
                     })
                 },{
-                    label: 'Aktionen',
+                    label: _.t('actions'),
                     editable: false,
                     sortable: false,
                     cell: Backgrid.Cell.extend({

@@ -16,7 +16,7 @@ HoneySens.module('Common.Views', function(Views, HoneySens, Backbone, Marionette
                         if (this.errors.hasOwnProperty(code)) msg = this.errors[code];
                     }
                 } catch(e) {}
-                return msg !== null ? msg : 'Auf dem Server ist ein Fehler aufgetreten.';
+                return msg !== null ? msg : _.t('genericServerError');
             }
         },
         onDestroy: function() {

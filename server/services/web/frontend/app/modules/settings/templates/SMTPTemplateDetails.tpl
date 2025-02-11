@@ -1,4 +1,4 @@
-<p><strong>Verf&uuml;gbare dynamische Template-Variablen</strong></p>
+<p><strong><%= _.t("settings:templateVars") %></strong></p>
 <ul>
     <% _(variables).each(function(description, varname) { %>
         <li><code>{{<%- varname %>}}</code> <%- description %></li>
@@ -7,7 +7,7 @@
 <div class="form-group">
     <label>
         <input type="checkbox" name="hasOverlay" <% if(hasOverlay()) { %>checked<% } %>>
-        Eigenes Template verwenden
+        <%= _.t("settings:templateUseCustom") %>
     </label>
 </div>
 <div class="form-group">
@@ -16,12 +16,12 @@
 <div class="row">
     <div class="col-sm-6">
         <button type="submit" class="saveSettings btn btn-block btn-primary btn-sm">
-            <span class="glyphicon glyphicon-save"></span>&nbsp;&nbsp;Speichern
+            <span class="glyphicon glyphicon-save"></span>&nbsp;&nbsp;<%= _.t("save") %>
         </button>
     </div>
     <div class="col-sm-6">
         <button type="button" class="preview btn btn-block btn-default btn-sm">
-            <span class="glyphicon glyphicon-search"></span>&nbsp;&nbsp;Vorschau
+            <span class="glyphicon glyphicon-search"></span>&nbsp;&nbsp;<%= _.t("settings:templatePreview") %>
         </button>
     </div>
 </div>

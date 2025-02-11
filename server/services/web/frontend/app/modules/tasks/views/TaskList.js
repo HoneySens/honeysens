@@ -17,14 +17,14 @@ HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette,
             this.updateWorkerStatus();
             var columns = [{
                 name: 'id',
-                label: 'ID',
+                label: _.t('id'),
                 editable: false,
                 cell: Backgrid.IntegerCell.extend({
                     orderSeparator: ''
                 })
             }, {
                 name: 'type',
-                label: 'Job',
+                label: _.t('tasks:taskJob'),
                 editable: false,
                 cell: Backgrid.Cell.extend({
                     template: _.template(TaskListTypeCellTpl),
@@ -35,7 +35,7 @@ HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette,
                 })
             }, {
                 name: 'user',
-                label: 'Benutzer',
+                label: _.t('user'),
                 editable: false,
                 cell: Backgrid.Cell.extend({
                     render: function() {
@@ -43,13 +43,13 @@ HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette,
                         var userid = this.model.get('user'),
                             sessionUser = HoneySens.data.session.user;
                         if(userid === sessionUser.id) this.$el.html(sessionUser.get("name"));
-                        else this.$el.html(userid ? HoneySens.data.models.users.get(userid).get('name') : '(system)');
+                        else this.$el.html(userid ? HoneySens.data.models.users.get(userid).get('name') : `(${_.t('tasks:userSystem')})`);
                         return this;
                     }
                 })
             }, {
                 name: 'status',
-                label: 'Status',
+                label: _.t('tasks:taskStatus'),
                 editable: false,
                 cell: Backgrid.Cell.extend({
                     template: _.template(TaskListStatusCellTpl),
@@ -59,7 +59,7 @@ HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette,
                     }
                 })
             }, {
-                label: 'Aktionen',
+                label: _.t('actions'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -109,12 +109,12 @@ HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette,
                 view = this;
             status.fetch({
                 success: function(model) {
-                    view.$el.find('#taskWorkerStatus').removeClass('statusOffline').addClass('statusOnline').text('Online');
+                    view.$el.find('#taskWorkerStatus').removeClass('statusOffline').addClass('statusOnline').text(`${_.t('tasks:workerStatusOnline')}`);
                     view.$el.find('#taskWorkerQueueLength').text(model.get('queue_length'));
                     view.$el.find('#taskWorkerQueue').removeClass('hidden');
                 },
                 error: function() {
-                    view.$el.find('#taskWorkerStatus').removeClass('statusOnline').addClass('statusOffline').text('Offline');
+                    view.$el.find('#taskWorkerStatus').removeClass('statusOnline').addClass('statusOffline').text(`${_.t('tasks:workerStatusOffline')}`);
                 }
             });
         }

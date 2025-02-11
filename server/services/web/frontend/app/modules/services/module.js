@@ -12,7 +12,7 @@ var ServicesModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: 'Dienste', uri: 'sensors/services', iconClass: 'glyphicon glyphicon-asterisk', permission: {domain: 'sensors', action: 'get'}}
+        {title: _.t('services:header'), uri: 'sensors/services', iconClass: 'glyphicon glyphicon-asterisk', permission: {domain: 'sensors', action: 'get'}}
     ],
     start: function() {
         console.log('Starting module: services');

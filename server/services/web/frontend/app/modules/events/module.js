@@ -38,7 +38,7 @@ var EventsModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [{
-        title: 'Ereignisse',
+        title: _.t('events:eventHeader'),
         uri: 'events',
         iconClass: 'glyphicon glyphicon-list',
         permission: {domain: 'events', action: 'get'},
@@ -53,7 +53,7 @@ var EventsModule = Routing.extend({
             event: 'update'
         }
     }, {
-        title: 'Filter',
+        title: _.t('events:filterHeader'),
         uri: 'events/filters',
         iconClass: 'glyphicon glyphicon-filter',
         permission: {domain: 'eventfilters', action: 'create'}
@@ -224,9 +224,6 @@ var EventsModule = Routing.extend({
             calcParams[collection.queryParams.order] = collection.queryParams.directions[collection.state.order];
         }
         calcParams.format = 'text/csv';
-
-        console.log(calcParams);
-
         $.ajax({
             type: 'GET',
             url: 'api/events',

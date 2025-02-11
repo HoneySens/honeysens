@@ -27,21 +27,21 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                 e.preventDefault();
                 this.servicesEditable = !this.servicesEditable;
                 this.displayServiceCheckboxes(this.$el);
-                this.$el.find('span.serviceEditLabel').html(this.servicesEditable ? 'sperren' : 'bearbeiten');
+                this.$el.find('span.serviceEditLabel').html(this.servicesEditable ? _.t('sensors:servicesLock') : _.t('sensors:servicesUpdate'));
             }
         },
         onRender: function() {
             var view = this,
                 columns = [{
                     name: 'id',
-                    label: 'ID',
+                    label: _.t('id'),
                     editable: false,
                     cell: Backgrid.IntegerCell.extend({
                         orderSeparator: ''
                     })
                 }, {
                     name: 'division',
-                    label: 'Gruppe',
+                    label: _.t('division'),
                     editable: false,
                     cell: Backgrid.Cell.extend({
                         render: function() {
@@ -51,16 +51,16 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                     })
                 }, {
                     name: 'name',
-                    label: 'Name',
+                    label: _.t('name'),
                     editable: false,
                     cell: 'string'
                 }, {
                     name: 'location',
-                    label: 'Standort',
+                    label: _.t('sensors:sensorLocation'),
                     editable: false,
                     cell: 'string'
                 }, {
-                    label: 'Firmware',
+                    label: _.t('sensors:sensorFirmwareHeader'),
                     editable: false,
                     sortable: false,
                     cell: Backgrid.Cell.extend({
@@ -71,7 +71,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                         }
                     })
                 }, {
-                    label: 'IP-Adresse',
+                    label: _.t('ipAddr'),
                     editable: false,
                     sortable: false,
                     cell: Backgrid.Cell.extend({
@@ -84,7 +84,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                 }];
             columns.push({
                 name: 'new_events',
-                label: 'NE',
+                label: _.t('sensors:sensorNewEventsShort'),
                 editable: false,
                 sortable: true,
                 cell: Backgrid.IntegerCell.extend({
@@ -103,7 +103,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                         // Add tooltip
                         var $anchor = this.$el.find('a');
                         $anchor.attr('data-toggle', 'tooltip');
-                        $anchor.attr('title', 'Neue Ereignisse');
+                        $anchor.attr('title', _.t('sensors:sensorNewEvents'));
                         $anchor.tooltip();
                         return this;
                     }
@@ -198,7 +198,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
             });
             // Status and actions columns
             columns.push({
-                label: 'Status',
+                label: _.t('sensors:sensorStatus'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -217,11 +217,11 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                             var now = new Date().getTime() / 1000,
                                 diffMin = Math.floor((now - timeRef) / 60);
                             if(diffMin < 60) {
-                                return "seit " + diffMin + " Minuten";
+                                return _.t('sensors:sensorStatusForMinutes', {minutes: diffMin});
                             } else if(diffMin < (60 * 24)) {
-                                return "seit " + Math.floor(diffMin / 60) + " Stunden";
+                                return _.t('sensors:sensorStatusForHours', {hours: Math.floor(diffMin / 60)});
                             } else if(diffMin >= (60 * 24)) {
-                                return "seit " + Math.floor(diffMin / (60 * 24)) + " Tag(en)";
+                                return _.t('sensors:sensorStatusForDays', {days: Math.floor(diffMin / (60 * 24))});
                             }
                         };
                         // Calculate td classification (for color indication)
@@ -244,7 +244,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                 })
             });
             columns.push({
-                label: 'Aktionen',
+                label: _.t('actions'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -294,7 +294,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
             this.list.show(grid);
             grid.sort('id', 'ascending');
             // Division filter
-            var divisions = _.union([{label: 'Alle', value: null}],
+            var divisions = _.union([{label: _.t('allDivisions'), value: null}],
                 HoneySens.data.models.divisions.map(function(division) {
                     return {label: division.get('name'), value: division.id};
                 })

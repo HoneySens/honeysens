@@ -18,8 +18,9 @@ HoneySens.module('Dashboard.Views', function(Views, HoneySens, Backbone, Marione
         } else {
             ticks = 12;
             tickDict = {
-                1: 'Januar', 2: 'Februar', 3: 'März', 4: 'April', 5: 'Mai', 6: 'Juni', 7: 'Juli',
-                8: 'August', 9: 'September', 10: 'Oktober', 11: 'November', 12: 'Dezember'};
+                1: _.t('january'), 2: _.t('february'), 3: _.t('march'), 4: _.t('april'), 5: _.t('may'),
+                6: _.t('june'), 7: _.t('july'), 8: _.t('august'), 9: _.t('september'), 10: _.t('october'),
+                11: _.t('november'), 12: _.t('december')};
         }
 
         for(var i=1;i<=ticks;i++) {
@@ -61,7 +62,7 @@ HoneySens.module('Dashboard.Views', function(Views, HoneySens, Backbone, Marione
                     data: {
                         labels: _.pluck(dataset, 'name'),
                         datasets: [{
-                            label: 'Ereignisse',
+                            label: _.t('events'),
                             data: _.pluck(dataset, 'events'),
                             backgroundColor: '#d9230f'
                         }]

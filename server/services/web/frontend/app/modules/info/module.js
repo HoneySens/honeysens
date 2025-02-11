@@ -8,7 +8,7 @@ var InfoModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: 'Information', uri: 'info', iconClass: 'glyphicon glyphicon-info-sign', permission: {domain: 'state', action: 'get'}}
+        {title: _.t('info:infoHeader'), uri: 'info', iconClass: 'glyphicon glyphicon-info-sign', permission: {domain: 'state', action: 'get'}}
     ],
     start: function() {
         console.log('Starting module: info');

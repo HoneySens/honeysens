@@ -1,9 +1,8 @@
-<h2>N&auml;chste Schritte</h2>
+<h2><%= _.t("setup:finalizeHeader") %></h2>
 <hr />
-<p>Der Server ist nun vollst&auml;ndig eingerichtet. Melden Sie sich nun mit dem Benutzernamen <em>admin</em> und dem
-von Ihnen zuvor vergebenen Passwort am System an. Die n&auml;chsten Schritte umfassen typischerweise:</p>
+<p><%= _.t("setup:finalizeIntro") %></p>
 <ol>
-    <li>Hochladen einer g&uuml;ltigen Sensor-Firmware</li>
-    <li>Hinzuf&uuml;gen des ersten Sensors</li>
+    <li><%= _.t("setup:finalizeUploadFirmware") %></li>
+    <li><%= _.t("setup:finalizeAddSensor") %></li>
 </ol>
-<button type="button" class="btn btn-primary btn-block">Zum Login</button>
+<button type="button" class="btn btn-primary btn-block"><%= _.t('setup:finalizeContinue') %></button>

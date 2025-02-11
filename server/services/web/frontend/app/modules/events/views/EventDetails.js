@@ -23,10 +23,10 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             showType: function() {
                 switch(this.type) {
                     case Models.EventDetail.type.GENERIC:
-                        return 'Sonstiges';
+                        return _.t('events:eventDetailGeneric');
                         break;
                     default:
-                        return 'Unbekannt';
+                        return _.t('unknown');
                 }
             }
         }
@@ -72,13 +72,13 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             showProtocol: function() {
                 switch(this.protocol) {
                     case Models.EventPacket.protocol.UNKNOWN:
-                        return 'Unbekannt';
+                        return _.t("unknown");
                         break;
                     case Models.EventPacket.protocol.TCP:
-                        return 'TCP';
+                        return _.t("tcp");
                         break;
                     case Models.EventPacket.protocol.UDP:
-                        return 'UDP';
+                        return _.t("udp");
                         break;
                 }
             },

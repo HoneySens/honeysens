@@ -1,0 +1,20 @@
+{
+  "header": "Services",
+  "noServerConnection": "Server connection failed",
+  "serviceRemoveHeader": "Remove service",
+  "serviceRemovePromptP1": "Should the service <strong>{{name}}</strong> and <strong>all associated revisions</strong> really be removed?",
+  "serviceRemovePromptP2": "The service will also be unassigned from all active sensors.",
+  "serviceRevision": "Revision",
+  "serviceArchitectures": "Architectures",
+  "serviceStatus": "Status",
+  "serviceDescription": "Description",
+  "serviceStatusOnline": "Online",
+  "serviceStatusWarning": "Limited availability of services",
+  "serviceStatusOffline": "Registry is offline",
+  "revisionRemoveHeader": "Remove service revision",
+  "revisionRemovePrompt": "Should the revision {{- revision}} of this service really be removed?",
+  "revisionMakeDefault": "Make default",
+  "revisionStatusOk": "Ok",
+  "revisionStatusError": "Not available",
+  "statusQuery": "Querying..."
+}

@@ -11,7 +11,7 @@ var TasksModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [{
-        title: 'Prozesse',
+        title: _.t('tasks:header'),
         uri: 'tasks',
         iconClass: 'glyphicon glyphicon-tasks',
         permission: {domain: 'tasks', action: 'get'},

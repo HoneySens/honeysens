@@ -1,14 +1,11 @@
 <div class="col-sm-12">
-    <div class="well">
-        Die nachfolgend gelisteten Prozesse werden vom Server im Hintergrund abgearbeitet, das jeweilige Resultat kann
-        nach Abschluss des Vorgangs über die Buttons in der Spalte <em>Aktionen</em> eingesehen, bzw. heruntergeladen werden.
-    </div>
+    <div class="well"><%= _.t("tasks:listInfo") %></div>
     <div class="headerBar form-inline clearfix">
         <div class="form-group">
-            <label>Status:&nbsp;</label>
-            <span id="taskWorkerStatus" class="help-block" style="display: inline-block;">Abfrage l&auml;ft...</span>
+            <label><%= _.t("tasks:status") %>:&nbsp;</label>
+            <span id="taskWorkerStatus" class="help-block" style="display: inline-block;"><%= _.t("tasks:statusQuerying") %></span>
             <span id="taskWorkerQueue" class="hidden">
-                (<span id="taskWorkerQueueLength"></span> Jobs in der Warteschlange)
+                (<%= _.t("tasks:statusQueueLength", {count: '<span id="taskWorkerQueueLength"></span>'}) %>)
             </span>
         </div>
     </div>

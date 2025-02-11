@@ -1,15 +1,13 @@
-<h2>Gruppe</h2>
+<h2><%= _.t("division") %></h2>
 <hr />
 <form>
-    <p>Geben Sie nun einen Namen f&uuml;r die erste, automatisch eingerichtete Gruppe ein. Gruppen fassen mehrere Sensoren
-    zusammen. Jeder Benutzer kann einer oder mehreren Gruppen zugewiesen werden. Der Administrator-Benutzer wird Mitglied
-    der hier benannten Gruppe sein.</p>
+    <p><%= _.t("setup:divisionPrompt") %></p>
     <div class="form-group has-feedback">
-        <label for="divisionName">Gruppenname</label>
-        <input type="text" name="divisionName" id="divisionName" class="form-control" required pattern="^[a-zA-Z0-9]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben und Zahlen erlaubt"  minlength="1" maxlength="255" data-maxlength-error="Der Name muss zwischen 1 und 255 Zeichen lang sein"/>
+        <label for="divisionName"><%= _.t("setup:divisionName") %></label>
+        <input type="text" name="divisionName" id="divisionName" class="form-control" required pattern="^[a-zA-Z0-9]+$" data-pattern-error="<%= _.t('nameValidationError') %>"  minlength="1" maxlength="255" data-maxlength-error="<%= _.t('lengthValidationError', {min: 1, max: 255}) %>" />
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>
     
-    <button type="submit" class="btn btn-primary btn-block">Weiter</button>
+    <button type="submit" class="btn btn-primary btn-block"><%= _.t("continue") %></button>
 </form>

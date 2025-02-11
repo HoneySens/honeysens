@@ -1,20 +1,20 @@
-<h2>Passwort&auml;nderung</h2>
+<h2><%= _.t("userPasswordHeader") %></h2>
 <hr />
 <form>
-    <p>Um mit der Anmeldung fortzufahren, vergeben Sie bitte zun&auml;chst f&uuml;r Ihren Account ein neues Passwort.</p>
+    <p><%= _.t("setup:userPasswordIntro") %></p>
     <div class="form-group has-feedback">
-        <label for="userPassword">Passwort</label>
-        <input type="password" name="userPassword" id="userPassword" class="form-control" required minlength="6" data-minlength-error="Das Passwort muss zwischen 6 und 255 Zeichen lang sein" maxlength="255"/>
+        <label for="userPassword"><%= _.t("setup:userPassword") %></label>
+        <input type="password" name="userPassword" id="userPassword" class="form-control" required minlength="6" data-minlength-error="<%= _.t('lengthValidationError', {min: 6, max: 255}) %>" maxlength="255"/>
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>
     <div class="form-group has-feedback">
-        <label for="userPasswordRepeat">Wiederholung</label>
-        <input type="password" name="userPasswordRepeat" id="userPasswordRepeat" class="form-control" required data-match="#userPassword" data-match-error="Die Passw&ouml;rter stimmen nicht &uuml;berein"/>
+        <label for="userPasswordRepeat"><%= _.t("setup:passwordRepeat") %></label>
+        <input type="password" name="userPasswordRepeat" id="userPasswordRepeat" class="form-control" required data-match="#userPassword" data-match-error="<%= _.t('setup:passwordMismatch') %>"/>
         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
         <div class="help-block with-errors"></div>
     </div>
-    <p>Sie werden im Anschluss dazu aufgefordert, sich mit den neuen Zugangsdaten erneut anzumelden.</p>
-    <button type="button" class="btn btn-default btn-block">Abbrechen</button>
-    <button type="submit" class="btn btn-primary btn-block">Weiter</button>
+    <p><%= _.t("setup:userPasswordInfo") %></p>
+    <button type="button" class="btn btn-default btn-block"><%= _.t("cancel") %></button>
+    <button type="submit" class="btn btn-primary btn-block"><%= _.t("continue") %></button>
 </form>

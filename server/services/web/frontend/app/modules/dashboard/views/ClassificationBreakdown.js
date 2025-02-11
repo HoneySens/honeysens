@@ -8,10 +8,10 @@ HoneySens.module('Dashboard.Views', function(Views, HoneySens, Backbone, Marione
         var dataset = [],
             classificationData = _.unzip(_.map(model.get('classification'), function(d) {return [parseInt(d.events), parseInt(d.classification)]})),
             classificationDict = {
-                '0': {'label': 'Unbekannt', 'color': '#474949'},
-                '2': {'label': 'Verbindungsversuch', 'color': '#ddd'},
-                '3': {'label': 'Honeypot', 'color': '#d9230f'},
-                '4': {'label': 'Scan', 'color': '#029acf'}
+                '0': {'label': _.t('unknown'), 'color': '#474949'},
+                '2': {'label': _.t('eventClassificationConnectionAttempt'), 'color': '#ddd'},
+                '3': {'label': _.t('eventClassificationHoneypot'), 'color': '#d9230f'},
+                '4': {'label': _.t('eventClassificationScan'), 'color': '#029acf'}
             };
 
         _.each([0, 2, 3, 4], function(i) {

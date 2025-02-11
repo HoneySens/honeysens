@@ -7,8 +7,8 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
         onRender: function() {
             var errorText;
             switch(this.model.get('code')) {
-                case 1: errorText = 'Server-Konfiguration konnte nicht geschrieben werden.'; break;
-                default: errorText = 'Auf dem Server ist ein Fehler aufgetreten.'; break;
+                case 1: errorText = _.t('setup:errorConfigWrite'); break;
+                default: errorText = _.t('genericServerError'); break;
             }
             this.$el.find('p').text(errorText);
         }

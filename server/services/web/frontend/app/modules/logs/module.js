@@ -8,7 +8,7 @@ var LogsModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [{
-        title: 'Logs',
+        title: _.t('logs:header'),
         uri: 'logs',
         iconClass: 'glyphicon glyphicon-book',
         permission: {domain: 'logs', action: 'get'},

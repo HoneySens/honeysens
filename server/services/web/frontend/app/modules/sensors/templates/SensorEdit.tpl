@@ -1,23 +1,23 @@
 <div class="row addForm">
     <div class="col-sm-12">
-        <h1 class="page-header"><span class="glyphicon glyphicon-plus"></span>&nbsp;Sensor <% if(isNew()) { %>hinzuf&uuml;gen<% } else { %>bearbeiten<% } %></h1>
+        <h1 class="page-header"><span class="glyphicon glyphicon-plus"></span>&nbsp;<% if(isNew()) { %><%= _.t("sensors:sensorAddHeader") %><% } else { %><%= _.t("sensors:sensorUpdateHeader") %><% } %></h1>
         <form>
             <div class="row">
                 <div class="col-sm-6">
                     <div class="form-group has-feedback">
-                        <label for="sensorName" class="control-label">Name</label>
-                        <input pattern="^[a-zA-Z0-9._\- ]+$" data-pattern-error="Nur Gro&szlig;-, Kleinbuchstaben, Zahlen und Sonderzeichen (_, -, .) sind erlaubt" data-maxlength-error="Der Sensorname muss zwischen 1 und 50 Zeichen lang sein" maxlength="50" minlength="1" type="text" class="form-control" name="sensorName" placeholder="Sensorname" value="<%- name %>" required autofocus />
+                        <label for="sensorName" class="control-label"><%= _.t("name") %></label>
+                        <input pattern="^[a-zA-Z0-9._\- ]+$" data-pattern-error="<%= _.t('nameAltValidationError') %>" data-maxlength-error="<%= _.t('lengthValidationError', {min: 1, max: 50}) %>" maxlength="50" minlength="1" type="text" class="form-control" name="sensorName" placeholder="<%= _.t('sensors:sensorNamePlaceholder') %>" value="<%- name %>" required autofocus />
                         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                         <div class="help-block with-errors"></div>
                     </div>
                     <div class="form-group has-feedback">
-                        <label for="location" class="control-label">Standort</label>
-                        <input data-maxlength-error="Der Standort darf maximal 255 Zeichen lang sein" maxlength="255" minlength="1" type="text" class="form-control" name="location" placeholder="z.B. Raum 312" value="<%- location %>" required />
+                        <label for="location" class="control-label"><%= _.t("sensors:sensorLocation") %></label>
+                        <input data-maxlength-error="<%= _.t('lengthValidationError', {min: 1, max: 255}) %>" maxlength="255" minlength="1" type="text" class="form-control" name="location" placeholder="<%= _.t('sensors:sensorLocationPlaceholder') %>" value="<%- location %>" required />
                         <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                         <div class="help-block with-errors"></div>
                     </div>
                     <div class="form-group">
-                        <label for="division" class="control-label">Gruppe</label>
+                        <label for="division" class="control-label"><%= _.t("division") %></label>
                         <select class="form-control" name="division">
                             <% _(divisions).each(function(d) { %>
                                 <option value="<%- d.id %>"><%- d.name %></option>
@@ -25,56 +25,56 @@
                         </select>
                     </div>
                     <fieldset>
-                        <legend>Erreichbarkeit HoneySens-Server</legend>
+                        <legend><%= _.t("sensors:sensorServerConnection") %></legend>
                         <div class="form-group has-feedback">
-                            <label for="updateInterval" class="control-label">Update-Interval</label>
+                            <label for="updateInterval" class="control-label"><%= _.t("sensors:sensorUpdateInterval") %></label>
                             <div class="input-group">
-                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Zwischen systemweitem Standard und individuellem Wert umschalten">
+                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorToggleSystemCustom') %>">
                                     <button type="button" class="useCustomUpdateInterval btn btn-default <% if(hasCustomUpdateInterval()) { %>active<% } %>">
                                         <span class="glyphicon glyphicon-cog"></span>
                                     </button>
                                 </span>
-                                <input type="number" name="updateInterval" class="form-control" value="<%- getUpdateInterval() %>" min="1" max="60" data-max-error="Das Intervall muss minimal 1 und maximal 60 Minuten betragen" <% if(!hasCustomUpdateInterval()) { %>disabled<% } %>/>
+                                <input type="number" name="updateInterval" class="form-control" value="<%- getUpdateInterval() %>" min="1" max="60" data-max-error="<%= _.t('lengthValidationError', {min: 1, max: 60}) %>" <% if(!hasCustomUpdateInterval()) { %>disabled<% } %>/>
                                 <div class="input-group-addon">
                                     <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                                 </div>
-                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Intervall in Minuten, in dem dieser Sensor den Server kontaktiert.">
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorUpdateIntervalInfo') %>">
                                     <span class="glyphicon glyphicon-question-sign"></span>
                                 </div>
                             </div>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group has-feedback">
-                            <label for="serverHost" class="control-label">Host</label>
+                            <label for="serverHost" class="control-label"><%= _.t("host") %></label>
                             <div class="input-group">
-                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Zwischen systemweitem Standard und individuellem Wert umschalten">
+                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorToggleSystemCustom') %>">
                                         <button type="button" class="useCustomServerEndpoint btn btn-default <% if(hasCustomServerHost()) { %>active<% } %>">
                                             <span class="glyphicon glyphicon-cog"></span>
                                         </button>
                                     </span>
-                                <input type="text" name="serverHost" class="form-control" pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" placeholder="IP-Adresse des Servers" value="<%- getServerHost() %>" <% if(!hasCustomServerHost()) { %>disabled<% } %>/>
+                                <input type="text" name="serverHost" class="form-control" pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="<%= _.t('ipAddrValidationError') %>" placeholder="<%= _.t('sensors:sensorServerHostPlaceholder') %>" value="<%- getServerHost() %>" <% if(!hasCustomServerHost()) { %>disabled<% } %>/>
                                 <div class="input-group-addon">
                                     <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                                 </div>
-                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="IP-Adresse, mit welcher dieser Sensor den Server kontaktiert.">
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorServerHostInfo')%>">
                                     <span class="glyphicon glyphicon-question-sign"></span>
                                 </div>
                             </div>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group has-feedback">
-                            <label for="serverPortHTTPS" class="control-label">HTTPS-Port (API)</label>
+                            <label for="serverPortHTTPS" class="control-label"><%= _.t("sensors:sensorServerPort") %></label>
                             <div class="input-group">
-                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Zwischen systemweitem Standard und individuellem Wert umschalten">
+                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorToggleSystemCustom') %>">
                                         <button type="button" class="useCustomServerEndpoint btn btn-default <% if(hasCustomServerPort()) { %>active<% } %>">
                                             <span class="glyphicon glyphicon-cog"></span>
                                         </button>
                                     </span>
-                                <input type="number" name="serverPortHTTPS" class="form-control" placeholder="Standard: 443" required min="1" max="65535" data-max-error="Der Port muss zwischen 1 und 65535 liegen" value="<%- getServerPortHTTPS() %>" <% if(!hasCustomServerPort()) { %>disabled<% } %>/>
+                                <input type="number" name="serverPortHTTPS" class="form-control" placeholder="<%= _.t('sensors:sensorServerPortPlaceholder') %>" required min="1" max="65535" data-max-error="<%= _.t('lengthValidationError', {min: 1, max: 65535}) %>" value="<%- getServerPortHTTPS() %>" <% if(!hasCustomServerPort()) { %>disabled<% } %>/>
                                 <div class="input-group-addon">
                                     <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                                 </div>
-                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="HTTPS-Port, mit welchem dieser Sensor den Server kontaktiert.">
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorServerPortInfo') %>">
                                     <span class="glyphicon glyphicon-question-sign"></span>
                                 </div>
                             </div>
@@ -82,25 +82,25 @@
                         </div>
                     </fieldset>
                     <fieldset>
-                        <legend>Firmware</legend>
+                        <legend><%= _.t("sensors:sensorFirmwareHeader") %></legend>
                         <div class="form-group">
                             <div class="btn-group btn-group-justified" data-toggle="buttons">
                                 <label class="btn btn-default <% if(!firmwareExists()) { %>disabled<% } %>">
-                                    <input type="radio" name="firmwarePreference" value="0">Standard</label>
+                                    <input type="radio" name="firmwarePreference" value="0"><%= _.t('sensors:sensorFirmwareStandard') %></label>
                                 </label>
                                 <label class="btn btn-default <% if(!firmwareExists()) { %>disabled<% } %>">
-                                    <input type="radio" name="firmwarePreference" value="1">Spezifische Revision</label>
+                                    <input type="radio" name="firmwarePreference" value="1"><%= _.t('sensors:sensorFirmwareSpecificRevision') %></label>
                                 </label>
                             </div>
                         </div>
                         <div class="form-group firmwarePreferenceDisabled">
-                            <p class="form-control-static">Der Sensor nutzt die plattformabhängige Standardfirmware.</p>
+                            <p class="form-control-static"><%= _.t('sensors:sensorFirmwareStandardInfo') %></p>
                             <% if(!firmwareExists()) { %>
-                            <p class="form-control-static firmwareMissing"><strong>Achtung: Es ist derzeit keine Firmware registriert!</strong></p>
+                            <p class="form-control-static firmwareMissing"><strong><%= _.t("sensors:sensorFirmwareWarning") %></strong></p>
                             <% } %>
                         </div>
                         <div class="form-group firmwarePreferenceEnabled">
-                            <label for="firmwarePlatform" class="control-label">Plattform</label>
+                            <label for="firmwarePlatform" class="control-label"><%= _.t("sensors:sensorFirmwarePlatform") %></label>
                             <select class="form-control" name="firmwarePlatform">
                                 <% _(platforms).each(function(p) { %>
                                     <option value="<%- p.id %>"><%- p.title %></option>
@@ -108,77 +108,76 @@
                             </select>
                         </div>
                         <div class="form-group firmwarePreferenceEnabled">
-                            <label for="firmwareRevision" class="control-label">Revision</label>
+                            <label for="firmwareRevision" class="control-label"><%= _.t("sensors:sensorFirmwareRevision") %></label>
                             <select class="form-control" name="firmwareRevision"></select>
                         </div>
                     </fieldset>
                 </div>
                 <div class="col-sm-6">
                     <fieldset>
-                        <legend>Netzwerkschnittstelle</legend>
-                        <p>Spezifizieren Sie hier, ob der Sensor eine statische IP-Adresse besitzen oder diese von einem DHCP-Server beziehen soll.
-                            Falls dieser Sensor <strong>virtuell</strong> (d.h. als Docker-Container) betrieben werden soll, ist an dieser Stelle <em>"Unkonfiguriert"</em> die richtige Wahl.</p>
+                        <legend><%= _.t("sensors:sensorNetworkHeader") %></legend>
+                        <p><%= _.t("sensors:sensorNetworkAddressPrompt") %></p>
                         <div class="form-group">
                             <div class="btn-group btn-group-justified" data-toggle="buttons">
                                 <label class="btn btn-default">
-                                    <input type="radio" name="networkMode" value="0">DHCP</input>
+                                    <input type="radio" name="networkMode" value="0"><%= _.t("sensors:sensorNetworkAddressDHCP") %></input>
                                 </label>
                                 <label class="btn btn-default">
-                                    <input type="radio" name="networkMode" value="1">Statisch</input>
+                                    <input type="radio" name="networkMode" value="1"><%= _.t("sensors:sensorNetworkAddressStatic") %></input>
                                 </label>
                                 <label class="btn btn-default">
-                                    <input type="radio" name="networkMode" value="2">Unkonfiguriert</input>
+                                    <input type="radio" name="networkMode" value="2"><%= _.t("sensors:sensorNetworkAddressUnconfigured") %></input>
                                 </label>
                             </div>
                         </div>
                         <div class="form-group networkModeDHCP has-feedback">
-                            <label for="networkDHCPHostname" class="control-label">Hostname</label>
+                            <label for="networkDHCPHostname" class="control-label"><%= _.t("sensors:sensorNetworkHostname") %></label>
                             <div class="input-group">
-                                <input pattern="^[a-z0-9.\-]+$" data-pattern-error="Nur Kleinbuchstaben, Zahlen und Sonderzeichen (-, .) sind erlaubt" data-maxlength-error="Der Hostname muss zwischen 1 und 253 Zeichen lang sein" maxlength="253" minlength="1" type="text" class="form-control" name="networkDHCPHostname" placeholder="optional" />
+                                <input pattern="^[a-z0-9.\-]+$" data-pattern-error="<%= _.t('nameAlt2ValidationError') %>" data-maxlength-error="<%= _.t('lengthValidationError', {min: 1, max: 253}) %>" maxlength="253" minlength="1" type="text" class="form-control" name="networkDHCPHostname" placeholder="<%= _.t('optional') %>" />
                                 <div class="input-group-addon">
                                     <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                                 </div>
-                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Optionaler Hostname, der zusammen mit DHCP-Anfragen zum DHCP-Server gesendet wird. Feld freilassen, um keinen Hostnamen zum Server zu senden.">
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorNetworkHostnameInfo') %>">
                                     <span class="glyphicon glyphicon-question-sign"></span>
                                 </div>
                             </div>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkModeDHCP">
-                            <p class="form-control-static">IP-Adresse und Subnetzmaske werden automatisch vom DHCP-Server bezogen.</p>
+                            <p class="form-control-static"><%= _.t("sensors:sensorNetworkAddressDHCPInfo") %></p>
                         </div>
                         <div class="form-group networkModeNone">
-                            <p class="form-control-static">Das Netzwerkinterface bleibt unkonfiguriert. Dies ist erforderlich, wenn die IP-Adresse des Sensors andersweitig verwaltet wird, beispielsweise durch das Hostsystem bei virtuellen, in Docker-Containern betriebenen Sensoren.</p>
+                            <p class="form-control-static"><%= _.t("sensors:sensorNetworkAddressUnconfiguredInfo") %></p>
                         </div>
                         <div class="form-group networkModeStatic has-feedback">
-                            <label for="networkIP" class="control-label">IP-Adresse</label>                            
-                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="networkIP" placeholder="z.B. 192.168.1.13" />
+                            <label for="networkIP" class="control-label"><%= _.t("sensors:sensorNetworkAddressStaticIP") %></label>
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="<%= _.t('ipAddrValidationError') %>" type="text" class="form-control" name="networkIP" placeholder="<%= _.t('sensors:sensorNetworkAddressStaticIPPlaceholder') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkModeStatic has-feedback">
-                            <label for="networkNetmask" class="control-label">Subnetzmaske</label>
-                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="networkNetmask" placeholder="z.B. 255.255.255.0" />
+                            <label for="networkNetmask" class="control-label"><%= _.t("sensors:sensorNetworkAddressStaticSubnet") %></label>
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="<%= _.t('ipAddrValidationError') %>" type="text" class="form-control" name="networkNetmask" placeholder="<%= _.t('sensors:sensorNetworkAddressStaticSubnetPlaceholder') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkModeStatic has-feedback">
-                            <label for="networkGateway" class="control-label">Gateway</label>
-                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="networkGateway" placeholder="optional" />
+                            <label for="networkGateway" class="control-label"><%= _.t("sensors:sensorNetworkAddressStaticGateway") %></label>
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="<%= _.t('ipAddrValidationError') %>" type="text" class="form-control" name="networkGateway" placeholder="<%= _.t('optional') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkModeStatic has-feedback">
-                            <label for="networkDNS" class="control-label">DNS-Server</label>
-                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="Bitte geben Sie eine valide IP-Adresse ein" type="text" class="form-control" name="networkDNS" placeholder="optional" />
+                            <label for="networkDNS" class="control-label"><%= _.t("sensors:sensorNetworkAddressStaticDNS") %></label>
+                            <input pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" data-pattern-error="<%= _.t('ipAddrValidationError') %>" type="text" class="form-control" name="networkDNS" placeholder="<%= _.t('optional') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group">
-                            <span class="label label-info">BETA</span>
+                            <span class="label label-info"><%= _.t("sensors:sensorNetworkEAPOLBeta") %></span>
                             <label for="networkEAPOLMode" class="control-label">EAPOL/IEEE802.1X-Authentifizierung</label>
                             <select class="form-control" name="networkEAPOLMode">
-                                <option value="0">Deaktiviert</option>
+                                <option value="0"><%= _.t("sensors:sensorNetworkEAPOLDisabled") %></option>
                                 <option value="1">MD5</option>
                                 <option value="2">TLS</option>
                                 <option value="3">PEAP</option>
@@ -186,25 +185,25 @@
                             </select>
                         </div>
                         <div class="form-group networkEAPOLIdentity has-feedback">
-                            <label for="networkEAPOLIdentity" class="control-label">Identit&auml;t</label>
+                            <label for="networkEAPOLIdentity" class="control-label"><%= _.t("sensors:sensorNetworkEAPOLIdentity") %></label>
                             <input type="text" class="form-control" name="networkEAPOLIdentity" minlength="1" maxlength="512" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkEAPOLPassword has-feedback">
-                            <label for="networkEAPOLPassword" class="control-label">Passwort</label>
-                            <input type="password" class="form-control" name="networkEAPOLPassword" minlength="1" maxlength="512" placeholder="Neues Passwort" />
+                            <label for="networkEAPOLPassword" class="control-label"><%= _.t("sensors:sensorNetworkEAPOLPassword") %></label>
+                            <input type="password" class="form-control" name="networkEAPOLPassword" minlength="1" maxlength="512" placeholder="<%= _.t('sensors:sensorNetworkEAPOLPasswordPlaceholder') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkEAPOLAnonIdentity has-feedback">
-                            <label for="networkEAPOLAnonIdentity" class="control-label">Anonyme Identit&auml;t</label>
-                            <input type="text" class="form-control" name="networkEAPOLAnonIdentity" minlength="1" maxlength="512" placeholder="optional" />
+                            <label for="networkEAPOLAnonIdentity" class="control-label"><%= _.t("sensors:sensorNetworkEAPOLAnonIdentity") %></label>
+                            <input type="text" class="form-control" name="networkEAPOLAnonIdentity" minlength="1" maxlength="512" placeholder="<%= _.t('optional') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkEAPOLCA has-feedback">
-                            <label for="networkEAPOLCA" class="control-label">CA-Zertifikat (optional)</label>
+                            <label for="networkEAPOLCA" class="control-label"><%= _.t("sensors:sensorNetworkEAPOLCA") %></label>
                             <input type="file" class="hide" />
                             <div class="input-group">
                                 <span class="input-group-btn">
@@ -214,13 +213,13 @@
                                 </span>
                                 <input type="text" class="form-control uploadMetadata" name="networkEAPOLCA" pattern="^.+ \(\d+ Bytes\)$|^[0-9A-Fa-f]+$" disabled />
                                 <span class="input-group-btn">
-                                    <button type="button" class="upload btn btn-default">Upload...</button>
+                                    <button type="button" class="upload btn btn-default"><%= _.t("upload") %></button>
                                 </span>
                             </div>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkEAPOLClientCert has-feedback">
-                            <label for="networkEAPOLClientCert" class="control-label">Client-Zertifikat</label>
+                            <label for="networkEAPOLClientCert" class="control-label"><%= _.t("sensors:sensorNetworkEAPOLClientCert") %></label>
                             <input type="file" class="hide" />
                             <div class="input-group">
                                 <span class="input-group-btn">
@@ -230,13 +229,13 @@
                                 </span>
                                 <input type="text" class="form-control uploadMetadata" name="networkEAPOLClientCert" pattern="^.+ \(\d+ Bytes\)$|^[0-9A-Fa-f]+$" disabled />
                                 <span class="input-group-btn">
-                                    <button type="button" class="upload btn btn-default">Upload...</button>
+                                    <button type="button" class="upload btn btn-default"><%= _.t("upload") %></button>
                                 </span>
                             </div>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkEAPOLClientKey has-feedback">
-                            <label for="networkEAPOLClientKey" class="control-label">Client-Schl&uuml;ssel</label>
+                            <label for="networkEAPOLClientKey" class="control-label"><%= _.t("sensors:sensorNetworkEAPOLClientKey") %></label>
                             <input type="file" class="hidden" />
                             <div class="input-group">
                                 <span class="input-group-btn">
@@ -246,50 +245,50 @@
                                 </span>
                                 <input type="text" class="form-control uploadMetadata" name="networkEAPOLClientKey" pattern="^.+ \(\d+ Bytes\)$|^[0-9A-Fa-f]+$" disabled />
                                 <span class="input-group-btn">
-                                    <button type="button" class="upload btn btn-default">Upload...</button>
+                                    <button type="button" class="upload btn btn-default"><%= _.t("upload") %></button>
                                 </span>
                             </div>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkEAPOLClientPassphrase has-feedback">
-                            <label for="networkEAPOLClientPassphrase" class="control-label">Passphrase des privaten Schl&uuml;sels</label>
-                            <input type="password" class="form-control" name="networkEAPOLClientPassphrase" minlength="1" maxlength="512" placeholder="optional" />
+                            <label for="networkEAPOLClientPassphrase" class="control-label"><%= _.t("sensors:sensorNetworkEAPOLClientPassphrase") %></label>
+                            <input type="password" class="form-control" name="networkEAPOLClientPassphrase" minlength="1" maxlength="512" placeholder="<%= _.t('optional') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group">
-                            <label for="networkMACMode" class="control-label">MAC-Adresse</label>
+                            <label for="networkMACMode" class="control-label"><%= _.t("sensors:sensorNetworkMACMode") %></label>
                             <div class="btn-group btn-group-justified" data-toggle="buttons">
                                 <label class="btn btn-default">
-                                    <input type="radio" name="networkMACMode" value="0">Standard</input>
+                                    <input type="radio" name="networkMACMode" value="0"><%= _.t("sensors:sensorFirmwareStandard") %></input>
                                 </label>
                                 <label class="btn btn-default">
-                                    <input type="radio" name="networkMACMode" value="1">Individuell</input>
+                                    <input type="radio" name="networkMACMode" value="1"><%= _.t("sensors:sensorNetworkMACModeCustom") %></input>
                                 </label>
                             </div>
                         </div>
                         <div class="form-group networkMACOriginal">
-                            <p class="form-control-static">Es wird die originale MAC-Adresse des verbauten Netzwerkinterfaces genutzt.</p>
+                            <p class="form-control-static"><%= _.t("sensors:sensorNetworkMACModeStandardInfo") %></p>
                         </div>
                         <div class="form-group networkMACCustom has-feedback">
-                            <label for="customMAC" class="control-label">Individuelle MAC-Adresse</label>
-                            <input pattern="^(([A-Fa-f0-9]{2}[:]){5}[A-Fa-f0-9]{2}[,]?)+$" data-pattern-error="Bitte geben Sie eine valide MAC-Adresse ein" type="text" class="form-control" name="customMAC" placeholder="z.B. 00:11:22:33:44:55" />
+                            <label for="customMAC" class="control-label"><%= _.t("sensors:sensorNetworkMACCustom") %></label>
+                            <input pattern="^(([A-Fa-f0-9]{2}[:]){5}[A-Fa-f0-9]{2}[,]?)+$" data-pattern-error="<%= _.t('macValidationError') %>" type="text" class="form-control" name="customMAC" placeholder="<%= _.t('sensors:sensorNetworkMACPlaceholder') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group networkServiceNetwork has-feedback">
-                            <label for="serviceNetwork" class="control-label">Interner Netzbereich f&uuml;r Honeypot-Services</label>
+                            <label for="serviceNetwork" class="control-label"><%= _.t("sensors:sensorServiceNetwork") %></label>
                             <div class="input-group">
-                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Zwischen systemweitem Standard und individuellem Wert umschalten">
+                                <span class="input-group-btn" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorToggleSystemCustom') %>">
                                     <button type="button" class="useCustomServiceNetwork btn btn-default <% if(hasCustomServiceNetwork()) { %>active<% } %>">
                                         <span class="glyphicon glyphicon-cog"></span>
                                     </button>
                                 </span>
-                                <input pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9])$" data-pattern-error="Netzbereich als IP-Adresse mit Netzmaske (z.B. 192.168.1.0/24) spezifizieren" type="text" class="form-control" name="serviceNetwork" value="<%- getServiceNetwork() %>" <% if(!hasCustomServiceNetwork()) { %>disabled<% } %> />
+                                <input pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:30|2[0-9]|1[0-9]|[1-9])$" data-pattern-error="<%= _.t('sensors:sensorServiceNetworkValidationError') %>" type="text" class="form-control" name="serviceNetwork" value="<%- getServiceNetwork() %>" <% if(!hasCustomServiceNetwork()) { %>disabled<% } %> />
                                 <div class="input-group-addon">
                                     <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                                 </div>
-                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Spezifiziert den IP-Adressbereich, den Sensordienste zur internen Adressierung nutzen. Falls dieser mit lokalen Adressbereichen im Konflikt steht, ist hier ein freier und ungenutzter Adessraum anzugeben.">
+                                <div class="input-group-addon" data-container="body" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="<%= _.t('sensors:sensorServiceNetworkInfo') %>">
                                     <span class="glyphicon glyphicon-question-sign"></span>
                                 </div>
                             </div>
@@ -297,39 +296,39 @@
                         </div>
                     </fieldset>
                     <fieldset>
-                        <legend>HTTP(S)-Proxy</legend>
+                        <legend><%= _.t("sensors:sensorProxy") %></legend>
                         <div class="form-group">
                             <div class="btn-group btn-group-justified" data-toggle="buttons">
                                 <label class="btn btn-default">
-                                    <input type="radio" name="proxyType" value="0">Inaktiv</input>
+                                    <input type="radio" name="proxyType" value="0"><%= _.t("sensors:sensorProxyDisabled") %></input>
                                 </label>
                                 <label class="btn btn-default">
-                                    <input type="radio" name="proxyType" value="1">Aktiv</input>
+                                    <input type="radio" name="proxyType" value="1"><%= _.t("sensors:sensorProxyEnabled") %></input>
                                 </label>
                             </div>
                         </div>
                         <div class="form-group proxyTypeDisabled">
-                            <p class="form-control-static">Es kommt kein Proxy-Server zum Einsatz.</p>
+                            <p class="form-control-static"><%= _.t("sensors:sensorProxyDisabledInfo") %></p>
                         </div>
                         <div class="form-group proxyTypeEnabled has-feedback">
-                            <label for="proxyHost" class="control-label">Proxy-Server</label>
-                            <input type="text" class="form-control" name="proxyHost" placeholder="z.B. 10.0.0.3" />
+                            <label for="proxyHost" class="control-label"><%= _.t("sensors:sensorProxyHost") %></label>
+                            <input type="text" class="form-control" name="proxyHost" placeholder="<%= _.t('sensors:sensorProxyHostPlaceholder') %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group proxyTypeEnabled has-feedback">
-                            <label for="proxyPort" class="control-label">Port</label>
-                            <input type="number" name="proxyPort" class="form-control" placeholder="z.B. 3128" min="0" max="65535" data-max-error="Der Port muss zwischen 0 und 65535 liegen"/>
+                            <label for="proxyPort" class="control-label"><%= _.t("port") %></label>
+                            <input type="number" name="proxyPort" class="form-control" placeholder="<%= _.t('sensors:sensorProxyPortPlaceholder') %>" min="0" max="65535" data-max-error="<% _.t('intValidationError', {min: 0, max: 65535}) %>" />
                             <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                             <div class="help-block with-errors"></div>
                         </div>
                         <div class="form-group proxyTypeEnabled">
-                            <label for="proxyUser" class="control-label">Benutzer</label>
-                            <input type="text" name="proxyUser" class="form-control" placeholder="optional" />
+                            <label for="proxyUser" class="control-label"><%= _.t("sensors:sensorProxyUser") %></label>
+                            <input type="text" name="proxyUser" class="form-control" placeholder="<%= _.t('optional') %>" />
                         </div>
                         <div class="form-group proxyTypeEnabled">
-                            <label for="proxyPassword" class="control-label">Passwort</label>
-                            <input type="password" name="proxyPassword" class="form-control" placeholder="optional" autocomplete="new-password" />
+                            <label for="proxyPassword" class="control-label"><%= _.t("sensors:sensorProxyPassword") %></label>
+                            <input type="password" name="proxyPassword" class="form-control" placeholder="<%= _.t('optional') %>" autocomplete="new-password" />
                         </div>
                     </fieldset>
                 </div>
@@ -338,10 +337,10 @@
             <div class="form-group">
                 <div class="btn-group btn-group-justified">
                     <div class="btn-group">
-                        <button type="button" class="cancel btn btn-default">&nbsp;&nbsp;Abbrechen</button>
+                        <button type="button" class="cancel btn btn-default">&nbsp;&nbsp;<%= _.t("cancel") %></button>
                     </div>
                     <div class="btn-group">
-                        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span>&nbsp;&nbsp;Speichern</button>
+                        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-save"></span>&nbsp;&nbsp;<%= _.t("save") %></button>
                     </div>
                 </div>
             </div>
@@ -350,39 +349,35 @@
 </div>
 <div class="row addBusy hide">
     <div class="col-sm-12">
-        <p class="text-center">Daten werden verarbeitet</p>
+        <p class="text-center"><%= _.t("sensors:sensorProcessing") %></p>
         <div class="loading center-block"></div>
     </div>
 </div>
 <div class="row addResult hide">
     <div class="col-sm-12">
         <div class="resultSuccess">
-            <div class="alert alert-success">Der neue Sensor wurde erfolgreich auf dem Server registriert.</div>
-            <p>Bitte laden Sie die Sensor-Konfiguration mit einem Klick auf den nachfolgenden Button herunter. Sie wird für die Einrichtung eines
-                neuen Sensors unabhängig von der verwendeten Plattform zwingend benötigt.</p>
+            <div class="alert alert-success"><%= _.t("sensors:sensorSaveSuccess") %></div>
+            <p><%= _.t("sensors:sensorSaveSuccessInstructions") %></p>
             <div class="configArchive">
-                <h5 class="text-center hide"><strong>Bitte warten, Konfiguration wird erzeugt...</strong></h5>
-                <div class="alert alert-danger hide">Es ist ein Fehler beim Erzeugen der Sensorkonfiguration aufgetreten.</div>
-                <button type="button" class="btn btn-primary btn-block reqConfig"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Sensor-Konfiguration</button>
+                <h5 class="text-center hide"><strong><%= _.t("sensors:sensorConfigWait") %></strong></h5>
+                <div class="alert alert-danger hide"><%= _.t("sensors:sensorConfigError") %></div>
+                <button type="button" class="btn btn-primary btn-block reqConfig"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;<%= _.t("sensors:sensorConfigDownloadButton") %></button>
             </div>
             <hr />
             <% if(firmwareExists()) { %>
-            <p>Die weiteren Schritte für die Inbetriebnahme des Sensors hängen davon ab, auf welcher Plattform dieser zum Einsatz kommen soll.
-                Für eine kurze Zusammenfassung der erforderlichen Schritte, klicken Sie bitte auf die nachfolgenden Links.</p>
+            <p><%= _.t("sensors:sensorSaveFirmwareInstructions") %></p>
             <div class="panel-group" id="instructions">
                 <% if(firmwareExists(1)) { %>
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a class="collapsed" data-toggle="collapse" data-parent="#instructions" href="#instBBB">BeagleBone Black</a>
+                            <a class="collapsed" data-toggle="collapse" data-parent="#instructions" href="#instBBB"><%= _.t("BBB") %></a>
                         </h4>
                     </div>
                     <div id="instBBB" class="panel-collapse collapse">
                         <div class="panel-body">
-                            <p>Laden Sie nun im nächsten Schritt die Sensor-Firmware und die individuelle Sensor-Konfiguration herunter.
-                            Schreiben Sie anschließend die Firmware auf eine SD-Karte und kopieren das Konfigurationsarchiv auf deren
-                            erste Partition. Schließen Sie zuletzt den Sensor mit eingesteckter SD-Karte an das Netzwerk an.</p>
-                            <a class="btn btn-primary btn-block" href="#"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Download Firmware</a>
+                            <p><%= _.t("sensors:BBBInstructions") %></p>
+                            <a class="btn btn-primary btn-block" href="#"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;<%= _.t("sensors:BBBDownload") %></a>
                         </div>
                     </div>
                 </div>
@@ -391,14 +386,13 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a class="collapsed" data-toggle="collapse" data-parent="#instructions" href="#instDocker">Docker (x86)</a>
+                            <a class="collapsed" data-toggle="collapse" data-parent="#instructions" href="#instDocker"><%= _.t("sensors:docker") %></a>
                         </h4>
                     </div>
                     <div id="instDocker" class="panel-collapse collapse">
                         <div class="panel-body">
-                            <p>Für die Einrichtung eines virtuellen Sensors auf Basis von Docker kann an dieser Stelle ein Archiv
-                                heruntergeladen werden, das sowohl das aktuelle Image als auch ein zugehöriges Startskript beinhaltet.</p>
-                            <a class="btn btn-primary btn-block" href="#"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Download Docker-Image</a>
+                            <p><%= _.t("sensors:dockerInstructions") %></p>
+                            <a class="btn btn-primary btn-block" href="#"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;<%= _.t("sensors:dockerDownload") %></a>
                         </div>
                     </div>
                 </div>
@@ -407,9 +401,9 @@
             <% } %>
         </div>
         <div class="resultError hide">
-            <div class="alert alert-danger">Es ist ein Fehler aufgetreten.</div>
+            <div class="alert alert-danger"><%= _.t("sensors:sensorSaveError") %></div>
         </div>
         <hr />
-        <button type="button" class="cancel btn btn-default btn-block">Schlie&szlig;en</button>
+        <button type="button" class="cancel btn btn-default btn-block"><%= _.t("close") %></button>
     </div>
 </div>

@@ -10,7 +10,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         template: _.template(UsersEditViewTpl),
         className: 'transitionView row',
         errors: {
-            1: 'Das Login ist bereits im System vorhanden und kann nicht doppelt vergeben werden.'
+            1: _.t('accounts:userNameConflict')
         },
         events: {
             'click button.cancel': function(e) {

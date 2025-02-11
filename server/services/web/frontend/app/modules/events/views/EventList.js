@@ -19,7 +19,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             sensors = HoneySens.data.models.sensors;
         if(division >= 0) sensors = sensors.where({division: division});
         else sensors = sensors.models;
-        return _.union([{label: 'Alle', value: null}],
+        return _.union([{label: _.t('all'), value: null}],
             _.map(sensors, function(sensor) {
                 return {label: sensor.get('name'), value: sensor.id};
             })
@@ -93,7 +93,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 sortable: false
             }, {
                 name: 'id',
-                label: 'ID',
+                label: _.t('id'),
                 editable: false,
                 sortType: 'toggle',
                 cell: Backgrid.Cell.extend({
@@ -104,7 +104,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 })
             }, {
                 name: 'timestamp',
-                label: 'Zeitpunkt',
+                label: _.t('timestamp'),
                 editable: false,
                 sortType: 'toggle',
                 direction: 'descending',
@@ -116,7 +116,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 })
             }, {
                 name: 'division',
-                label: 'Gruppe',
+                label: _.t('division'),
                 editable: false,
                 sortType: 'toggle',
                 cell: Backgrid.Cell.extend({
@@ -127,7 +127,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 })
             }, {
                 name: 'sensor',
-                label: 'Sensor',
+                label: _.t('sensor'),
                 editable: false,
                 sortType: 'toggle',
                 cell: Backgrid.Cell.extend({
@@ -138,7 +138,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 })
             }, {
                 name: 'classification',
-                label: 'Klassifikation',
+                label: _.t('events:eventClassification'),
                 editable: false,
                 sortType: 'toggle',
                 cell: Backgrid.Cell.extend({
@@ -149,19 +149,22 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 })
             }, {
                 name: 'source',
-                label: 'Quelle',
+                label: _.t('events:eventSource'),
                 editable: false,
                 sortType: 'toggle',
                 cell: 'string'
             }, {
                 name: 'summary',
-                label: 'Details',
+                label: _.t('details'),
                 editable: false,
                 sortType: 'toggle',
                 cell: Backgrid.Cell.extend({
                     render: function() {
+                        var summary = this.model.get('summary');
+                        // The Recon service writes 'Einzelverbindung' into the summary field, translate it
+                        if(summary === 'Einzelverbindung') summary = _.t('events:eventDetailRecon');
                         this.$el.html(HoneySens.Views.EventTemplateHelpers.showSummary(
-                            this.model.get('summary'),
+                            summary,
                             this.model.get('numberOfPackets'),
                             this.model.get('numberOfDetails')
                         ));
@@ -170,7 +173,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 })
             }, {
                 name: 'status',
-                label: 'Status',
+                label: _.t('events:eventStatus'),
                 editable: false,
                 sortType: 'toggle',
                 cell: Backgrid.Cell.extend({
@@ -210,7 +213,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     }
                 })
             }, {
-                label: 'Aktionen',
+                label: _.t('actions'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -293,7 +296,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             this.list.show(this.grid);
             this.paginator.show(paginator);
             // Division filter
-            var divisions = _.union([{label: 'Alle', value: null}],
+            var divisions = _.union([{label: _.t('allDivisions'), value: null}],
                 HoneySens.data.models.divisions.map(function(division) {
                     return {label: division.get('name'), value: division.id};
                 })
@@ -330,10 +333,10 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 collection: this.collection,
                 field: 'classification',
                 selectOptions: [
-                    {label: 'Alle', value: null},
-                    {label: 'Verbindungsversuch', value: '2'},
-                    {label: 'Scan', value: 4},
-                    {label: 'Honeypot', value: '3'}
+                    {label: _.t('all'), value: null},
+                    {label: _.t('eventClassificationConnectionAttempt'), value: '2'},
+                    {label: _.t('eventClassificationScan'), value: 4},
+                    {label: _.t('eventClassificationHoneypot'), value: '3'}
                 ]
             });
             this.classificationFilter.show(this.classificationFilterView);
@@ -344,13 +347,13 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 field: 'status',
                 initialValue: '0,1',
                 selectOptions: [
-                    {label: 'Neu & In Bearb.', value: '0,1'},
-                    {label: 'Erledigt & Ign.', value: '2,3'},
-                    {label: 'Neu', value: '0'},
-                    {label: 'In Bearbeitung', value: '1'},
-                    {label: 'Erledigt', value: '2'},
-                    {label: 'Ignoriert', value: '3'},
-                    {label: 'Alle', value: null}
+                    {label: _.t('events:eventListFilterStatusUneditedBusy'), value: '0,1'},
+                    {label: _.t('events:eventListFilterStatusResolvedIgnored'), value: '2,3'},
+                    {label: _.t('events:eventStatusUnedited'), value: '0'},
+                    {label: _.t('events:eventStatusBusy'), value: '1'},
+                    {label: _.t('events:eventStatusResolved'), value: '2'},
+                    {label: _.t('events:eventStatusIgnored'), value: '3'},
+                    {label: _.t('all'), value: null}
                 ]
             });
             this.statusFilter.show(this.statusFilterView);
@@ -367,8 +370,8 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     return '<span class="search">&nbsp;</span><input style="width: 25em;" class="form-control" type="search" ' + (data.placeholder ? 'placeholder="' + data.placeholder + '"' : '') + ' name="' + data.name + '" ' + (data.value ? 'value="' + data.value + '"' : '') + '/><a class="clear" data-backgrid-action="clear" href="#">&times;</a>';
                 },
                 collection: this.collection,
-                name: "filter",
-                placeholder: "Suche nach Datum, Quelle oder Kommentar"
+                name: 'filter',
+                placeholder: _.t('events:eventListFilterSearchPlaceholder')
             });
             this.eventFilter.show(eventFilter);
             // Source filter
@@ -377,8 +380,8 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 collection: this.collection,
                 field: 'archived',
                 selectOptions: [
-                    {label: 'Live', value: false},
-                    {label: 'Archiv', value: true}
+                    {label: _.t('events:eventListFilterDatasetLive'), value: false},
+                    {label: _.t('events:eventListFilterDatasetArchive'), value: true}
                 ],
                 beforeChange: function(e) {
                     let switchingToArchive = e.target.value === 'true',

@@ -109,14 +109,14 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                 var file = e.target.files[0];
                 if(file.size >= 64*1024) {
                     $fileInput.prop('value', null);
-                    $uploadMetadata.val('Max. Dateigröße: 64 kB');
+                    $uploadMetadata.val(_.t('sensors:sensorNetworkEAPOLUploadError'));
                     // Force revalidation (disabled inputs are otherwise always considered valid and marked green)
                     $uploadMetadata.prop('disabled', false);
                     $uploadMetadata.trigger('input');
                     $uploadMetadata.prop('disabled', true);
                     return;
                 }
-                $uploadMetadata.val(file.name + ' (' + file.size + ' Bytes)');
+                $uploadMetadata.val(`${file.name} (${file.size} ${_.t("bytes")})`);
                 // Force revalidation
                 $uploadMetadata.prop('disabled', false);
                 $uploadMetadata.trigger('input');

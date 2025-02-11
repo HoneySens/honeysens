@@ -13,23 +13,16 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
         showClassification: function (classification) {
             var classification = classification || this.classification;
             switch (classification) {
-                case Models.Event.classification.UNKNOWN:
-                    return 'Unbekannt';
-                    break;
                 case Models.Event.classification.ICMP:
-                    return 'ICMP';
-                    break;
+                    return _.t('eventClassificationICMP');
                 case Models.Event.classification.CONN_ATTEMPT:
-                    return 'Verbindungsversuch';
-                    break;
+                    return _.t('eventClassificationConnectionAttempt');
                 case Models.Event.classification.LOW_HP:
-                    return 'Honeypot';
-                    break;
+                    return _.t('eventClassificationHoneypot');
                 case Models.Event.classification.PORTSCAN:
-                    return 'Portscan';
-                    break;
+                    return _.t('eventClassificationScan');
                 default:
-                    return 'Ungültige Klassifikation';
+                    return _.t('unknown');
             }
         },
         showSensor: function (eventAttrs) {

@@ -11,7 +11,7 @@ var PlatformsModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: 'Plattformen', uri: 'sensors/platforms', iconClass: 'glyphicon glyphicon-import', permission: {domain: 'sensors', action: 'get'}}
+        {title: _.t("platforms:header"), uri: 'sensors/platforms', iconClass: 'glyphicon glyphicon-import', permission: {domain: 'sensors', action: 'get'}}
     ],
     start: function() {
         console.log('Starting module: platforms');

@@ -1,4 +1,4 @@
-<div class="panel-heading">Klassifikation</div>
+<div class="panel-heading"><%= _.t("dashboard:classificationHeader") %></div>
 <div class="panel-body">
     <div class="row">
         <div class="col-sm-5">

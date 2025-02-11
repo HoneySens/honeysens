@@ -3,7 +3,7 @@
         <% if(_.templateHelpers.isAllowed('platforms', 'create')) { %>
         <div class="pull-right form-group">
             <button type="button" class="add btn btn-default btn-sm">
-                <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Hinzuf&uuml;gen
+                <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;<%= _.t("add") %>
             </button>
         </div>
         <% } %>

@@ -20,17 +20,17 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
             this.updateRegistryStatus();
             var columns = [{
                 name: 'name',
-                label: 'Name',
+                label: _.t('name'),
                 editable: false,
                 cell: 'string'
             }, {
                 name: 'description',
-                label: 'Beschreibung',
+                label: _.t('services:serviceDescription'),
                 editable: false,
                 sortable: false,
                 cell: 'string'
             }, {
-                label: 'Aktionen',
+                label: _.t('actions'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -72,13 +72,13 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                 success: function(res) {
                     let $status = view.$el.find('div.filters span.help-block');
                     if(res.registry) {
-                        if(res.services) $status.addClass('statusOnline').text('Online');
-                        else $status.addClass('statusWarning').text('Dienste nur eingeschränkt verfügbar');
+                        if(res.services) $status.addClass('statusOnline').text(_.t('services:serviceStatusOnline'));
+                        else $status.addClass('statusWarning').text(_.t('services:serviceStatusWarning'));
                         view.enableInterface(true);
-                    } else $status.addClass('statusOffline').text('Registry offline');
+                    } else $status.addClass('statusOffline').text(_.t('services:serviceStatusOffline'));
                 },
                 error: function() {
-                    view.$el.find('div.filters span.help-block').addClass('statusOffline').text('Keine Verbindung zum Server');
+                    view.$el.find('div.filters span.help-block').addClass('statusOffline').text(_.t('services:noServerConnection'));
                 }
             });
         },

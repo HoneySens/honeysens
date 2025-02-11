@@ -49,7 +49,7 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
                     return view.$el.find('div.popover div.popover-content').html();
                 },
                 placement: 'bottom',
-                title: 'Refresh-Countdown',
+                title: _.t('layout:updateHeader'),
                 trigger: 'manual',
                 container: this.$el
             });

@@ -8,7 +8,7 @@ var SettingsModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: 'System', uri: 'settings', iconClass: 'glyphicon glyphicon-cog', permission: {domain: 'settings', action: 'update'}, priority: 3}
+        {title: _.t('settings:header'), uri: 'settings', iconClass: 'glyphicon glyphicon-cog', permission: {domain: 'settings', action: 'update'}, priority: 3}
     ],
     start: function() {
         console.log('Starting module: settings');

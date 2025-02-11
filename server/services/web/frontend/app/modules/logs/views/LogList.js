@@ -9,7 +9,7 @@ import 'app/views/common';
 HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
     function getUserSelectOptions() {
         var users = HoneySens.data.models.users.models;
-        return _.union([{label: 'Alle', value: null}],
+        return _.union([{label: _.t('all'), value: null}],
             _.map(users, function(user) {
                 return {label: user.get('name'), value: user.id};
             })
@@ -17,7 +17,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
     }
 
     function getResourceTypeSelectOptions() {
-        return _.union([{label: 'Alle', value: null}],
+        return _.union([{label: _.t('all'), value: null}],
             _.map(Models.LogEntry.resource, function(rID) {
                 return {label: stringifyResourceType(rID), value: rID};
             })
@@ -26,19 +26,19 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
 
     function stringifyResourceType(resource_type) {
         switch(resource_type) {
-            case Models.LogEntry.resource.GENERIC: return 'Allgemein';
-            case Models.LogEntry.resource.CONTACTS: return 'Kontakte';
-            case Models.LogEntry.resource.DIVISIONS: return 'Gruppen';
-            case Models.LogEntry.resource.EVENTFILTERS: return 'Ereignis-Filter';
-            case Models.LogEntry.resource.EVENTS: return 'Ereignisse';
-            case Models.LogEntry.resource.PLATFORMS: return 'Plattformen';
-            case Models.LogEntry.resource.SENSORS: return 'Sensoren';
-            case Models.LogEntry.resource.SERVICES: return 'Dienste';
-            case Models.LogEntry.resource.SETTINGS: return 'Konfiguration';
-            case Models.LogEntry.resource.TASKS: return 'Prozesse';
-            case Models.LogEntry.resource.USERS: return 'Benutzer';
-            case Models.LogEntry.resource.SYSTEM: return 'System';
-            case Models.LogEntry.resource.SESSIONS: return 'Sessions';
+            case Models.LogEntry.resource.GENERIC: return _.t('logs:resourceGeneric');
+            case Models.LogEntry.resource.CONTACTS: return _.t('logs:resourceContacts');
+            case Models.LogEntry.resource.DIVISIONS: return _.t('logs:resourceDivisions');
+            case Models.LogEntry.resource.EVENTFILTERS: return _.t('logs:resourceFilters');
+            case Models.LogEntry.resource.EVENTS: return _.t('events');
+            case Models.LogEntry.resource.PLATFORMS: return _.t('logs:resourcePlatforms');
+            case Models.LogEntry.resource.SENSORS: return _.t('sensors');
+            case Models.LogEntry.resource.SERVICES: return _.t('logs:resourceServices');
+            case Models.LogEntry.resource.SETTINGS: return _.t('logs:resourceSettings');
+            case Models.LogEntry.resource.TASKS: return _.t('logs:resourceTasks');
+            case Models.LogEntry.resource.USERS: return _.t('users');
+            case Models.LogEntry.resource.SYSTEM: return _.t('logs:resourceSystem');
+            case Models.LogEntry.resource.SESSIONS: return _.t('logs:resourceSessions');
         }
     }
 
@@ -64,7 +64,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
 
             var columns = [{
                 name: 'id',
-                label: 'ID',
+                label: _.t('id'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.IntegerCell.extend({
@@ -72,7 +72,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
                 })
             }, {
                 name: 'timestamp',
-                label: 'Zeitpunkt',
+                label: _.t('timestamp'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -83,7 +83,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
                 })
             }, {
                 name: 'user_id',
-                label: 'Benutzer',
+                label: _.t('user'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -97,7 +97,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
                 })
             }, {
                 name: 'resource_type',
-                label: 'Ressource',
+                label: _.t('logs:resource'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({
@@ -108,7 +108,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
                 })
             }, {
                 name: 'resource_id',
-                label: 'RID',
+                label: _.t('logs:resourceID'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.IntegerCell.extend({
@@ -116,7 +116,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
                 })
             }, {
                 name: 'message',
-                label: 'Ereignis',
+                label: _.t('event'),
                 editable: false,
                 sortable: false,
                 cell: 'string'

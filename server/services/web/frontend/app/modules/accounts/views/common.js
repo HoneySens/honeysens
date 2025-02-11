@@ -6,13 +6,13 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         showRole: function() {
             switch(this.role) {
                 case Models.User.role.OBSERVER:
-                    return 'Beobachter';
+                    return _.t('accounts:roleObserver');
                     break;
                 case Models.User.role.MANAGER:
-                    return 'Manager';
+                    return _.t('accounts:roleManager')
                     break;
                 case Models.User.role.ADMIN:
-                    return 'Administrator';
+                    return _.t('accounts:roleAdmin')
                     break;
             }
         },

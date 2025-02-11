@@ -9,7 +9,7 @@ var DashboardModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: 'Übersicht', uri: '', iconClass: 'glyphicon glyphicon-globe', permission: {domain: 'events', action: 'get'}, priority: 0}
+        {title: _.t('dashboard:header'), uri: '', iconClass: 'glyphicon glyphicon-globe', permission: {domain: 'events', action: 'get'}, priority: 0}
     ],
     start: function() {
         console.log('Starting module: dashboard');

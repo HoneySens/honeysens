@@ -1,6 +1,6 @@
 <div class="row">
     <div class="col-sm-12">
-        <h1 class="page-header"><span class="glyphicon glyphicon-plus"></span>&nbsp;Archiv-Upload</h1>
+        <h1 class="page-header"><span class="glyphicon glyphicon-plus"></span>&nbsp;<%= _.t("uploadHeader") %></h1>
         <% if(!hasTask()) { %>
             <form>
                 <div class="form-group">
@@ -14,14 +14,14 @@
             <div class="well text-center"><strong><%= params.path %></strong></div>
             <% if(status == _.templateHelpers.getModels().Task.status.SCHEDULED || status == _.templateHelpers.getModels().Task.status.RUNNING) { %>
                 <div class="alert alert-info">
-                    <div class="pull-left loadingInline"></div>&nbsp;&Uuml;berpr&uuml;fung l&auml;uft</span>
+                    <div class="pull-left loadingInline"></div>&nbsp;<%= _.t("uploadVerifying") %></span>
                 </div>
             <% } else if(status == _.templateHelpers.getModels().Task.status.DONE) { %>
                 <% if(result.valid) { %>
                     <% if(isServiceArchive()) { %>
                         <div class="form-group">
                             <strong>Typ</strong>
-                            <p class="form-control-static">Dienst</p>
+                            <p class="form-control-static"><%= _.t("uploadService") %></p>
                         </div>
                         <div class="form-group">
                             <strong>Name</strong>
@@ -37,25 +37,24 @@
                         </div>
                         <div class="form-group">
                             <div class="serviceMgrRunning alert alert-info hide">
-                                <div class="pull-left loadingInline"></div>&nbsp;Dienst wird registriert</span>
+                                <div class="pull-left loadingInline"></div>&nbsp;<%= _.t("uploadServiceRegistering") %>
                             </div>
                             <div class="serviceMgrSuccess alert alert-success hide">
-                                Der Dienst wurde erfolgreich registriert
+                                <%= _.t("uploadServiceSuccess") %>
                             </div>
                             <div class="serviceMgrError alert alert-danger hide">
-                                Der Dienst konnte nicht registriert werden <span class="reason"></span>
+                                <%= _.t("uploadServiceError") %> <span class="reason"></span>
                             </div>
                             <div class="btn-group btn-group-justified">
                                 <div class="btn-group">
-                                    <button type="button" class="createService btn btn-primary">&nbsp;&nbsp;Dienst auf dem Server registrieren</button>
-                                    <button type="button" class="removeTask btn btn-primary hide">&nbsp;&nbsp;Ok</button>
+                                    <button type="button" class="createService btn btn-primary">&nbsp;&nbsp;<%= _.t("uploadServiceRegister") %></button>
                                 </div>
                             </div>
                         </div>
                     <% } else if(isPlatformArchive()) { %>
                         <div class="form-group">
                             <strong>Typ</strong>
-                            <p class="form-control-static">Plattform-Firmware</p>
+                            <p class="form-control-static"><%= _.t("uploadFirmware") %></p>
                         </div>
                         <div class="form-group">
                             <strong>Name</strong>
@@ -71,41 +70,26 @@
                         </div>
                         <div class="form-group">
                             <div class="firmwareSuccess alert alert-success hide">
-                                Die Firmware wurde erfolgreich registriert
+                                <%= _.t("uploadFirmwareSuccess") %>
                             </div>
                             <div class="firmwareError alert alert-danger hide">
-                                Die Firmware konnte nicht registriert werden <span class="reason"></span>
+                                <%= _.t("uploadFirmwareError") %> <span class="reason"></span>
                             </div>
                             <div class="btn-group btn-group-justified">
                                 <div class="btn-group">
-                                    <button type="button" class="createFirmware btn btn-primary">&nbsp;&nbsp;Firmware auf dem Server registrieren</button>
-                                    <button type="button" class="removeTask btn btn-primary hide">&nbsp;&nbsp;Ok</button>
+                                    <button type="button" class="createFirmware btn btn-primary">&nbsp;&nbsp;<%= _.t("uploadFirmwareRegister") %></button>
                                 </div>
                             </div>
                         </div>
                     <% } %>
                 <% } else { %>
                     <div class="alert alert-danger">
-                        <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;Die hochgeladene Datei konnte nicht verarbeitet werden.
-                    </div>
-                    <div class="form-group">
-                        <div class="btn-group btn-group-justified">
-                            <div class="btn-group">
-                                <button type="button" class="removeTask btn btn-primary">&nbsp;&nbsp;Ok</button>
-                            </div>
-                        </div>
+                        <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;<%= _.t("uploadVerifyingError") %>
                     </div>
                 <% } %>
             <% } else { %>
                 <div class="alert alert-danger">
-                    <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;Der Upload-Vorgang wurde unerwartet beendet.
-                </div>
-                <div class="form-group">
-                    <div class="btn-group btn-group-justified">
-                        <div class="btn-group">
-                            <button type="button" class="removeTask btn btn-primary">&nbsp;&nbsp;Ok</button>
-                        </div>
-                    </div>
+                    <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;<%= _.t("uploadAbort") %>
                 </div>
             <% } %>
         <% } %>
@@ -113,7 +97,7 @@
         <div class="form-group">
             <div class="btn-group btn-group-justified">
                 <div class="btn-group">
-                    <button type="button" class="cancel btn btn-default">&nbsp;&nbsp;Schlie&szlig;en</button>
+                    <button type="button" class="cancel btn btn-default">&nbsp;&nbsp;<%= _.t("close") %></button>
                 </div>
             </div>
         </div>

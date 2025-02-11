@@ -13,7 +13,7 @@ var SensorsModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: 'Sensoren', uri: 'sensors', iconClass: 'glyphicon glyphicon-hdd', permission: {domain: 'sensors', action: 'get'}, priority: 2}
+        {title: _.t('sensors:header'), uri: 'sensors', iconClass: 'glyphicon glyphicon-hdd', permission: {domain: 'sensors', action: 'get'}, priority: 2}
     ],
     start: function() {
         console.log('Starting module: sensors');
@@ -66,7 +66,7 @@ var SensorsModule = Routing.extend({
                 },
                 error: function() {
                     HoneySens.request('view:modal').show(new ModalServerError({
-                        model: new Backbone.Model({msg: 'Serverfehler beim Erzeugen der Sensorkonfiguration'})
+                        model: new Backbone.Model({msg: _.t('sensors:sensorConfigError')})
                     }));
                 }
             })

@@ -12,7 +12,7 @@ var AccountsModule = Routing.extend({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: 'Benutzer u. Gruppen', uri: 'accounts', iconClass: 'glyphicon glyphicon-user', permission: {domain: 'divisions', action: 'create'}, priority: 4}
+        {title: _.t('accounts:header'), uri: 'accounts', iconClass: 'glyphicon glyphicon-user', permission: {domain: 'divisions', action: 'create'}, priority: 4}
     ],
     start: function() {
         console.log('Starting module: accounts');

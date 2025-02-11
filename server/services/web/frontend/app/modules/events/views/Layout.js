@@ -9,10 +9,10 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         },
         initialize: function() {
             this.listenTo(HoneySens.vent, 'events:shown', function() {
-                this.$el.find('span.title').html('Ereignisse');
+                this.$el.find('span.title').html(_.t("events:eventHeader"));
             });
             this.listenTo(HoneySens.vent, 'events:filters:shown', function() {
-                this.$el.find('span.title').html('Ereignisse &rsaquo; Filter');
+                this.$el.find('span.title').html(`${_.t("events:eventHeader")} &rsaquo; ${_.t("events:filterHeader")}`);
             });
         }
     });

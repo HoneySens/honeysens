@@ -1,0 +1,12 @@
+{
+  "login": "Anmelden",
+  "logout": "Abmelden",
+  "loginSuccess": "Login erfolgreich!",
+  "loginFailed": "Ungültige Zugangsdaten!",
+  "loginUserPlaceholder": "Benutzername",
+  "loginPasswordPlaceholder": "Passwort",
+  "updateHeader": "Benutzeroberfläche",
+  "updateInSeconds": "Aktualisierung in {{- count}} Sekunden",
+  "toggleNav": "Navigation öffnen/schließen",
+  "connectionLost": "Verbindung zum Server verloren, Website wird nach Klick auf 'OK' neu geladen."
+}

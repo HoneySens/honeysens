@@ -82,18 +82,18 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             $select.empty();
             switch(attribute) {
                 case Models.EventFilterCondition.field.CLASSIFICATION:
-                    $select.attr('disabled', 'disabled').append('<option value="0">Klasse</option>');
+                    $select.attr('disabled', 'disabled').append(`<option value="0">${_.t("events:filterClassificationClass")}</option>`);
                     break;
                 case Models.EventFilterCondition.field.SOURCE:
                     $select.attr('disabled', false);
-                    $select.append('<option value="' + Models.EventFilterCondition.type.SOURCE_STATIC + '">IP-Adresse</option>');
-                    $select.append('<option value="' + Models.EventFilterCondition.type.SOURCE_IPRANGE + '">IP-Bereich</option>');
+                    $select.append(`<option value="${Models.EventFilterCondition.type.SOURCE_STATIC}">${_.t("ipAddr")}</option>`);
+                    $select.append(`<option value="${Models.EventFilterCondition.type.SOURCE_IPRANGE}">${_.t("ipRange")}</option>`);
                     break;
                 case Models.EventFilterCondition.field.TARGET:
-                    $select.attr('disabled', 'disabled').append('<option value="' + Models.EventFilterCondition.type.TARGET_PORT + '">Port</option>');
+                    $select.attr('disabled', 'disabled').append(`<option value="${Models.EventFilterCondition.type.TARGET_PORT}">${_.t("port")}</option>`);
                     break;
                 case Models.EventFilterCondition.field.PROTOCOL:
-                    $select.attr('disabled', 'disabled').append('<option value="0">IPv4</option>');
+                    $select.attr('disabled', 'disabled').append(`<option value="0">${_.t("ipv4")}</option>`);
                     break;
             }
             $select.find('option[value="' + preselected + '"]').prop('selected', true);

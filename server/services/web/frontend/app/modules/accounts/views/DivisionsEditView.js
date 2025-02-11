@@ -11,7 +11,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         template: _.template(DivisionsEditViewTpl),
         className: 'transitionView row',
         errors: {
-            1: 'Der Gruppenname ist bereits im System vorhanden und kann nicht doppelt vergeben werden.'
+            1: _.t('accounts:groupNameConflict')
         },
         regions: {
             users: 'div.userList',

@@ -19,17 +19,17 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
         onRender: function() {
             var columns = [{
                 name: 'title',
-                label: 'Name',
+                label: _.t('name'),
                 editable: false,
                 cell: 'string'
             }, {
                 name: 'description',
-                label: 'Beschreibung',
+                label: _.t('platforms:firmwareDescription'),
                 editable: false,
                 sortable: false,
                 cell: 'string'
             }, {
-                label: 'Aktionen',
+                label: _.t('actions'),
                 editable: false,
                 sortable: false,
                 cell: Backgrid.Cell.extend({

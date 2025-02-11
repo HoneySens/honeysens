@@ -7,7 +7,7 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
     Views.UserPassword = Marionette.ItemView.extend({
         template: _.template(UserPasswordTpl),
         errors: {
-            2: 'Das derzeitige Passwort kann nicht erneut verwendet werden, bitte vergeben Sie ein neues.'
+            2: _.t('setup:errorUserPasswordReuse')
         },
         events: {
             'click button:submit': function(e) {
@@ -37,7 +37,7 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
                         error: function(xhr) {
                             var modal;
                             if(xhr.status === 403) {
-                                modal = {msg: 'Session abgelaufen, bitte erneut anmelden.', onClose: function() {
+                                modal = {msg: _.t('setup:errorSessionExpired'), onClose: function() {
                                     HoneySens.execute('logout');
                                 }};
                             } else {

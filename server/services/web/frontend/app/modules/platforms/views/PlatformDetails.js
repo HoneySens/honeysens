@@ -20,21 +20,21 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
                 view = this,
                 columns = [{
                     name: 'name',
-                    label: 'Name',
+                    label: _.t('name'),
                     editable: false,
                     cell: 'string'
                 }, {
                     name: 'version',
-                    label: 'Version',
+                    label: _.t('platforms:firmwareVersion'),
                     editable: false,
                     cell: 'string'
                 }, {
                     name: 'description',
-                    label: 'Beschreibung',
+                    label: _.t('platforms:firmwareDescription'),
                     editable: false,
                     cell: 'string'
                 }, {
-                    name: 'Aktionen',
+                    name: _.t('actions'),
                     editable: false,
                     sortable: false,
                     cell: Backgrid.Cell.extend({

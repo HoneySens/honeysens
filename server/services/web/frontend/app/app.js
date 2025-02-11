@@ -3,6 +3,7 @@ import Marionette from 'backbone.marionette';
 import Backbone from 'backbone';
 import $ from 'jquery';
 import _ from 'underscore';
+import i18n from 'app/common/i18n';
 
 var app = new Marionette.Application();
 
@@ -67,14 +68,17 @@ app.assureAllowed = function(domain, action) {
     return _.templateHelpers.isAllowed(domain, action);
 };
 
+// i18n support injected into underscore
+_.t = i18n.t;
+
 // Global template helpers via an underscore property
 _.templateHelpers = {
     isAllowed: function(domain, action) {
-        var permissions = require('app/app').default.data.session.user.get('permissions');
+        var permissions = app.data.session.user.get('permissions');
         return domain in permissions && ($.inArray(action, permissions[domain]) > -1)
     },
     getModels: function() {
-        return require('app/models').default;
+        return app.Models;
     }
 };
 
