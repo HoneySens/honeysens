@@ -135,7 +135,8 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                                 this.model.save({services: services}, {wait: true});
                             }
                         },
-                        initialize: function() {
+                        initialize: function(options) {
+                            Backgrid.Cell.prototype.initialize.apply(this, [options]);
                             // Re-render this cell on model changes (caused by toggling a service checkbox)
                             this.listenTo(this.model, 'change', function() {
                                 this.render();
@@ -203,7 +204,8 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                 sortable: false,
                 cell: Backgrid.Cell.extend({
                     template: _.template(SensorListStatusCellTpl),
-                    initialize: function() {
+                    initialize: function(options) {
+                        Backgrid.Cell.prototype.initialize.apply(this, [options]);
                         // Refresh the view after model updates to recalculate status cell timers
                         this.listenTo(HoneySens.vent, 'models:updated', function() {
                             this.render();
