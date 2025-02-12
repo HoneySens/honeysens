@@ -11,5 +11,7 @@ await i18next
     });
 
 export default {
-    t: i18next.t
+    t: i18next.t,
+    setLanguage: (lang) => i18next.changeLanguage(lang),
+    getLanguage: () => i18next.resolvedLanguage
 };

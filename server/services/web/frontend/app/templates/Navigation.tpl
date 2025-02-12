@@ -11,6 +11,26 @@
     <div class="navbar-right">
         <div id="counter"></div>
         <p class="navbar-text pull-right"><span class="glyphicon glyphicon-user"></span>&nbsp;<strong><%- name %></strong> (<a class="logout" href="#logout"><%= _.t("layout:logout") %></a>)</p>
+        <span id="languageSwitcher" class="dropdown navbar-text pull-right">
+            <span class="glyphicon glyphicon-font" data-toggle="dropdown"></span>
+            <ul class="dropdown-menu dropdown-menu-left">
+                <li class="dropdown-header"><%= _.t("layout:langSwitcherHeader") %></li>
+                <li>
+                    <a id="langEnglish">
+                        <% if(getLanguage() == "en") { %><strong><% } %>
+                        <%= _.t("layout:langEnglish") %>
+                        <% if(getLanguage() == "en") { %></strong><% } %>
+                    </a>
+                </li>
+                <li>
+                    <a id="langGerman">
+                        <% if(getLanguage() == "de") { %><strong><% } %>
+                        <%= _.t("layout:langGerman") %>
+                        <% if(getLanguage() == "de") { %></strong><% } %>
+                    </a>
+                </li>
+            </ul>
+        </span>
     </div>
     <div class="navbar-menu"></div>
 </div>

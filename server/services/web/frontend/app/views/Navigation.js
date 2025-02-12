@@ -2,6 +2,7 @@ import HoneySens from 'app/app';
 import MenuView from 'app/common/views/Menu';
 import NavigationTpl from 'app/templates/Navigation.tpl';
 import ProgressBar from 'progressbar.js';
+import i18n from 'app/common/i18n';
 
 HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
     Views.Navigation = Marionette.LayoutView.extend({
@@ -26,6 +27,16 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
                 e.preventDefault();
                 this.$el.find('#counter').popover('hide');
                 this.popoverVisible = false;
+            },
+            'click a#langEnglish': function(e) {
+                e.preventDefault();
+                localStorage.setItem('lang', 'en');
+                location.reload();
+            },
+            'click a#langGerman': function(e) {
+                e.preventDefault();
+                localStorage.setItem('lang', 'de');
+                location.reload();
             }
         },
         initialize: function() {
@@ -53,6 +64,13 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
                 trigger: 'manual',
                 container: this.$el
             });
+            this.$el.find('.dropdown').hover(
+                function() {
+                    $(this).addClass('open');
+                },
+                function() {
+                    $(this).removeClass('open');
+                });
         },
         onShow: function() {
             this.circle = new ProgressBar.Circle('#counter', {
@@ -60,6 +78,11 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
                 strokeWidth: 20,
                 trailWidth: 1
             });
+        },
+        templateHelpers: {
+            getLanguage: function() {
+                return i18n.getLanguage();
+            }
         }
     });
 });

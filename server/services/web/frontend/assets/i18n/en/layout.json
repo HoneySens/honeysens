@@ -8,5 +8,8 @@
   "updateHeader": "User interface",
   "updateInSeconds": "Update in {{- count}} seconds",
   "toggleNav": "Toggle navigation",
-  "connectionLost": "The connection to the server has been lost, the website will be reloaded after clicking on ‘OK’."
+  "connectionLost": "The connection to the server has been lost, the website will be reloaded after clicking on ‘OK’.",
+  "langSwitcherHeader": "Language",
+  "langEnglish": "English",
+  "langGerman": "German"
 }

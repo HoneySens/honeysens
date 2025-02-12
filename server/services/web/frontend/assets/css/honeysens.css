@@ -170,6 +170,8 @@ div.navbar-header a.navbar-brand {padding: 10px}
 div.navbar-right {margin-right: 0}
 #navbar-top p.navbar-text {display: inline-block}
 #navbar-top div#counter {width: 12px; height: 12px; margin-top: 14px; display: inline-block !important}
+#navbar-top span#languageSwitcher {margin-right: 0}
+#navbar-top span#languageSwitcher .dropdown-menu{margin-top: 0; left: -2rem}
 
 /* Sidebar styling */
 div.sidebar {display: none; overflow: auto}
