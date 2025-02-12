@@ -18,8 +18,8 @@ class Logs extends RESTResource {
         $optionalParams = array();
         $queryParams = $request->getQueryParams();
         if(array_key_exists('user_id', $queryParams)) {
-            V::key('user_id', V::intType())->check($queryParams);
-            $optionalParams['userID'] = $queryParams['user_id'];
+            V::key('user_id', V::intVal())->check($queryParams);
+            $optionalParams['userID'] = intval($queryParams['user_id']);
         }
         if(array_key_exists('resource_type', $queryParams)) {
             V::key('resource_type', V::intVal()->between(0, 12))->check($queryParams);
