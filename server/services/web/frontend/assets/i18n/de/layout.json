@@ -8,7 +8,7 @@
   "updateHeader": "Benutzeroberfläche",
   "updateInSeconds": "Aktualisierung in {{- count}} Sekunden",
   "toggleNav": "Navigation öffnen/schließen",
-  "connectionLost": "Verbindung zum Server verloren, Website wird nach Klick auf 'OK' neu geladen.",
+  "connectionLost": "Verbindung zum Server verloren, Anwendung wird neu geladen.",
   "langSwitcherHeader": "Sprache",
   "langEnglish": "Englisch",
   "langGerman": "Deutsch"

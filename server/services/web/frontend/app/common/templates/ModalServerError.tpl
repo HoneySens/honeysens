@@ -7,7 +7,7 @@
             <p><%- getMessage() %></p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal"><%= _.t("close") %></button>
+            <button type="button" class="btn btn-block btn-default" data-dismiss="modal"><%= _.t("close") %></button>
         </div>
     </div>
 </div>
