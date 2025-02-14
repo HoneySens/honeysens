@@ -7,7 +7,7 @@ The build process relies on the official [OMAP image builder](https://github.com
 $ apt install dosfstools git kpartx wget parted
 ```
 
-To initiate the BeagleBone Black firmware build process, checkout this repository on a BeagleBone Black, `cd` to the directory `sensor/platforms/bbb/` and execute `make`. If the build was successful, the resulting production-ready firmware tarball can be found in `sensor/platforms/bbb/out/dist/`. The target `make clean` can be utilized to clean the `out/` directory.
+To initiate the BeagleBone Black firmware build process, checkout this repository on a BeagleBone Black, `cd` to the directory `sensor/platforms/bbb/` and execute `make`. If the build was successful, the resulting production-ready firmware tarball can be found in `sensor/platforms/bbb/build/dist/`. The target `make clean` can be utilized to clean the `build/` directory.
 
 ## Deployment
 Firmware images for the BBB platform are distributed as `.tar.gz` archives (as result of the aforementioned build process) with the following content:
@@ -17,4 +17,4 @@ Firmware images for the BBB platform are distributed as `.tar.gz` archives (as r
 To deploy a BeagleBone-based sensor, follow these steps:
 * Unpack the archive, `cd` into the new directory and write the `firmware.img` file to a micro SD card, e.g. with `dd`: `dd if=firmware.img of=/dev/mmcblk0`.
 * The resulting micro SD card will have two partitions. Mount the first, smaller partition (it should have a size of roughly 100 MB) and copy a proper sensor configuration archive obtained from the server into its top-level directory. Then unmount that partition.
-* Insert the micro SD card into the BeagleBone Black, then attach Ethernet and power cables to boot up the system. The LEDs on the board will indicate that the installation is in progress. After ten to twenty minutes, which mostly depends on the quality of your micro SD card, the system will restart into the new firmware and try to contact the server.
+* Insert the micro SD card into the BeagleBone Black, then attach Ethernet and power cables to boot up the system. The LEDs on the board will indicate that the installation is in progress. After ten to twenty minutes, which mostly depends on the quality of your micro SD card, the system will boot the new firmware and try to contact the server.

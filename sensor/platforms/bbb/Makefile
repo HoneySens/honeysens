@@ -4,7 +4,7 @@ IMG_SIZE := 4gb
 REVISION := ${IMG_SIZE}-2.6.0
 TIME := $(shell date +%Y-%m-%d)
 ARCH := $(shell uname -m)
-OUTDIR := out
+OUTDIR := build
 
 default: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
 

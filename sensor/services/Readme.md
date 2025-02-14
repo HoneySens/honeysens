@@ -5,15 +5,15 @@ To build a service, simply `cd` to the service directory, such as `sensor/servic
 
 ## Service matrix
 
-| Name | Protocol/Purpose | URL | Revision | Ports (TCP) | Ports (UDP) |
-| ---- | ------- | --- | -------- | ----------- | ----------- |
-| Conpot | ICS/SCADA honeypot | https://github.com/mushorg/conpot | 0.5.2 | 80, 102, 502, 47808 | |
-| Cowrie | SSH server with pseudo interactive shell | https://github.com/cowrie/cowrie | 1.6.0 | 22 | |
-| dionaea | SMB server that recognizes various CVEs | https://github.com/DinoTools/dionaea | 1426750b9fd09c5bfeae74d506237333cd8505e2 | 445 | |
-| Glastopf | Simple HTTP server that lures attackers with randomly generated sites full of exploitable keywords | https://github.com/mushorg/glastopf | f9ac53e685991ffe2402f9cb3eb5ccdc2d0b198c | 80 | |
-| Heralding | Multi-protocol credentials catching honeypot server | https://github.com/johnnykv/heralding | 1.0.7 | 21, 23, 25, 110, 143, 443, 465, 993, 995, 1080, 3306, 5432, 5900, 8080 | |
-| miniprint | Honeypot that acts like a network printer | https://github.com/sa7mon/miniprint | b5c8aa4f990869d22a00a054f1a08edf12502a1f | 9100 | |
-| RDPY | RDP server | https://github.com/citronneur/rdpy | cef16a9f64d836a3221a344ca7d571644280d829 | 3389 | |
-| recon | Catch-all service, performs TCP 3-way-handshake and logs received packets | (internal) | - | * | * |
+| Name | Protocol/Purpose | URL | Ports (TCP) | Ports (UDP) |
+| ---- | ---------------- | --- | ----------- | ----------- |
+| conpot | ICS/SCADA honeypot | https://github.com/mushorg/conpot | 80, 102, 502, 47808 | |
+| cowrie | SSH server with pseudo interactive shell | https://github.com/cowrie/cowrie | 22 | |
+| dionaea | SMB server that recognizes various CVEs | https://github.com/DinoTools/dionaea | 445 | |
+| glastopf | Simple HTTP server that lures attackers with randomly generated sites full of exploitable keywords | https://github.com/mushorg/glastopf | 80 | |
+| heralding | Multi-protocol credentials catching honeypot server | https://github.com/johnnykv/heralding | 21, 23, 25, 110, 143, 443, 465, 993, 995, 1080, 3306, 5432, 5900, 8080 | |
+| miniprint | Honeypot that acts like a network printer | https://github.com/sa7mon/miniprint | 9100 | |
+| RDPY | RDP server | https://github.com/citronneur/rdpy | 3389 | |
+| recon | Catch-all service, performs TCP 3-way-handshake and logs received packets | (internal) | * | * |
 
 

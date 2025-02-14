@@ -1,12 +1,12 @@
 # Dockerized Sensor
-Dockerized sensors are delivered as a docker image that contains the sensor management daemon along other sensor-specific software. Sensor services will be run within nested docker containers. For that to work, a recent version of docker is required on the host. As an example, the outdated docker vesion 1.6.2 doesn't mount cgroups into containers and therefore won't work. It is known to work with recent versions of Docker CE, specifically version 1.11 and newer. Both build and deployment of a dockerized sensor rely on Docker Compose. Furthermore, this container has to be run in privileged mode for nested containers to work. 
+Dockerized sensors are provided as docker images that contain a minimal base system, the sensor management daemon, a nested docker daemon and some sensor-specific adjustments. Sensor services will be run within nested docker containers. Both build and deployment processes of a dockerized sensor utilize `docker compose`. Furthermore, the sensor container itself has to be run in privileged mode so that nested containers can be created. 
 
 ## Build
-Analogous to the server, the dockerized sensor can be built in either development or production mode. A recent installation of [Docker Engine](http://www.docker.com/products/docker-engine), GNU make and curl on top of any Linux installations are the only requirements. A recent version of Docker Compose will be automatically fetched during the build process and written to the build directory (`out/`).
+Analogous to the server, the dockerized sensor can be built in either development or production mode. A recent installation of [Docker Engine](https://docs.docker.com/engine/), GNU make and curl are required. Building has only been tested on Linux hosts.
 
 To initiate the build process, launch make from within the `sensor/platforms/docker_x86/` directory with one of the following options:
-* `make dev`: Builds and launches a development sensor container that continuously watches the local codebase for changes and automatically deploys those to the running instance. **Important**: Before running this command, ensure that `docker-compose-dev.yml` was adjusted to the local environment and the directory  `sensor/platforms/docker_x86/conf/` was created and a valid sensor configuration copied into it (see chapter 'Deployment' below). Use `Strg+C` from the terminal to stop a running dev sensor.
-* `make dist` will build and save a production-ready firmware tarball to `sensor/platforms/docker_x86/out/dist/`.
+* `make dev`: Builds and launches a development sensor container that continuously watches the local codebase for changes and automatically restarts the running instance. **Important**: Before running this command, ensure that `docker-compose-dev.yml` was adjusted to the local environment and the directory  `sensor/platforms/docker_x86/conf/` was created and a valid sensor configuration copied into it (see chapter 'Deployment' below). Use `Strg+C` from the terminal to stop a running dev sensor.
+* `make dist` will build and save a production-ready firmware tarball to `sensor/platforms/docker_x86/build/dist/`.
 * `make reset` will shut down the sensor container and remove associated volumes, thus resetting that instance.
 * `make clean` can be used to remove build artifacts (including the dev sensor image) and clean the build directory.
 
