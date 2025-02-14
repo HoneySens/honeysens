@@ -1,41 +1,33 @@
 PREFIX := HoneySens-Firmware-dockerx86
 REVISION := 2.6.0
-OUTDIR := out
 METADATA := metadata.xml
-# (watch|simple-watch|chokidar)
-export DEV_WATCH_TASK := chokidar
 
-dist: ${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz
+dist: build/dist/${PREFIX}-${REVISION}.tar.gz
 
-clean: ${OUTDIR}/utils/docker-compose reset
+clean: reset
 	docker rmi honeysens_dev_sensor:latest || true
-	rm -rf ${OUTDIR}
+	rm -rf build
 
-dev: ${OUTDIR}/utils/docker-compose
-	${OUTDIR}/utils/docker-compose -f docker-compose-dev.yml -p honeysens_dev up || true
+dev:
+	docker compose -f docker-compose-dev.yml -p honeysens_dev up || true
 
-reset: ${OUTDIR}/utils/docker-compose
-	${OUTDIR}/utils/docker-compose -f docker-compose-dev.yml -p honeysens_dev down -v || true
+reset:
+	docker compose -f docker-compose-dev.yml -p honeysens_dev down -v || true
 
-${OUTDIR}/utils/docker-compose: | DIR.${OUTDIR}/utils
-	curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$$(uname -s)-$$(uname -m)" -o $@
-	chmod +x $@
-	$@ --version
+build/dist/${PREFIX}-${REVISION}.tar.gz: build/${PREFIX}-${REVISION}/firmware.img build/${PREFIX}-${REVISION}/metadata.xml build/${PREFIX}-${REVISION}/docker-compose.yml | DIR.build/dist
+	mkdir -p build/${PREFIX}-${REVISION}/conf
+	cp -v .env Deployment.md build/${PREFIX}-${REVISION}/
+	tar -czf $@ -C build/${PREFIX}-${REVISION}/ firmware.img metadata.xml docker-compose.yml conf/ .env Deployment.md
 
-${OUTDIR}/dist/${PREFIX}-${REVISION}.tar.gz: ${OUTDIR}/build/firmware.img ${OUTDIR}/build/metadata.xml ${OUTDIR}/build/docker-compose.yml | DIR.${OUTDIR}/dist
-	mkdir -p ${OUTDIR}/build/conf
-	cp -v .env Deployment.md ${OUTDIR}/build/
-	tar -czf $@ -C ${OUTDIR}/build/ firmware.img metadata.xml docker-compose.yml conf/ .env Deployment.md
-
-${OUTDIR}/build/firmware.img: | DIR.${OUTDIR}/build
+build/${PREFIX}-${REVISION}/firmware.img: | DIR.build/${PREFIX}-${REVISION}
 	docker build --no-cache --build-arg REVISION=${REVISION} -t honeysens/sensorx86:${REVISION} -f Dockerfile ../../
 	docker save -o $@ honeysens/sensorx86:${REVISION}
 
-${OUTDIR}/build/metadata.xml: | DIR.${OUTDIR}/build
+build/${PREFIX}-${REVISION}/metadata.xml: | DIR.build/${PREFIX}-${REVISION}
 	sed 's/$$REVISION/${REVISION}/' metadata.xml > $@
 
-${OUTDIR}/build/docker-compose.yml: | DIR.${OUTDIR}/build
+build/${PREFIX}-${REVISION}/docker-compose.yml: | DIR.build/${PREFIX}-${REVISION}
 	sed 's/$$REVISION/${REVISION}/' docker-compose.yml > $@
 
-DIR.${OUTDIR}/%:
+DIR.build/%:
 	mkdir -p $(@:DIR.%=%)
