@@ -22,6 +22,3 @@ The dockerized sensor supports unattended firmware updates by mounting the host'
 * Update of the compose environment file `.env` with a new compose project name
 * Startup of a new container with the environment variable `PREV_PREFIX` set to the current (old) compose project name. This way the new sensor container will properly clean up and remove the current sensor instance on startup.
 * Shutdown of the current - now outdated - sensor container
-
-### Honeyd
-Honeyd is a honeypot framework that might be integrated into the sensor software in the future. It allows us to simulate the networking stack of various devices and operating systems, thus increasing our credibility to be a real host. To run honeyd inside of a container, [checksum offloading](https://wiki.wireshark.org/CaptureSetup/Offloading) should be disabled for the virtual bridge connecting the container to the outside world [1]. Otherwise checksum headers might not be calculated for some incoming packets, which will subsequently be dropped by honeyd upon performing checksum verification.
