@@ -1,4 +1,4 @@
-gevent==1.1.2
+gevent==23.9.0
 webob>=1.2.0
 pyopenssl
 lxml
