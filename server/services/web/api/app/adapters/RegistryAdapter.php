@@ -44,7 +44,8 @@ class RegistryAdapter {
     public function getTags(string $repository): array {
         $response = Requests::get(sprintf('%s/%s/tags/list', $this->getRegistryURL(), $repository));
         if(!$response->success) throw new NotFoundException();
-        return json_decode($response->body)->tags;
+        $tags = json_decode($response->body)->tags;
+        return $tags === null ? [] : $tags;
     }
 
     public function removeRepository(string $repository) {
