@@ -139,20 +139,20 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         initialize: function() {
             this.eventDetails = this.model.getDetailsAndPackets();
             // bind to the details collection, because we split that one into data details and interaction details further below
-            this.listenTo(this.eventDetails.details, 'reset', this.render);
+            this.listenTo(this.eventDetails.details, 'reset', this.updateDetails);
             // re-render on packet changes, because the visibility of the whole packet list might change when the first packet is added
-            this.listenTo(this.eventDetails.packets, 'reset', this.render);
+            this.listenTo(this.eventDetails.packets, 'reset', this.updateDetails);
         },
-        onRender: function() {
+        updateDetails: function() {
             var dataDetails = new Models.EventDetails(this.eventDetails.details.filter(function(m) {
                 return m.get('type') === Models.EventDetail.type.GENERIC;
             }));
             var interactionDetails = new Models.EventDetails(this.eventDetails.details.filter(function(m) {
                 return m.get('type') === Models.EventDetail.type.INTERACTION;
             }));
-            if(dataDetails.length > 0) this.dataList.show(new dataListView({collection: dataDetails}));
-            if(interactionDetails.length > 0) this.interactionList.show(new interactionListView({collection: interactionDetails}));
-            if(this.eventDetails.packets.length > 0) this.packetList.show(new packetListView({collection: this.eventDetails.packets}));
+            if(dataDetails.length > 0) this.getRegion('dataList').show(new dataListView({collection: dataDetails}));
+            if(interactionDetails.length > 0) this.getRegion('interactionList').show(new interactionListView({collection: interactionDetails}));
+            if(this.eventDetails.packets.length > 0) this.getRegion('packetList').show(new packetListView({collection: this.eventDetails.packets}));
         }
     });
 });
