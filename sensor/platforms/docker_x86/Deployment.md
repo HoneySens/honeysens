@@ -15,7 +15,7 @@ To deploy a dockerized sensor, follow these steps:
 * Unpack the archive, `cd` into the new directory and adjust `docker-compose.yml` to your needs, especially the network configuration. The variable `LOG_LVL` specifies the granularity of logging output received from the sensor manager and can be set to either `debug`, `info` or `warn`. You may also adjust the restart policy by adjusting the `restart` setting. In the `volumes` section, also make sure that the local host's docker socket is correctly mounted into the container. This is required for unattended container updates. The default `/var/run/docker.sock` should work for most distributions.
 * Load the firmware docker image: `docker load -i firmware.img`
 * Copy a proper sensor configuration archive obtained from the server into the `conf/` directory. That directory will be mounted into the sensor container on startup. Make sure that the directory doesn't contain any other files or directories except the configuration archive.
-* Start the sensor: `HOST_PWD=$(pwd) docker-compose up -d`
+* Start the sensor: `HOST_PWD=$(pwd) docker compose up -d`
 
 ### Networking modes
 In general, we support two modes of operation when connecting a sensor container to the outside world: Host and bridged networking. The networking setup is a combination of configuration parameters in the web frontend (which result in a configuration archive) and Docker-specific configuration options during deployment, usually via the respective `docker-compose.yml` file.

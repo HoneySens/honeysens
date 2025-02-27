@@ -535,7 +535,7 @@ class SensorsService extends Service {
     /**
      * Updates a sensor's attributes from the given params, except:
      * - $params->divisionID is ignored in favor of $division
-     * - $params->services is ignored (use updateSensorServices())
+     * - $params->services is ignored (use updateSensor() instead)
      * This method persists all changes made to sensor in the DB.
      *
      * @param Sensor $sensor The sensor object to update

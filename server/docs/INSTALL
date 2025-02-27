@@ -29,13 +29,13 @@ Hinweis: Wichtig ist, dass für die Container die im Compose-File angegebenen Na
 beibehalten werden, da sich diese im nutzerdefinierten Docker-Netzwerk über ihre Namen zu kontaktieren versuchen.
 
 3. Starten:
-docker-compose up -d
+docker compose up -d
 Hier ist zu beachten, dass bei Docker Compose für die Arbeit mit einer laufenden Instanz der "Projektname" von zentraler
 Bedeutung ist. Standardmäßig nutzt Docker Compose den Namen des aktuellen Arbeitsverzeichnisses als Projektname, es kann
-aber auch mittels "docker-compose -p <projektname>" für alle Operationen ein individueller Name spezifiziert werden.
+aber auch mittels "docker compose -p <projektname>" für alle Operationen ein individueller Name spezifiziert werden.
 Bei allen späteren Arbeiten mit der Instanz ist es wichtig, immer denselben Projektnamen zu verwenden - also entweder
 alle Befehle aus dem gleichen Arbeitsverzeichnis heraus auszuführen oder bei allen Operationen den individuellen Projektnamen
-mittels "docker-compose -p <projektname>" mit anzugeben.
+mittels "docker compose -p <projektname>" mit anzugeben.
 
 4. Installation prüfen:
 Auf Port 443 kann über HTTPS das Webinterface angesprochen werden.
@@ -49,12 +49,12 @@ kommunizieren beide Container erfolgreich.
 --------------------
 Die nötigen Schritte für die Aktualisierung einer bestehenden Instanz orienten sich stark an den unter 'Installation' beschriebenen Schritten.
 Auch hier ist darauf zu achten, alle Operationen mit demselben Projektnamen auszuführen (siehe Installation, Punkt 3):
-* Laufende Instanz mittels 'docker-compose down' herunterfahren
+* Laufende Instanz mittels 'docker compose down' herunterfahren
 * Neue Revisionen der Images mit 'docker load -i <service>.tar' importieren
 * Die Projektdatei docker-compose.yml anpassen (nach dem Vorbild im Archiv der neueren Version)
   Vergleichen Sie hierfür die bestehende Serverkonfiguration mit der neuen mitgelieferten mittels
   diff -u <alt>/docker-compose.yml <neu>/docker-compose.yml
-* Instanz im Anschluss mittels 'docker-compose up -d' neu starten
+* Instanz im Anschluss mittels 'docker compose up -d' neu starten
 * Für die Nutzung des Webinterfaces empfiehlt es sich, nach Updates den Browser-Cache zu leeren
 
 ----------------------------

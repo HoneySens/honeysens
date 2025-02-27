@@ -5,7 +5,7 @@ This directory contains the source for the backup service container, which can b
 This container can both be utilized to manually backup/restore/reset the running deployment and to schedule automatic backup tasks (optional).
 
 ### Manual invocation
-All manual tasks have to be executed from within the container. For this, both `docker exec` or `docker-compose exec` are sufficient.
+All manual tasks have to be executed from within the container. For this, both `docker exec` or `docker compose exec` are sufficient.
 
 The available commands are:
 
@@ -22,26 +22,26 @@ Scheduled backups will be written to `/srv/backup/` within the container, which 
 By default, full backups will be created, which include both the database and data volumes. To just back up the database itself without volume data (in case a backup procedure for the volumes already exists), either utilize the backup parameter `-d` for manual backups or set the environment variable `CRON_DBONLY` to `true` for scheduled database-only backups. The restoration script is aware of both backup types and doesn't require additional parameterization.
 
 ## Examples
-The following examples utilize manual invocation with docker-compose and should be run from within a directory that contains a `docker-compose.yml` for the current deployment.
+The following examples utilize manual invocation with `docker compose` and should be run from within a directory that contains a `docker-compose.yml` for the current deployment.
 
 To take a live snapshot from the currently running deployment, issue
 
-`docker-compose exec -T backup backup > backup_archive.tar.bz2`
+`docker compose exec -T backup backup > backup_archive.tar.bz2`
 
 The `-T` switch is strictly required so that no interactive terminal session is launched. The backup script will pipe the resulting archive directly to stdout, so that it can be redirected into a file anywhere on the host system.
 
 To restore a snapshot, first shut down all services besides the backup and database containers:
 
-`docker-compose stop server tasks broker registry`
+`docker compose stop web tasks broker registry`
 
 then simply pipe a backup archive into the restoration script:
 
-`cat backup_archive.tar.bz2 | docker-compose exec -T backup restore`
+`cat backup_archive.tar.bz2 | docker compose exec -T backup restore`
 
 That script will first make sure that all services besides the databases are offline, verify the archive contents and finally restore the given snapshot. Afterwards the remaining services have to be started again:
 
-`docker-compose start server tasks broker registry`
+`docker compose start web tasks broker registry`
 
 The procedure for doing a factory reset are similar to the restoration case, the only difference being the restoration command:
 
-`docker-compose exec -T backup reset`
+`docker compose exec -T backup reset`
