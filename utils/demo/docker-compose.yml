@@ -1,0 +1,133 @@
+services:
+  web:
+    depends_on:
+      demo-init:
+        condition: service_completed_successfully
+    image: honeysens/web:$SERVER_REVISION
+    restart: unless-stopped
+    ports:
+      - "443:8443"
+    networks:
+      - honeysens
+    environment:
+      - ACCESS_LOG=false
+      - API_LOG=false
+      - DOMAIN=web
+      - HS_DB_PASSWORD=honeysens
+      - HS_DB_ROOT_PASSWORD=secret
+      - PLAIN_HTTP_API=false
+      - TLS_FORCE_12=false
+    volumes:
+      - honeysens_data:/opt/HoneySens/data
+
+  database:
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --log-error-verbosity=1 --mysql-native-password=ON
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=honeysens
+      - MYSQL_USER=honeysens
+      - MYSQL_PASSWORD=honeysens
+    image: mysql:8-oracle
+    networks:
+      - honeysens
+    user: "999:999"
+    volumes:
+      - honeysens_db:/var/lib/mysql
+
+  broker:
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    image: ubuntu/redis:6.0-22.04_beta
+    restart: unless-stopped
+    user: "101:101"
+    networks:
+      - honeysens
+
+  tasks:
+    depends_on:
+      demo-init:
+        condition: service_completed_successfully
+    image: honeysens/tasks:$SERVER_REVISION
+    restart: unless-stopped
+    environment:
+      - HS_DB_PASSWORD=honeysens
+      - HS_WORKER_COUNT=auto
+    networks:
+      - honeysens
+    volumes:
+      - honeysens_data:/srv/data
+
+  registry:
+    depends_on:
+      demo-init:
+        condition: service_completed_successfully
+    image: registry:2
+    restart: unless-stopped
+    networks:
+      - honeysens
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    user: "1000:1000"
+    volumes:
+      - honeysens_registry:/var/lib/registry
+
+  backup:
+    depends_on:
+      demo-init:
+        condition: service_completed_successfully
+    image: honeysens/backup:$SERVER_REVISION
+    restart: unless-stopped
+    environment:
+      - CRON_ENABLED=false
+      - CRON_CONDITION=0 3 * * *
+      - CRON_DBONLY=false
+      - CRON_KEEP=0
+      - CRON_TEMPLATE=backup-%s
+      - HS_DB_PASSWORD=honeysens
+    networks:
+      - honeysens
+    volumes:
+      - honeysens_data:/srv/data
+      - honeysens_registry:/srv/registry
+
+  sensor:
+    depends_on:
+      demo-init:
+        condition: service_completed_successfully
+      web:
+        condition: service_healthy
+    environment:
+      - IFACE=eth0
+      - PREV_PREFIX
+      - HOST_PWD
+    image: honeysens/sensorx86:$SENSOR_REVISION
+    networks:
+      - honeysens
+    privileged: true
+    tty: true
+    volumes:
+      - honeysens_sensor:/etc/manager
+      - docker_overlay:/var/lib/docker
+
+  demo-init:
+    depends_on:
+      database:
+        condition: service_started
+    image: honeysens/demo-init:$BUILD_ID
+    networks:
+      - honeysens
+    volumes:
+      - honeysens_data:/srv/data
+      - honeysens_registry:/srv/registry
+      - honeysens_sensor:/srv/sensor
+
+volumes:
+  docker_overlay: null
+  honeysens_data:
+  honeysens_db:
+  honeysens_registry:
+  honeysens_sensor:
+
+networks:
+  honeysens:
