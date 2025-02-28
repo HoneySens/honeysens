@@ -4,7 +4,8 @@
 HoneySens.iml
 
 # Build artifaccts
-server/out/
-sensor/platforms/**/out/
+server/build/
+server/**/build/
+sensor/platforms/**/build/
 sensor/platforms/docker_x86/conf/
-sensor/services/**/out/
+sensor/services/**/build/

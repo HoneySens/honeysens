@@ -55,7 +55,7 @@ echo "${COOKIES}" | curl -skX PUT -H "Content-Type: application/json" -d "${SERV
 
 for service in ${SENSOR_SERVICES}; do
   echo "Uploading $service service..."
-  TASK_ID=`echo "${COOKIES}" | curl -skH "Content-Type: multipart/form-data" -b - -F chunkCount=1 -F chunkIndex=0 -F "fileBlob=@$(realpath ../../sensor/services/$service/out/dist/*);filename=service.tar.gz" -F token=token -F fileName=service.tar.gz -F fileSize=1 https://localhost/api/tasks/upload | jq -r .task.id`
+  TASK_ID=`echo "${COOKIES}" | curl -skH "Content-Type: multipart/form-data" -b - -F chunkCount=1 -F chunkIndex=0 -F "fileBlob=@$(realpath ../../sensor/services/$service/build/dist/*);filename=service.tar.gz" -F token=token -F fileName=service.tar.gz -F fileSize=1 https://localhost/api/tasks/upload | jq -r .task.id`
   while [ `echo "${COOKIES}" | curl -sk -b - https://localhost/api/tasks/${TASK_ID} | jq .status` -ne 2 ]; do sleep 1; done
   TASK_ID=`echo "${COOKIES}" | curl -skH "Content-Type: application/json" -b - -d "{\"task\":${TASK_ID}}" https://localhost/api/services | jq -r .id`
   while [ `echo "${COOKIES}" | curl -sk -b - https://localhost/api/tasks/${TASK_ID} | jq .status` -ne 2 ]; do sleep 1; done

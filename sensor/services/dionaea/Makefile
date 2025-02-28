@@ -1,6 +1,6 @@
 PREFIX := HoneySens-dionaea
 REVISION := 2.7.0
-OUTDIR := out
+OUTDIR := build
 METADATA := metadata.xml
 
 default: all
