@@ -30,7 +30,7 @@ npm --prefix /srv/frontend install
 # is supposed to just build frontend and API, then exit.
 if [[ -n "${BUILD_ONLY}" ]]; then
     echo "[*] Building frontend"
-    (cd /srv/frontend && webpack)
+    (cd /srv/frontend && webpack --mode production)
     exit
 fi
 
