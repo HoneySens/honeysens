@@ -92,7 +92,7 @@ function initDatabase(): EntityManager {
     $config->setMetadataCache(new PhpFilesAdapter('doctrine_metadata'));
     $config->setQueryCache(new PhpFilesAdapter('doctrine_queries'));
     $config->setResultCache(new PhpFilesAdapter('doctrine_results'));
-    $config->setProxyDir(APPLICATION_PATH . '/../cache');
+    $config->setProxyDir(sprintf('%s/cache', DATA_PATH));
     $config->setAutoGenerateProxyClasses(true);
     $config->setProxyNamespace('HoneySens\Cache\Proxies');
     $config->addCustomDatetimeFunction('DAY', '\DoctrineExtensions\Query\Mysql\Day');

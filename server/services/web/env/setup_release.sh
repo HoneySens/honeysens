@@ -2,8 +2,8 @@
 set -e
 
 # Apache
-mkdir -vp /srv/api/cache /opt/HoneySens/data
-chown -R ubuntu:ubuntu /srv/api/cache /opt/HoneySens/data
+mkdir -vp /opt/HoneySens/data
+chown -R ubuntu:ubuntu /opt/HoneySens/data
 cp -v /srv/env/apache/apache.frontend.local.conf /etc/apache2/conf/frontend.conf
 cp -v /srv/env/apache/apache.web.conf /etc/apache2/conf/web.conf
 cp -v /srv/env/apache/apache.http.api.conf /etc/apache2/sites-available/honeysens_http_api.conf
