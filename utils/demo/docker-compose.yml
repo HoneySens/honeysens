@@ -114,7 +114,7 @@ services:
     depends_on:
       database:
         condition: service_started
-    image: honeysens/demo-init:$BUILD_ID
+    image: honeysens/demo-init:$SERVER_REVISION
     networks:
       - honeysens
     volumes:

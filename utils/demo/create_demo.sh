@@ -22,7 +22,7 @@ rm -rf ${BUILDDIR}
 mkdir -p ${BUILDDIR}
 cp docker-compose-create.yml docker-compose.yml ${BUILDDIR}
 sed "s/\$SERVER_REVISION/${SERVER_REVISION}/" docker-compose-create.yml > ${BUILDDIR}/docker-compose-create.yml
-sed -e "s/\$SERVER_REVISION/${SERVER_REVISION}/" -e "s/\$SENSOR_REVISION/${SENSOR_REVISION}/" -e "s/\$BUILD_ID/${BUILD_ID}/" docker-compose.yml > ${BUILDDIR}/docker-compose.yml
+sed -e "s/\$SERVER_REVISION/${SERVER_REVISION}/" -e "s/\$SENSOR_REVISION/${SENSOR_REVISION}/" docker-compose.yml > ${BUILDDIR}/docker-compose.yml
 
 echo "Building server..."
 make -C ../../server/ dist BUILD_ID=${BUILD_ID} REVISION=${SERVER_REVISION}
@@ -78,10 +78,10 @@ docker compose -f ${BUILDDIR}/docker-compose-create.yml stop web tasks broker re
 docker compose -f ${BUILDDIR}/docker-compose-create.yml exec -T backup backup > "${BUILDDIR}/snapshot.tar.bz2"
 
 echo "Building initializer..."
-docker build -t honeysens/demo-init:${BUILD_ID} --build-arg SNAPSHOT_PATH=`realpath --relative-to=$(pwd) ${BUILDDIR}`/snapshot.tar.bz2 --build-arg SENSOR_CONFIG_PATH=`realpath --relative-to=$(pwd) ${BUILDDIR}`/config.tar.gz .
+docker build -t honeysens/demo-init:${SERVER_REVISION} --build-arg SNAPSHOT_PATH=`realpath --relative-to=$(pwd) ${BUILDDIR}`/snapshot.tar.bz2 --build-arg SENSOR_CONFIG_PATH=`realpath --relative-to=$(pwd) ${BUILDDIR}`/config.tar.gz .
 
-echo "Writing ${BUILDDIR}/demo-init-${BUILD_ID}.tar..."
-docker save -o ${BUILDDIR}/demo-init-${BUILD_ID}.tar honeysens/demo-init:${BUILD_ID}
+echo "Writing ${BUILDDIR}/demo-init-${SERVER_REVISION}.tar..."
+docker save -o ${BUILDDIR}/demo-init-${SERVER_REVISION}.tar honeysens/demo-init:${SERVER_REVISION}
 
 echo "Shutting down server, cleaning up..."
 docker compose -f ${BUILDDIR}/docker-compose-create.yml stop
