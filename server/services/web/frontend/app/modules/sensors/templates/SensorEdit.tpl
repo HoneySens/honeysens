@@ -175,7 +175,7 @@
                         </div>
                         <div class="form-group">
                             <span class="label label-info"><%= _.t("sensors:sensorNetworkEAPOLBeta") %></span>
-                            <label for="networkEAPOLMode" class="control-label">EAPOL/IEEE802.1X-Authentifizierung</label>
+                            <label for="networkEAPOLMode" class="control-label"><%= _.t("sensors:sensorNetworkEAPOL") %></label>
                             <select class="form-control" name="networkEAPOLMode">
                                 <option value="0"><%= _.t("sensors:sensorNetworkEAPOLDisabled") %></option>
                                 <option value="1">MD5</option>

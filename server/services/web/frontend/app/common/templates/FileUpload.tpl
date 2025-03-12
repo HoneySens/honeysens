@@ -53,19 +53,19 @@
                         </div>
                     <% } else if(isPlatformArchive()) { %>
                         <div class="form-group">
-                            <strong>Typ</strong>
+                            <strong><%= _.t("type") %></strong>
                             <p class="form-control-static"><%= _.t("uploadFirmware") %></p>
                         </div>
                         <div class="form-group">
-                            <strong>Name</strong>
+                            <strong><%= _.t("name") %></strong>
                             <p class="form-control-static"><%= result.name %></p>
                         </div>
                         <div class="form-group">
-                            <strong>Plattform</strong>
+                            <strong><%= _.t("sensors:sensorFirmwarePlatform") %></strong>
                             <p class="form-control-static"><%= result.platform %></p>
                         </div>
                         <div class="form-group">
-                            <strong>Version</strong>
+                            <strong><%= _.t("platforms:firmwareVersion") %></strong>
                             <p class="form-control-static"><%= result.version %></p>
                         </div>
                         <div class="form-group">
