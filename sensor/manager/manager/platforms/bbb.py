@@ -105,10 +105,7 @@ class Platform(GenericPlatform):
                 GenericPlatform.update_mac_address(self, self.interface, config.get('mac', 'address'))
             # Proxy configuration
             if config.get('proxy', 'mode') == '1':
-                credentials = ''
-                if config.get('proxy', 'user') != '':
-                    credentials = '{}:{}@'.format(config.get('proxy', 'user'), config.get('proxy', 'password'))
-                proxy = 'https://{}{}:{}/'.format(credentials, config.get('proxy', 'host'), config.get('proxy', 'port'))
+                proxy = 'https://{}:{}'.format(config.get('proxy', 'host'), config.get('proxy', 'port'))
                 self.logger.info('Registering proxy {}'.format(proxy))
                 # Reconfigure cntlm
                 GenericPlatform.configure_cntlm(self, '{}:{}'.format(config.get('proxy', 'host'), config.get('proxy', 'port')),
