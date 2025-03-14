@@ -229,6 +229,11 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                 HoneySens.data.lastEventID = data.lastEventID;
                 HoneySens.data.lastUpdateTimestamp = data.timestamp;
                 HoneySens.commands.execute('init:finalize');
+            },
+            error: function(data) {
+                // Receiving an HTTP 403 from api/state indicates a session timeout.
+                // The session will now be discarded on the server, we can safely reload the page.
+                if(data.status === 403) location.reload();
             }
         });
     });
