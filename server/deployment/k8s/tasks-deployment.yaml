@@ -29,8 +29,10 @@ spec:
       containers:
         - env:
             - name: HS_DB_PASSWORD
-              value: honeysens
-          image: localhost:5000/honeysens/tasks:2.5.0-20220421
+              value: "honeysens"
+            - name: HW_WORKER_COUNT
+              value: "auto"
+          image: localhost:5000/honeysens/tasks:2.9.0
           name: tasks
           resources: {}
           securityContext:

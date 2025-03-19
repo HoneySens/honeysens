@@ -29,7 +29,7 @@ spec:
       containers:
         - env:
             - name: CRON_CONDITION
-              value: 0 3 * * *
+              value: "0 3 * * *"
             - name: CRON_DBONLY
               value: "false"
             - name: CRON_ENABLED
@@ -37,10 +37,10 @@ spec:
             - name: CRON_KEEP
               value: "0"
             - name: CRON_TEMPLATE
-              value: backup-%s
+              value: "backup-%s"
             - name: HS_DB_PASSWORD
-              value: honeysens
-          image: localhost:5000/honeysens/backup:2.5.0-20220421
+              value: "honeysens"
+          image: localhost:5000/honeysens/backup:2.9.0
           name: backup
           resources: {}
           securityContext:

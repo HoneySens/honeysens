@@ -1,6 +1,6 @@
 PREFIX := HoneySens-Server
 BUILD_ID := $(shell date +%Y%m%d)
-REVISION := 2.8.0-${BUILD_ID}
+REVISION := 2.9.0-${BUILD_ID}
 
 # Additional dev environment features
 DEV_ENV_LDAP := no
@@ -33,7 +33,7 @@ services/backup/build/dist/web-${REVISION}.tar:
 	$(MAKE) -C services/web dist BUILD_ID=${BUILD_ID} REVISION=${REVISION}
 
 build/dist/${PREFIX}-${REVISION}.tar.gz: services/backup/build/dist/backup-${REVISION}.tar services/backup/build/dist/tasks-${REVISION}.tar services/backup/build/dist/web-${REVISION}.tar build/${PREFIX}-${REVISION}/docker-compose.yml | DIR.build/dist
-	cp -vr docs/INSTALL build/${PREFIX}-${REVISION}/
+	cp -vr docs/Readme.txt build/${PREFIX}-${REVISION}/
 	ln -vfs ../../services/backup/build/dist/backup-${REVISION}.tar build/${PREFIX}-${REVISION}/backup-${REVISION}.tar
 	ln -vfs ../../services/tasks/build/dist/tasks-${REVISION}.tar build/${PREFIX}-${REVISION}/tasks-${REVISION}.tar
 	ln -vfs ../../services/web/build/dist/web-${REVISION}.tar build/${PREFIX}-${REVISION}/web-${REVISION}.tar

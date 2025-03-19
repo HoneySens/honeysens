@@ -33,14 +33,16 @@ spec:
             - name: API_LOG
               value: "false"
             - name: DOMAIN
-              value: server
+              value: "server"
             - name: HS_DB_PASSWORD
-              value: honeysens
+              value: "honeysens"
+            - name: HS_DB_ROOT_PASSWORD
+              value: "secret"
             - name: PLAIN_HTTP_API
               value: "false"
             - name: TLS_FORCE_12
               value: "false"
-          image: localhost:5000/honeysens/server:2.5.0-2022042101
+          image: localhost:5000/honeysens/server:2.9.0
           name: server
           #command: ["/bin/bash", "-c", "sleep infinity"]
           ports:

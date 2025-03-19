@@ -12,6 +12,8 @@
   "infoDocumentationWebsite": "Webseite",
   "infoDocumentationDetails": "Aktuelle Dokumentation zur System-Architektur, Inbetriebnahme und Wartung",
   "infoServerNotesHeader": "Release Notes: Server",
+  "infoServerNotes290p1": "Benutzer können nun zwischen Englisch (Standard) und Deutsch als Frontend-Sprache wählen",
+  "infoServerNotes290p2": "Verschiedene Bugs im Frontend behoben",
   "infoServerNotes280p1": "Backend-Migration auf PHP8",
   "infoServerNotes280p2": "Überarbeitung aller API-Berechtigungsprüfungen",
   "infoServerNotes270p1": "Rudimentäres System-Last-Monitoring zur Vorbeugung von Problemen bei hoher Auslastung",
