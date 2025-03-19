@@ -24,4 +24,4 @@ fi
 # Force unbuffered stdout
 export PYTHONUNBUFFERED=1
 
-exec manager -p docker $DEV_MODE $IFACE $LOG_LVL $CONFIG_FILE
+exec /srv/manager/venv/bin/manager -p docker $DEV_MODE $IFACE $LOG_LVL $CONFIG_FILE

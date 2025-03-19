@@ -11,7 +11,8 @@ echo "Installing sensor manager"
 mkdir -p /srv/manager
 ln -sfnv /mnt/manager/manager /srv/manager/manager
 ln -sfnv /mnt/manager/setup.py /srv/manager/setup.py
-pip3 install -e /srv/manager
+python3 -m venv --system-site-packages /srv/manager/venv
+/srv/manager/venv/bin/pip3 install -e /srv/manager
 
 echo "Adding services"
 cp -vr /mnt/platforms/docker_x86/services/cntlm /etc/services.d

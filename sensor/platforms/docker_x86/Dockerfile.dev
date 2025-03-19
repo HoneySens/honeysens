@@ -1,13 +1,13 @@
-FROM alpine:3.17
+FROM alpine:3.21
 
 MAINTAINER Pascal Brueckner pascal.brueckner@sylence.cc
 
 ARG REVISION=unversioned
 
 RUN apk --no-cache add bash
-COPY setup_prepare.sh setup_dev.sh ifup.sh /opt/
+COPY setup_prepare.sh setup_dev.sh ifup.sh /srv/
 COPY init/00_init_dev_env.sh /etc/cont-init.d/
-RUN /opt/setup_prepare.sh $REVISION
-RUN /opt/setup_dev.sh
+RUN /srv/setup_prepare.sh $REVISION
+RUN /srv/setup_dev.sh
 
 ENTRYPOINT ["/init"]

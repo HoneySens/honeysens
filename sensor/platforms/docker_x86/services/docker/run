@@ -9,7 +9,7 @@ honeysens_cfg_path = '/honeysens.cfg'  # The manager is responsible for the /hon
 if os.path.isfile(honeysens_cfg_path):
     config = configparser.ConfigParser(allow_no_value=True)
     try:
-        config.readfp(open(honeysens_cfg_path))
+        config.read_file(open(honeysens_cfg_path))
         if config.get('proxy', 'mode') == '1':
             os.environ['HTTP_PROXY'] = 'http://127.0.0.1:3128/'
             os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:3128/'

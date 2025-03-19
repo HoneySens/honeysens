@@ -4,7 +4,7 @@ set -e
 
 # Basic requirements
 apk --update --no-cache add --virtual build-dependencies alpine-sdk python3-dev linux-headers zeromq-dev libffi-dev yaml-dev
-apk --update --no-cache add ca-certificates cntlm curl-dev dhcpcd docker docker-compose libffi libpcap macchanger py3-pip tar yaml wpa_supplicant zeromq
+apk --update --no-cache add ca-certificates cntlm curl curl-dev dhcpcd docker docker-compose libffi libpcap macchanger py3-cryptography py3-netifaces py3-pip tar yaml wpa_supplicant zeromq
 
 # Overlay s6 init system
 S6_VERSION="2.2.0.3"
@@ -17,7 +17,7 @@ touch /etc/network/interfaces
 
 # Shadow /sbin/ifup with a decoy that also accepts --no-act as -n (required by python's debinterface)
 mv /sbin/ifup /usr/local/bin/ifup
-mv /opt/ifup.sh /sbin/ifup
+mv /srv/ifup.sh /sbin/ifup
 
 # Set revision marker
 echo $1 > /revision
