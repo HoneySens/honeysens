@@ -69,7 +69,7 @@ class Manager:
             self.config_dir = tempfile.mkdtemp()
             with tarfile.open(self.config_archive) as config_archive:
                 config_archive.extractall(self.config_dir)
-            self.config.readfp(open('{}/honeysens.cfg'.format(self.config_dir)))
+            self.config.read_file(open('{}/honeysens.cfg'.format(self.config_dir)))
         except Exception as e:
             self.logger.critical('Could not parse configuration ({})'.format(str(e)))
             exit()

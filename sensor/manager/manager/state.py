@@ -64,7 +64,7 @@ class StateWorker(threading.Thread):
 
             # We can't use the fileinput module here because that one physically moves files which is not possible
             # with /etc/hosts inside docker containers (it's a mounted file)
-            hosts_content = re.sub('\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}\t\S+ honeysens-server', '{}\t{} honeysens-server'.format(host, name), hosts_content)
+            hosts_content = re.sub(r'\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}\t\S+ honeysens-server', '{}\t{} honeysens-server'.format(host, name), hosts_content)
             with open('/etc/hosts', 'w') as f:
                 f.write(hosts_content)
         else:
