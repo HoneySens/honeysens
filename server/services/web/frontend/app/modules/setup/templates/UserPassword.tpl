@@ -1,4 +1,4 @@
-<h2><%= _.t("userPasswordHeader") %></h2>
+<h2><%= _.t("setup:userPasswordHeader") %></h2>
 <hr />
 <form>
     <p><%= _.t("setup:userPasswordIntro") %></p>
