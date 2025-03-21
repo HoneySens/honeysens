@@ -175,6 +175,11 @@ if config_version == '2.7.0':
 # 2.8.0 -> 2.9.0
 if config_version == '2.8.0':
     print('Upgrading configuration 2.8.0 -> 2.9.0')
+    db_statements = [
+        'ALTER TABLE events CHANGE comment comment VARCHAR(1000) DEFAULT NULL',
+    ]
+    execute_sql(db, db_statements)
+    db.commit()
     config.set('server', 'config_version', '2.9.0')
     config_version = '2.9.0'
 

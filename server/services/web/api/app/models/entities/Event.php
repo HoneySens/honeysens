@@ -80,7 +80,7 @@ class Event {
      * Communication field to note custom metadata about this event,
      * such as investigation results or notes to other users/admins.
      */
-    #[Column(type: Types::STRING, nullable: true)]
+    #[Column(type: Types::STRING, length: 1000, nullable: true)]
     public ?string $comment;
 
     /**

@@ -23,7 +23,7 @@
             </div>
             <div class="form-group">
                 <label for="comment" class="control-label"><%= _.t("events:eventComment") %></label>
-                <textarea rows="10" class="form-control" name="comment" maxlength="65535" autofocus style="resize: none;" <% if(isMultiEdit()) { %>placeholder="<%= _.t('events:eventCommentPlaceholder') %>"<% } %>></textarea>
+                <textarea rows="10" class="form-control" name="comment" maxlength="1000" autofocus style="resize: none;" <% if(isMultiEdit()) { %>placeholder="<%= _.t('events:eventCommentPlaceholder') %>"<% } %>></textarea>
             </div>
             <p><%= _.t("events:eventLastModificationTime") %>: <strong><%- showLastModificationTime() %></strong></p>
             <hr />

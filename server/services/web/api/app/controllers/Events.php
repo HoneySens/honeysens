@@ -64,7 +64,7 @@ class Events extends RESTResource {
             $updateParams['newStatus'] = EventStatus::tryFrom($data['new_status']);
         }
         if(array_key_exists('new_comment', $data)) {
-            V::key('new_comment', V::stringType()->length(0, 65535))->check($data);
+            V::key('new_comment', V::stringType()->length(0, 1000))->check($data);
             $updateParams['newComment'] = $data['new_comment'];
         }
         $filterConditions = $this::validateEventFilterConditions($this->getSessionUser(), $data);
