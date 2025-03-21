@@ -281,6 +281,8 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                                     contentHeight = $('#overlay div.container-fluid div.addBusy').outerHeight();
                                 $busy.css('position', 'relative');
                                 $busy.add($result).css('top', -Math.min(overlayHeight, contentHeight));
+                                // Update state
+                                HoneySens.execute('fetchUpdates', false);
                             },
                             error: function() {
                                 $result.removeClass('hide');

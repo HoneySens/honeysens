@@ -151,7 +151,7 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
             Backbone.history.start();
         });
 
-        HoneySens.commands.setHandler('fetchUpdates', function() {
+        HoneySens.commands.setHandler('fetchUpdates', function(startNewCounter) {
             let url = 'api/state?ts=' + HoneySens.data.lastUpdateTimestamp + '&last_id=' + HoneySens.data.lastEventID;
             $.ajax({
                 type: 'GET',
@@ -175,7 +175,7 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                     if(_.has(data, 'platforms')) HoneySens.data.models.platforms.set(data.platforms);
                     if(_.has(data, 'tasks')) HoneySens.data.models.tasks.set(data.tasks);
                     HoneySens.vent.trigger('models:updated');
-                    HoneySens.execute('counter:start');
+                    if(startNewCounter) HoneySens.execute('counter:start');
                 },
                 error: function() {
                     HoneySens.request('view:modal').show(new ModalServerError({
@@ -201,7 +201,7 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                     HoneySens.vent.trigger('counter:updated', counter);
                     if(counter <= 0) {
                         stopCounter();
-                        HoneySens.execute('fetchUpdates');
+                        HoneySens.execute('fetchUpdates', true);
                     }
                 }, 1000);
             HoneySens.vent.trigger('counter:started');

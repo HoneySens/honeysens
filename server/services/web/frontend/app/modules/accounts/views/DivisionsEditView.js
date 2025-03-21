@@ -48,7 +48,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
                             view.$el.find('button').prop('disabled', false);
                         },
                         success: function() {
-                            HoneySens.execute('fetchUpdates');
+                            HoneySens.execute('fetchUpdates', false);
                             HoneySens.request('accounts:show', {animation: 'slideRight'});
                         }});
                 }

@@ -14,7 +14,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                     url: 'api/sensors/' + id,
                     data: JSON.stringify({archive: archive}),
                     success: function() {
-                        HoneySens.execute('fetchUpdates');
+                        HoneySens.execute('fetchUpdates', false);
                         // Update events manually, since event deletes aren't covered by global updates (for performance reasons)
                         HoneySens.data.models.events.remove(HoneySens.data.models.events.filter(function(event) {return event.get('sensor') == id;}));
                         HoneySens.request('view:modal').empty();
