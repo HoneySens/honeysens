@@ -150,8 +150,14 @@ class UsersService extends Service {
         $user->notifyOnSystemState = $notifyOnSystemState;
         $user->role = $role;
         if($domain === AuthDomain::LOCAL) {
-            if($password !== null) $user->setPassword($password)->setLegacyPassword(null);
-        } else $user->setPassword(null)->setLegacyPassword(null);
+            if($password !== null) {
+                $user->setPassword($password);
+                $user->setLegacyPassword(null);
+            }
+        } else {
+            $user->setPassword(null);
+            $user->setLegacyPassword(null);
+        }
         try {
             $this->em->flush();
         } catch(ORMException $e) {
