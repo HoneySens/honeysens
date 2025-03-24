@@ -241,7 +241,7 @@ class EventsService extends Service {
      * only status and comment fields can be updated.
      * If permissions settings require mandatory comments, each status flag update to anything other than "UNEDITED"
      * also requires a comment to be present. It's NOT possible to update archived events.
-     * At least one of $newStatus or $newComment has to be setup, other this throws an Exception.
+     * At least one of $newStatus or $newComment has to be setup, otherwise an Exception is thrown.
      *
      * @param EventFilterConditions $conditions Filter conditions
      * @param EventStatus|null $newStatus If given, new status flag for all selected events
@@ -265,13 +265,15 @@ class EventsService extends Service {
                 ($newComment === null || strlen($newComment) === 0))
                     throw new BadRequestException();
             $qb->set('e.status', ':status')
-                ->set('e.lastModificationTime', ':lastmod')
-                ->setParameter('status', $newStatus)
-                ->setParameter('lastmod', new \DateTime());
+                ->setParameter('status', $newStatus);
         }
         if($newComment !== null) {
             $qb->set('e.comment', ':comment')
                 ->setParameter('comment', $newComment);
+        }
+        if($newComment !== null || $newStatus !== null) {
+            $qb->set('e.lastModificationTime', ':lastmod')
+                ->setParameter('lastmod', new \DateTime());
         }
         try {
             $qb->getQuery()->execute();

@@ -32,10 +32,9 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
 
                     // Set comment and status depending on whether a single or multiple events are edited
                     if(isSingleEdit) {
-                        // For single edits we can simply compare to the model to spot a new status
+                        // For single edits we can simply diff the current state with the model to spot changes
                         if(parseInt(status) !== model.get('status')) data.new_status = status;
-                        // Backend always requires the comment to be set
-                        data.new_comment = comment;
+                        if(comment !== model.get('comment')) data.new_comment = comment;
                     } else {
                         // When editing multiple events, users have to explicitly select or enter new values
                         if(parseInt(status) >= 0) data.new_status = status;
