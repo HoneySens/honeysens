@@ -242,6 +242,9 @@
             </div>
             <div id="releasenotesBBB" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong><%= _.t("info:revision") %> 2.9.0</strong> - <%= _.t("march") %> 2025<br/>
+                    <p><%= _.t("info:infoBBBNotes290") %></p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong><%= _.t("info:revision") %> 2.6.0</strong> - <%= _.t("may") %> 2023<br/>
                     <p><%= _.t("info:infoBBBNotes260") %></p>
                     <hr />
@@ -294,6 +297,9 @@
             </div>
             <div id="releasenotesDocker" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong><%= _.t("info:revision") %> 2.9.0</strong> - <%= _.t("march") %> 2025<br/>
+                    <p><%= _.t("info:infoDockerNotes290") %></p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong><%= _.t("info:revision") %> 2.6.0</strong> - <%= _.t("may") %> 2023<br/>
                     <p><%= _.t("info:infoDockerNotes260") %></p>
                     <hr />
