@@ -28,14 +28,14 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
                 this.$el.find('#counter').popover('hide');
                 this.popoverVisible = false;
             },
-            'click a#langEnglish': function(e) {
+            'click a#langEnglish': async function(e) {
                 e.preventDefault();
-                localStorage.setItem('lang', 'en');
+                await i18n.setLanguage('en');
                 location.reload();
             },
-            'click a#langGerman': function(e) {
+            'click a#langGerman': async function(e) {
                 e.preventDefault();
-                localStorage.setItem('lang', 'de');
+                await i18n.setLanguage('de');
                 location.reload();
             }
         },

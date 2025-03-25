@@ -70,9 +70,6 @@ app.assureAllowed = function(domain, action) {
 
 // i18n support injected into underscore
 _.t = i18n.t;
-var selectedLang = localStorage.getItem('lang');
-if(selectedLang !== null) await i18n.setLanguage(selectedLang);
-else await i18n.setLanguage(null);
 
 // Global template helpers via an underscore property
 _.templateHelpers = {
