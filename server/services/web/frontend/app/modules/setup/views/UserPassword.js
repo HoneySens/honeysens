@@ -32,7 +32,10 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
                         contentType: 'application/json',
                         url: 'api/users/session',
                         success: function() {
-                            HoneySens.execute('logout');
+                            view.$el.find('button').prop('disabled', true);
+                            setTimeout(() => {
+                                HoneySens.execute('logout');
+                            }, 500);
                         },
                         error: function(xhr) {
                             var modal;
