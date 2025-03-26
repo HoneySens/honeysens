@@ -385,12 +385,12 @@ class SensorsService extends Service {
             $sensorState['server_crt'] = $srvCert;
         // If the EAPOL CA cert fingerprint was sent and differs, include updated cert
         $caCertFP = $sensor->EAPOLCACert?->getFingerprint();
-        if($eapolCaCrtFp && $caCertFP !== $eapolCaCrtFp)
+        if($caCertFP !== $eapolCaCrtFp)
             $sensorState['eapol_ca_cert'] = $sensor->EAPOLCACert?->content;
         else unset($sensorState['eapol_ca_cert']);
         // If the EAPOL TLS cert fingerprint was sent and differs, include updated cert and key
         $clientCertFP = $sensor->EAPOLClientCert?->getFingerprint();
-        if($eapolClientCrtFp && $clientCertFP !== $eapolClientCrtFp) {
+        if($clientCertFP !== $eapolClientCrtFp) {
             $sensorState['eapol_client_cert'] = $sensor->EAPOLClientCert?->content;
             $sensorState['eapol_client_key'] = $sensor->EAPOLClientCert?->privateKey;
         } else unset($sensorState['eapol_client_cert']);
