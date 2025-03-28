@@ -44,6 +44,7 @@
                     <ul>
                         <li><%= _.t("info:infoServerNotes290p1") %></li>
                         <li><%= _.t("info:infoServerNotes290p2") %></li>
+                        <li><%= _.t("info:infoServerNotes290p3") %></li>
                     </ul>
                     </p>
                     <hr />
