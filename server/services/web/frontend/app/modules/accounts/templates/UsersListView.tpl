@@ -6,7 +6,7 @@
             </button>
         </div>
     <% } %>
-    <h3>Benutzer</h3>
+    <h3><%= _.t("users") %></h3>
 </div>
 <div class="table-responsive">
     <table class="table table-striped">
