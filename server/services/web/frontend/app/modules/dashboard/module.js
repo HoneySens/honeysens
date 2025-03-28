@@ -2,7 +2,7 @@ import HoneySens from 'app/app';
 import Routing from 'app/routing';
 import Models from 'app/models';
 import LayoutView from 'app/modules/dashboard/views/Layout';
-import SummaryView from 'app/modules/dashboard/views/Summary';
+import Dashboardview from 'app/modules/dashboard/views/Dashboard';
 
 var DashboardModule = Routing.extend({
     name: 'dashboard',
@@ -22,7 +22,7 @@ var DashboardModule = Routing.extend({
 
         HoneySens.reqres.setHandler('dashboard:show', function() {
             if(!HoneySens.assureAllowed('events', 'get')) return false;
-            contentRegion.show(new SummaryView({model: new Models.Stats()}));
+            contentRegion.show(new Dashboardview({model: new Models.Stats()}));
             router.navigate('');
             HoneySens.vent.trigger('dashboard:shown');
         });

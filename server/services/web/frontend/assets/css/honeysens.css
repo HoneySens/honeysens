@@ -25,6 +25,10 @@ a, a:active, a:focus, .btn:active, .btn:focus, .btn.focus, .btn:active:focus, .b
 /* Add some spacing to captions within infobox containers (that contain lots of text) */
 div.infobox h4 {padding-top: 15px}
 
+/* Table styling */
+td.indent {padding-left: 2.5rem !important}
+th > span, td > span {padding-right: .5rem}
+
 /* Fix forms in popovers within a DataTable */
 table.table div.popover div.form-group {display: block; margin-bottom: 15px}
 table.table div.popover .form-control {display: block; width: 100%}

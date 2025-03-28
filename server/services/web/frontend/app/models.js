@@ -434,9 +434,50 @@ HoneySens.module('Models', function(Models, HoneySens, Backbone, Marionette, $, 
             year: '',
             month: null,
             division: null,
-            events_timeline: []
+            events_timeline: [],
+            events_total: 0,
+            events_live: 0,
+            events_unedited: 0,
+            events_busy: 0,
+            events_resolved: 0,
+            events_ignored: 0,
+            events_archived: 0,
+            sensors_total: 0,
+            sensors_online: 0,
+            sensors_offline: 0,
+            filters_total: 0,
+            filters_active: 0,
+            filters_inactive: 0,
+            services_total: 0,
+            services_online: 0,
+            services_offline: 0,
+            users: 0,
+            divisions: 0
         },
-        url: 'api/stats'
+        url: 'api/stats',
+        recalculate: function() {
+            var sensorsTotal = HoneySens.data.models.sensors.length,
+                sensorsOnline = HoneySens.data.models.sensors.filter((m) => m.get('last_status') === Models.SensorStatus.status.RUNNING || m.get('last_status') === Models.SensorStatus.status.UPDATING).length;
+            this.set('sensors_total', sensorsTotal);
+            this.set('sensors_online', sensorsOnline);
+            this.set('sensors_offline', sensorsTotal - sensorsOnline);
+            var filtersTotal = HoneySens.data.models.eventfilters.length,
+                filtersActive = HoneySens.data.models.eventfilters.where({enabled: true}).length;
+            this.set('filters_total', filtersTotal);
+            this.set('filters_active', filtersActive);
+            this.set('filters_inactive', filtersTotal - filtersActive);
+            var servicesTotal = HoneySens.data.models.sensors.map((m) => m.get('services').length).reduce((acc, val) => acc + val, 0),
+                servicesOnline = HoneySens.data.models.sensors.map((m) => {
+                    var lastServiceStatus = m.get('last_service_status');
+                    if(lastServiceStatus === null) return 0;
+                    return Object.keys(lastServiceStatus).filter(key => lastServiceStatus[key] === 0).length;
+                }).reduce((acc, val) => acc + val, 0);
+            this.set('services_total', servicesTotal);
+            this.set('services_online', servicesOnline);
+            this.set('services_offline', servicesTotal - servicesOnline);
+            this.set('users', HoneySens.data.models.users.length);
+            this.set('divisions', HoneySens.data.models.divisions.length);
+        }
     });
 
     Models.TaskWorkerStatus = Backbone.Model.extend({
