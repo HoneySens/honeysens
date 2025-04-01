@@ -5,12 +5,12 @@ HoneySens.module('Dashboard.Views', function(Views, HoneySens, Backbone, Marione
     Views.Summary = Marionette.ItemView.extend({
         template: _.template(SummaryTpl),
         className: 'panel panel-primary',
-        onModelChange: function() {
+        onModelSync: function() {
             this.model.recalculate();
             this.render();
         },
         modelEvents: {
-            change: 'onModelChange'
+            sync: 'onModelSync'
         }
     });
 });
