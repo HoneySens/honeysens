@@ -51,7 +51,9 @@ class SensorTimeoutChecker(HandlerInterface):
                     cur.execute(sql, (s_id, now.strftime('%Y-%m-%d %H:%M:%S'), self.STATUS_TIMEOUT))
                     cur.execute('UPDATE last_updates SET timestamp = NOW() WHERE table_name = "sensors"')
                     db.commit()
-                    # Find contacts and inform them
+                    # If e-mail notifications are enabled, find contacts and inform them
+                    if not config.getboolean('smtp', 'enabled'):
+                        continue
                     cur.execute(('SELECT c.email,u.email FROM contacts AS c LEFT JOIN users AS u ON c.user_id = u.id ' 
                                  'WHERE c.division_id = %s AND c.sendSensorTimeouts = 1'), last_status['division'])
                     for row in cur.fetchall():
@@ -76,7 +78,7 @@ class SensorTimeoutChecker(HandlerInterface):
 
     @staticmethod
     def _notify_contact(db, config, recipient, sensor_id, sensor_name, interval, timeout_threshold):
-        """Sends a mail to recipient, informing them that the given sensor exceeded its timeout and is now offline."""
+        """Sends an e-mail to recipient, notifying that the given sensor exceeded its timeout and is now offline."""
         subject = 'HoneySens: Sensor {} (ID {}) offline'.format(sensor_name, sensor_id)
         body = templates.process_template(db, templates.TemplateType.EMAIL_SENSOR_TIMEOUT, {
             'SENSOR_NAME': sensor_name,

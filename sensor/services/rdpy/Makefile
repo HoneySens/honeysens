@@ -1,6 +1,6 @@
 PREFIX := HoneySens-RDPy
 REVISION := 2.2.0
-OUTDIR := out
+OUTDIR := build
 METADATA := metadata.xml
 
 default: all

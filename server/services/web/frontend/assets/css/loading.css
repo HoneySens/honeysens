@@ -1,0 +1,4 @@
+/* The loading page is shown while the app JS is downloaded and initialized */
+div#loading {background-color: #eee; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 1040}
+
+div#loading img {display: block; margin: 4.4em auto 0 auto}

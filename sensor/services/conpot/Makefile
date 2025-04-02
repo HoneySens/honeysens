@@ -1,6 +1,6 @@
 PREFIX := HoneySens-conpot
 REVISION := 2.3.0
-OUTDIR := out
+OUTDIR := build
 METADATA := metadata.xml
 
 default: all

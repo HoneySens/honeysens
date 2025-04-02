@@ -1,0 +1,1 @@
+Visit https://honeysens.org/docs/ for comprehensive documentation covering deployment and management of a HoneySens server.

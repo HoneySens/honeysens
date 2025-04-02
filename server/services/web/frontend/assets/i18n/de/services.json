@@ -1,0 +1,20 @@
+{
+  "header": "Dienste",
+  "noServerConnection": "Keine Verbindung zum Server",
+  "serviceRemoveHeader": "Dienst entfernen",
+  "serviceRemovePromptP1": "Soll der Dienst <strong>{{name}}</strong> und <strong>alle damit verkn&uuml;pften Revisionen</strong> wirklich entfernt werden?",
+  "serviceRemovePromptP2": "Die Dienstzuweisung wird außerdem auf allen aktiven Sensoren entfernt.",
+  "serviceRevision": "Revision",
+  "serviceArchitectures": "Architekturen",
+  "serviceStatus": "Status",
+  "serviceDescription": "Beschreibung",
+  "serviceStatusOnline": "Online",
+  "serviceStatusWarning": "Dienste nur eingeschränkt verfügbar",
+  "serviceStatusOffline": "Registry offline",
+  "revisionRemoveHeader": "Service-Revision entfernen",
+  "revisionRemovePrompt": "Soll die Revision {{- revision}} dieses Dienstes wirklich entfernt werden?",
+  "revisionMakeDefault": "Als Standard festlegen",
+  "revisionStatusOk": "Ok",
+  "revisionStatusError": "Nicht verfügbar",
+  "statusQuery": "Abfrage läuft..."
+}

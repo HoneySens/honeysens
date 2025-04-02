@@ -1,0 +1,15 @@
+{
+  "header": "Logs",
+  "resource": "Resource",
+  "resourceID": "RID",
+  "resourceGeneric": "Generic",
+  "resourceContacts": "Contacts",
+  "resourceDivisions": "Groups",
+  "resourceFilters": "Event filters",
+  "resourcePlatforms": "Platforms",
+  "resourceServices": "Services",
+  "resourceSettings": "Settings",
+  "resourceTasks": "Tasks",
+  "resourceSystem": "System",
+  "resourceSessions": "Sessions"
+}

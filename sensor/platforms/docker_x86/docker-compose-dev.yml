@@ -1,4 +1,3 @@
-version: "3"
 services:
 
   sensor:
@@ -9,7 +8,6 @@ services:
       - IFACE=eth0
       #- EAPOL_IFACE=eth1
       - LOG_LVL=debug
-      - DEV_WATCH_TASK
     #network_mode: host
     networks:
       - ext_sensors

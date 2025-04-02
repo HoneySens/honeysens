@@ -31,7 +31,7 @@ class SystemHealthMonitor(HandlerInterface):
     @staticmethod
     def _notify_user(db, config, recipient, queue_length, queue_threshold):
         server_name = config.get('server', 'host')
-        subject = 'HoneySens: Hohe Systemlast auf Server {}'.format(server_name)
+        subject = 'HoneySens: High system load on server {}'.format(server_name)
         body = templates.process_template(db, templates.TemplateType.EMAIL_HIGH_SYSTEM_LOAD, {
             'SERVER_NAME': server_name,
             'QUEUE_LENGTH': queue_length,

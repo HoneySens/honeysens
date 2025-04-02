@@ -102,7 +102,7 @@ class Platform(GenericPlatform):
         if 'search' in resolv_content or 'domain' in resolv_content:
             self.logger.info('Removing search and domain entries from /etc/resolv.conf')
             # Replace 'search' and 'domain' statements with comments
-            resolv_content = re.sub('search\s\S+', '#', re.sub('domain\s\S+', '#', resolv_content))
+            resolv_content = re.sub(r'search\s\S+', '#', re.sub(r'domain\s\S+', '#', resolv_content))
             with open('/etc/resolv.conf', 'w') as f:
                 f.write(resolv_content)
             reset_network = True

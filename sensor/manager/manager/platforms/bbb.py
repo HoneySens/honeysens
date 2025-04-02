@@ -23,6 +23,7 @@ LED_MODE_FLASH_ORANGE = 6
 
 LED_GPIO_PIN_A = 60
 LED_GPIO_PIN_B = 26
+LED_GPIO_PIN_C = 44
 LED_GPIO_HIGH = 'high'
 LED_GPIO_LOW = 'low'
 LED_CONTROLLER_INTERVAL = 1.0  # LED worker timing (in seconds)
@@ -104,10 +105,7 @@ class Platform(GenericPlatform):
                 GenericPlatform.update_mac_address(self, self.interface, config.get('mac', 'address'))
             # Proxy configuration
             if config.get('proxy', 'mode') == '1':
-                credentials = ''
-                if config.get('proxy', 'user') != '':
-                    credentials = '{}:{}@'.format(config.get('proxy', 'user'), config.get('proxy', 'password'))
-                proxy = 'https://{}{}:{}/'.format(credentials, config.get('proxy', 'host'), config.get('proxy', 'port'))
+                proxy = 'https://{}:{}'.format(config.get('proxy', 'host'), config.get('proxy', 'port'))
                 self.logger.info('Registering proxy {}'.format(proxy))
                 # Reconfigure cntlm
                 GenericPlatform.configure_cntlm(self, '{}:{}'.format(config.get('proxy', 'host'), config.get('proxy', 'port')),
@@ -267,7 +265,7 @@ class LEDController(threading.Thread):
         self.logger = logging.getLogger(__name__)
         self.logger.info('Initializing LED controller')
         # Enable required GPIO pins
-        for pin in [LED_GPIO_PIN_A, LED_GPIO_PIN_B]:
+        for pin in [LED_GPIO_PIN_A, LED_GPIO_PIN_B, LED_GPIO_PIN_C]:
             try:
                 with open('/sys/class/gpio/export', 'w') as f:
                     f.write(str(pin))
@@ -323,25 +321,29 @@ class LEDController(threading.Thread):
             self.logger.debug('LED: turning off')
             self.set_pin(LED_GPIO_PIN_A, LED_GPIO_HIGH)
             self.set_pin(LED_GPIO_PIN_B, LED_GPIO_HIGH)
+            self.set_pin(LED_GPIO_PIN_C, LED_GPIO_HIGH)
             self.status = LED_MODE_OFF
         elif mode == LED_MODE_STEADY_RED:
             self.logger.debug('LED: red')
             self.set_pin(LED_GPIO_PIN_A, LED_GPIO_HIGH)
             self.set_pin(LED_GPIO_PIN_B, LED_GPIO_LOW)
+            self.set_pin(LED_GPIO_PIN_C, LED_GPIO_HIGH)
             self.status = LED_MODE_STEADY_RED
         elif mode == LED_MODE_STEADY_GREEN:
             self.logger.debug('LED: green')
             self.set_pin(LED_GPIO_PIN_A, LED_GPIO_LOW)
             self.set_pin(LED_GPIO_PIN_B, LED_GPIO_HIGH)
+            self.set_pin(LED_GPIO_PIN_C, LED_GPIO_HIGH)
             self.status = LED_MODE_STEADY_GREEN
         elif mode == LED_MODE_STEADY_ORANGE:
             self.logger.debug('LED: orange')
             self.set_pin(LED_GPIO_PIN_A, LED_GPIO_LOW)
             self.set_pin(LED_GPIO_PIN_B, LED_GPIO_LOW)
+            self.set_pin(LED_GPIO_PIN_C, LED_GPIO_HIGH)
             self.status = LED_MODE_STEADY_ORANGE
 
     def set_pin(self, pin, value):
-        if pin not in [LED_GPIO_PIN_A, LED_GPIO_PIN_B] or value not in [LED_GPIO_LOW, LED_GPIO_HIGH]:
+        if pin not in [LED_GPIO_PIN_A, LED_GPIO_PIN_B, LED_GPIO_PIN_C] or value not in [LED_GPIO_LOW, LED_GPIO_HIGH]:
             raise Exception('Invalid pin data ({}, {})'.format(pin, value))
         with open('/sys/class/gpio/gpio{}/direction'.format(pin), 'w') as f:
             f.write(value)

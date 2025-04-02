@@ -35,7 +35,7 @@ class CAExpirationChecker(HandlerInterface):
     @staticmethod
     def _notify_user(db, config, recipient, expiration_days):
         server_name = config.get('server', 'host')
-        subject = 'HoneySens: CA-Zertifikat des Servers {} läuft in {} Tagen ab'.format(server_name, expiration_days)
+        subject = 'HoneySens: CA certificate of server {} expires in {} days'.format(server_name, expiration_days)
         body = templates.process_template(db, templates.TemplateType.EMAIL_CA_EXPIRATION, {
             'SERVER_NAME': server_name,
             'EXPIRATION_TIME': expiration_days

@@ -1,0 +1,11 @@
+{
+  "header": "Platforms",
+  "download": "Download",
+  "makeDefault": "Make default",
+  "firmwareRemoveHeader": "Remove firmware",
+  "firmwareRemovePrompt": "Should the Firmware {{- name}} (version {{- version}}) really be removed?",
+  "firmwareRemoveSensorInfo": "Sensors for which individual firmware is configured will be reset to the system-wide default revision.",
+  "firmwareRemoveSensorAffected": "The following sensors are affected",
+  "firmwareDescription": "Description",
+  "firmwareVersion": "Version"
+}

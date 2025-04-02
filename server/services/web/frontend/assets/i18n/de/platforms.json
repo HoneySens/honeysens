@@ -1,0 +1,11 @@
+{
+  "header": "Plattformen",
+  "download": "Download",
+  "makeDefault": "Als Standard festlegen",
+  "firmwareRemoveHeader": "Firmware entfernen",
+  "firmwareRemovePrompt": "Soll die Firmware {{- name}} (Version {{- version}}) wirklich entfernt werden?",
+  "firmwareRemoveSensorInfo": "Sensoren, für die individuelle Firmware konfiguriert ist, werden auf die systemweite Standardrevision zurückgesetzt.",
+  "firmwareRemoveSensorAffected": "Dies betrifft die folgenden Sensoren",
+  "firmwareDescription": "Beschreibung",
+  "firmwareVersion": "Version"
+}

@@ -1,0 +1,15 @@
+{
+  "header": "Übersicht",
+  "classificationHeader": "Ereignis-Klassifikation",
+  "summaryHeader": "System-Übersicht",
+  "summaryLive": "Live",
+  "summaryArchived": "Archiviert",
+  "summaryInfrastructure": "Infrastruktur",
+  "summaryServices": "Dienste",
+  "summaryFilters": "Ereignis-Filter",
+  "summaryOnline": "online",
+  "summaryOffline": "offline",
+  "summaryActive": "aktiv",
+  "summaryInactive": "inaktiv",
+  "timelineHeader": "Ereignisse im Zeitraum"
+}

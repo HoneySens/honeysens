@@ -1,0 +1,15 @@
+{
+  "header": "Dashboard",
+  "classificationHeader": "Event Classification",
+  "summaryHeader": "System Overview",
+  "summaryLive": "Live",
+  "summaryArchived": "Archived",
+  "summaryInfrastructure": "Infrastructure",
+  "summaryServices": "Services",
+  "summaryFilters": "Event filters",
+  "summaryOnline": "online",
+  "summaryOffline": "offline",
+  "summaryActive": "active",
+  "summaryInactive": "inactive",
+  "timelineHeader": "Event timeline"
+}

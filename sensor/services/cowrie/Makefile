@@ -1,6 +1,6 @@
 PREFIX := HoneySens-cowrie
 REVISION := 2.6.0
-OUTDIR := out
+OUTDIR := build
 METADATA := metadata.xml
 
 default: all

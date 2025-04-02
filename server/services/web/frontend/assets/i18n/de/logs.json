@@ -1,0 +1,15 @@
+{
+  "header": "Protokolle",
+  "resource": "Ressource",
+  "resourceID": "RID",
+  "resourceGeneric": "Allgemein",
+  "resourceContacts": "Kontakte",
+  "resourceDivisions": "Gruppen",
+  "resourceFilters": "Ereignis-Filter",
+  "resourcePlatforms": "Plattformen",
+  "resourceServices": "Dienste",
+  "resourceSettings": "Konfiguration",
+  "resourceTasks": "Prozesse",
+  "resourceSystem": "System",
+  "resourceSessions": "Sessions"
+}

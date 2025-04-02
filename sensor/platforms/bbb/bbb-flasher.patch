@@ -1,7 +1,7 @@
-diff -ru a/usr/sbin/init-beagle-flasher b/usr/sbin/init-beagle-flasher
---- a/usr/sbin/init-beagle-flasher	2023-02-22 15:12:47.646992674 +0100
-+++ b/usr/sbin/init-beagle-flasher	2023-02-22 14:54:28.920366351 +0100
-@@ -375,6 +375,11 @@
+diff -ur a/usr/sbin/init-beagle-flasher b/usr/sbin/init-beagle-flasher
+--- a/usr/sbin/init-beagle-flasher	2025-03-14 13:07:52.144000897 +0000
++++ b/usr/sbin/init-beagle-flasher	2025-03-14 13:23:47.968001011 +0000
+@@ -371,6 +371,11 @@
  		reset_leds
  	fi
  
@@ -13,7 +13,18 @@ diff -ru a/usr/sbin/init-beagle-flasher b/usr/sbin/init-beagle-flasher
  	unset are_we_flasher
  	are_we_flasher=$(grep init-beagle-flasher /proc/cmdline || true)
  	if [ ! "x${are_we_flasher}" = "x" ] ; then
-@@ -494,4 +499,17 @@
+@@ -393,8 +398,8 @@
+ 			message="--------------------------------------------------------------------------------" ; broadcast
+ 			#For sync
+ 			echo s > /proc/sysrq-trigger
+-			#For shutdown the system
+-			echo o > /proc/sysrq-trigger
++			#Reboot the system
++			echo b > /proc/sysrq-trigger
+ 		fi
+ 
+ 		message="4"                                                                                ; broadcast
+@@ -519,4 +524,17 @@
  fi
  
  check_running_system
@@ -31,22 +42,3 @@ diff -ru a/usr/sbin/init-beagle-flasher b/usr/sbin/init-beagle-flasher
 +mount -o remount,ro /
 +
  partition_drive
-diff -ru a/usr/sbin/init-shutdown-beagle-flasher b/usr/sbin/init-shutdown-beagle-flasher
---- a/usr/sbin/init-shutdown-beagle-flasher	2023-02-21 13:37:06.226439584 +0100
-+++ b/usr/sbin/init-shutdown-beagle-flasher	2023-02-21 13:36:12.477490572 +0100
-@@ -5,13 +5,13 @@
- unset are_we_flasher
- are_we_flasher=$(grep init-beagle-flasher-test /proc/cmdline || true)
- if [ ! "x${are_we_flasher}" = "x" ] ; then
--	systemctl poweroff || halt
-+	systemctl reboot || reboot
- 	exit
- fi
- 
- unset are_we_flasher
- are_we_flasher=$(grep init-beagle-flasher /proc/cmdline || true)
- if [ ! "x${are_we_flasher}" = "x" ] ; then
--	systemctl poweroff || halt
-+	systemctl reboot || reboot
- 	exit
- fi

@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: honeysens
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (a9d05d509)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: web
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: web
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.1 (a9d05d509)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/honeysens: "true"
+        io.kompose.service: web
+    spec:
+      containers:
+        - env:
+            - name: ACCESS_LOG
+              value: "false"
+            - name: API_LOG
+              value: "false"
+            - name: DOMAIN
+              value: "server"
+            - name: HS_DB_PASSWORD
+              value: "honeysens"
+            - name: HS_DB_ROOT_PASSWORD
+              value: "secret"
+            - name: PLAIN_HTTP_API
+              value: "false"
+            - name: TLS_FORCE_12
+              value: "false"
+          image: localhost:5000/honeysens/web:2.9.0
+          name: web
+          #command: ["/bin/bash", "-c", "sleep infinity"]
+          ports:
+            #- containerPort: 80
+            - containerPort: 8443
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
+          volumeMounts:
+            - mountPath: /opt/HoneySens/data
+              name: honeysens-data
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: true
+      volumes:
+        - name: honeysens-data
+          persistentVolumeClaim:
+            claimName: honeysens-data
+status: {}

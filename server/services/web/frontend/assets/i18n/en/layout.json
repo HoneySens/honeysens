@@ -1,0 +1,15 @@
+{
+  "login": "Login",
+  "logout": "Logout",
+  "loginSuccess": "Login successful!",
+  "loginFailed": "Invalid credentials!",
+  "loginUserPlaceholder": "User",
+  "loginPasswordPlaceholder": "Password",
+  "updateHeader": "User interface",
+  "updateInSeconds": "Update in {{- count}} seconds",
+  "toggleNav": "Toggle navigation",
+  "connectionLost": "The connection to the server has been lost, the application will be reloaded.",
+  "langSwitcherHeader": "Language",
+  "langEnglish": "English",
+  "langGerman": "German"
+}
