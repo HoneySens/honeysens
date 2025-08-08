@@ -274,12 +274,13 @@ def register_registry_cert(config, server_response, reset_network):
     # Make registry certificate available for the docker client
     docker_config_dir = '/etc/docker/certs.d'
     server_cert_dir = '{}/{}:{}'.format(docker_config_dir, _config.get('server', 'name'), _config.get('server', 'port_https'))
-    server_cert_path = '{}/ca.crt'.format(server_cert_dir)
-    if not os.path.isfile(server_cert_path):
+    server_cert_dst_path = '{}/ca.crt'.format(server_cert_dir)
+    server_cert_src_path = '{}/{}'.format(_config_dir, _config.get('server', 'certfile'))
+    if os.path.isfile(server_cert_src_path) and not os.path.isfile(server_cert_dst_path):
         if not os.path.isdir(server_cert_dir):
             _logger.info('Creating {}'.format(server_cert_dir))
             os.makedirs(server_cert_dir)
-        shutil.copy('{}/{}'.format(_config_dir, _config.get('server', 'certfile')), server_cert_path)
+        shutil.copy(server_cert_src_path, server_cert_dst_path)
 
 
 def enable_docker(config, server_response, reset_network):

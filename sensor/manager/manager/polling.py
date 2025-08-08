@@ -90,6 +90,9 @@ def get_certificate_fp(path):
 def collect_data():
     # Collect certificate fingerprints
     server_crt_fp = get_certificate_fp('{}/{}'.format(_config_dir, _config.get('server', 'certfile')))
+    if server_crt_fp is None:
+        # We're missing the server cert. Send an invalid hash value to force the server to send us our cert.
+        server_crt_fp = 'invalid'
     eapol_ca_cert_fp = get_certificate_fp('{}/{}'.format(_config_dir, _config.get('eapol', 'ca_cert')))
     eapol_client_cert_fp = get_certificate_fp('{}/{}'.format(_config_dir, _config.get('eapol', 'client_cert')))
     # Sensor status

@@ -3,6 +3,7 @@ import hashlib
 import hmac
 from io import BytesIO
 import json
+import os
 import pycurl
 import time
 
@@ -72,8 +73,12 @@ def perform_https_request(config, config_dir, path, request_type, verify=True, p
     else:
         c.setopt(pycurl.WRITEDATA, content)
 
+    # Set a custom CA cert in case the config provides one
+    server_cert_path = '{}/{}'.format(config_dir, config.get('server', 'certfile'))
+    if os.path.isfile(server_cert_path) and os.path.getsize(server_cert_path) > 0:
+        c.setopt(pycurl.CAINFO, server_cert_path)
+
     c.setopt(pycurl.URL, 'https://{}:{}/{}'.format(config.get('server', 'name'), config.get('server', 'port_https'), path))
-    c.setopt(pycurl.CAINFO, '{}/{}'.format(config_dir, config.get('server', 'certfile')))
     c.setopt(pycurl.HEADERFUNCTION, parse_headers)
     c.perform()
 
