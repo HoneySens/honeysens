@@ -29,6 +29,8 @@ LED_GPIO_LOW = 'low'
 LED_CONTROLLER_INTERVAL = 1.0  # LED worker timing (in seconds)
 LED_TRANSIENT_DURATION = 6 # Number of cycles (of length LED_CONTROLLER_INTERVAL) the transient mode should last
 
+MAX_TIME_DIFF = 3  # Maximum tolerated time difference between sensor and server in seconds
+
 DHCP_CONFIG_FILE = '/etc/dhcp/dhclient.conf'
 EAPOL_CONFIG_DIR = '/etc/wpa_supplicant'
 EAPOL_CONFIG_FILE = 'eapol.conf'
@@ -159,9 +161,15 @@ class Platform(GenericPlatform):
         if 'date' not in r['headers']:
             return
         req_time = r['headers']['date']
-        t = time.localtime(time.mktime(time.strptime(req_time, '%a, %d %b %Y %H:%M:%S %Z')) - time.timezone)
+        timestamp_from_server = time.mktime(time.strptime(req_time, '%a, %d %b %Y %H:%M:%S %Z')) - time.timezone
+        timestamp_local = time.time()
+        if abs(timestamp_from_server - timestamp_local) <= MAX_TIME_DIFF:
+            # Tolerate a diff of a few seconds between sensor and server to prevent unnecessary clock updates
+            return
+        timestamp_target = time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(timestamp_from_server))
+        self.logger.info(f'Setting system time to {timestamp_target}')
         with open(os.devnull, 'w') as devnull:
-            subprocess.call(['date', '-s', time.strftime('%Y/%m/%d %H:%M:%S', t)], stdout=devnull)
+            subprocess.call(['date', '-s', timestamp_target], stdout=devnull)
 
     def update(self, config, server_response, reset_network):
         # Don't update if an update is already running
