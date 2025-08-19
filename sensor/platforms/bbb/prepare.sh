@@ -48,6 +48,10 @@ systemctl disable bbbio-set-sysconf
 
 # Disable unattended-upgrades
 sed -i -e 's/APT::Periodic::Update-Package-Lists "1";/APT::Periodic::Update-Package-Lists "0";/g' -e 's/APT::Periodic::Unattended-Upgrade "1";/APT::Periodic::Unattended-Upgrade "0";/g' /etc/apt/apt.conf.d/20auto-upgrades
+systemctl disable apt-daily.timer
+systemctl disable apt-daily.service
+systemctl disable apt-daily-upgrade.timer
+systemctl disable apt-daily-upgrade.service
 
 # Regenerate /etc/resolv.conf
 rm -v /etc/resolv.conf
