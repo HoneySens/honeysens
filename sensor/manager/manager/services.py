@@ -1,4 +1,5 @@
 import docker
+import hashlib
 import json
 import logging
 import netifaces
@@ -274,12 +275,23 @@ def register_registry_cert(config, server_response, reset_network):
     # Make registry certificate available for the docker client
     docker_config_dir = '/etc/docker/certs.d'
     server_cert_dir = '{}/{}:{}'.format(docker_config_dir, _config.get('server', 'name'), _config.get('server', 'port_https'))
-    server_cert_dst_path = '{}/ca.crt'.format(server_cert_dir)
     server_cert_src_path = '{}/{}'.format(_config_dir, _config.get('server', 'certfile'))
-    if os.path.isfile(server_cert_src_path) and not os.path.isfile(server_cert_dst_path):
+    server_cert_src_hash = None
+    if os.path.isfile(server_cert_src_path):
+        with open(server_cert_src_path, "rb") as f:
+            h = hashlib.sha256(f.read())
+            server_cert_src_hash = h.hexdigest()
+    server_cert_dst_path = '{}/ca.crt'.format(server_cert_dir)
+    server_cert_dst_hash = None
+    if os.path.isfile(server_cert_dst_path):
+        with open(server_cert_dst_path, "rb") as f:
+            h = hashlib.sha256(f.read())
+            server_cert_dst_hash = h.hexdigest()
+    if server_cert_src_hash is not None and server_cert_src_hash != server_cert_dst_hash:
         if not os.path.isdir(server_cert_dir):
             _logger.info('Creating {}'.format(server_cert_dir))
             os.makedirs(server_cert_dir)
+        _logger.info('Refreshing docker registry CA certificate at {}'.format(server_cert_dst_path))
         shutil.copy(server_cert_src_path, server_cert_dst_path)
 
 
