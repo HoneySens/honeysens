@@ -4,6 +4,7 @@ cleanup() {
   echo "Cleaning up"
   umount ${MOUNT_PATH} 2>/dev/null
   rmdir -v ${MOUNT_PATH}
+  test ${RESULT_STATUS} -eq 0 && /opt/manager/venv/bin/manager-cli -n orange
   exit 0
 }
 
@@ -19,6 +20,7 @@ fi
 
 MOUNT_PATH=/mnt/${1}
 OUT_DIR=${MOUNT_PATH}/sensor-$(date "+%F.%H-%m")
+RESULT_STATUS=1
 
 # Attempt to unmount previous artifacts
 umount ${MOUNT_PATH} 2>/dev/null
@@ -34,7 +36,7 @@ echo "Mounting successful, attempting to write log data"
 if [[ -w ${MOUNT_PATH} ]]; then
   mkdir -p ${OUT_DIR}
   journalctl --no-pager >${OUT_DIR}/system.log
-  /opt/manager/venv/bin/manager-cli -n orange
+  RESULT_STATUS=0
 else
   echo "${MOUNT_PATH} is not writable"
 fi
