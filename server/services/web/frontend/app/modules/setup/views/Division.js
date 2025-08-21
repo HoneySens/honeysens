@@ -8,7 +8,6 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
             'click button:submit': function(e) {
                 e.preventDefault();
                 this.$el.find('form').trigger('submit');
-                this.$el.find('button').prop('disabled', true).text('...');
             }
         },
         onRender: function() {
@@ -17,6 +16,8 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
             this.$el.find('form').validator().on('submit', function (e) {
                 if (!e.isDefaultPrevented()) {
                     e.preventDefault();
+                    view.$el.find('button').prop('disabled', true).text('...');
+                    view.$el.find('input').prop('disabled', true);
 
                     var divisionName = view.$el.find('input[name="divisionName"]').val();
                     view.model.set({divisionName: divisionName});
