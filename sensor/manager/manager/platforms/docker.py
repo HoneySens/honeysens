@@ -89,8 +89,8 @@ class Platform(GenericPlatform):
                               '-f', '{{.HostConfig.NetworkMode}}'],
                              stdout=subprocess.PIPE)
         out, err = p.communicate()
-        network_mode = out.strip()
-        self.logger.info('Network mode: {}'.format(network_mode))
+        network_mode = out.strip().decode('utf-8')
+        self.logger.info('Docker network mode: {}'.format(network_mode))
 
     def update_resolv_conf(self, config, server_response, reset_network):
         # DNS is provided via go-dnsmasq, but dockerd does its own DNS resolution by interpreting 'domain'

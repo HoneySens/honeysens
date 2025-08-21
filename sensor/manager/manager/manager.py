@@ -3,6 +3,7 @@
 import argparse
 import coloredlogs
 import configparser
+import importlib.metadata
 import logging
 import netifaces
 import os
@@ -50,15 +51,16 @@ class Manager:
         self.config_archive = config_archive
         self.dev_mode = dev_mode
         self.init_logging(log_lvl)
+        self.logger.info('HoneySens Sensor Manager {}'.format(importlib.metadata.version('honeysens-manager')))
+        self.logger.info('Log level: {}'.format(log_lvl))
         self.init_config()
         self.init_interface(interface)
-        self.platform = platform  # Temporarily save the name of the requested platform here, after start() the instance
+        self.platform_type = platform  # The type of the requested platform
+        self.platform = None  # Platform instance, populated after start() has been called
 
     def init_logging(self, log_lvl):
         self.logger = logging.getLogger(__name__)
         coloredlogs.install(level=log_lvl.upper(), fmt='%(asctime)s [%(name)s] %(levelname)s %(message)s')
-        self.logger.info('Starting up...')
-        self.logger.info('Log level: {}'.format(log_lvl))
 
     def init_config(self):
         if not os.path.isfile(self.config_archive):
@@ -94,15 +96,25 @@ class Manager:
         self.logger.info('Sensor interface {} found'.format(self.interface))
 
     def init_platform(self):
-        if self.platform == 'bbb':
+        if self.platform_type == 'bbb':
             self.platform = bbb.Platform(hooks, self.interface, self.config_dir, self.config_archive)
-        elif self.platform == 'docker':
+        elif self.platform_type == 'docker':
             self.platform = docker.Platform(hooks, self.interface, self.config_dir, self.config_archive)
         else:
             self.platform = dummy.Platform(hooks, self.interface, self.config_dir, self.config_archive)
+        self.logger.info('Platform: {}@{}, Revision {}'.format(self.platform_type,
+                                                                 self.platform.get_architecture(),
+                                                                 self.platform.get_current_revision()))
 
     def start(self):
         self.init_platform()
+        self.logger.info('Sensor ID: {}'.format(self.config.get('general', 'sensor_id')))
+        self.logger.info('Hostname: {}'.format(self.config.get('general', 'hostname')))
+        self.logger.info('Server: {} / {} (Port {})'.format(
+            self.config.get('server', 'host'),
+            self.config.get('server', 'name'),
+            self.config.get('server', 'port_https')
+        ))
         services.init(self.config_dir, self.config, hooks, self.platform, self.interface)
         hooks.execute_hook(constants.Hooks.ON_INIT)
         # Apply initial configuration
