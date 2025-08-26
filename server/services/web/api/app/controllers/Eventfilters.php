@@ -5,7 +5,6 @@ use HoneySens\app\models\constants\EventFilterConditionField;
 use HoneySens\app\models\constants\EventFilterConditionType;
 use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\services\EventFiltersService;
-use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Validator as V;
