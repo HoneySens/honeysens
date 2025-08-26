@@ -1,5 +1,5 @@
 PREFIX := HoneySens-Firmware-dockerx86
-REVISION := 2.9.0
+REVISION := 2.9.1
 METADATA := metadata.xml
 
 dist: build/dist/${PREFIX}-${REVISION}.tar.gz

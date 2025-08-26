@@ -6,6 +6,10 @@
   <description>Debian-based firmware that runs dockerized services</description>
   <changelog>
     <entry>
+      <version>2.9.1</version>
+      <desc>Improved certificate management and enhanced logging capabilities</desc>
+    </entry>
+    <entry>
       <version>2.9.0</version>
       <desc>Base system updated</desc>
     </entry>
