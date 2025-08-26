@@ -36,6 +36,7 @@ echo "Mounting successful, attempting to write log data"
 if [[ -w ${MOUNT_PATH} ]]; then
   mkdir -p ${OUT_DIR}
   journalctl --no-pager >${OUT_DIR}/system.log
+  /opt/manager/venv/bin/manager-cli >${OUT_DIR}/status.txt
   RESULT_STATUS=0
 else
   echo "${MOUNT_PATH} is not writable"
