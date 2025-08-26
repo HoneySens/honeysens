@@ -21,6 +21,9 @@ class GenericPlatform(object):
         self.logger = logging.getLogger(__name__)
         self.config_dir = config_dir
 
+    def get_type(self):
+        return None
+
     def get_architecture(self):
         return None
 

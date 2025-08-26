@@ -1,6 +1,11 @@
+import datetime
+import importlib.metadata
 import logging
+import pprint
 import zmq
 
+from . import polling
+from . import services
 from .platforms import bbb
 from .utils import constants
 
@@ -10,6 +15,7 @@ STATUS_ERROR = 1
 
 class CommandProcessor():
 
+    config = None
     ev_stop = False
     logger = None
     manager = None
@@ -44,7 +50,7 @@ class CommandProcessor():
                     continue
 
                 if msg['cmd'] == 'status':
-                    args = 'HoneySens Sensor Manager is ready'
+                    args = self.get_status()
                     status = STATUS_OK
                 elif msg['cmd'] == 'log_level':
                     if 'level' in msg and msg['level'] in ['debug', 'info', 'warning']:
@@ -79,3 +85,40 @@ class CommandProcessor():
 
     def stop(self):
         self.ev_stop = True
+
+    def interface_config_to_string(self):
+        cfg = self.manager.config
+        interface = self.manager.interface
+        network_mode = cfg.getint('network', 'mode')
+        if network_mode == constants.NetworkIPMode.DHCP:
+            return f'{interface} - DHCP'
+        elif network_mode == constants.NetworkIPMode.STATIC:
+            result = f'{interface} - Static ({cfg.get("network", "address")}/{cfg.get("network", "netmask")}'
+            if cfg.get('network', 'gateway') is not None:
+                result += f', GW {cfg.get("network", "gateway")}'
+            if cfg.get('network', 'dns') is not None:
+                result += f', DNS {cfg.get("network", "dns")}'
+        else:
+            return f'{interface} - Unconfigured'
+
+    def get_status(self):
+        # Returns the current sensor status as a human-readable string
+        cfg = self.manager.config
+        time_format = '%Y-%m-%d %H:%M:%S'
+        last_successful_poll = 'Never' if polling._last_successful_poll is None else datetime.datetime.fromtimestamp(polling._last_successful_poll).strftime(time_format)
+        return f'''--- Sensor status ---
+Sensor manager: {importlib.metadata.version('honeysens-manager')}
+Platform: {self.manager.platform.get_type()}@{self.manager.platform.get_architecture()}, Revision {self.manager.platform.get_current_revision()}
+Sensor ID: {cfg.get('general', 'sensor_id')}
+Hostname: {cfg.get('general', 'hostname')}
+Server: {cfg.get('server', 'host')} / {cfg.get('server', 'name')} (Port {cfg.get('server', 'port_https')})
+Network config: {self.interface_config_to_string()}
+Polling interval: {cfg.get('server', 'interval')} minutes
+
+System time: {datetime.datetime.now().strftime(time_format)}
+Last successful poll: {last_successful_poll}
+System update running: {self.manager.platform.is_firmware_update_in_progress()}
+Service update running: {self.manager.platform.is_service_update_in_progress()}
+Queued events: {len(self.manager.event_processor.events)}
+Services:\n{pprint.pformat(services._services)}
+'''

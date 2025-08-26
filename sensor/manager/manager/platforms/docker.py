@@ -45,6 +45,9 @@ class Platform(GenericPlatform):
     def get_architecture(self):
         return 'amd64'
 
+    def get_type(self):
+        return 'Docker'
+
     # Enables the docker daemon (if it's not already running) or forces a restart of dockerd
     def enable_docker(self, force_restart):
         if force_restart:

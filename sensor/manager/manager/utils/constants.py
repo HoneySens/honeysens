@@ -27,3 +27,9 @@ class ServiceStatus:
     RUNNING = 0
     SCHEDULED = 1
     ERROR = 2
+
+
+class NetworkIPMode:
+    DHCP = 0
+    STATIC = 1
+    NONE = 2
