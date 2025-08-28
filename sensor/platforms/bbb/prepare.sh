@@ -26,6 +26,9 @@ python3 -m venv --system-site-packages /opt/manager/venv
 # Register sensor manager service
 ln -s /etc/systemd/system/manager.service /etc/systemd/system/multi-user.target.wants/manager.service
 
+# Expose sensor manager CLI
+ln -s /opt/manager/venv/bin/manager-cli /usr/local/bin/manager-cli
+
 # Disable IPv6
 echo "net.ipv6.conf.all.disable_ipv6 = 1" > /etc/sysctl.d/70-disable-ipv6.conf
 

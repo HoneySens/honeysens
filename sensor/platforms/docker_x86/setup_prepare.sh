@@ -19,5 +19,8 @@ touch /etc/network/interfaces
 mv /sbin/ifup /usr/local/bin/ifup
 mv /srv/ifup.sh /sbin/ifup
 
+# Expose sensor manager CLI
+ln -s /srv/manager/venv/bin/manager-cli /usr/local/bin/manager-cli
+
 # Set revision marker
 echo $1 > /revision
