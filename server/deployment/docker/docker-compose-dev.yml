@@ -19,7 +19,7 @@ services:
       - TLS_FORCE_12=false
     volumes:
       - vol_data:/srv/data
-      - ./services/web:/mnt
+      - ./services/web:/mnt:z
 
   database:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --log-error-verbosity=1 --mysql-native-password=ON
@@ -56,7 +56,7 @@ services:
       - server
     volumes:
       - vol_data:/srv/data
-      - ./services/tasks:/mnt
+      - ./services/tasks:/mnt:z
 
   registry:
     image: registry:2
