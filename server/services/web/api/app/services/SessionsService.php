@@ -102,6 +102,7 @@ class SessionsService extends Service {
                                 $_SESSION['user'] = $userState;
                                 $_SESSION['authenticated'] = true;
                                 $_SESSION['last_activity'] = time();
+                                $_SESSION['timeout'] = self::SESSION_TIMEOUT_DEFAULT;
                                 $this->logger->log(sprintf('Successful login by user %s (ID %d)', $user->name, $user->getId()), LogResource::SESSIONS, null, $user->getId());
                                 return $userState;
                             } else throw new ForbiddenException();
