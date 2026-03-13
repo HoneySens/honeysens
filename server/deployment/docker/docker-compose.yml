@@ -59,11 +59,13 @@ services:
       #- <path to server.key>:/srv/tls/server.key
 
   registry:
-    image: registry:2
+    image: registry:3
     restart: unless-stopped
     networks:
       - honeysens
     environment:
+      - OTEL_TRACES_EXPORTER=none
+      - REGISTRY_LOG_LEVEL=info
       - REGISTRY_STORAGE_DELETE_ENABLED=true
     user: "1000:1000"
     volumes:

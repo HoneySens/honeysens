@@ -59,10 +59,12 @@ services:
       - ./services/tasks:/mnt:z
 
   registry:
-    image: registry:2
+    image: registry:3
     networks:
       - server
     environment:
+      - OTEL_TRACES_EXPORTER=none
+      - REGISTRY_LOG_LEVEL=info
       - REGISTRY_STORAGE_DELETE_ENABLED=true
     user: "1000:1000"
     volumes:
