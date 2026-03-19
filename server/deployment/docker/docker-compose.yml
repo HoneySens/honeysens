@@ -17,7 +17,7 @@ services:
       - PLAIN_HTTP_API=false
       - TLS_FORCE_12=false
     volumes:
-      - honeysens_data:/opt/HoneySens/data
+      - honeysens_data:/opt/HoneySens/data:z
       #- <path to server.chain.crt>:/srv/tls/server.crt
       #- <path to server.key>:/srv/tls/server.key
 
@@ -34,7 +34,7 @@ services:
       - honeysens
     user: "999:999"
     volumes:
-      - honeysens_db:/var/lib/mysql
+      - honeysens_db:/var/lib/mysql:Z
 
   broker:
     environment:
@@ -54,7 +54,7 @@ services:
     networks:
       - honeysens
     volumes:
-      - honeysens_data:/srv/data
+      - honeysens_data:/srv/data:z
       #- <path to server.chain.crt>:/srv/tls/server.crt
       #- <path to server.key>:/srv/tls/server.key
 
@@ -69,7 +69,7 @@ services:
       - REGISTRY_STORAGE_DELETE_ENABLED=true
     user: "1000:1000"
     volumes:
-      - honeysens_registry:/var/lib/registry
+      - honeysens_registry:/var/lib/registry:z
 
   backup:
     image: honeysens/backup:$REVISION
@@ -84,9 +84,9 @@ services:
     networks:
       - honeysens
     volumes:
-      - honeysens_backup:/srv/backup
-      - honeysens_data:/srv/data
-      - honeysens_registry:/srv/registry
+      - honeysens_backup:/srv/backup:Z
+      - honeysens_data:/srv/data:z
+      - honeysens_registry:/srv/registry:z
 
 volumes:
   honeysens_backup:
