@@ -42,7 +42,7 @@ spec:
               value: "false"
             - name: TLS_FORCE_12
               value: "false"
-          image: localhost:5000/honeysens/web:2.9.0
+          image: localhost:5000/honeysens/web:2.9.1
           name: web
           #command: ["/bin/bash", "-c", "sleep infinity"]
           ports:

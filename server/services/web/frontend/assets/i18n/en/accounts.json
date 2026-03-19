@@ -23,7 +23,7 @@
   "userFullNamePlaceholder": "Name or description",
   "userNotificationsHeader": "Notifications",
   "userNotificationsDesc": "Activating options in this section will result in e-mails being sent automatically. For this to work, a valid e-mail address must be provided for this user and the sending of e-mails must be activated globally.",
-  "userNotificationsSystem": "Receive system messages (e.g. in situatons of high system utilization or imminent expiry of CA certificates) ",
+  "userNotificationsSystem": "Receive system messages (e.g. in situations of high system utilization or imminent expiry of CA certificates) ",
   "userDivisionsNone": "This user doesn't currently belong to any groups. To add it to existing groups, switch to the group management.",
   "userDivisionsHeader": "This user currently belongs to the following groups:",
   "userDivisionsInfo": "The group membership can be modified by editing the respective groups.",

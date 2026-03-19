@@ -12,6 +12,8 @@
   "infoDocumentationWebsite": "Website",
   "infoDocumentationDetails": "Up-to-date documentation on design goals, architecture, setup procedure and operation.",
   "infoServerNotesHeader": "Release Notes: Server",
+  "infoServerNotes291p1": "Fixed LDAP authentication and minor frontend issues",
+  "infoServerNotes291p2": "Third-party dependencies updated",
   "infoServerNotes290p1": "Users can now choose between English (default) and German as frontend language",
   "infoServerNotes290p2": "System overview panel added to frontend",
   "infoServerNotes290p3": "Fixed various frontend bugs",

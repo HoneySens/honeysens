@@ -4,7 +4,7 @@
         <dt><%= _.t("info:infoPlatform") %></dt>
         <dd>HoneySens Server</dd>
         <dt><%= _.t("info:infoRevision") %></dt>
-        <dd>2.9.0</dd>
+        <dd>2.9.1</dd>
         <dt><%= _.t("info:infoBuild") %></dt>
         <dd><%- showBuildID() %></dd>
         <dt><%= _.t("info:infoLicense") %></dt>
@@ -39,6 +39,14 @@
             </div>
             <div id="releasenotesServer" class="panel-collapse collapse">
                 <div class="panel-body">
+                    <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong><%= _.t("info:revision") %> 2.9.1</strong> - <%= _.t("march") %> 2026<br/>
+                    <p>
+                    <ul>
+                        <li><%= _.t("info:infoServerNotes291p1") %></li>
+                        <li><%= _.t("info:infoServerNotes291p2") %></li>
+                    </ul>
+                    </p>
+                    <hr />
                     <span class="glyphicon glyphicon-record"></span>&nbsp;&nbsp;<strong><%= _.t("info:revision") %> 2.9.0</strong> - <%= _.t("march") %> 2025<br/>
                     <p>
                     <ul>
