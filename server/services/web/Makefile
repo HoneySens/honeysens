@@ -13,7 +13,7 @@ build/dist/web-${REVISION}.tar: | api/build/vendor frontend/build/dist DIR.build
 api/build/vendor frontend/build/dist:
 	mkdir -p api/build/vendor frontend/build/dist
 	docker build --no-cache -t honeysens/web-builder:${REVISION} -f Dockerfile.dev .
-	docker run -v $(shell pwd):/mnt -e BUILD_ONLY=1 --rm honeysens/web-builder:${REVISION} || true
+	docker run -v $(shell pwd):/mnt:z -e BUILD_ONLY=1 --rm honeysens/web-builder:${REVISION} || true
 	docker rmi honeysens/web-builder:${REVISION}
 
 DIR.build/%:

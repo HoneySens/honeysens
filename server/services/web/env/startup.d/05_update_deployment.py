@@ -182,6 +182,11 @@ if config_version == '2.8.0':
     db.commit()
     config.set('server', 'config_version', '2.9.0')
     config_version = '2.9.0'
+# 2.9.0 -> 2.9.1
+if config_version == '2.9.0':
+    print('Upgrading configuration 2.9.0 -> 2.9.1')
+    config.set('server', 'config_version', '2.9.1')
+    config_version = '2.9.1'
 
 # Write new config file
 with open(config_file, 'w') as f:

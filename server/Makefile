@@ -1,6 +1,6 @@
 PREFIX := HoneySens-Server
 BUILD_ID := $(shell date +%Y%m%d)
-REVISION := 2.9.0-${BUILD_ID}
+REVISION := 2.9.1-${BUILD_ID}
 
 # Additional dev environment features
 DEV_ENV_LDAP := no
