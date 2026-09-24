@@ -1,24 +1,25 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import DivisionsItemViewTpl from 'app/modules/accounts/templates/DivisionsItemView.tpl';
 
 HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.DivisionsItemView = Marionette.ItemView.extend({
+    Views.DivisionsItemView = Marionette.View.extend({
         template: _.template(DivisionsItemViewTpl),
         tagName: 'tr',
         events: {
             'click button.remove': function(e) {
                 e.preventDefault();
-                HoneySens.request('accounts:division:remove', this.model);
+                radio.request('accounts:division:remove', this.model);
             },
             'click button.edit': function(e) {
                 e.preventDefault();
-                HoneySens.request('accounts:division:edit', this.model, {animation: 'slideLeft'});
+                radio.request('accounts:division:edit', this.model, {animation: 'slideLeft'});
             }
         },
         onRender: function() {
             this.$el.find('button').tooltip();
         },
-        templateHelpers: {
+        templateContext: {
             getUserCount: function() {
                 return this.users.length;
             },

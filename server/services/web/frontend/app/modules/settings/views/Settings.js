@@ -12,7 +12,7 @@ import EventForwardingView from 'app/modules/settings/views/EventForwarding';
 import SettingsTpl from 'app/modules/settings/templates/Settings.tpl';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Settings = Marionette.LayoutView.extend({
+    Views.Settings = Marionette.View.extend({
         template: _.template(SettingsTpl),
         className: 'col-sm-12',
         regions: {
@@ -30,15 +30,15 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
         events: {
             'click div.ldapSettings button.toggle': function(e) {
                 e.preventDefault();
-                this.handleStatusButton($(e.target), this.$el.find(this.regions.ldap), 'ldapEnabled', this.ldap.currentView);
+                this.handleStatusButton($(e.target), this.$el.find(this.regions.ldap), 'ldapEnabled', this.getRegion('ldap').currentView);
             },
             'click div.smtpSettings button.toggle': function(e) {
                 e.preventDefault();
-                this.handleStatusButton($(e.target), this.$el.find(this.regions.smtp), 'smtpEnabled', this.smtp.currentView);
+                this.handleStatusButton($(e.target), this.$el.find(this.regions.smtp), 'smtpEnabled', this.getRegion('smtp').currentView);
             },
             'click div.evforwardSettings button.toggle': function(e) {
                 e.preventDefault();
-                this.handleStatusButton($(e.target), this.$el.find(this.regions.evforward), 'syslogEnabled', this.evforward.currentView);
+                this.handleStatusButton($(e.target), this.$el.find(this.regions.evforward), 'syslogEnabled', this.getRegion('evforward').currentView);
             },
             'show.bs.collapse #settings-smtp-templates': function(e) {
                 this.templates.fetch();

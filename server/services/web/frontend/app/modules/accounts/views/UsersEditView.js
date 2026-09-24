@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import ModalServerError from 'app/common/views/ModalServerError';
@@ -15,7 +16,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         events: {
             'click button.cancel': function(e) {
                 e.preventDefault();
-                HoneySens.request('accounts:show', {animation: 'slideRight'});
+                radio.request('accounts:show', {animation: 'slideRight'});
             },
             'click button.save': function(e) {
                 e.preventDefault();
@@ -65,13 +66,13 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
                             data: JSON.stringify(modelData),
                             contentType: 'application/json',
                             error: function(xhr) {
-                                HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
+                                radio.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
                                 view.$el.find('button').prop('disabled', false);
                             },
                             success: function() {
                                 HoneySens.data.models.users.fetch({ reset: true, success: function() {
-                                    if(model.id == HoneySens.data.session.user.id) HoneySens.execute('logout');
-                                    HoneySens.request('accounts:show', {animation: 'slideRight'});
+                                    if(model.id == HoneySens.data.session.user.id) radio.request('logout');
+                                    radio.request('accounts:show', {animation: 'slideRight'});
                                 }});
                             }
                         });
@@ -83,14 +84,14 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
                             data: JSON.stringify(modelData),
                             contentType: "application/json",
                             error: function(xhr) {
-                                HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
+                                radio.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
                                 view.$el.find('button').prop('disabled', false);
                             },
                             success: function(data) {
                                 data = JSON.parse(data);
                                 model.id = data.id;
                                 HoneySens.data.models.users.fetch({ reset: true, success: function() {
-                                        HoneySens.request('accounts:show', {animation: 'slideRight'});
+                                        radio.request('accounts:show', {animation: 'slideRight'});
                                 }});
                             }
                         });
@@ -98,7 +99,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
                 }
             });
         },
-        templateHelpers: {
+        templateContext: {
             isEdit: function() {
                 return typeof this.id !== 'undefined';
             },

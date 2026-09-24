@@ -2,10 +2,10 @@ import HoneySens from 'app/app';
 import ModalSensorStatusItemTpl from 'app/modules/sensors/templates/ModalSensorStatusItem.tpl';
 
 HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalSensorStatusItem = Marionette.ItemView.extend({
+    Views.ModalSensorStatusItem = Marionette.View.extend({
         template: _.template(ModalSensorStatusItemTpl),
         tagName: 'tr',
-        templateHelpers: {
+        templateContext: {
             showTimestamp: function() {
                 var ts = this.timestamp;
                 return ('0' + ts.getDate()).slice(-2) + '.' + ('0' + (ts.getMonth() + 1)).slice(-2) + '.' +

@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Backgrid from 'backgrid';
 import FilterListTpl from 'app/modules/events/templates/FilterList.tpl';
@@ -7,7 +8,7 @@ import 'app/views/common';
 import 'backgrid-select-filter';
 
 HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.FilterList = Marionette.LayoutView.extend({
+    Views.FilterList = Marionette.View.extend({
         template: _.template(FilterListTpl),
         className: 'row',
         regions: {
@@ -17,7 +18,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         events: {
             'click button.add': function(e) {
                 e.preventDefault();
-                HoneySens.request('events:filters:add');
+                radio.request('events:filters:add');
             }
         },
         onRender: function() {
@@ -76,15 +77,15 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     events: {
                         'click button.toggle': function(e) {
                             e.preventDefault();
-                            HoneySens.request('events:filters:toggle', this.model);
+                            radio.request('events:filters:toggle', this.model);
                         },
                         'click button.edit': function(e) {
                             e.preventDefault();
-                            HoneySens.request('events:filters:edit', this.model);
+                            radio.request('events:filters:edit', this.model);
                         },
                         'click button.remove': function(e) {
                             e.preventDefault();
-                            HoneySens.request('events:filters:remove', this.model);
+                            radio.request('events:filters:remove', this.model);
                         }
                     },
                     initialize: function(options) {
@@ -105,7 +106,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 collection: this.collection,
                 className: 'table table-striped'
             });
-            this.list.show(grid);
+            this.getRegion('list').show(grid);
             grid.sort('id', 'descending');
             // Division Filter
             var divisions = _.union([{label: _.t('allDivisions'), value: null}],
@@ -119,9 +120,9 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 field: 'division',
                 selectOptions: divisions
             });
-            this.groupFilter.show(this.groupFilterView);
+            this.getRegion('groupFilter').show(this.groupFilterView);
         },
-        templateHelpers: {
+        templateContext: {
             hasDivision: function() {
                 // checks whether there is at least one division available
                 return HoneySens.data.models.divisions.length > 0;

@@ -1,9 +1,10 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
-import Routing from 'app/routing';
+import createRoutingModule from 'app/routing';
 import LayoutView from 'app/modules/settings/views/Layout';
 import Overview from 'app/modules/settings/views/Overview';
 
-var SettingsModule = Routing.extend({
+var SettingsModule = createRoutingModule({
     name: 'settings',
     startWithParent: false,
     rootView: null,
@@ -13,13 +14,13 @@ var SettingsModule = Routing.extend({
     start: function() {
         console.log('Starting module: settings');
         this.rootView = new LayoutView();
-        HoneySens.request('view:content').main.show(this.rootView);
+        radio.request('view:content').getRegion('main').show(this.rootView);
 
         // register command handlers
         var contentRegion = this.rootView.getRegion('content'),
             router = this.router;
 
-        HoneySens.reqres.setHandler('settings:show', function() {
+        radio.reply('settings:show', function() {
             if(!HoneySens.assureAllowed('settings', 'get')) return false;
             contentRegion.show(new Overview({model: HoneySens.data.settings}));
             router.navigate('settings');
@@ -27,12 +28,12 @@ var SettingsModule = Routing.extend({
     },
     stop: function() {
         console.log('Stopping module: settings');
-        HoneySens.reqres.removeHandler('settings:show');
+        radio.stopReplying('settings:show');
     },
     routesList: {
         'settings': 'showSettings'
     },
-    showSettings: function() {HoneySens.request('settings:show');}
+    showSettings: function() {radio.request('settings:show');}
 });
 
 export default HoneySens.module('Settings.Routing', SettingsModule);

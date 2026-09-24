@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import EventEditTpl from 'app/modules/events/templates/EventEdit.tpl';
@@ -5,7 +6,7 @@ import 'app/views/common';
 import 'validator';
 
 HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.EventEdit = Marionette.ItemView.extend({
+    Views.EventEdit = Marionette.View.extend({
         template: _.template(EventEditTpl),
         className: 'container-fluid',
         events: {
@@ -13,7 +14,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 this.refreshValidators(e.target.value);
             },
             'click button.cancel': function() {
-                HoneySens.request('view:content').overlay.empty();
+                radio.request('view:content').getRegion('overlay').empty();
             },
             'click button:submit': function(e) {
                 e.preventDefault();
@@ -52,7 +53,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             }
             this.refreshValidators(this.model.get('status'));
         },
-        templateHelpers: {
+        templateContext: {
             isMultiEdit: function() {
                 return typeof this.total !== 'undefined';
             },

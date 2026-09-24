@@ -1,5 +1,6 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
-import Routing from 'app/routing';
+import createRoutingModule from 'app/routing';
 import LayoutView from 'app/modules/setup/views/Layout';
 import ErrorView from 'app/modules/setup/views/Error';
 import LandingView from 'app/modules/setup/views/Landing';
@@ -9,7 +10,7 @@ import DivisionView from 'app/modules/setup/views/Division';
 import FinalizeInstallView from 'app/modules/setup/views/FinalizeInstall';
 import UserPasswordView from 'app/modules/setup/views/UserPassword';
 
-var SetupModule = Routing.extend({
+var SetupModule = createRoutingModule({
     name: 'setup',
     startWithParent: false,
     rootView: null,
@@ -17,17 +18,17 @@ var SetupModule = Routing.extend({
     start: function() {
         console.log('Starting module: setup');
         this.rootView = new LayoutView();
-        HoneySens.request('view:content-region').show(this.rootView);
+        radio.request('view:content-region').show(this.rootView);
 
         // register command handlers
         var contentRegion = this.rootView.getRegion('content'),
             router = this.router;
 
-        HoneySens.reqres.setHandler('setup:landing:show', function() {
+        radio.reply('setup:landing:show', function() {
             contentRegion.show(new LandingView({model: HoneySens.data.system}));
             router.navigate('setup');
         });
-        HoneySens.reqres.setHandler('setup:install:show', function(data) {
+        radio.reply('setup:install:show', function(data) {
             switch(parseInt(data.step)) {
                 case 1:
                     contentRegion.show(new AdminPasswordView({model: data.model}));
@@ -61,27 +62,27 @@ var SetupModule = Routing.extend({
                     break;
             }
         });
-        HoneySens.reqres.setHandler('setup:changepw:show', function() {
+        radio.reply('setup:changepw:show', function() {
             if(HoneySens.data.session.user.get('require_password_change')) {
                 contentRegion.show(new UserPasswordView());
                 router.navigate('setup/changepw');
-            } else HoneySens.execute('logout');
+            } else radio.request('logout');
         });
     },
     stop: function() {
         console.log('Stopping module: setup');
-        HoneySens.reqres.removeHandler('setup:landing:show');
-        HoneySens.reqres.removeHandler('setup:install:show');
-        HoneySens.reqres.removeHandler('setup:changepw:show');
+        radio.stopReplying('setup:landing:show');
+        radio.stopReplying('setup:install:show');
+        radio.stopReplying('setup:changepw:show');
     },
     routesList: {
         'setup': 'showLanding',
         'setup/install': 'showInstall',
         'setup/changepw': 'changeOwnPassword'
     },
-    showLanding: function() {HoneySens.request('setup:landing:show');},
-    showInstall: function() {HoneySens.request('setup:install:show', {step: 1, model: new Backbone.Model()})},
-    changeOwnPassword: function() {HoneySens.request('setup:changepw:show');}
+    showLanding: function() {radio.request('setup:landing:show');},
+    showInstall: function() {radio.request('setup:install:show', {step: 1, model: new Backbone.Model()})},
+    changeOwnPassword: function() {radio.request('setup:changepw:show');}
 });
 
 export default HoneySens.module('Setup.Routing', SetupModule);

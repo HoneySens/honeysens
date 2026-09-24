@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import FilterConditionListView from 'app/modules/events/views/FilterConditionList';
 import FilterEditTpl from 'app/modules/events/templates/FilterEdit.tpl';
 import 'validator';
 
 HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.FilterEdit = Marionette.LayoutView.extend({
+    Views.FilterEdit = Marionette.View.extend({
         template: _.template(FilterEditTpl),
         className: 'container-fluid',
         regions: {
@@ -13,7 +14,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         events: {
             'click button.cancel': function(e) {
                 e.preventDefault();
-                HoneySens.request('view:content').overlay.empty();
+                radio.request('view:content').getRegion('overlay').empty();
             },
             'click button.save': function(e) {
                 e.preventDefault();
@@ -37,7 +38,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     model.save({name: name, description: description, division: division, conditions: conditions},
                         {success: function() {
                             HoneySens.data.models.eventfilters.fetch();
-                            HoneySens.request('view:content').overlay.empty();
+                            radio.request('view:content').getRegion('overlay').empty();
                         }});
                 }
             }
@@ -57,7 +58,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             this.getRegion('conditions').show(new FilterConditionListView({collection: view.conditionCollection}));
             this.$el.find('textarea[name="description"]').val(this.model.get('description'));
         },
-        templateHelpers: {
+        templateContext: {
             isNew: function() {
                 return !this.hasOwnProperty('id');
             },
@@ -66,7 +67,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             }
         },
         serializeData: function() {
-            var data = Marionette.ItemView.prototype.serializeData.apply(this, arguments);
+            var data = Marionette.View.prototype.serializeData.apply(this, arguments);
             data.divisions = HoneySens.data.models.divisions.toJSON();
             return data;
         }

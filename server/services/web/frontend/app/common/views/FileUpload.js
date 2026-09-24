@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import FileUploadTpl from 'app/common/templates/FileUpload.tpl';
@@ -10,7 +11,7 @@ HoneySens.module('Common.Views', function(Views, HoneySens, Backbone, Marionette
         return Math.random().toString(36).substring(2);
     }
 
-    Views.FileUpload = Marionette.ItemView.extend({
+    Views.FileUpload = Marionette.View.extend({
         template: _.template(FileUploadTpl),
         className: 'container-fluid',
         uploadToken: generateToken(),
@@ -83,10 +84,10 @@ HoneySens.module('Common.Views', function(Views, HoneySens, Backbone, Marionette
                 if(this.model == null
                     || this.model.get('status') === Models.Task.status.SCHEDULED
                     || this.model.get('status') === Models.Task.status.RUNNING)
-                    HoneySens.request('view:content').overlay.empty();
+                    radio.request('view:content').getRegion('overlay').empty();
                 else this.model.destroy({
                     wait: true, success: function () {
-                        HoneySens.request('view:content').overlay.empty();
+                        radio.request('view:content').getRegion('overlay').empty();
                     }
                 });
             }
@@ -139,7 +140,7 @@ HoneySens.module('Common.Views', function(Views, HoneySens, Backbone, Marionette
         modelEvents: {
             change: 'render'
         },
-        templateHelpers: {
+        templateContext: {
             hasTask: function() {
                 return this.hasOwnProperty('id');
             },

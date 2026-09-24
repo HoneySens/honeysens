@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import ModalServerError from 'app/common/views/ModalServerError';
@@ -20,7 +21,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         events: {
             'click button.cancel': function(e) {
                 e.preventDefault();
-                HoneySens.request('accounts:show', {animation: 'slideRight'});
+                radio.request('accounts:show', {animation: 'slideRight'});
             },
             'click button.save': function(e) {
                 e.preventDefault();
@@ -44,12 +45,12 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
                     if(!model.id) HoneySens.data.models.divisions.add(model);
                     model.save({name: name, users: users, contacts: contacts.toJSON()}, {
                         error: function(model, xhr) {
-                            HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
+                            radio.request('view:modal').show(new ModalServerError({model: new Backbone.Model({xhr: xhr, errors: view.errors})}));
                             view.$el.find('button').prop('disabled', false);
                         },
                         success: function() {
-                            HoneySens.execute('fetchUpdates', false);
-                            HoneySens.request('accounts:show', {animation: 'slideRight'});
+                            radio.request('fetchUpdates', false);
+                            radio.request('accounts:show', {animation: 'slideRight'});
                         }});
                 }
 
@@ -62,7 +63,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
             if(this.model.id) {
                 this.contactCollection.reset(HoneySens.data.models.contacts.where({division: this.model.id}));
             }
-            HoneySens.reqres.setHandler('accounts:division:users', function() {
+            radio.reply('accounts:division:users', function() {
                 return view.userCollection;
             });
         },

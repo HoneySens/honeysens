@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalServerError from 'app/common/views/ModalServerError';
 import UserPasswordTpl from 'app/modules/setup/templates/UserPassword.tpl';
 import 'validator';
 
 HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.UserPassword = Marionette.ItemView.extend({
+    Views.UserPassword = Marionette.View.extend({
         template: _.template(UserPasswordTpl),
         errors: {
             2: _.t('setup:errorUserPasswordReuse')
@@ -16,7 +17,7 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
             },
             'click button.btn-default': function(e) {
                 e.preventDefault();
-                HoneySens.execute('logout');
+                radio.request('logout');
             }
         },
         onRender: function() {
@@ -34,19 +35,19 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
                         success: function() {
                             view.$el.find('button').prop('disabled', true);
                             setTimeout(() => {
-                                HoneySens.execute('logout');
+                                radio.request('logout');
                             }, 500);
                         },
                         error: function(xhr) {
                             var modal;
                             if(xhr.status === 403) {
                                 modal = {msg: _.t('setup:errorSessionExpired'), onClose: function() {
-                                    HoneySens.execute('logout');
+                                    radio.request('logout');
                                 }};
                             } else {
                                 modal = {xhr: xhr, errors: view.errors};
                             }
-                            HoneySens.request('view:modal').show(new ModalServerError({model: new Backbone.Model(modal)}));
+                            radio.request('view:modal').show(new ModalServerError({model: new Backbone.Model(modal)}));
                             view.$el.find('form').trigger('reset');
                         }
                     });

@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import ModalSMTPTemplatePreviewView from 'app/modules/settings/views/ModalSMTPTemplatePreview';
@@ -6,7 +7,7 @@ import SMTPTemplateDetailsTpl from 'app/modules/settings/templates/SMTPTemplateD
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
     // Inline views to render the template selector
-    var TemplateDropdownItem = Marionette.ItemView.extend({
+    var TemplateDropdownItem = Marionette.View.extend({
         template: _.template('<%- name %>'),
         tagName: 'option',
         onRender: function() {
@@ -19,12 +20,12 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
         childView: TemplateDropdownItem,
         events: {
             'change': function() {
-                HoneySens.request('settings:templates:show', this.$el.val());
+                radio.request('settings:templates:show', this.$el.val());
             }
         }
     });
 
-    var TemplateDetailsView = Marionette.ItemView.extend({
+    var TemplateDetailsView = Marionette.View.extend({
         template: _.template(SMTPTemplateDetailsTpl),
         tagName: 'form',
         events: {
@@ -42,7 +43,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                 _.each(this.model.get('preview'), function(content, variable) {
                     preview = preview.replace('{{' + variable + '}}', content);
                 });
-                HoneySens.request('view:modal').show(new ModalSMTPTemplatePreviewView({model: new Backbone.Model({preview: preview})}));
+                radio.request('view:modal').show(new ModalSMTPTemplatePreviewView({model: new Backbone.Model({preview: preview})}));
             },
             'submit': function(e) {
                 e.preventDefault();
@@ -52,7 +53,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                 if(hasOverlay || this.model.get('overlay') !== null) {
                     this.model.save({template: template}, {
                         success: function() {
-                            HoneySens.request('view:modal').show(new ModalSettingsSaveView());
+                            radio.request('view:modal').show(new ModalSettingsSaveView());
                         }
                     });
                 }
@@ -66,14 +67,14 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
             let activeTemplate = this.model.get('overlay') !== null ? this.model.get('overlay').template : this.model.get('template');
             this.$el.find('textarea[name="templateContent"]').val(activeTemplate);
         },
-        templateHelpers: {
+        templateContext: {
             hasOverlay: function() {
-                return this.overlay !== null;
+                return this.getRegion('overlay') !== null;
             }
         }
     });
 
-    Views.SMTPTemplates = Marionette.LayoutView.extend({
+    Views.SMTPTemplates = Marionette.View.extend({
         template: _.template(SMTPTemplatesTpl),
         className: 'panel-body',
         regions: {
@@ -81,11 +82,11 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
         },
         initialize: function() {
             var view = this;
-            HoneySens.reqres.setHandler('settings:templates:show', function (type) {
+            radio.reply('settings:templates:show', function (type) {
                 view.getRegion('templateDetails').show(new TemplateDetailsView({model: view.collection.get(type)}));
             });
             this.listenTo(this.collection, 'update', function(c) {
-                HoneySens.request('settings:templates:show', c.at(0).id);
+                radio.request('settings:templates:show', c.at(0).id);
             });
         },
         onRender: function() {
@@ -94,7 +95,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
             templateSelector.render();
         },
         onDestroy: function() {
-            HoneySens.reqres.removeHandler('settings:templates:show');
+            radio.stopReplying('settings:templates:show');
         }
     });
 });

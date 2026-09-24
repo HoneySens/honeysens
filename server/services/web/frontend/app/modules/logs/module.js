@@ -1,9 +1,10 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
-import Routing from 'app/routing';
+import createRoutingModule from 'app/routing';
 import LayoutView from 'app/modules/logs/views/Layout';
 import LogListView from 'app/modules/logs/views/LogList';
 
-var LogsModule = Routing.extend({
+var LogsModule = createRoutingModule({
     name: 'logs',
     startWithParent: false,
     rootView: null,
@@ -17,28 +18,28 @@ var LogsModule = Routing.extend({
     start: function() {
         console.log('Starting module: logs');
         this.rootView = new LayoutView();
-        HoneySens.request('view:content').main.show(this.rootView);
+        radio.request('view:content').getRegion('main').show(this.rootView);
 
         // Register command handlers
         var contentRegion = this.rootView.getRegion('content'),
             router = this.router;
 
-        HoneySens.reqres.setHandler('logs:show', function() {
+        radio.reply('logs:show', function() {
             if(!HoneySens.assureAllowed('logs', 'get')) return false;
             var logs = HoneySens.data.models.logs;
             contentRegion.show(new LogListView({collection: logs}));
             router.navigate('logs');
-            HoneySens.vent.trigger('logs:shown');
+            radio.trigger('logs:shown');
         });
     },
     stop: function() {
         console.log('Stopping module: logs');
-        HoneySens.reqres.removeHandler('logs:show');
+        radio.stopReplying('logs:show');
     },
     routesList: {
         'logs': 'showLogs'
     },
-    showLogs: function() {HoneySens.request('logs:show');}
+    showLogs: function() {radio.request('logs:show');}
 });
 
 export default HoneySens.module('Logs.Routing', LogsModule);

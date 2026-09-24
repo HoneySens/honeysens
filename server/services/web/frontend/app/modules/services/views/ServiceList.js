@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Backgrid from 'backgrid';
 import ServiceListTpl from 'app/modules/services/templates/ServiceList.tpl';
 import ServiceListActionsCellTpl from 'app/modules/services/templates/ServiceListActionsCell.tpl';
 
 HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ServiceList = Marionette.LayoutView.extend({
+    Views.ServiceList = Marionette.View.extend({
         template: _.template(ServiceListTpl),
         className: 'row',
         regions: {
@@ -13,7 +14,7 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
         events: {
             'click button.add': function(e) {
                 e.preventDefault();
-                HoneySens.request('services:add');
+                radio.request('services:add');
             }
         },
         onRender: function() {
@@ -38,11 +39,11 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                     events: {
                         'click button.showDetails': function(e) {
                             e.preventDefault();
-                            HoneySens.request('services:details', this.model);
+                            radio.request('services:details', this.model);
                         },
                         'click button.removeService': function(e) {
                             e.preventDefault();
-                            HoneySens.request('services:remove', this.model);
+                            radio.request('services:remove', this.model);
                         }
                     },
                     render: function() {
@@ -57,7 +58,7 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                 collection: this.collection,
                 className: 'table table-striped'
             });
-            this.list.show(grid);
+            this.getRegion('list').show(grid);
             grid.sort('name', 'ascending');
             // Disable all interface controls by default (they are reactivated by the registry status check)
             this.enableInterface(false);

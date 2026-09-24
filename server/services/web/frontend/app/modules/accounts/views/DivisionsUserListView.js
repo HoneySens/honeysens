@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import DivisionsUserItemView from 'app/modules/accounts/views/DivisionsUserItemView';
@@ -5,13 +6,13 @@ import DivisionsUserListViewTpl from 'app/modules/accounts/templates/DivisionsUs
 
 HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
     // inline views to render the "add user" dropdown menu
-    var DivisionsUserDropdownItem = Marionette.ItemView.extend({
+    var DivisionsUserDropdownItem = Marionette.View.extend({
         template: _.template('<a href="#"><%- name %></a>'),
         tagName: 'li',
         events: {
             'click': function(e) {
                 e.preventDefault();
-                HoneySens.request('accounts:division:user:add', this.model);
+                radio.request('accounts:division:user:add', this.model);
             }
         }
     });
@@ -21,7 +22,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         childView: DivisionsUserDropdownItem
     });
 
-    Views.DivisionsUserListView = Marionette.CompositeView.extend({
+    Views.DivisionsUserListView = Marionette.CollectionView.extend({
         template: _.template(DivisionsUserListViewTpl),
         childViewContainer: 'tbody',
         childView: DivisionsUserItemView,
@@ -31,11 +32,11 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
                 return !this.contains(u);
             }, view.collection));
 
-            HoneySens.reqres.setHandler('accounts:division:user:add', function(user) {
+            radio.reply('accounts:division:user:add', function(user) {
                 view.collection.add(user);
                 view.availableUsers.remove(user);
             });
-            HoneySens.reqres.setHandler('accounts:division:user:remove', function(user) {
+            radio.reply('accounts:division:user:remove', function(user) {
                 view.collection.remove(user);
                 view.availableUsers.add(user);
             });

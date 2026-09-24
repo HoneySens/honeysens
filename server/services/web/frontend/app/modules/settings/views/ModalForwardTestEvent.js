@@ -3,9 +3,9 @@ import ModalForwardTestEventTpl from 'app/modules/settings/templates/ModalForwar
 import 'validator';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalForwardTestEvent = Marionette.ItemView.extend({
+    Views.ModalForwardTestEvent = Marionette.View.extend({
         template:  _.template(ModalForwardTestEventTpl),
-        templateHelpers: {
+        templateContext: {
             showTimestamp: function() {
                 var ts = new Date(this.timestamp * 1000);
                 return ts.toISOString();

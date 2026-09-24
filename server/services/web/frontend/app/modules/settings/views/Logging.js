@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import LoggingTpl from 'app/modules/settings/templates/Logging.tpl';
 import 'validator';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Logging = Marionette.ItemView.extend({
+    Views.Logging = Marionette.View.extend({
         template: _.template(LoggingTpl),
         className: 'panel-body',
         onRender: function() {
@@ -18,7 +19,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                     view.model.save({
                         apiLogKeepDays: keepDays}, {
                         success: function() {
-                            HoneySens.request('view:modal').show(new ModalSettingsSaveView());
+                            radio.request('view:modal').show(new ModalSettingsSaveView());
                         }
                     });
                 }

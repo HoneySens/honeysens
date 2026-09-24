@@ -2,7 +2,7 @@ import HoneySens from 'app/app';
 import ModalSMTPTemplatePreviewTpl from 'app/modules/settings/templates/ModalSMTPTemplatePreview.tpl';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalSMTPTemplatePreview = Marionette.ItemView.extend({
+    Views.ModalSMTPTemplatePreview = Marionette.View.extend({
         template: _.template(ModalSMTPTemplatePreviewTpl),
     });
 });

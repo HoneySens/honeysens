@@ -126,21 +126,21 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
     }
 
     // based on https://github.com/jmeas/marionette.transition-region
-    Views.SlideCompositeView = Marionette.CompositeView.extend({
+    Views.SlideCompositeView = Marionette.CollectionView.extend({
         className: 'transitionView',
         transitionInCss: {},
         animateIn: animateIn,
         animateOut: animateOut
     });
 
-    Views.SlideItemView = Marionette.ItemView.extend({
+    Views.SlideItemView = Marionette.View.extend({
         className: 'transitionView',
         transitionInCss: {},
         animateIn: animateIn,
         animateOut: animateOut
     });
 
-    Views.SlideLayoutView = Marionette.LayoutView.extend({
+    Views.SlideLayoutView = Marionette.View.extend({
         className: 'transitionView',
         transitionInCss: {},
         animateIn: animateIn,

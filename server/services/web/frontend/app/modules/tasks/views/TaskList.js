@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import Backgrid from 'backgrid';
@@ -7,7 +8,7 @@ import TaskListStatusCellTpl from 'app/modules/tasks/templates/TaskListStatusCel
 import TaskListActionsCellTpl from 'app/modules/tasks/templates/TaskListActionsCell.tpl';
 
 HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.TaskList = Marionette.LayoutView.extend({
+    Views.TaskList = Marionette.View.extend({
         template: _.template(TaskListTpl),
         className: 'row',
         regions: {
@@ -75,11 +76,11 @@ HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette,
                         },
                         'click button.inspectUpload': function(e) {
                             e.preventDefault();
-                            HoneySens.request('tasks:upload:show', this.model);
+                            radio.request('tasks:upload:show', this.model);
                         },
                         'click button.inspectTestMail': function(e) {
                             e.preventDefault();
-                            HoneySens.request('tasks:testmail:show', this.model);
+                            radio.request('tasks:testmail:show', this.model);
                         }
                     },
                     render: function() {
@@ -100,7 +101,7 @@ HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette,
                 collection: this.collection,
                 className: 'table table-striped'
             });
-            this.list.show(grid);
+            this.getRegion('list').show(grid);
             grid.sort('id', 'descending');
         },
         updateWorkerStatus: function() {

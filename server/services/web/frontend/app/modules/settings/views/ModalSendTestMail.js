@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import ModalSendTestMailTpl from 'app/modules/settings/templates/ModalSendTestMail.tpl';
@@ -7,7 +8,7 @@ import 'validator';
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
     // The model this view receives is a vanilla Backbone.Model() upon first invocation,
     // but will be exchanged with a Task model when the 'send' button is pressed.
-    Views.ModalSendTestMail = Marionette.ItemView.extend({
+    Views.ModalSendTestMail = Marionette.View.extend({
         template: _.template(ModalSendTestMailTpl),
         events: {
             'click button.btn-primary': function(e) {
@@ -19,10 +20,10 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                 if(this.model.has('status')) {
                     this.model.destroy({
                         wait: true, success: function() {
-                            HoneySens.request('view:modal').empty();
+                            radio.request('view:modal').empty();
                         }
                     })
-                } else HoneySens.request('view:modal').empty();
+                } else radio.request('view:modal').empty();
             }
         },
         onRender: function() {
@@ -66,7 +67,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                 }
             });
         },
-        templateHelpers: {
+        templateContext: {
             getError: function() {
                 return this.result.error;
             },

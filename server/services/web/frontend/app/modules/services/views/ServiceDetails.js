@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Backgrid from 'backgrid';
 import ServiceDetailsTpl from 'app/modules/services/templates/ServiceDetails.tpl';
@@ -8,7 +9,7 @@ import 'backgrid-subgrid-cell';
 import 'app/views/common';
 
 HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ServiceDetails = Marionette.LayoutView.extend({
+    Views.ServiceDetails = Marionette.View.extend({
         template: _.template(ServiceDetailsTpl),
         className: 'container-fluid',
         regions: {
@@ -17,7 +18,7 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
         revisionStatus: null,
         events: {
             'click button.cancel': function() {
-                HoneySens.request('view:content').overlay.empty();
+                radio.request('view:content').getRegion('overlay').empty();
             }
         },
         onRender: function() {
@@ -85,7 +86,7 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                         events: {
                             'click button.removeRevision': function(e) {
                                 e.preventDefault();
-                                HoneySens.request('services:revisions:remove', this.model);
+                                radio.request('services:revisions:remove', this.model);
                             }
                         },
                         render: function() {
@@ -197,7 +198,7 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                 collection: modelCollection,
                 className: 'table table-striped'
             });
-            this.revisions.show(grid);
+            this.getRegion('revisions').show(grid);
             grid.sort('id', 'descending');
 
             // Request registry status data for this service in the background

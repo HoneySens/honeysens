@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import EventDetailsTpl from 'app/modules/events/templates/EventDetails.tpl';
@@ -16,10 +17,10 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         return (('0' + ts.getHours()).slice(-2) + ':' + ('0' + ts.getMinutes()).slice(-2) + ':' + ('0' + ts.getSeconds()).slice(-2));
     };
 
-    var dataItemView = Marionette.ItemView.extend({
+    var dataItemView = Marionette.View.extend({
         template: _.template(DetailsDataItemTpl),
         tagName: 'tr',
-        templateHelpers: {
+        templateContext: {
             showType: function() {
                 switch(this.type) {
                     case Models.EventDetail.type.GENERIC:
@@ -32,42 +33,42 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         }
     });
 
-    var dataListView = Marionette.CompositeView.extend({
+    var dataListView = Marionette.CollectionView.extend({
         template: _.template(DetailsDataListTpl),
         className: 'panel panel-primary',
         childViewContainer: 'tbody',
         childView: dataItemView
     });
 
-    var interactionItemView = Marionette.ItemView.extend({
+    var interactionItemView = Marionette.View.extend({
         template: _.template(DetailsInteractionItemTpl),
         tagName: 'tr',
-        templateHelpers: {
+        templateContext: {
             showTimestamp: showTimestampHelper
         }
     });
 
-    var interactionListView = Marionette.CompositeView.extend({
+    var interactionListView = Marionette.CollectionView.extend({
         template: _.template(DetailsInteractionListTpl),
         className: 'panel panel-primary',
         childViewContainer: 'tbody',
         childView: interactionItemView,
-        templateHelpers: {
+        templateContext: {
             showModelCount: function() {
                 return this.collection.length;
             }
         },
         serializeData: function() {
-            var data = Marionette.CompositeView.prototype.serializeData.apply(this, arguments);
+            var data = Marionette.CollectionView.prototype.serializeData.apply(this, arguments);
             data.collection = this.collection;
             return data;
         }
     });
 
-    var packetListItemView = Marionette.ItemView.extend({
+    var packetListItemView = Marionette.View.extend({
         template: _.template(DetailsPacketListItemTpl),
         tagName: 'tr',
-        templateHelpers: {
+        templateContext: {
             showTimestamp: showTimestampHelper,
             showProtocol: function() {
                 switch(this.protocol) {
@@ -105,24 +106,24 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         }
     });
 
-    var packetListView = Marionette.CompositeView.extend({
+    var packetListView = Marionette.CollectionView.extend({
         template: _.template(DetailsPacketListTpl),
         className: 'panel panel-primary',
         childViewContainer: 'tbody',
         childView: packetListItemView,
-        templateHelpers: {
+        templateContext: {
             showModelCount: function() {
                 return this.collection.length;
             }
         },
         serializeData: function() {
-            var data = Marionette.CompositeView.prototype.serializeData.apply(this, arguments);
+            var data = Marionette.CollectionView.prototype.serializeData.apply(this, arguments);
             data.collection = this.collection;
             return data;
         }
     });
 
-    Views.EventDetails = Marionette.LayoutView.extend({
+    Views.EventDetails = Marionette.View.extend({
         template: _.template(EventDetailsTpl),
         className: 'container-fluid',
         regions: {
@@ -132,10 +133,10 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         },
         events: {
             'click button.btn-default': function() {
-                HoneySens.request('view:content').overlay.empty();
+                radio.request('view:content').getRegion('overlay').empty();
             }
         },
-        templateHelpers: HoneySens.Views.EventTemplateHelpers,
+        templateContext: HoneySens.Views.EventTemplateHelpers,
         initialize: function() {
             this.eventDetails = this.model.getDetailsAndPackets();
             // bind to the details collection, because we split that one into data details and interaction details further below

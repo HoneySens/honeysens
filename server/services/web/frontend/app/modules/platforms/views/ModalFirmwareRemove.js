@@ -1,8 +1,9 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalFirmwareRemoveTpl from 'app/modules/platforms/templates/ModalFirmwareRemove.tpl';
 
 HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalFirmwareRemove = Marionette.ItemView.extend({
+    Views.ModalFirmwareRemove = Marionette.View.extend({
         template: _.template(ModalFirmwareRemoveTpl),
         events: {
             'click button.btn-primary': function(e) {
@@ -10,16 +11,16 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
                 this.model.destroy({
                     wait: true,
                     success: function() {
-                        HoneySens.request('view:modal').empty();
+                        radio.request('view:modal').empty();
                         HoneySens.data.models.platforms.fetch();
                     },
                     error: function() {
-                        HoneySens.request('view:modal').empty();
+                        radio.request('view:modal').empty();
                     }
                 });
             }
         },
-        templateHelpers: {
+        templateContext: {
             hasAffectedSensors: function() {
                 let firmware = this.id,
                     affectedSensors = HoneySens.data.models.sensors.filter(function(s) {

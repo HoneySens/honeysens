@@ -8,7 +8,10 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
     Views.AccountsListView = HoneySens.Views.SlideLayoutView.extend({
         template: _.template(AccountsListViewTpl),
         className: 'transitionView row',
-        regions: { users: { selector: 'div.users'}, divisions: { selector: 'div.divisions' } },
+        regions: {
+            users: { el: 'div.users'},
+            divisions: { el: 'div.divisions' }
+        },
         initialize: function(options) {
             this.users = options.users;
             this.divisions = options.divisions;

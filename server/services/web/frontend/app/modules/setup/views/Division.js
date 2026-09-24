@@ -1,8 +1,9 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import DivisionTpl from 'app/modules/setup/templates/Division.tpl';
 
 HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Division = Marionette.ItemView.extend({
+    Views.Division = Marionette.View.extend({
         template: _.template(DivisionTpl),
         events: {
             'click button:submit': function(e) {
@@ -21,7 +22,7 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
 
                     var divisionName = view.$el.find('input[name="divisionName"]').val();
                     view.model.set({divisionName: divisionName});
-                    HoneySens.request('setup:install:show', {step: 4, model: view.model});
+                    radio.request('setup:install:show', {step: 4, model: view.model});
                 }
             });
         }

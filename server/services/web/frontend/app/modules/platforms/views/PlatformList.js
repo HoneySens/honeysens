@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Backgrid from 'backgrid';
 import PlatformListTpl from 'app/modules/platforms/templates/PlatformList.tpl';
 import PlatformListActionsCellTpl from 'app/modules/platforms/templates/PlatformListActionsCell.tpl';
 
 HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.PlatformList = Marionette.LayoutView.extend({
+    Views.PlatformList = Marionette.View.extend({
         template: _.template(PlatformListTpl),
         className: 'row',
         regions: {
@@ -13,7 +14,7 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
         events: {
             'click button.add': function(e) {
                 e.preventDefault();
-                HoneySens.request('platforms:firmware:add');
+                radio.request('platforms:firmware:add');
             }
         },
         onRender: function() {
@@ -37,7 +38,7 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
                     events: {
                         'click button.showDetails': function(e) {
                             e.preventDefault();
-                            HoneySens.request('platforms:details', this.model);
+                            radio.request('platforms:details', this.model);
                         }
                     },
                     render: function() {
@@ -52,7 +53,7 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
                 collection: this.collection,
                 className: 'table table-striped'
             });
-            this.list.show(grid);
+            this.getRegion('list').show(grid);
             grid.sort('title', 'ascending');
         }
     });

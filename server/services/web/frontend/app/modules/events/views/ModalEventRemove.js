@@ -4,7 +4,7 @@ import ModalEventRemoveMassTpl from 'app/modules/events/templates/ModalEventRemo
 import 'app/views/common';
 
 HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalRemoveEvent = Marionette.ItemView.extend({
+    Views.ModalRemoveEvent = Marionette.View.extend({
         events: {
             'click button.btn-primary': function(e) {
                 e.preventDefault();
@@ -17,7 +17,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             if(this.model.has('total')) this.template = _.template(ModalEventRemoveMassTpl);
             else this.template = _.template(ModalEventRemoveSingleTpl);
         },
-        templateHelpers: Object.assign({
+        templateContext: Object.assign({
             archivePrefer: function() {
                 return HoneySens.data.settings.get('archivePrefer');
             }

@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
-import Routing from 'app/routing';
+import createRoutingModule from 'app/routing';
 import Models from 'app/models';
 import LayoutView from 'app/modules/dashboard/views/Layout';
 import Dashboardview from 'app/modules/dashboard/views/Dashboard';
 
-var DashboardModule = Routing.extend({
+var DashboardModule = createRoutingModule({
     name: 'dashboard',
     startWithParent: false,
     rootView: null,
@@ -14,27 +15,27 @@ var DashboardModule = Routing.extend({
     start: function() {
         console.log('Starting module: dashboard');
         this.rootView = new LayoutView();
-        HoneySens.request('view:content').main.show(this.rootView);
+        radio.request('view:content').getRegion('main').show(this.rootView);
 
         // register command handlers
         var contentRegion = this.rootView.getRegion('content'),
             router = this.router;
 
-        HoneySens.reqres.setHandler('dashboard:show', function() {
+        radio.reply('dashboard:show', function() {
             if(!HoneySens.assureAllowed('events', 'get')) return false;
             contentRegion.show(new Dashboardview({model: new Models.Stats()}));
             router.navigate('');
-            HoneySens.vent.trigger('dashboard:shown');
+            radio.trigger('dashboard:shown');
         });
     },
     stop: function() {
         console.log('Stopping module: dashboard');
-        HoneySens.reqres.removeHandler('dashboard:show');
+        radio.stopReplying('dashboard:show');
     },
     routesList: {
         '': 'showDashboard'
     },
-    showDashboard: function() {HoneySens.request('dashboard:show');}
+    showDashboard: function() {radio.request('dashboard:show');}
 });
 
 export default HoneySens.module('Dashboard.Routing', DashboardModule);

@@ -1,9 +1,10 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import AdminPasswordTpl from 'app/modules/setup/templates/AdminPassword.tpl';
 import 'validator';
 
 HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.AdminPassword = Marionette.ItemView.extend({
+    Views.AdminPassword = Marionette.View.extend({
         template: _.template(AdminPasswordTpl),
         events: {
             'click button:submit': function(e) {
@@ -21,7 +22,7 @@ HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette,
                     let email = view.$el.find('input[name="adminEmail"]').val(),
                         password = view.$el.find('input[name="adminPassword"]').val();
                     view.model.set({email: email, password: password});
-                    HoneySens.request('setup:install:show', {step: 2, model: view.model});
+                    radio.request('setup:install:show', {step: 2, model: view.model});
                 }
             });
         }

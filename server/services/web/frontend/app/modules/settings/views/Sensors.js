@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import SensorsTpl from 'app/modules/settings/templates/Sensors.tpl';
 import 'validator';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Sensors = Marionette.ItemView.extend({
+    Views.Sensors = Marionette.View.extend({
         template: _.template(SensorsTpl),
         className: 'panel-body',
         onRender: function() {
@@ -22,7 +23,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                         sensorsServiceNetwork: serviceNetwork,
                         sensorsTimeoutThreshold: timeoutThreshold}, {
                         success: function() {
-                            HoneySens.request('view:modal').show(new ModalSettingsSaveView());
+                            radio.request('view:modal').show(new ModalSettingsSaveView());
                         }
                     });
                 }

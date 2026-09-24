@@ -1,8 +1,9 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalSensorRemoveTpl from 'app/modules/sensors/templates/ModalSensorRemove.tpl';
 
 HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalSensorRemove = Marionette.ItemView.extend({
+    Views.ModalSensorRemove = Marionette.View.extend({
         template: _.template(ModalSensorRemoveTpl),
         events: {
             'click button.btn-primary': function(e) {
@@ -14,15 +15,15 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                     url: 'api/sensors/' + id,
                     data: JSON.stringify({archive: archive}),
                     success: function() {
-                        HoneySens.execute('fetchUpdates', false);
+                        radio.request('fetchUpdates', false);
                         // Update events manually, since event deletes aren't covered by global updates (for performance reasons)
                         HoneySens.data.models.events.remove(HoneySens.data.models.events.filter(function(event) {return event.get('sensor') == id;}));
-                        HoneySens.request('view:modal').empty();
+                        radio.request('view:modal').empty();
                     }
                 });
             }
         },
-        templateHelpers: {
+        templateContext: {
             archivePrefer: function() {
                 return HoneySens.data.settings.get('archivePrefer');
             }

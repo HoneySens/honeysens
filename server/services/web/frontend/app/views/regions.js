@@ -1,4 +1,7 @@
 import Marionette from 'backbone.marionette';
+import Backbone from 'backbone';
+import _ from 'underscore';
+import $ from 'jquery';
 import 'bootstrap';
 
 var Regions = {};
@@ -134,8 +137,6 @@ Regions.TransitionRegion = Marionette.Region.extend({
         // we are only changing the view if there is a view to change to begin with
         var isChangingView = !!this.currentView;
 
-        // console.log(view.animateIn);
-
         // The region is only animating if there's an animateIn method on the new view
         var animatingIn = _.isFunction(view.animateIn);
 
@@ -176,14 +177,7 @@ Regions.TransitionRegion = Marionette.Region.extend({
             view.$el.css(transitionInCss);
         }
 
-        // Attach or append the HTML, depending on whether we
-        // want to concurrently animate or not
-        if (!this.getOption('concurrentTransition')) {
-            this.attachHtml(view);
-        } else {
-            this.appendHtml(view);
-        }
-
+        this.attachHtml(view);
         this.currentView = view;
 
         // show triggerMethods
@@ -207,18 +201,12 @@ Regions.TransitionRegion = Marionette.Region.extend({
         }
     },
 
-    // Append the new child
-    appendHtml: function(view) {
-        this.el.appendChild(view.el);
-    },
-
-    // After it's shown, then we triggerMethod 'animateIn'
     _onTransitionIn: function(options) {
         var preventDestroy =  options.preventDestroy;
 
         var oldView = this._oldView;
-        // // Destroy the old view
-        if (!preventDestroy && oldView && !oldView.isDestroyed) {
+        // Destroy the old view
+        if (!preventDestroy && oldView && !oldView.isDestroyed()) {
             if (oldView.destroy) { oldView.destroy(); }
             else if (oldView.remove) { oldView.remove(); }
         }
@@ -234,7 +222,7 @@ Regions.TransitionRegion = Marionette.Region.extend({
         options = options || {};
 
         var view = this.currentView;
-        if (!view || view.isDestroyed){ return; }
+        if (!view || view.isDestroyed()) { return; }
 
         // Animate by default
         var animate = options.animate === undefined ? true : options.animate;
@@ -251,7 +239,7 @@ Regions.TransitionRegion = Marionette.Region.extend({
 
     _destroyView: function() {
         var view = this.currentView;
-        if (!view || view.isDestroyed){ return; }
+        if (!view || view.isDestroyed()) { return; }
 
         this.triggerMethod('before:empty', view);
 

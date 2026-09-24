@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalConfirmation from 'app/common/views/ModalConfirmation';
 import MaintenanceTpl from 'app/modules/settings/templates/Maintenance.tpl';
 import 'app/views/common';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.DatabaseSettings = Marionette.ItemView.extend({
+    Views.DatabaseSettings = Marionette.View.extend({
         template: _.template(MaintenanceTpl),
         className: 'col-sm-12',
         events: {
@@ -15,12 +16,12 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                     type: 'DELETE',
                     url: 'api/system/db',
                     success: function () {
-                        HoneySens.execute('logout');
+                        radio.request('logout');
                     }
                 });
             },
             'click button.removeEvents': function () {
-                HoneySens.request('view:modal').show(new ModalConfirmation({
+                radio.request('view:modal').show(new ModalConfirmation({
                     model: new Backbone.Model({
                         msg: _.t('settings:removeAllEventsPrompt'),
                         onConfirm: function () {
@@ -29,7 +30,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                                 url: 'api/system/events',
                                 success: function () {
                                     HoneySens.data.models.events.reset();
-                                    HoneySens.request('view:modal').empty();
+                                    radio.request('view:modal').empty();
                                 }
                             });
                         }
@@ -37,9 +38,9 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                 }));
             },
             'click button.refreshCA': function () {
-                let modal = HoneySens.request('view:modal'),
+                let modal = radio.request('view:modal'),
                     view = this;
-                HoneySens.request('view:modal').show(new ModalConfirmation({
+                radio.request('view:modal').show(new ModalConfirmation({
                     model: new Backbone.Model({
                         msg: _.t('settings:internalCAPrompt'),
                         onConfirm: function () {
@@ -58,7 +59,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                 }));
             },
         },
-        templateHelpers: {
+        templateContext: {
             showCaFP: function() {
                 return this.caFP.replace(/(..?)/g, '$1:').slice(0, -1)
             },

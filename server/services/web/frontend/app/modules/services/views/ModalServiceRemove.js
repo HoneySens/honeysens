@@ -1,8 +1,9 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalServiceRemoveTpl from 'app/modules/services/templates/ModalServiceRemove.tpl';
 
 HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalServiceRemove = Marionette.ItemView.extend({
+    Views.ModalServiceRemove = Marionette.View.extend({
         template: _.template(ModalServiceRemoveTpl),
         events: {
             'click button.btn-primary': function(e) {
@@ -10,10 +11,10 @@ HoneySens.module('Services.Views', function(Views, HoneySens, Backbone, Marionet
                 this.model.destroy({
                     wait: true,
                     success: function() {
-                        HoneySens.request('view:modal').empty();
+                        radio.request('view:modal').empty();
                     },
                     error: function() {
-                        HoneySens.request('view:modal').empty();
+                        radio.request('view:modal').empty();
                     }
                 });
             }

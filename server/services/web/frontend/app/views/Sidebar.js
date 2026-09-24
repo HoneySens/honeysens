@@ -3,7 +3,7 @@ import MenuView from 'app/common/views/Menu';
 import SidebarTpl from 'app/templates/Sidebar.tpl';
 
 HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Sidebar = Marionette.LayoutView.extend({
+    Views.Sidebar = Marionette.View.extend({
         template: _.template(SidebarTpl),
         regions: {
             content: 'div.sidebar-content'
@@ -40,10 +40,10 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
             });
         },
         onRender: function() {
-            this.content.show(new MenuView({model: new Backbone.Model({items: HoneySens.menuItems})}));
+            this.getRegion('content').show(new MenuView({model: new Backbone.Model({items: HoneySens.menuItems})}));
             this.refreshSidebarExpansion();
         },
-        templateHelpers: {
+        templateContext: {
             showVersion: function() {
                 return HoneySens.data.system.get('version');
             }

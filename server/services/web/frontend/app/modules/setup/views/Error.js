@@ -2,7 +2,7 @@ import HoneySens from 'app/app';
 import ErrorTpl from 'app/modules/setup/templates/Error.tpl';
 
 HoneySens.module('Setup.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Error = Marionette.ItemView.extend({
+    Views.Error = Marionette.View.extend({
         template: _.template(ErrorTpl),
         onRender: function() {
             var errorText;

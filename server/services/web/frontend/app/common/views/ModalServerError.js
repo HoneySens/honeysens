@@ -2,9 +2,9 @@ import HoneySens from 'app/app';
 import ModalServerErrorTpl from 'app/common/templates/ModalServerError.tpl';
 
 HoneySens.module('Common.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalServerError = Marionette.ItemView.extend({
+    Views.ModalServerError = Marionette.View.extend({
         template: _.template(ModalServerErrorTpl),
-        templateHelpers: {
+        templateContext: {
             getMessage: function() {
                 var msg = null;
                 try {

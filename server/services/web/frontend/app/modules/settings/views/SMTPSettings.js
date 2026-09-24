@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import ModalSendTestMail from 'app/modules/settings/views/ModalSendTestMail';
@@ -5,7 +6,7 @@ import SMTPSettingsTpl from 'app/modules/settings/templates/SMTPSettings.tpl';
 import 'validator';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.SMTPSettings = Marionette.ItemView.extend({
+    Views.SMTPSettings = Marionette.View.extend({
         template: _.template(SMTPSettingsTpl),
         className: 'panel-body',
         submitTestMail: false, // Indicates whether the test mail dialog should be invoked after a form submit event
@@ -39,11 +40,11 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                     if(view.submitTestMail) {
                         var smtpModel = new Backbone.Model();
                         smtpModel.set(view.getFormData());
-                        HoneySens.request('view:modal').show(new ModalSendTestMail({model: smtpModel}));
+                        radio.request('view:modal').show(new ModalSendTestMail({model: smtpModel}));
                     } else {
                         view.model.save(view.getFormData(), {
                             success: function () {
-                                HoneySens.request('view:modal').show(new ModalSettingsSaveView());
+                                radio.request('view:modal').show(new ModalSettingsSaveView());
                             }
                         });
                     }

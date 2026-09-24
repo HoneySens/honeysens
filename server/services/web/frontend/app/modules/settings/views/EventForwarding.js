@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
@@ -6,7 +7,7 @@ import EventForwardingTpl from 'app/modules/settings/templates/EventForwarding.t
 import 'validator';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.EventForwarding = Marionette.ItemView.extend({
+    Views.EventForwarding = Marionette.View.extend({
         template: _.template(EventForwardingTpl),
         className: 'panel-body',
         events: {
@@ -25,7 +26,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                                 method: 'POST',
                                 url: 'api/settings/testevent',
                                 success: function(result) {
-                                    HoneySens.request('view:modal').show(new ModalForwardTestEvent({model: new Models.Event(result)}));
+                                    radio.request('view:modal').show(new ModalForwardTestEvent({model: new Models.Event(result)}));
                                 }
                             });
                         }
@@ -43,7 +44,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                     e.preventDefault();
                     view.model.save(view.getFormData(), {
                         success: function() {
-                            HoneySens.request('view:modal').show(new ModalSettingsSaveView());
+                            radio.request('view:modal').show(new ModalSettingsSaveView());
                         }
                     });
                 }

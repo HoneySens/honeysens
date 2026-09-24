@@ -1,4 +1,5 @@
 import RootLayout from 'app/views/RootLayout';
+import { radio } from 'app/radio';
 import Marionette from 'backbone.marionette';
 import Backbone from 'backbone';
 import $ from 'jquery';
@@ -9,6 +10,36 @@ var app = new Marionette.Application();
 
 // Disable AJAX request caching (fixes some bugs with Internet Explorer)
 $.ajaxSetup({cache: false});
+
+var initializers = [];
+app.addInitializer = function(initializer) {
+    initializers.push(initializer);
+};
+app.onStart = function(options) {
+    initializers.forEach(function(initializer) {
+        initializer.call(app);
+    });
+};
+
+// Application module factory that catalogues all modules under "app"
+app.module = function(name, def) {
+    var parts = name.split('.');
+    var target = app;
+    for (var i = 0; i < parts.length - 1; i++) {
+        target[parts[i]] = target[parts[i]] || {};
+        target = target[parts[i]];
+    }
+    var leaf = target[parts[parts.length - 1]] = target[parts[parts.length - 1]] || {};
+    if (typeof def === 'function') {
+        // View-registration function:
+        //   HoneySens.module('X.Views', function(Views, HoneySens, Backbone, Marionette, $, _) { ... })
+        def(leaf, app, Backbone, Marionette, $, _);
+    } else if (def) {
+        // Plain module definition (routing modules): merge its properties in.
+        _.extend(leaf, def);
+    }
+    return leaf;
+};
 
 // Controls the lifecycle of submodules
 app.currentModule = null;
@@ -87,17 +118,17 @@ app.addInitializer(function() {
     app.rootView.render();
 
     // Modules can request the root views' regions
-    app.reqres.setHandler('view:navigation', function() {
-        return app.rootView.navigation;
+    radio.reply('view:navigation', function() {
+        return app.rootView.getRegion('navigation');
     });
-    app.reqres.setHandler('view:content-region', function() {
-        return app.rootView.content;
+    radio.reply('view:content-region', function() {
+        return app.rootView.getRegion('content');
     });
-    app.reqres.setHandler('view:content', function() {
-        return app.rootView.content.currentView;
+    radio.reply('view:content', function() {
+        return app.rootView.getRegion('content').currentView;
     });
-    app.reqres.setHandler('view:modal', function() {
-        return app.rootView.modal;
+    radio.reply('view:modal', function() {
+        return app.rootView.getRegion('modal');
     });
 
     var settings = new Backbone.Model();

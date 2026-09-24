@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import EventsTimelineView from 'app/modules/dashboard/views/EventsTimeline';
 import ClassificationBreakdownView from 'app/modules/dashboard/views/ClassificationBreakdown';
@@ -6,7 +7,7 @@ import DashboardTpl from 'app/modules/dashboard/templates/Dashboard.tpl';
 
 HoneySens.module('Dashboard.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
     // inline views to render the division selector
-    var DivisionDropdownItem = Marionette.ItemView.extend({
+    var DivisionDropdownItem = Marionette.View.extend({
         template: _.template('<%- name %>'),
         tagName: 'option',
         onRender: function() {
@@ -19,12 +20,12 @@ HoneySens.module('Dashboard.Views', function(Views, HoneySens, Backbone, Marione
         childView: DivisionDropdownItem,
         events: {
             'change': function() {
-                HoneySens.request('dashboard:filter:division', this.$el.val());
+                radio.request('dashboard:filter:division', this.$el.val());
             }
         }
     });
 
-    Views.Dashboard = Marionette.LayoutView.extend({
+    Views.Dashboard = Marionette.View.extend({
         template: _.template(DashboardTpl),
         className: 'dashboard',
         events: {
@@ -48,10 +49,10 @@ HoneySens.module('Dashboard.Views', function(Views, HoneySens, Backbone, Marione
         initialize: function() {
             var view = this;
             view.model.fetch();
-            HoneySens.reqres.setHandler('dashboard:filter:division', function(id) {
+            radio.reply('dashboard:filter:division', function(id) {
                 view.model.fetch({data: {year: parseInt(view.model.get('year')), month: view.model.get('month'), division: id}});
             });
-            this.listenTo(HoneySens.vent, 'models:updated', function() {
+            this.listenTo(radio, 'models:updated', function() {
                 view.model.fetch({data: {year: parseInt(view.model.get('year')), month: view.model.get('month'), division: this.model.get('division')}});
             });
         },

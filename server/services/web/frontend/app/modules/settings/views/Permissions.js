@@ -2,7 +2,7 @@ import HoneySens from 'app/app';
 import PermissionsTpl from 'app/modules/settings/templates/Permissions.tpl';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Permissions = Marionette.ItemView.extend({
+    Views.Permissions = Marionette.View.extend({
         template: _.template(PermissionsTpl),
         className: 'panel-body',
         events: {

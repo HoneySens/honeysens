@@ -4,11 +4,11 @@ import LayoutTpl from 'app/modules/dashboard/templates/Layout.tpl';
 import 'app/views/common';
 
 HoneySens.module('Dashboard.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Layout = Marionette.LayoutView.extend({
+    Views.Layout = Marionette.View.extend({
         template: _.template(LayoutTpl),
         regions: {
             content: {
-                selector: 'div.content',
+                el: 'div.content',
                 regionClass: Regions.TransitionRegion
         }},
         initialize: function() {

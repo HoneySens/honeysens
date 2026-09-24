@@ -3,7 +3,7 @@ import ModalSensorStatusItemView from 'app/modules/sensors/views/ModalSensorStat
 import ModalSensorStatusListTpl from 'app/modules/sensors/templates/ModalSensorStatusList.tpl';
 
 HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalSensorStatusList = Marionette.CompositeView.extend({
+    Views.ModalSensorStatusList = Marionette.CollectionView.extend({
         template: _.template(ModalSensorStatusListTpl),
         childViewContainer: 'tbody',
         childView: ModalSensorStatusItemView,

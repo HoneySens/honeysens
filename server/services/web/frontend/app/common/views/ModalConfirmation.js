@@ -8,7 +8,7 @@ HoneySens.module('Common.Views', function (Views, HoneySens, Backbone, Marionett
      * - onConfirm: Optional callback function in case of confirmation
      * - onClose: Optional callback function called when the modal closes (regardless of user selection)
      */
-    Views.ModalConfirmation = Marionette.ItemView.extend({
+    Views.ModalConfirmation = Marionette.View.extend({
         template: _.template(ModalConfirmationTpl),
         events: {
             'click button.btn-primary': function(e) {

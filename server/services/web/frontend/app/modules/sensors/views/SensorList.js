@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import Backgrid from 'backgrid';
@@ -9,7 +10,7 @@ import SensorListServiceCellTpl from 'app/modules/sensors/templates/SensorListSe
 import 'app/views/common';
 
 HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.SensorList = Marionette.LayoutView.extend({
+    Views.SensorList = Marionette.View.extend({
         template: _.template(SensorListTpl),
         className: 'row',
         actionsDropdownVisibleFor: null,
@@ -21,7 +22,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
         events: {
             'click button.add': function(e) {
                 e.preventDefault();
-                HoneySens.request('sensors:add');
+                radio.request('sensors:add');
             },
             'click button.toggleServiceEdit': function(e) {
                 e.preventDefault();
@@ -207,7 +208,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                     initialize: function(options) {
                         Backgrid.Cell.prototype.initialize.apply(this, [options]);
                         // Refresh the view after model updates to recalculate status cell timers
-                        this.listenTo(HoneySens.vent, 'models:updated', function() {
+                        this.listenTo(radio, 'models:updated', function() {
                             this.render();
                         });
                     },
@@ -254,11 +255,11 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                     events: {
                         'click button.removeSensor': function(e) {
                             e.preventDefault();
-                            HoneySens.request('sensors:remove', this.model);
+                            radio.request('sensors:remove', this.model);
                         },
                         'click button.editSensor': function(e) {
                             e.preventDefault();
-                            HoneySens.request('sensors:edit', this.model);
+                            radio.request('sensors:edit', this.model);
                         },
                         'show.bs.dropdown div.dropdown': function(e) {
                             view.actionsDropdownVisibleFor = this.model.id;
@@ -270,11 +271,11 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                             e.preventDefault();
                             var collection = this.model.status;
                             collection.fetch({reset: true});
-                            HoneySens.request('view:modal').show(new ModalSensorStatusListView({collection: collection}));
+                            radio.request('view:modal').show(new ModalSensorStatusListView({collection: collection}));
                         },
                         'click a.downloadConfig': function(e) {
                             e.preventDefault();
-                            HoneySens.request('sensors:config:download', this.model);
+                            radio.request('sensors:config:download', this.model);
                         }
                     },
                     render: function() {
@@ -293,7 +294,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                 collection: this.collection,
                 className: 'table table-striped rotated'
             });
-            this.list.show(grid);
+            this.getRegion('list').show(grid);
             grid.sort('id', 'ascending');
             // Division filter
             var divisions = _.union([{label: _.t('allDivisions'), value: null}],
@@ -307,9 +308,9 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                 field: 'division',
                 selectOptions: divisions
             });
-            this.groupFilter.show(this.groupFilterView);
+            this.getRegion('groupFilter').show(this.groupFilterView);
         },
-        onShow: function() {
+        onDomRefresh: function() {
             // Readjust table margin so that all service labels are visible
             var $serviceLabels = this.$el.find('span.serviceLabel');
             this.$el.find('table.table').css('margin-top', Math.max(...$.map($serviceLabels, (e) => $(e).outerWidth() - 45), 0));
@@ -324,7 +325,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                 $anchor.find('input[type="checkbox"]').addClass('hide');
             }
         },
-        templateHelpers: {
+        templateContext: {
             hasDivision: function() {
                 // checks whether there is at least one division available
                 return HoneySens.data.models.divisions.length > 0;

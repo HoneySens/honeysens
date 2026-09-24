@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import DivisionsContactItemTpl from 'app/modules/accounts/templates/DivisionsContactItem.tpl';
 import DivisionsContactListViewTpl from 'app/modules/accounts/templates/DivisionsContactListView.tpl';
 
 HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    var DivisionsContactUserSelectItem = Marionette.ItemView.extend({
+    var DivisionsContactUserSelectItem = Marionette.View.extend({
         template: _.template('<%- name %>'),
         tagName: 'option',
         onRender: function() {
@@ -17,19 +18,19 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         childView: DivisionsContactUserSelectItem
     });
 
-    var DivisionsContactItem = Marionette.ItemView.extend({
+    var DivisionsContactItem = Marionette.View.extend({
         template: _.template(DivisionsContactItemTpl),
         tagName: 'tr',
         events: {
             'click button.remove': function(e) {
                 e.preventDefault();
-                HoneySens.request('accounts:division:contact:remove', this.model);
+                radio.request('accounts:division:contact:remove', this.model);
             },
             'change select[name="type"]': 'changeType',
         },
         onRender: function() {
             var userSelectView = new DivisionsContactUserSelect({el: this.$el.find('select[name="user"]'),
-                    collection: HoneySens.request('accounts:division:users')}),
+                    collection: radio.request('accounts:division:users')}),
                 type = this.model.get('type'),
                 view = this;
 
@@ -102,7 +103,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
 
             $form.validator('update');
         },
-        templateHelpers: {
+        templateContext: {
             getIdentifier: function() {
                 // In case this contact has no id yet (i.e. it is new), return a unique id based on time.
                 // This is necessary for the panel group to work.
@@ -114,7 +115,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         }
     });
 
-    Views.DivisionsContactListView = Marionette.CompositeView.extend({
+    Views.DivisionsContactListView = Marionette.CollectionView.extend({
         template: _.template(DivisionsContactListViewTpl),
         childViewContainer: 'tbody',
         childView: DivisionsContactItem,
@@ -126,7 +127,7 @@ HoneySens.module('Accounts.Views', function(Views, HoneySens, Backbone, Marionet
         },
         initialize: function() {
             var view = this;
-            HoneySens.reqres.setHandler('accounts:division:contact:remove', function(contact) {
+            radio.reply('accounts:division:contact:remove', function(contact) {
                 view.collection.remove(contact);
             });
         }

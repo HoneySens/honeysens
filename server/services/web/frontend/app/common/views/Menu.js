@@ -2,7 +2,7 @@ import HoneySens from 'app/app';
 
 HoneySens.module('Common.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
     // Creates a menu from the global application menu data (and therefore from all submodules)
-    Views.Menu = Marionette.ItemView.extend({
+    Views.Menu = Marionette.View.extend({
         tagName: 'ul',
         className: 'nav nav-sidebar',
         getTemplate: function() {

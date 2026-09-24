@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import MenuView from 'app/common/views/Menu';
 import NavigationTpl from 'app/templates/Navigation.tpl';
@@ -5,7 +6,7 @@ import ProgressBar from 'progressbar.js';
 import i18n from 'app/common/i18n';
 
 HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Navigation = Marionette.LayoutView.extend({
+    Views.Navigation = Marionette.View.extend({
         popoverVisible: false,
         template: _.template(NavigationTpl),
         className: 'container-fluid',
@@ -41,19 +42,19 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
         },
         initialize: function() {
             var view = this;
-            this.listenTo(HoneySens.vent, 'counter:started', function() {
+            this.listenTo(radio, 'counter:started', function() {
                 view.circle.set(0);
                 view.circle.animate(1.0, {
                     duration: 10000
                 });
             });
-            this.listenTo(HoneySens.vent, 'counter:updated', function(counter) {
+            this.listenTo(radio, 'counter:updated', function(counter) {
                 this.$el.find('div.popover div.popover-content span.counter').html(counter);
             });
         },
         onRender: function() {
             var view = this;
-            this.menu.show(new MenuView({model: new Backbone.Model({items: HoneySens.menuItems})}));
+            this.getRegion('menu').show(new MenuView({model: new Backbone.Model({items: HoneySens.menuItems})}));
             this.$el.find('#counter').popover({
                 html: true,
                 content: function() {
@@ -72,14 +73,14 @@ HoneySens.module('Views', function(Views, HoneySens, Backbone, Marionette, $, _)
                     $(this).removeClass('open');
                 });
         },
-        onShow: function() {
+        onDomRefresh: function() {
             this.circle = new ProgressBar.Circle('#counter', {
                 color: '#777',
                 strokeWidth: 20,
                 trailWidth: 1
             });
         },
-        templateHelpers: {
+        templateContext: {
             getLanguage: function() {
                 return i18n.getLanguage();
             }

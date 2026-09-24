@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Backgrid from 'backgrid';
 import PlatformDetailsTpl from 'app/modules/platforms/templates/PlatformDetails.tpl';
 import FirmwareListActionsCellTpl from 'app/modules/platforms/templates/FirmwareListActionsCell.tpl';
 
 HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.PlatformDetails = Marionette.LayoutView.extend({
+    Views.PlatformDetails = Marionette.View.extend({
         template: _.template(PlatformDetailsTpl),
         className: 'container-fluid',
         regions: {
@@ -12,7 +13,7 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
         },
         events: {
             'click button.cancel': function() {
-                HoneySens.request('view:content').overlay.empty();
+                radio.request('view:content').getRegion('overlay').empty();
             }
         },
         onRender: function() {
@@ -52,7 +53,7 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
                             },
                             'click button.removeFirmware': function(e) {
                                 e.preventDefault();
-                                HoneySens.request('platforms:firmware:remove', this.model);
+                                radio.request('platforms:firmware:remove', this.model);
                             }
                         },
                         render: function() {
@@ -77,7 +78,7 @@ HoneySens.module('Platforms.Views', function(Views, HoneySens, Backbone, Marione
                 collection: modelCollection,
                 className: 'table table-striped'
             });
-            this.firmware.show(grid);
+            this.getRegion('firmware').show(grid);
             grid.sort('version', 'descending');
         }
     });

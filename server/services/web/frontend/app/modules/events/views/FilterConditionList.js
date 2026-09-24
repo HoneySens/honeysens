@@ -1,16 +1,17 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import FilterConditionListItemTpl from 'app/modules/events/templates/FilterConditionListItem.tpl';
 import FilterConditionListTpl from 'app/modules/events/templates/FilterConditionList.tpl';
 
 HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    var FilterConditionListItem = Marionette.ItemView.extend({
+    var FilterConditionListItem = Marionette.View.extend({
         template: _.template(FilterConditionListItemTpl),
         tagName: 'tr',
         events: {
             'click button.remove': function(e) {
                 e.preventDefault();
-                HoneySens.request('events:filters:condition:remove', this.model);
+                radio.request('events:filters:condition:remove', this.model);
             },
             'change select[name="attribute"]': 'changeAttribute',
             'change select[name="type"]': 'changeType'
@@ -169,7 +170,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         }
     });
 
-    Views.FilterConditionList = Marionette.CompositeView.extend({
+    Views.FilterConditionList = Marionette.CollectionView.extend({
         template: _.template(FilterConditionListTpl),
         childViewContainer: 'tbody',
         childView: FilterConditionListItem,
@@ -181,7 +182,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         },
         initialize: function() {
             var view = this;
-            HoneySens.reqres.setHandler('events:filters:condition:remove', function(condition) {
+            radio.reply('events:filters:condition:remove', function(condition) {
                 view.collection.remove(condition);
             });
         }

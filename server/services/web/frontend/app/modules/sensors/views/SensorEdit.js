@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import SensorEditTpl from 'app/modules/sensors/templates/SensorEdit.tpl';
@@ -5,13 +6,13 @@ import 'app/views/common';
 import 'validator';
 
 HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.SensorEdit = Marionette.ItemView.extend({
+    Views.SensorEdit = Marionette.View.extend({
         template: _.template(SensorEditTpl),
         className: 'container-fluid',
         cfgTaskId: null, // The id of a sensor config creation task we're waiting for, if any
         events: {
             'click button.cancel': function() {
-                HoneySens.request('view:content').overlay.empty();
+                radio.request('view:content').getRegion('overlay').empty();
             },
             'click button.useCustomUpdateInterval': function(e) {
                 var $updateIntervalField = this.$el.find('input[name="updateInterval"]'),
@@ -282,7 +283,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
                                 $busy.css('position', 'relative');
                                 $busy.add($result).css('top', -Math.min(overlayHeight, contentHeight));
                                 // Update state
-                                HoneySens.execute('fetchUpdates', false);
+                                radio.request('fetchUpdates', false);
                             },
                             error: function() {
                                 $result.removeClass('hide');
@@ -323,7 +324,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
             this.$el.find('input[name="firmwarePreference"][value="' + firmwarePreference + '"]').prop('checked', true).parent().addClass('active');
             this.refreshFirmwarePreference(firmwarePreference, this.model.getFirmware());
         },
-        templateHelpers: {
+        templateContext: {
             isNew: function() {
                 return !this.hasOwnProperty('id');
             },
@@ -364,7 +365,7 @@ HoneySens.module('Sensors.Views', function(Views, HoneySens, Backbone, Marionett
             }
         },
         serializeData: function() {
-            var data = Marionette.ItemView.prototype.serializeData.apply(this, arguments);
+            var data = Marionette.View.prototype.serializeData.apply(this, arguments);
             data.divisions = HoneySens.data.models.divisions.toJSON();
             // Only show platforms with attached default firmware to users
             data.platforms = _.map(HoneySens.data.models.platforms.filter(function(p) {

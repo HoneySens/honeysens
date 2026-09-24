@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import ServerEndpointTpl from 'app/modules/settings/templates/ServerEndpoint.tpl';
 import 'validator';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ServerEndpoint = Marionette.ItemView.extend({
+    Views.ServerEndpoint = Marionette.View.extend({
         template: _.template(ServerEndpointTpl),
         className: 'panel-body',
         onRender: function() {
@@ -18,7 +19,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                     var serverPortHTTPS = parseInt(view.$el.find('input[name="serverPortHTTPS"]').val());
                     view.model.save({serverHost: serverHost, serverPortHTTPS: serverPortHTTPS}, {
                         success: function() {
-                            HoneySens.request('view:modal').show(new ModalSettingsSaveView());
+                            radio.request('view:modal').show(new ModalSettingsSaveView());
                         }
                     });
                 }

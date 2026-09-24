@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import Backgrid from 'backgrid';
@@ -26,7 +27,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         );
     }
 
-    Views.EventList  = Marionette.LayoutView.extend({
+    Views.EventList  = Marionette.View.extend({
         template: _.template(EventListTpl),
         grid: null,
         regions: {
@@ -42,31 +43,31 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
         },
         events: {
             'click button.massExport': function() {
-                HoneySens.request('events:export:list', this.collection, new Models.Events(this.grid.getSelectedModels()));
+                radio.request('events:export:list', this.collection, new Models.Events(this.grid.getSelectedModels()));
             },
             'click button.massEdit': function() {
-                HoneySens.request('events:edit:some', new Models.Events(this.grid.getSelectedModels()));
+                radio.request('events:edit:some', new Models.Events(this.grid.getSelectedModels()));
             },
             'click button.massDelete': function() {
-                HoneySens.request('events:remove:some', new Models.Events(this.grid.getSelectedModels()), this.collection);
+                radio.request('events:remove:some', new Models.Events(this.grid.getSelectedModels()), this.collection);
             },
             'click a.exportPage': function() {
-                HoneySens.request('events:export:page', this.collection);
+                radio.request('events:export:page', this.collection);
             },
             'click a.exportAll': function() {
-                HoneySens.request('events:export:all', this.collection);
+                radio.request('events:export:all', this.collection);
             },
             'click a.editPage': function() {
-                HoneySens.request('events:edit:some', this.collection);
+                radio.request('events:edit:some', this.collection);
             },
             'click a.editAll': function() {
-                HoneySens.request('events:edit:all', this.collection);
+                radio.request('events:edit:all', this.collection);
             },
             'click a.removePage': function() {
-                HoneySens.request('events:remove:some', this.collection, this.collection);
+                radio.request('events:remove:some', this.collection, this.collection);
             },
             'click a.removeAll': function() {
-                HoneySens.request('events:remove:all', this.collection);
+                radio.request('events:remove:all', this.collection);
             }
         },
         onRender: function() {
@@ -189,7 +190,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                         },
                         'click button.editStatus': function(e) {
                             e.preventDefault();
-                            HoneySens.request('events:edit:single', this.model);
+                            radio.request('events:edit:single', this.model);
                             this.$el.find('button.editStatus').popover('hide');
                         }
                     },
@@ -221,7 +222,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     events: {
                         'click button.showEvent': function(e) {
                             e.preventDefault();
-                            HoneySens.request('view:content').overlay.show(new EventDetailsView({model: this.model}));
+                            radio.request('view:content').getRegion('overlay').show(new EventDetailsView({model: this.model}));
                         },
                         'click button.removeEvent': function(e) {
                             e.preventDefault();
@@ -234,11 +235,11 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                                     contentType: 'application/json',
                                     success: function() {
                                         HoneySens.data.models.events.fetch();
-                                        HoneySens.request('view:modal').empty();
+                                        radio.request('view:modal').empty();
                                     }
                                 });
                             });
-                            HoneySens.request('view:modal').show(dialog);
+                            radio.request('view:modal').show(dialog);
                         }
                     },
                     render: function() {
@@ -293,8 +294,8 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 collection: this.collection,
                 goBackFirstOnSort: false
             });
-            this.list.show(this.grid);
-            this.paginator.show(paginator);
+            this.getRegion('list').show(this.grid);
+            this.getRegion('paginator').show(paginator);
             // Division filter
             var divisions = _.union([{label: _.t('allDivisions'), value: null}],
                 HoneySens.data.models.divisions.map(function(division) {
@@ -316,7 +317,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 field: 'division',
                 selectOptions: divisions
             });
-            this.groupFilter.show(this.groupFilterView);
+            this.getRegion('groupFilter').show(this.groupFilterView);
             // Sensor filter
             this.sensorFilterView = new Backgrid.Extension.SelectFilter({
                 className: 'backgrid-filter form-control',
@@ -324,7 +325,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 field: 'sensor',
                 selectOptions: getSensorSelectOptions()
             });
-            this.sensorFilter.show(this.sensorFilterView);
+            this.getRegion('sensorFilter').show(this.sensorFilterView);
             // Event control box tooltips
             this.$el.find('div.selectionOptions button').tooltip();
             // Classification filter
@@ -339,7 +340,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     {label: _.t('eventClassificationHoneypot'), value: '3'}
                 ]
             });
-            this.classificationFilter.show(this.classificationFilterView);
+            this.getRegion('classificationFilter').show(this.classificationFilterView);
             // Status filter
             this.statusFilterView = new Backgrid.Extension.SelectFilter({
                 className: 'backgrid-filter form-control',
@@ -356,14 +357,14 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     {label: _.t('all'), value: null}
                 ]
             });
-            this.statusFilter.show(this.statusFilterView);
+            this.getRegion('statusFilter').show(this.statusFilterView);
             // Date filter
             this.dateFilterView = new BackgridDatepickerFilter({
                 collection: this.collection,
                 fromField: 'fromTS',
                 toField: 'toTS'
             });
-            this.dateFilter.show(this.dateFilterView);
+            this.getRegion('dateFilter').show(this.dateFilterView);
             // Search box
             var eventFilter = new Backgrid.Extension.ServerSideFilter({
                 template: function(data) {
@@ -373,7 +374,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                 name: 'filter',
                 placeholder: _.t('events:eventListFilterSearchPlaceholder')
             });
-            this.eventFilter.show(eventFilter);
+            this.getRegion('eventFilter').show(eventFilter);
             // Source filter
             this.sourceFilterView = new Backgrid.Extension.SelectFilter({
                 className: 'backgrid-filter form-control',
@@ -408,7 +409,7 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     else $groupEditElements.removeClass('hidden');
                 }
             });
-            this.sourceFilter.show(this.sourceFilterView);
+            this.getRegion('sourceFilter').show(this.sourceFilterView);
             // Display control box when models are selected and update counter
             this.listenTo(this.collection, 'backgrid:selected', function() {
                 view.updateSelectionControlPanel()
@@ -420,8 +421,11 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
             this.listenTo(this.collection, 'pageable:state:change', function() {
                 view.grid.clearSelectedModels();
             });
+            this.listenTo(this.collection, 'update', function() {
+                this.refreshPageSize(this.collection);
+            });
             // Update event collection when new events are announced
-            this.listenTo(HoneySens.vent, 'models:events:new', function(ids) {
+            this.listenTo(radio, 'models:events:new', function(ids) {
                 this.collection.fetch({
                     success: function(collection) {
                         // Force rendering of potential new rows
@@ -429,9 +433,6 @@ HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette
                     }
                 });
             });
-        },
-        onShow: function() {
-            this.refreshPageSize(this.collection);
         },
         onDestroy: function() {
             HoneySens.data.models.events.reset();

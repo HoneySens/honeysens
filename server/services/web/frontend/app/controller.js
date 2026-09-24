@@ -1,3 +1,4 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import Models from 'app/models';
 import AppLayoutView from 'app/views/AppLayout';
@@ -18,21 +19,20 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
     }
 
     Controller.doLogout = function() {
-        HoneySens.execute('logout');
+        radio.request('logout');
     };
 
-    Controller.Router = Backbone.Marionette.AppRouter.extend({
-        appRoutes: {
-            'logout': 'doLogout'
-        },
-        onRoute: function() {
-            HoneySens.startModule(Controller);
+    Controller.Router = Backbone.Router.extend({
+        routes: {
+            'logout': function() {
+                Controller.doLogout();
+            }
         }
     });
 
     HoneySens.addInitializer(function() {
         // Session management commands
-        HoneySens.commands.setHandler('logout', function() {
+        radio.reply('logout', function() {
             $.ajax({
                 type: 'DELETE',
                 url: 'api/sessions',
@@ -56,21 +56,21 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                     HoneySens.data.settings.clear();
                     HoneySens.data.lastEventID = null;
                     HoneySens.data.lastUpdateTimestamp = null;
-                    HoneySens.vent.trigger('logout:success');
+                    radio.trigger('logout:success');
                 },
                 error: function() {
                     location.reload();
                 }
             });
         });
-        HoneySens.reqres.setHandler('login', function(credentials) {
+        radio.reply('login', function(credentials) {
             $.ajax({
                 type: 'POST',
                 url: 'api/sessions',
                 data: JSON.stringify(credentials),
                 contentType: 'application/json',
                 success: function(data) {
-                    HoneySens.vent.trigger('login:success');
+                    radio.trigger('login:success');
                     data = JSON.parse(data);
                     var user = new Models.User(data);
                     HoneySens.data.session.user = user;
@@ -98,36 +98,36 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                                 HoneySens.data.lastEventID = data.lastEventID;
                                 HoneySens.data.lastUpdateTimestamp = data.timestamp;
                                 // Update Layout
-                                HoneySens.commands.execute('init:layout');
+                                radio.request('init:layout');
                                 // Navigate to dashboard
                                 HoneySens.router.navigate('login');
                                 HoneySens.router.navigate('', {trigger: true});
-                                HoneySens.commands.execute('counter:start');
+                                radio.request('counter:start');
                             }
                         });
                     }
                 },
                 error: function() {
-                    HoneySens.vent.trigger('login:failed');
+                    radio.trigger('login:failed');
                 }
             });
         });
 
         // Initialize events
-        HoneySens.vent.on('logout:success', function(user) {
+        radio.on('logout:success', function(user) {
             HoneySens.stopCurrentModule();
-            HoneySens.request('view:content-region').show(new LoginView());
-            HoneySens.request('view:navigation').empty();
+            radio.request('view:content-region').show(new LoginView());
+            radio.request('view:navigation').empty();
             if(HoneySens.router) HoneySens.router.navigate(''); // only clear URL if router is initialized already
         });
 
-        HoneySens.commands.setHandler('init:layout', function() {
-            HoneySens.request('view:content-region').show(new AppLayoutView());
-            HoneySens.request('view:navigation').show(new NavigationView({model: HoneySens.data.session.user}));
-            HoneySens.request('view:content').sidebar.show(new SidebarView());
+        radio.reply('init:layout', function() {
+            radio.request('view:content-region').show(new AppLayoutView());
+            radio.request('view:navigation').show(new NavigationView({model: HoneySens.data.session.user}));
+            radio.request('view:content').getRegion('sidebar').show(new SidebarView());
         });
 
-        HoneySens.commands.setHandler('init:finalize', function() {
+        radio.reply('init:finalize', function() {
             // Initialize Layout according to system and session status
             var user = HoneySens.data.session.user;
             if(HoneySens.data.system.get('setup')) {
@@ -138,11 +138,11 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                 if (HoneySens.data.system.get('update')) {
                     document.location.hash = '#setup';
                 } else {
-                    HoneySens.commands.execute('init:layout');
-                    HoneySens.commands.execute('counter:start');
+                    radio.request('init:layout');
+                    radio.request('counter:start');
                 }
             } else {
-                HoneySens.vent.trigger('logout:success');
+                radio.trigger('logout:success');
             }
             // Initialize main router
             HoneySens.router = new Controller.Router({
@@ -151,7 +151,7 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
             Backbone.history.start();
         });
 
-        HoneySens.commands.setHandler('fetchUpdates', function(startNewCounter) {
+        radio.reply('fetchUpdates', function(startNewCounter) {
             let url = 'api/state?ts=' + HoneySens.data.lastUpdateTimestamp + '&last_id=' + HoneySens.data.lastEventID;
             $.ajax({
                 type: 'GET',
@@ -162,7 +162,7 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                     HoneySens.data.lastEventID = data.lastEventID;
                     if(data.new_events.length > 0) {
                         HoneySens.data.models.new_events.add(data.new_events);
-                        HoneySens.vent.trigger('models:events:new', _.pluck(data.new_events.items, 'id'));
+                        radio.trigger('models:events:new', _.pluck(data.new_events.items, 'id'));
                     }
                     if(_.has(data, 'event_filters')) HoneySens.data.models.eventfilters.fullCollection.reset(data.event_filters);
                     if(_.has(data, 'sensors')) HoneySens.data.models.sensors.fullCollection.reset(data.sensors);
@@ -174,11 +174,11 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                     if(_.has(data, 'services')) HoneySens.data.models.services.set(data.services);
                     if(_.has(data, 'platforms')) HoneySens.data.models.platforms.set(data.platforms);
                     if(_.has(data, 'tasks')) HoneySens.data.models.tasks.set(data.tasks);
-                    HoneySens.vent.trigger('models:updated');
-                    if(startNewCounter) HoneySens.execute('counter:start');
+                    radio.trigger('models:updated');
+                    if(startNewCounter) radio.request('counter:start');
                 },
                 error: function() {
-                    HoneySens.request('view:modal').show(new ModalServerError({
+                    radio.request('view:modal').show(new ModalServerError({
                         model: new Backbone.Model({
                             msg: _.t('layout:connectionLost'),
                             onClose: function() {
@@ -190,22 +190,22 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
             });
         });
 
-        HoneySens.commands.setHandler('counter:start', function() {
+        radio.reply('counter:start', function() {
             var counter = 10,
                 stopCounter = function() {
-                    HoneySens.vent.off('logout:success', stopCounter);
+                    radio.off('logout:success', stopCounter);
                     clearInterval(eventCounter);
                 },
                 eventCounter = setInterval(function() {
                     counter--;
-                    HoneySens.vent.trigger('counter:updated', counter);
+                    radio.trigger('counter:updated', counter);
                     if(counter <= 0) {
                         stopCounter();
-                        HoneySens.execute('fetchUpdates', true);
+                        radio.request('fetchUpdates', true);
                     }
                 }, 1000);
-            HoneySens.vent.trigger('counter:started');
-            HoneySens.vent.on('logout:success', stopCounter);
+            radio.trigger('counter:started');
+            radio.on('logout:success', stopCounter);
         });
 
 
@@ -228,7 +228,7 @@ HoneySens.module('Controller', function(Controller, HoneySens, Backbone, Marione
                 HoneySens.data.system.set(data.system);
                 HoneySens.data.lastEventID = data.lastEventID;
                 HoneySens.data.lastUpdateTimestamp = data.timestamp;
-                HoneySens.commands.execute('init:finalize');
+                radio.request('init:finalize');
             },
             error: function(data) {
                 // Receiving an HTTP 403 from api/state indicates a session timeout.

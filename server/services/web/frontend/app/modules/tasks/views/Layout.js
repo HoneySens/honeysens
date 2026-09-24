@@ -4,7 +4,7 @@ import 'app/views/common';
 import 'app/views/regions';
 
 HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Layout = Marionette.LayoutView.extend({
+    Views.Layout = Marionette.View.extend({
         template: _.template(LayoutTpl),
         regions: {
             content: 'div.content'

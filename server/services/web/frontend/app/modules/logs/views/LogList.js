@@ -42,7 +42,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
         }
     }
 
-    Views.LogList = Marionette.LayoutView.extend({
+    Views.LogList = Marionette.View.extend({
         template: _.template(LogListTpl),
         grid: null,
         regions: {
@@ -129,8 +129,8 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
             var paginator = new Backgrid.Extension.Paginator({
                 collection: this.collection
             });
-            this.list.show(this.grid);
-            this.paginator.show(paginator);
+            this.getRegion('list').show(this.grid);
+            this.getRegion('paginator').show(paginator);
             // User filter
             this.userFilterView = new Backgrid.Extension.SelectFilter({
                 className: 'backgrid-filter form-control',
@@ -138,7 +138,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
                 field: 'user_id',
                 selectOptions: getUserSelectOptions()
             });
-            this.userFilter.show(this.userFilterView);
+            this.getRegion('userFilter').show(this.userFilterView);
             // Resource filter
             this.resourceFilterView = new Backgrid.Extension.SelectFilter({
                 className: 'backgrid-filter form-control',
@@ -146,7 +146,7 @@ HoneySens.module('Logs.Views', function(Views, HoneySens, Backbone, Marionette, 
                 field: 'resource_type',
                 selectOptions: getResourceTypeSelectOptions()
             });
-            this.resourceFilter.show(this.resourceFilterView);
+            this.getRegion('resourceFilter').show(this.resourceFilterView);
             this.collection.fetch({
                 success: function() {
                     view.refreshPageSize(view.collection);

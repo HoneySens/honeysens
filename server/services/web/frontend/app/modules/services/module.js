@@ -1,5 +1,6 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
-import Routing from 'app/routing';
+import createRoutingModule from 'app/routing';
 import LayoutView from 'app/modules/services/views/Layout';
 import ServiceListView from 'app/modules/services/views/ServiceList';
 import FileUploadView from 'app/common/views/FileUpload';
@@ -7,7 +8,7 @@ import ServiceDetailsView from 'app/modules/services/views/ServiceDetails';
 import ModalServiceRemoveView from 'app/modules/services/views/ModalServiceRemove';
 import ModalServiceRevisionRemoveView from 'app/modules/services/views/ModalServiceRevisionRemove';
 
-var ServicesModule = Routing.extend({
+var ServicesModule = createRoutingModule({
     name: 'services',
     startWithParent: false,
     rootView: null,
@@ -17,44 +18,44 @@ var ServicesModule = Routing.extend({
     start: function() {
         console.log('Starting module: services');
         this.rootView = new LayoutView();
-        HoneySens.request('view:content').main.show(this.rootView);
+        radio.request('view:content').getRegion('main').show(this.rootView);
 
         // Register command handlers
         var contentRegion = this.rootView.getRegion('content'),
             router = this.router;
 
-        HoneySens.reqres.setHandler('services:show', function() {
+        radio.reply('services:show', function() {
             if(!HoneySens.assureAllowed('services', 'get')) return false;
             contentRegion.show(new ServiceListView({collection: HoneySens.data.models.services}));
             router.navigate('sensors/services');
-            HoneySens.vent.trigger('services:shown');
+            radio.trigger('services:shown');
         });
-        HoneySens.reqres.setHandler('services:add', function() {
-            HoneySens.request('view:content').overlay.show(new FileUploadView());
+        radio.reply('services:add', function() {
+            radio.request('view:content').getRegion('overlay').show(new FileUploadView());
         });
-        HoneySens.reqres.setHandler('services:remove', function(model) {
-            HoneySens.request('view:modal').show(new ModalServiceRemoveView({model: model}));
+        radio.reply('services:remove', function(model) {
+            radio.request('view:modal').show(new ModalServiceRemoveView({model: model}));
         });
-        HoneySens.reqres.setHandler('services:details', function(model) {
-            HoneySens.request('view:content').overlay.show(new ServiceDetailsView({model: model}));
+        radio.reply('services:details', function(model) {
+            radio.request('view:content').getRegion('overlay').show(new ServiceDetailsView({model: model}));
         });
-        HoneySens.reqres.setHandler('services:revisions:remove', function(model) {
-            HoneySens.request('view:modal').show(new ModalServiceRevisionRemoveView({model: model}));
+        radio.reply('services:revisions:remove', function(model) {
+            radio.request('view:modal').show(new ModalServiceRevisionRemoveView({model: model}));
         });
     },
     stop: function() {
         console.log('Stopping module: services');
-        HoneySens.reqres.removeHandler('services:show');
-        HoneySens.reqres.removeHandler('services:add');
-        HoneySens.reqres.removeHandler('services:remove');
-        HoneySens.reqres.removeHandler('services:details');
+        radio.stopReplying('services:show');
+        radio.stopReplying('services:add');
+        radio.stopReplying('services:remove');
+        radio.stopReplying('services:details');
     },
     routesList: {
         'sensors/services': 'showServices',
         'sensors/services/add': 'addService'
     },
-    showServices: function() {HoneySens.request('services:show');},
-    addService: function() {HoneySens.request('services:add');}
+    showServices: function() {radio.request('services:show');},
+    addService: function() {radio.request('services:add');}
 });
 
 export default HoneySens.module('Services.Routing', ServicesModule);

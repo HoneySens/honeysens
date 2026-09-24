@@ -1,10 +1,11 @@
+import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import LDAPTpl from 'app/modules/settings/templates/LDAP.tpl';
 import 'validator';
 
 HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.LDAP = Marionette.ItemView.extend({
+    Views.LDAP = Marionette.View.extend({
         template: _.template(LDAPTpl),
         className: 'panel-body',
         events: {
@@ -24,7 +25,7 @@ HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionet
                     e.preventDefault();
                     view.model.save(view.getFormData(), {
                         success: function() {
-                            HoneySens.request('view:modal').show(new ModalSettingsSaveView());
+                            radio.request('view:modal').show(new ModalSettingsSaveView());
                         }
                     });
                 }

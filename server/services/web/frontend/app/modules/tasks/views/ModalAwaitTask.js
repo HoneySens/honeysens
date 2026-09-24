@@ -3,7 +3,7 @@ import ModalAwaitTaskTpl from 'app/modules/tasks/templates/ModalAwaitTask.tpl';
 import 'app/views/common';
 
 HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalAwaitTask = Marionette.ItemView.extend({
+    Views.ModalAwaitTask = Marionette.View.extend({
         template: _.template(ModalAwaitTaskTpl),
         onRender: function() {
             var spinner = HoneySens.Views.inlineSpinner.spin();
