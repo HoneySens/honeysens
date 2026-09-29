@@ -1,7 +1,7 @@
 <% if(getStatus() == true) { %>
-    <span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;<%= _.t("services:revisionStatusOk") %>
+    <span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;<%= t("services:revisionStatusOk") %>
 <% } else if(getStatus() == false) { %>
-    <span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;<%= _.t("services:revisionStatusError") %>
+    <span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;<%= t("services:revisionStatusError") %>
 <% } else { %>
-    <span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;<%= _.t("services:statusQuery") %>
+    <span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;<%= t("services:statusQuery") %>
 <% } %>

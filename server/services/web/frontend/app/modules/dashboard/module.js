@@ -1,7 +1,8 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
-import Models from 'app/models';
+import { Stats } from 'app/models';
 import LayoutView from 'app/modules/dashboard/views/Layout';
 import Dashboardview from 'app/modules/dashboard/views/Dashboard';
 
@@ -10,7 +11,7 @@ var DashboardModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: _.t('dashboard:header'), uri: '', iconClass: 'glyphicon glyphicon-globe', permission: {domain: 'events', action: 'get'}, priority: 0}
+        {title: i18n.t('dashboard:header'), uri: '', iconClass: 'glyphicon glyphicon-globe', permission: {domain: 'events', action: 'get'}, priority: 0}
     ],
     start: function() {
         console.log('Starting module: dashboard');
@@ -23,7 +24,7 @@ var DashboardModule = createRoutingModule({
 
         radio.reply('dashboard:show', function() {
             if(!HoneySens.assureAllowed('events', 'get')) return false;
-            contentRegion.show(new Dashboardview({model: new Models.Stats()}));
+            contentRegion.show(new Dashboardview({model: new Stats()}));
             router.navigate('');
             radio.trigger('dashboard:shown');
         });
@@ -38,4 +39,4 @@ var DashboardModule = createRoutingModule({
     showDashboard: function() {radio.request('dashboard:show');}
 });
 
-export default HoneySens.module('Dashboard.Routing', DashboardModule);
+export default DashboardModule;

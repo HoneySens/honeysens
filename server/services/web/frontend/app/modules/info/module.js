@@ -1,5 +1,5 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
-import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
 import LayoutView from 'app/modules/info/views/Layout';
 import OverView from 'app/modules/info/views/Overview';
@@ -9,7 +9,7 @@ var InfoModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: _.t('info:infoHeader'), uri: 'info', iconClass: 'glyphicon glyphicon-info-sign', permission: {domain: 'state', action: 'get'}}
+        {title: i18n.t('info:infoHeader'), uri: 'info', iconClass: 'glyphicon glyphicon-info-sign', permission: {domain: 'state', action: 'get'}}
     ],
     start: function() {
         console.log('Starting module: info');
@@ -36,4 +36,4 @@ var InfoModule = createRoutingModule({
     showInfo: function() {radio.request('info:show');},
 });
 
-export default HoneySens.module('Info.Routing', InfoModule);
+export default InfoModule;

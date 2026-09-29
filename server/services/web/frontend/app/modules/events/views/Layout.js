@@ -1,22 +1,22 @@
+import i18n from 'app/common/i18n';
+import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
-import HoneySens from 'app/app';
 import LayoutTpl from 'app/modules/events/templates/Layout.tpl';
 
-HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Layout = Marionette.View.extend({
-        template: _.template(LayoutTpl),
-        regions: {
-            content: 'div.content'
-        },
-        initialize: function() {
-            this.listenTo(radio, 'events:shown', function() {
-                this.$el.find('span.title').html(_.t("events:eventHeader"));
-            });
-            this.listenTo(radio, 'events:filters:shown', function() {
-                this.$el.find('span.title').html(`${_.t("events:eventHeader")} &rsaquo; ${_.t("events:filterHeader")}`);
-            });
-        }
-    });
+const Layout = View.extend({
+    template: _.template(LayoutTpl),
+    templateContext: {...i18n},
+    regions: {
+        content: 'div.content'
+    },
+    initialize: function() {
+        this.listenTo(radio, 'events:shown', function() {
+            this.$el.find('span.title').html(i18n.t("events:eventHeader"));
+        });
+        this.listenTo(radio, 'events:filters:shown', function() {
+            this.$el.find('span.title').html(`${i18n.t("events:eventHeader")} &rsaquo; ${i18n.t("events:filterHeader")}`);
+        });
+    }
 });
 
-export default HoneySens.Events.Views.Layout;
+export default Layout;

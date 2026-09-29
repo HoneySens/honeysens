@@ -1,28 +1,29 @@
+import i18n from 'app/common/i18n';
+import { View } from 'backbone.marionette';
 import HoneySens from 'app/app';
 import ModalEventRemoveSingleTpl from 'app/modules/events/templates/ModalEventRemoveSingle.tpl';
 import ModalEventRemoveMassTpl from 'app/modules/events/templates/ModalEventRemoveMass.tpl';
-import 'app/views/common';
+import { EventTemplateHelpers } from 'app/views/common';
 
-HoneySens.module('Events.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalRemoveEvent = Marionette.View.extend({
-        events: {
-            'click button.btn-primary': function(e) {
-                e.preventDefault();
-                this.trigger('confirm', this.$el.find('input[name="archive"]').is(':checked'));
-            }
+const ModalRemoveEvent = View.extend({
+    events: {
+        'click button.btn-primary': function(e) {
+            e.preventDefault();
+            this.trigger('confirm', this.$el.find('input[name="archive"]').is(':checked'));
+        }
+    },
+    initialize: function() {
+        // Template selection based on single/mass event removal: in case of multiple events just their 'total'
+        // count is submitted, otherwise we receive an Event object
+        if(this.model.has('total')) this.template = _.template(ModalEventRemoveMassTpl);
+        else this.template = _.template(ModalEventRemoveSingleTpl);
+    },
+    templateContext: _.extend({
+        archivePrefer: function() {
+            return HoneySens.data.settings.get('archivePrefer');
         },
-        initialize: function() {
-            // Template selection based on single/mass event removal: in case of multiple events just their 'total'
-            // count is submitted, otherwise we receive an Event object
-            if(this.model.has('total')) this.template = _.template(ModalEventRemoveMassTpl);
-            else this.template = _.template(ModalEventRemoveSingleTpl);
-        },
-        templateContext: Object.assign({
-            archivePrefer: function() {
-                return HoneySens.data.settings.get('archivePrefer');
-            }
-        }, HoneySens.Views.EventTemplateHelpers)
-    });
+        t: i18n.t
+    }, EventTemplateHelpers)
 });
 
-export default HoneySens.Events.Views.ModalRemoveEvent;
+export default ModalRemoveEvent;

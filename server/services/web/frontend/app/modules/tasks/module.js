@@ -1,6 +1,7 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
-import Models from 'app/models';
+import { TaskStatus } from 'app/models';
 import createRoutingModule from 'app/routing';
 import LayoutView from 'app/modules/tasks/views/Layout';
 import TaskListView from 'app/modules/tasks/views/TaskList';
@@ -12,15 +13,15 @@ var TasksModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [{
-        title: _.t('tasks:header'),
+        title: i18n.t('tasks:header'),
         uri: 'tasks',
         iconClass: 'glyphicon glyphicon-tasks',
         permission: {domain: 'tasks', action: 'get'},
         priority: 4,
         highlight: {
             count: function() {
-                var doneTasks = HoneySens.data.models.tasks.where({status: Models.Task.status.DONE}).length,
-                    failedTasks = HoneySens.data.models.tasks.where({status: Models.Task.status.ERROR}).length;
+                var doneTasks = HoneySens.data.models.tasks.where({status: TaskStatus.DONE}).length,
+                    failedTasks = HoneySens.data.models.tasks.where({status: TaskStatus.ERROR}).length;
                 return doneTasks + failedTasks;
             },
             getModel: function() {
@@ -61,4 +62,4 @@ var TasksModule = createRoutingModule({
     showTasks: function() {radio.request('tasks:show');}
 });
 
-export default HoneySens.module('Tasks.Routing', TasksModule);
+export default TasksModule;

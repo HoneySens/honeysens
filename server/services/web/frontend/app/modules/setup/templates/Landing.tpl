@@ -1,4 +1,4 @@
-<h2><%= _.t("setup:landingHeader") %></h2>
+<h2><%= t("setup:landingHeader") %></h2>
 <hr />
-<p><%= _.t("setup:landingIntro") %></p>
-<button type="button" class="btn btn-primary btn-block install" <% if(!setup) { %>disabled<% } %>><%= _.t("continue") %></button>
+<p><%= t("setup:landingIntro") %></p>
+<button type="button" class="btn btn-primary btn-block install" <% if(!setup) { %>disabled<% } %>><%= t("continue") %></button>

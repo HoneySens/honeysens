@@ -1,16 +1,16 @@
 <td>
     <select name="type" class="form-control">
-        <option value="0"><%= _.t("emailAddress") %></option>
-        <option value="1"><%= _.t("user") %></option>
+        <option value="0"><%= t("emailAddress") %></option>
+        <option value="1"><%= t("user") %></option>
     </select>
 </td>
 <td>
     <form class="contactData form-horizontal">
         <div class="form-group has-feedback">
              <select name="user" class="form-control">
-                <option value="">** <%= _.t("select") %> **</option>
+                <option value="">** <%= t("select") %> **</option>
             </select>
-            <input type="email" name="email" class="form-control" placeholder="<%= _.t('emailAddress') %>" value="<%- email %>" data-type-error="<%= _.t('emailValidationError') %>" required />
+            <input type="email" name="email" class="form-control" placeholder="<%= t('emailAddress') %>" value="<%- email %>" data-type-error="<%= t('emailValidationError') %>" required />
             <div class="form-feedback">
                 <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                 <div class="help-block with-errors"></div>
@@ -23,7 +23,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
-                    <a class="collapsed" data-toggle="collapse" data-parent="#contactDetails<%- getIdentifier() %>" href="#contactDetailsContent<%- getIdentifier() %>"><%= _.t("accounts:notifications") %></a>
+                    <a class="collapsed" data-toggle="collapse" data-parent="#contactDetails<%- getIdentifier() %>" href="#contactDetailsContent<%- getIdentifier() %>"><%= t("accounts:notifications") %></a>
                 </h4>
             </div>
             <div id="contactDetailsContent<%- getIdentifier() %>" class="details panel-collapse collapse">
@@ -32,25 +32,25 @@
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox" name="weeklySummary" <% if(sendWeeklySummary) { %>checked<% } %>>
-                                <%= _.t("accounts:weeklyEventOverview") %>
+                                <%= t("accounts:weeklyEventOverview") %>
                             </label>
                         </div>
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox" name="criticalEvents" <% if(sendCriticalEvents) { %>checked<% } %>>
-                                <%= _.t("accounts:criticalEvents") %>
+                                <%= t("accounts:criticalEvents") %>
                             </label>
                         </div>
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox" name="allEvents" <% if(sendAllEvents) { %>checked<% } %>>
-                                <%= _.t("accounts:allEvents") %>
+                                <%= t("accounts:allEvents") %>
                             </label>
                         </div>
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox" name="sensorTimeouts" <% if(sendSensorTimeouts) { %>checked<% } %>>
-                                <%= _.t("accounts:sensorTimeout") %>
+                                <%= t("accounts:sensorTimeout") %>
                             </label>
                         </div>
                     </fieldset>
@@ -61,7 +61,7 @@
 </td>
 <% if(_.templateHelpers.isAllowed('contacts', 'update')) { %>
     <td>
-        <button type="button" class="remove btn btn-default " data-toggle="tooltip" title="<%= _.t('remove') %>">
+        <button type="button" class="remove btn btn-default " data-toggle="tooltip" title="<%= t('remove') %>">
             <span class="glyphicon glyphicon-remove"></span>
         </button>
     </td>

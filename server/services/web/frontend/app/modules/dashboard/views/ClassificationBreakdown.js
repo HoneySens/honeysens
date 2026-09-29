@@ -1,3 +1,4 @@
+import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import ClassificationBreakdownTpl from 'app/modules/dashboard/templates/ClassificationBreakdown.tpl';
 import 'chart.js';
@@ -7,10 +8,10 @@ function getDataset(model) {
     var dataset = [],
         classificationData = _.unzip(_.map(model.get('classification'), function(d) {return [parseInt(d.events), parseInt(d.classification)]})),
         classificationDict = {
-            '0': {'label': _.t('unknown'), 'color': '#474949'},
-            '2': {'label': _.t('eventClassificationConnectionAttempt'), 'color': '#ddd'},
-            '3': {'label': _.t('eventClassificationHoneypot'), 'color': '#d9230f'},
-            '4': {'label': _.t('eventClassificationScan'), 'color': '#029acf'}
+            '0': {'label': i18n.t('unknown'), 'color': '#474949'},
+            '2': {'label': i18n.t('eventClassificationConnectionAttempt'), 'color': '#ddd'},
+            '3': {'label': i18n.t('eventClassificationHoneypot'), 'color': '#d9230f'},
+            '4': {'label': i18n.t('eventClassificationScan'), 'color': '#029acf'}
         };
 
     _.each([0, 2, 3, 4], function(i) {
@@ -27,6 +28,7 @@ function getDataset(model) {
 
 const ClassificationBreakdownView = View.extend({
     template: _.template(ClassificationBreakdownTpl),
+    templateContext: {...i18n},
     className: 'panel panel-primary',
     onRender: function() {
         this.listenTo(this.model, 'change', function() {

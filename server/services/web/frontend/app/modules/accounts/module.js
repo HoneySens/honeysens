@@ -1,7 +1,8 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
-import Models from 'app/models';
+import { Division, User } from 'app/models';
 import AccountsView from 'app/modules/accounts/views/AccountsView';
 import AccountsListView from 'app/modules/accounts/views/AccountsListView';
 import DivisionsEditView from 'app/modules/accounts/views/DivisionsEditView';
@@ -13,7 +14,7 @@ var AccountsModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: _.t('accounts:header'), uri: 'accounts', iconClass: 'glyphicon glyphicon-user', permission: {domain: 'divisions', action: 'create'}, priority: 4}
+        {title: i18n.t('accounts:header'), uri: 'accounts', iconClass: 'glyphicon glyphicon-user', permission: {domain: 'divisions', action: 'create'}, priority: 4}
     ],
     start: function() {
         console.log('Starting module: accounts');
@@ -31,7 +32,7 @@ var AccountsModule = createRoutingModule({
         });
         radio.reply('accounts:division:add', function(options) {
             if(!HoneySens.assureAllowed('divisions', 'create')) return false;
-            contentRegion.show(new DivisionsEditView({model: new Models.Division()}), options);
+            contentRegion.show(new DivisionsEditView({model: new Division()}), options);
             router.navigate('accounts/division/add');
         });
         radio.reply('accounts:division:edit', function(division, options) {
@@ -44,7 +45,7 @@ var AccountsModule = createRoutingModule({
         });
         radio.reply('accounts:user:add', function(options) {
             if(!HoneySens.assureAllowed('users', 'create')) return false;
-            contentRegion.show(new UsersEditView({model: new Models.User({
+            contentRegion.show(new UsersEditView({model: new User({
                     require_password_change: true
                 })}), options);
             router.navigate('accounts/user/add');
@@ -78,4 +79,4 @@ var AccountsModule = createRoutingModule({
     editUser: function(id) { radio.request('accounts:user:edit', HoneySens.data.models.users.get(id)); }
 });
 
-export default HoneySens.module('Accounts.Routing', AccountsModule);
+export default AccountsModule;

@@ -4,7 +4,6 @@ import Marionette from 'backbone.marionette';
 import Backbone from 'backbone';
 import $ from 'jquery';
 import _ from 'underscore';
-import i18n from 'app/common/i18n';
 
 var app = new Marionette.Application();
 
@@ -19,26 +18,6 @@ app.onStart = function(options) {
     initializers.forEach(function(initializer) {
         initializer.call(app);
     });
-};
-
-// Application module factory that catalogues all modules under "app"
-app.module = function(name, def) {
-    var parts = name.split('.');
-    var target = app;
-    for (var i = 0; i < parts.length - 1; i++) {
-        target[parts[i]] = target[parts[i]] || {};
-        target = target[parts[i]];
-    }
-    var leaf = target[parts[parts.length - 1]] = target[parts[parts.length - 1]] || {};
-    if (typeof def === 'function') {
-        // View-registration function:
-        //   HoneySens.module('X.Views', function(Views, HoneySens, Backbone, Marionette, $, _) { ... })
-        def(leaf, app, Backbone, Marionette, $, _);
-    } else if (def) {
-        // Plain module definition (routing modules): merge its properties in.
-        _.extend(leaf, def);
-    }
-    return leaf;
 };
 
 // Controls the lifecycle of submodules
@@ -98,9 +77,6 @@ app.addMenuItems = function(items) {
 app.assureAllowed = function(domain, action) {
     return _.templateHelpers.isAllowed(domain, action);
 };
-
-// i18n support injected into underscore
-_.t = i18n.t;
 
 // Global template helpers via an underscore property
 _.templateHelpers = {

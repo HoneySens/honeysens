@@ -1,5 +1,5 @@
 import HoneySens from 'app/app';
-import Models from 'app/models';
+import { UserRole } from 'app/models';
 import Backbone from 'backbone';
 import $ from 'jquery';
 import _ from 'underscore';
@@ -43,7 +43,7 @@ export function createRoutingModule(module) {
     for (const [route, routeName] of Object.entries(module.routesList)) {
         module.router.route(route, routeName, function() {
             // Not logged-in users are only permitted to access the setup page (for the initial setup)
-            if (HoneySens.data.session.user.get('role') === Models.User.role.GUEST && module.name !== 'setup') return;
+            if (HoneySens.data.session.user.get('role') === UserRole.GUEST && module.name !== 'setup') return;
             // Prevent the module start of any other module if the setup is running
             if ((HoneySens.data.system.get('setup') || HoneySens.data.system.get('update')) && module.name !== 'setup') return;
             HoneySens.startModule(module);

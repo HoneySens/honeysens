@@ -1,31 +1,31 @@
+import i18n from 'app/common/i18n';
+import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
-import HoneySens from 'app/app';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import ServerEndpointTpl from 'app/modules/settings/templates/ServerEndpoint.tpl';
 import 'validator';
 
-HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ServerEndpoint = Marionette.View.extend({
-        template: _.template(ServerEndpointTpl),
-        className: 'panel-body',
-        onRender: function() {
-            var view = this;
+const ServerEndpoint = View.extend({
+    template: _.template(ServerEndpointTpl),
+    templateContext: {...i18n},
+    className: 'panel-body',
+    onRender: function() {
+        var view = this;
 
-            this.$el.find('form').validator().on('submit', function (e) {
-                if (!e.isDefaultPrevented()) {
-                    e.preventDefault();
+        this.$el.find('form').validator().on('submit', function (e) {
+            if (!e.isDefaultPrevented()) {
+                e.preventDefault();
 
-                    var serverHost = view.$el.find('input[name="serverHost"]').val();
-                    var serverPortHTTPS = parseInt(view.$el.find('input[name="serverPortHTTPS"]').val());
-                    view.model.save({serverHost: serverHost, serverPortHTTPS: serverPortHTTPS}, {
-                        success: function() {
-                            radio.request('view:modal').show(new ModalSettingsSaveView());
-                        }
-                    });
-                }
-            });
-        }
-    });
+                var serverHost = view.$el.find('input[name="serverHost"]').val();
+                var serverPortHTTPS = parseInt(view.$el.find('input[name="serverPortHTTPS"]').val());
+                view.model.save({serverHost: serverHost, serverPortHTTPS: serverPortHTTPS}, {
+                    success: function() {
+                        radio.request('view:modal').show(new ModalSettingsSaveView());
+                    }
+                });
+            }
+        });
+    }
 });
 
-export default HoneySens.Settings.Views.ServerEndpoint;
+export default ServerEndpoint;

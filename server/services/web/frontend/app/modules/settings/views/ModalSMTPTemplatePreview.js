@@ -1,10 +1,10 @@
-import HoneySens from 'app/app';
+import i18n from 'app/common/i18n';
+import { View } from 'backbone.marionette';
 import ModalSMTPTemplatePreviewTpl from 'app/modules/settings/templates/ModalSMTPTemplatePreview.tpl';
 
-HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.ModalSMTPTemplatePreview = Marionette.View.extend({
-        template: _.template(ModalSMTPTemplatePreviewTpl),
-    });
+const ModalSMTPTemplatePreview = View.extend({
+    template: _.template(ModalSMTPTemplatePreviewTpl),
+    templateContext: {...i18n},
 });
 
-export default HoneySens.Settings.Views.ModalSMTPTemplatePreview;
+export default ModalSMTPTemplatePreview;

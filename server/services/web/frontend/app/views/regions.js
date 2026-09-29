@@ -1,4 +1,4 @@
-import Marionette from 'backbone.marionette';
+import { Region } from 'backbone.marionette';
 import Backbone from 'backbone';
 import _ from 'underscore';
 import $ from 'jquery';
@@ -6,10 +6,10 @@ import 'bootstrap';
 
 var Regions = {};
 
-Regions.ModalRegion = Marionette.Region.extend({
+Regions.ModalRegion = Region.extend({
     constructor: function() {
         var region = this;
-        Marionette.Region.prototype.constructor.apply(this, arguments);
+        Region.prototype.constructor.apply(this, arguments);
         this._ensureElement();
         this.$el.on('hidden.bs.modal', { region: this }, function(e) {
             e.data.region.empty();
@@ -27,7 +27,7 @@ Regions.ModalRegion = Marionette.Region.extend({
 });
 
 // based on https://github.com/jmeas/marionette.transition-region
-Regions.TransitionRegion = Marionette.Region.extend({
+Regions.TransitionRegion = Region.extend({
     transitionInCss: {
         opacity: 0
     },
@@ -253,10 +253,10 @@ Regions.TransitionRegion = Marionette.Region.extend({
     }
 });
 
-Regions.OverlayRegion = Marionette.Region.extend({
+Regions.OverlayRegion = Region.extend({
     show: function(view, options) {
         var region = this;
-        Marionette.Region.prototype.show.apply(this, arguments);
+        Region.prototype.show.apply(this, arguments);
         view.$el.css({display: 'block', left: $(window).width(), width: $('#main').width()});
         var $backdrop = $('<div/>').addClass('overlay-backdrop');
         view.$el.parent().append($backdrop);
@@ -295,7 +295,7 @@ Regions.OverlayRegion = Marionette.Region.extend({
             view.$el.animate({left: $(window).width()}, {
                 duration: 400,
                 complete: function() {
-                    Marionette.Region.prototype.empty.apply(region, arguments);
+                    Region.prototype.empty.apply(region, arguments);
                 }
             });
             $backdrop.on('transitionend', function() {

@@ -1,3 +1,4 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
@@ -9,7 +10,7 @@ var LogsModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [{
-        title: _.t('logs:header'),
+        title: i18n.t('logs:header'),
         uri: 'logs',
         iconClass: 'glyphicon glyphicon-book',
         permission: {domain: 'logs', action: 'get'},
@@ -42,4 +43,4 @@ var LogsModule = createRoutingModule({
     showLogs: function() {radio.request('logs:show');}
 });
 
-export default HoneySens.module('Logs.Routing', LogsModule);
+export default LogsModule;

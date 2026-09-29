@@ -1,15 +1,13 @@
-import HoneySens from 'app/app';
+import i18n from 'app/common/i18n';
+import { View } from 'backbone.marionette';
 import LayoutTpl from 'app/modules/tasks/templates/Layout.tpl';
-import 'app/views/common';
-import 'app/views/regions';
 
-HoneySens.module('Tasks.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    Views.Layout = Marionette.View.extend({
-        template: _.template(LayoutTpl),
-        regions: {
-            content: 'div.content'
-        }
-    })
+const Layout = View.extend({
+    template: _.template(LayoutTpl),
+    templateContext: {...i18n},
+    regions: {
+        content: 'div.content'
+    }
 });
 
-export default HoneySens.Tasks.Views.Layout;
+export default Layout;

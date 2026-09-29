@@ -85,4 +85,4 @@ var SetupModule = createRoutingModule({
     changeOwnPassword: function() {radio.request('setup:changepw:show');}
 });
 
-export default HoneySens.module('Setup.Routing', SetupModule);
+export default SetupModule;

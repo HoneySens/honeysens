@@ -1,7 +1,9 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
+import { waitForTask } from 'app/views/common';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
-import Models from 'app/models';
+import { Sensor, Task } from 'app/models';
 import LayoutView from 'app/modules/sensors/views/Layout';
 import SensorListView from 'app/modules/sensors/views/SensorList';
 import SensorEditView from 'app/modules/sensors/views/SensorEdit';
@@ -14,7 +16,7 @@ var SensorsModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: _.t('sensors:header'), uri: 'sensors', iconClass: 'glyphicon glyphicon-hdd', permission: {domain: 'sensors', action: 'get'}, priority: 2}
+        {title: i18n.t('sensors:header'), uri: 'sensors', iconClass: 'glyphicon glyphicon-hdd', permission: {domain: 'sensors', action: 'get'}, priority: 2}
     ],
     start: function() {
         console.log('Starting module: sensors');
@@ -32,7 +34,7 @@ var SensorsModule = createRoutingModule({
             radio.trigger('sensors:shown');
         });
         radio.reply('sensors:add', function() {
-            radio.request('view:content').getRegion('overlay').show(new SensorEditView({model: new Models.Sensor()}));
+            radio.request('view:content').getRegion('overlay').show(new SensorEditView({model: new Sensor()}));
         });
         radio.reply('sensors:edit', function(model) {
             radio.request('view:content').getRegion('overlay').show(new SensorEditView({model: model}));
@@ -46,10 +48,10 @@ var SensorsModule = createRoutingModule({
                 url: 'api/sensors/config/' + model.id,
                 dataType: 'json',
                 success: function(resp) {
-                    var task = HoneySens.data.models.tasks.add(new Models.Task(resp)),
+                    var task = HoneySens.data.models.tasks.add(new Task(resp)),
                         awaitTaskView = new ModalAwaitTaskView({model: task});
                     radio.request('view:modal').show(awaitTaskView);
-                    HoneySens.Views.waitForTask(task, {
+                    waitForTask(task, {
                         done: function(task) {
                             if(!awaitTaskView.isDestroyed()) {
                                 // Close modal view and start download, then remove the task
@@ -67,7 +69,7 @@ var SensorsModule = createRoutingModule({
                 },
                 error: function() {
                     radio.request('view:modal').show(new ModalServerError({
-                        model: new Backbone.Model({msg: _.t('sensors:sensorConfigError')})
+                        model: new Backbone.Model({msg: i18n.t('sensors:sensorConfigError')})
                     }));
                 }
             })
@@ -86,4 +88,4 @@ var SensorsModule = createRoutingModule({
     showSensors: function() {radio.request('sensors:show');},
 });
 
-export default HoneySens.module('Sensors.Routing', SensorsModule);
+export default SensorsModule;

@@ -1,3 +1,4 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
@@ -12,7 +13,7 @@ var PlatformsModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: _.t("platforms:header"), uri: 'sensors/platforms', iconClass: 'glyphicon glyphicon-import', permission: {domain: 'sensors', action: 'get'}}
+        {title: i18n.t("platforms:header"), uri: 'sensors/platforms', iconClass: 'glyphicon glyphicon-import', permission: {domain: 'sensors', action: 'get'}}
     ],
     start: function() {
         console.log('Starting module: platforms');
@@ -50,4 +51,4 @@ var PlatformsModule = createRoutingModule({
     showPlatforms: function() {radio.request('platforms:show');}
 });
 
-export default HoneySens.module('Platforms.Routing', PlatformsModule);
+export default PlatformsModule;

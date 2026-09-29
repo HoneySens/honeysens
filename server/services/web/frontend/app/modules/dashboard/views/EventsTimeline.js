@@ -1,3 +1,4 @@
+import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import EventsTimelineTpl from 'app/modules/dashboard/templates/EventsTimeline.tpl';
 import 'chart.js';
@@ -17,9 +18,9 @@ function getDataset(model) {
     } else {
         ticks = 12;
         tickDict = {
-            1: _.t('january'), 2: _.t('february'), 3: _.t('march'), 4: _.t('april'), 5: _.t('may'),
-            6: _.t('june'), 7: _.t('july'), 8: _.t('august'), 9: _.t('september'), 10: _.t('october'),
-            11: _.t('november'), 12: _.t('december')};
+            1: i18n.t('january'), 2: i18n.t('february'), 3: i18n.t('march'), 4: i18n.t('april'), 5: i18n.t('may'),
+            6: i18n.t('june'), 7: i18n.t('july'), 8: i18n.t('august'), 9: i18n.t('september'), 10: i18n.t('october'),
+            11: i18n.t('november'), 12: i18n.t('december')};
     }
 
     for(var i=1;i<=ticks;i++) {
@@ -35,6 +36,7 @@ function getDataset(model) {
 
 const EventsTimelineView = View.extend({
     template: _.template(EventsTimelineTpl),
+    templateContext: {...i18n},
     className: 'panel panel-primary',
     onRender: function() {
         this.listenTo(this.model, 'change', function() {
@@ -55,7 +57,7 @@ const EventsTimelineView = View.extend({
             data: {
                 labels: _.pluck(dataset, 'name'),
                 datasets: [{
-                    label: _.t('events'),
+                    label: i18n.t('events'),
                     data: _.pluck(dataset, 'events'),
                     backgroundColor: '#d9230f'
                 }]

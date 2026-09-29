@@ -1,3 +1,4 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
@@ -9,7 +10,7 @@ var SettingsModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: _.t('settings:header'), uri: 'settings', iconClass: 'glyphicon glyphicon-cog', permission: {domain: 'settings', action: 'update'}, priority: 3}
+        {title: i18n.t('settings:header'), uri: 'settings', iconClass: 'glyphicon glyphicon-cog', permission: {domain: 'settings', action: 'update'}, priority: 3}
     ],
     start: function() {
         console.log('Starting module: settings');
@@ -36,4 +37,4 @@ var SettingsModule = createRoutingModule({
     showSettings: function() {radio.request('settings:show');}
 });
 
-export default HoneySens.module('Settings.Routing', SettingsModule);
+export default SettingsModule;

@@ -1,3 +1,4 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
@@ -13,7 +14,7 @@ var ServicesModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [
-        {title: _.t('services:header'), uri: 'sensors/services', iconClass: 'glyphicon glyphicon-asterisk', permission: {domain: 'sensors', action: 'get'}}
+        {title: i18n.t('services:header'), uri: 'sensors/services', iconClass: 'glyphicon glyphicon-asterisk', permission: {domain: 'sensors', action: 'get'}}
     ],
     start: function() {
         console.log('Starting module: services');
@@ -58,4 +59,4 @@ var ServicesModule = createRoutingModule({
     addService: function() {radio.request('services:add');}
 });
 
-export default HoneySens.module('Services.Routing', ServicesModule);
+export default ServicesModule;

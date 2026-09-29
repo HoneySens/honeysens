@@ -1,8 +1,8 @@
-import Marionette from 'backbone.marionette';
+import { View } from 'backbone.marionette';
 import Regions from 'app/views/regions';
 import RootLayoutTpl from 'app/templates/RootLayout.tpl';
 
-export default Marionette.View.extend({
+export default View.extend({
     el: 'body',
     template: _.template(RootLayoutTpl),
     regions: {

@@ -1,91 +1,91 @@
+import i18n from 'app/common/i18n';
+import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
-import HoneySens from 'app/app';
-import Models from 'app/models';
+import { Task } from 'app/models';
 import ModalSendTestMailTpl from 'app/modules/settings/templates/ModalSendTestMail.tpl';
-import 'app/views/common';
+import { inlineSpinner, waitForTask } from 'app/views/common';
 import 'validator';
 
-HoneySens.module('Settings.Views', function(Views, HoneySens, Backbone, Marionette, $, _) {
-    // The model this view receives is a vanilla Backbone.Model() upon first invocation,
-    // but will be exchanged with a Task model when the 'send' button is pressed.
-    Views.ModalSendTestMail = Marionette.View.extend({
-        template: _.template(ModalSendTestMailTpl),
-        events: {
-            'click button.btn-primary': function(e) {
-                e.preventDefault();
-                this.$el.find('form').trigger('submit');
-            },
-            'click button.btn-default': function(e) {
-                e.preventDefault();
-                if(this.model.has('status')) {
-                    this.model.destroy({
-                        wait: true, success: function() {
-                            radio.request('view:modal').empty();
-                        }
-                    })
-                } else radio.request('view:modal').empty();
-            }
+// The model this view receives is a vanilla Backbone.Model() upon first invocation,
+// but will be exchanged with a Task model when the 'send' button is pressed.
+const ModalSendTestMail = View.extend({
+    template: _.template(ModalSendTestMailTpl),
+    events: {
+        'click button.btn-primary': function(e) {
+            e.preventDefault();
+            this.$el.find('form').trigger('submit');
         },
-        onRender: function() {
-            var view = this;
-
-            // Focus input field when the dialog is shown
-            $('#modal').on('shown.bs.modal', function(){
-                view.$el.find('input[name="recipient"]').focus();
-            });
-
-            this.$el.find('form').validator().on('submit', function (e) {
-                if (!e.isDefaultPrevented()) {
-                    e.preventDefault();
-                    // Show pending spinner, hide other controls
-                    view.$el.find('input[name="recipient"]').prop('disabled', true);
-                    var spinner = HoneySens.Views.inlineSpinner.spin();
-                    view.$el.find('div.loadingInline').html(spinner.el);
-                    view.$el.find('div.sendPending').removeClass('hidden');
-                    view.$el.find('button.btn-primary').addClass('hidden');
-                    // Update model and send request
-                    view.model.set('recipient', view.$el.find('input[name="recipient"]').val());
-                    $.ajax({
-                        type: 'POST',
-                        url: 'api/settings/testmail',
-                        dataType: 'json',
-                        data: JSON.stringify(view.model),
-                        contentType: 'application/json',
-                        success: function(resp, code, xhr) {
-                            HoneySens.Views.waitForTask(new Models.Task(xhr.responseJSON), {
-                                done: function(task) {
-                                    view.model = task;
-                                    view.render();
-                                },
-                                error: function(task) {
-                                    view.model = task;
-                                    view.render();
-                                }
-                            })
-                        }
-                    });
-                }
-            });
-        },
-        templateContext: {
-            getError: function() {
-                return this.result.error;
-            },
-            getRecipient: function() {
-                if(this.hasOwnProperty('params') && this.params.hasOwnProperty('to')) return this.params.to;
-            },
-            isDone: function() {
-                return this.hasOwnProperty('status') && (this.status === 2 || this.status === 3);
-            },
-            isError: function() {
-                // If there was an error, 'result' would be an object with an 'error' property
-                return this.hasOwnProperty('result') && this.result != null;
-            }
-        },
-        onDestroy: function() {
-            $('#modal').off('shown.bs.modal');
+        'click button.btn-default': function(e) {
+            e.preventDefault();
+            if(this.model.has('status')) {
+                this.model.destroy({
+                    wait: true, success: function() {
+                        radio.request('view:modal').empty();
+                    }
+                })
+            } else radio.request('view:modal').empty();
         }
-    });
+    },
+    onRender: function() {
+        var view = this;
+
+        // Focus input field when the dialog is shown
+        $('#modal').on('shown.bs.modal', function(){
+            view.$el.find('input[name="recipient"]').focus();
+        });
+
+        this.$el.find('form').validator().on('submit', function (e) {
+            if (!e.isDefaultPrevented()) {
+                e.preventDefault();
+                // Show pending spinner, hide other controls
+                view.$el.find('input[name="recipient"]').prop('disabled', true);
+                var spinner = inlineSpinner.spin();
+                view.$el.find('div.loadingInline').html(spinner.el);
+                view.$el.find('div.sendPending').removeClass('hidden');
+                view.$el.find('button.btn-primary').addClass('hidden');
+                // Update model and send request
+                view.model.set('recipient', view.$el.find('input[name="recipient"]').val());
+                $.ajax({
+                    type: 'POST',
+                    url: 'api/settings/testmail',
+                    dataType: 'json',
+                    data: JSON.stringify(view.model),
+                    contentType: 'application/json',
+                    success: function(resp, code, xhr) {
+                        waitForTask(new Task(xhr.responseJSON), {
+                            done: function(task) {
+                                view.model = task;
+                                view.render();
+                            },
+                            error: function(task) {
+                                view.model = task;
+                                view.render();
+                            }
+                        })
+                    }
+                });
+            }
+        });
+    },
+    templateContext: {
+        ...i18n,
+        getError: function() {
+            return this.result.error;
+        },
+        getRecipient: function() {
+            if(this.hasOwnProperty('params') && this.params.hasOwnProperty('to')) return this.params.to;
+        },
+        isDone: function() {
+            return this.hasOwnProperty('status') && (this.status === 2 || this.status === 3);
+        },
+        isError: function() {
+            // If there was an error, 'result' would be an object with an 'error' property
+            return this.hasOwnProperty('result') && this.result != null;
+        }
+    },
+    onDestroy: function() {
+        $('#modal').off('shown.bs.modal');
+    }
 });
 
-export default HoneySens.Settings.Views.ModalSendTestMail;
+export default ModalSendTestMail;

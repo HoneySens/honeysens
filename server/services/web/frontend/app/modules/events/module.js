@@ -1,7 +1,9 @@
+import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
+import { waitForTask } from 'app/views/common';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
-import Models from 'app/models';
+import { EventFilter, Task } from 'app/models';
 import Backbone from 'backbone';
 import LayoutView from 'app/modules/events/views/Layout';
 import EventListView from 'app/modules/events/views/EventList';
@@ -39,7 +41,7 @@ var EventsModule = createRoutingModule({
     startWithParent: false,
     rootView: null,
     menuItems: [{
-        title: _.t('events:eventHeader'),
+        title: i18n.t('events:eventHeader'),
         uri: 'events',
         iconClass: 'glyphicon glyphicon-list',
         permission: {domain: 'events', action: 'get'},
@@ -54,7 +56,7 @@ var EventsModule = createRoutingModule({
             event: 'update'
         }
     }, {
-        title: _.t('events:filterHeader'),
+        title: i18n.t('events:filterHeader'),
         uri: 'events/filters',
         iconClass: 'glyphicon glyphicon-filter',
         permission: {domain: 'eventfilters', action: 'create'}
@@ -82,7 +84,7 @@ var EventsModule = createRoutingModule({
         });
         radio.reply('events:filters:add', function() {
             if(!HoneySens.assureAllowed('eventfilters', 'create')) return false;
-            radio.request('view:content').getRegion('overlay').show(new FilterEditView({model: new Models.EventFilter()}));
+            radio.request('view:content').getRegion('overlay').show(new FilterEditView({model: new EventFilter()}));
         });
         radio.reply('events:filters:toggle', function(filter) {
             if(!HoneySens.assureAllowed('eventfilters', 'update')) return false;
@@ -231,10 +233,10 @@ var EventsModule = createRoutingModule({
             data: calcParams,
             dataType: 'json',
             success: function(res) {
-                var task = HoneySens.data.models.tasks.add(new Models.Task(res)),
+                var task = HoneySens.data.models.tasks.add(new Task(res)),
                     awaitTaskView = new ModalAwaitTaskView({model: task});
                 radio.request('view:modal').show(awaitTaskView);
-                HoneySens.Views.waitForTask(task, {
+                waitForTask(task, {
                     done: function(m) {
                         if(!awaitTaskView.isDestroyed()) {
                             // Close modal view and start download, then remove the task
@@ -277,4 +279,4 @@ var EventsModule = createRoutingModule({
     }
 });
 
-export default HoneySens.module('Events.Routing', EventsModule);
+export default EventsModule;
