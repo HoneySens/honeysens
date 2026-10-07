@@ -26,13 +26,12 @@ const Sidebar = View.extend({
     },
     initialize: function() {
         // Match routes with sidebar highlighting
-        // TODO consider using Marionette AppRouter to get the current fragment more easily
         this.listenTo(Backbone.history, 'route', function(router, route, params) {
             var $sidebar = this.$el;
             if(router.current) {
-                var fragment = router.current().fragment;
+                var fragment = '#' + router.current().fragment;
                 $sidebar.find('ul.nav-sidebar li > a').each(function() {
-                    if($(this).attr('href') == '#' + fragment) {
+                    if(fragment.startsWith($(this).attr('href'))) {
                         var $node = $(this).parent('li').addClass('active');
                         $sidebar.find('ul.nav-sidebar li').not($node).removeClass('active');
                     }
