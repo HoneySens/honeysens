@@ -15,7 +15,7 @@ const UsersItemView = View.extend({
         },
         'click button.editUser': function(e) {
             e.preventDefault();
-            radio.request('accounts:user:edit', this.model, {animation: 'slideLeft'});
+            radio.request('accounts:user:edit', this.model);
         }
     },
     templateContext: {...i18n, ...UserItemTemplateHelpers},

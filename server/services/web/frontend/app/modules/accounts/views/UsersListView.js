@@ -12,7 +12,7 @@ const UsersListView = CollectionView.extend({
     events: {
         'click #addUser': function(e) {
             e.preventDefault();
-            radio.request('accounts:user:add', {animation: 'slideLeft'});
+            radio.request('accounts:user:add');
         }
     }
 });

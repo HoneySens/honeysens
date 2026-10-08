@@ -39,11 +39,6 @@ div.popover {max-width: 450px}
 /* Fieldset indentation within modals */
 #modal fieldset {padding: 0.35em 1em 0.75em}
 
-/* Position containers holding transition regions relative, because their children have set position: 'absolute' */
-div.transitionContainer {position: relative}
-
-div.transitionView {position: absolute; left: 0; right: 0}
-
 /* Distinguish toggle buttons in panel headings by color */
 div.panel-heading button.btn-primary {background: #d9230f none}
 div.panel-heading button.btn-primary.active {background: #469408 none}
@@ -200,7 +195,7 @@ div.main div.well h3 {margin-top: 0}
 
 /* Header bar for placing buttons next to some title text.
    Enforces a correct margin during transitions. */
-div.content div.row:first-of-type div.headerBar h3, div.content div.row.transitionView div.headerBar h3 {margin-top: 0}
+div.content div.row:first-of-type div.headerBar h3 {margin-top: 0}
 
 /* Force buttons in header bars in front of other stuff.
    Ensures that the click events can't be overtaken by other elements (e.g. forms) */

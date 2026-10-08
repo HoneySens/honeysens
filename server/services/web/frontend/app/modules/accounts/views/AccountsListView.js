@@ -1,11 +1,11 @@
+import { View } from 'backbone.marionette';
 import UsersListView from 'app/modules/accounts/views/UsersListView';
 import DivisionsListView from 'app/modules/accounts/views/DivisionsListView';
 import AccountsListViewTpl from 'app/modules/accounts/templates/AccountsListView.tpl';
-import { SlideLayoutView } from 'app/views/common';
 
-const AccountsListView = SlideLayoutView.extend({
+const AccountsListView = View.extend({
     template: _.template(AccountsListViewTpl),
-    className: 'transitionView row',
+    className: 'row',
     regions: {
         users: { el: 'div.users'},
         divisions: { el: 'div.divisions' }

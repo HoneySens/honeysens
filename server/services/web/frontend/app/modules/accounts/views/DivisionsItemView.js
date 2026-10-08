@@ -14,7 +14,7 @@ const DivisionsItemView = View.extend({
         },
         'click button.edit': function(e) {
             e.preventDefault();
-            radio.request('accounts:division:edit', this.model, {animation: 'slideLeft'});
+            radio.request('accounts:division:edit', this.model);
         }
     },
     onRender: function() {

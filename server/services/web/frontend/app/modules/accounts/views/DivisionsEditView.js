@@ -1,5 +1,6 @@
 import i18n from 'app/common/i18n';
 import Backbone from 'backbone';
+import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import { IncidentContacts } from 'app/models';
@@ -7,13 +8,17 @@ import ModalServerError from 'app/common/views/ModalServerError';
 import DivisionsUserListView from 'app/modules/accounts/views/DivisionsUserListView';
 import DivisionsContactListView from 'app/modules/accounts/views/DivisionsContactListView';
 import DivisionsEditViewTpl from 'app/modules/accounts/templates/DivisionsEditView.tpl';
-import { SlideLayoutView } from 'app/views/common';
 import 'validator';
 
-const DivisionsEditView = SlideLayoutView.extend({
+const DivisionsEditView = View.extend({
     template: _.template(DivisionsEditViewTpl),
-    templateContext: {...i18n},
-    className: 'transitionView row',
+    templateContext: {
+        ...i18n,
+        isNew: function() {
+            return !this.hasOwnProperty('id');
+        }
+    },
+    className: 'container-fluid',
     errors: {
         1: i18n.t('accounts:groupNameConflict')
     },
@@ -22,9 +27,8 @@ const DivisionsEditView = SlideLayoutView.extend({
         contacts: 'div.contactList'
     },
     events: {
-        'click button.cancel': function(e) {
-            e.preventDefault();
-            radio.request('accounts:show', {animation: 'slideRight'});
+        'click button.cancel': function() {
+            this.trigger('view:close');
         },
         'click button.save': function(e) {
             e.preventDefault();
@@ -53,7 +57,7 @@ const DivisionsEditView = SlideLayoutView.extend({
                     },
                     success: function() {
                         radio.request('fetchUpdates', false);
-                        radio.request('accounts:show', {animation: 'slideRight'});
+                        view.trigger('view:close');
                     }});
             }
 
