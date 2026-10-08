@@ -3,7 +3,7 @@ import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import createRoutingModule from 'app/routing';
 import { Division, User } from 'app/models';
-import AccountsView from 'app/modules/accounts/views/AccountsView';
+import LayoutView from 'app/modules/accounts/views/Layout';
 import AccountsListView from 'app/modules/accounts/views/AccountsListView';
 import DivisionsEditView from 'app/modules/accounts/views/DivisionsEditView';
 import ModalRemoveDivision from 'app/modules/accounts/views/ModalRemoveDivision';
@@ -18,42 +18,51 @@ var AccountsModule = createRoutingModule({
     ],
     start: function() {
         console.log('Starting module: accounts');
-        this.rootView = new AccountsView();
+        this.rootView = new LayoutView();
         radio.request('view:content').getRegion('main').show(this.rootView);
 
         // register command handlers
         var contentRegion = this.rootView.getRegion('content'),
             router = this.router;
 
-        radio.reply('accounts:show', function(options) {
+        radio.reply('accounts:show', function() {
             if(!HoneySens.assureAllowed('users', 'get')) return false;
-            contentRegion.show(new AccountsListView({users: HoneySens.data.models.users, divisions: HoneySens.data.models.divisions}), options);
-            router.navigate('accounts');
+            contentRegion.show(new AccountsListView({users: HoneySens.data.models.users, divisions: HoneySens.data.models.divisions}));
         });
-        radio.reply('accounts:division:add', function(options) {
+        radio.reply('accounts:division:add', function() {
             if(!HoneySens.assureAllowed('divisions', 'create')) return false;
-            contentRegion.show(new DivisionsEditView({model: new Division()}), options);
-            router.navigate('accounts/division/add');
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new DivisionsEditView({model: new Division()}),
+                'accounts/division/add',
+                'accounts',
+                router);
         });
-        radio.reply('accounts:division:edit', function(division, options) {
+        radio.reply('accounts:division:edit', function(division) {
             if(!HoneySens.assureAllowed('divisions', 'update')) return false;
-            contentRegion.show(new DivisionsEditView({model: division}), options);
-            router.navigate('accounts/division/edit/' + division.id);
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new DivisionsEditView({model: division}),
+                'accounts/division/edit/' + division.id,
+                'accounts',
+                router);
         });
         radio.reply('accounts:division:remove', function(division) {
             radio.request('view:modal').show(new ModalRemoveDivision({model: division}));
         });
-        radio.reply('accounts:user:add', function(options) {
+        radio.reply('accounts:user:add', function() {
             if(!HoneySens.assureAllowed('users', 'create')) return false;
-            contentRegion.show(new UsersEditView({model: new User({
-                    require_password_change: true
-                })}), options);
-            router.navigate('accounts/user/add');
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new UsersEditView({model: new User({ require_password_change: true })}),
+                'accounts/user/add',
+                'accounts',
+                router);
         });
-        radio.reply('accounts:user:edit', function(user, options) {
+        radio.reply('accounts:user:edit', function(user) {
             if(!HoneySens.assureAllowed('users', 'update')) return false;
-            contentRegion.show(new UsersEditView({model: user}), options);
-            router.navigate('accounts/user/edit/' + user.id);
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new UsersEditView({model: user}),
+                'accounts/user/edit/' + user.id,
+                'accounts',
+                router);
         });
     },
     stop: function() {
@@ -72,11 +81,26 @@ var AccountsModule = createRoutingModule({
         'accounts/user/add': 'addUser',
         'accounts/user/edit/:id': 'editUser'
     },
-    showAccounts: function() { radio.request('accounts:show'); },
-    addDivision: function() { radio.request('accounts:division:add'); },
-    editDivision: function(id) { radio.request('accounts:division:edit', HoneySens.data.models.divisions.get(id)); },
-    addUser: function() { radio.request('accounts:user:add'); },
-    editUser: function(id) { radio.request('accounts:user:edit', HoneySens.data.models.users.get(id)); }
+    showAccounts: function() {
+        radio.request('accounts:show');
+        this.router.navigate('accounts');
+    },
+    addDivision: function() {
+        radio.request("accounts:show");
+        radio.request('accounts:division:add');
+    },
+    editDivision: function(id) {
+        radio.request("accounts:show");
+        radio.request('accounts:division:edit', HoneySens.data.models.divisions.get(id));
+    },
+    addUser: function() {
+        radio.request("accounts:show");
+        radio.request('accounts:user:add');
+    },
+    editUser: function(id) {
+        radio.request("accounts:show");
+        radio.request('accounts:user:edit', HoneySens.data.models.users.get(id));
+    }
 });
 
 export default AccountsModule;

@@ -1,6 +1,5 @@
 import { Region } from 'backbone.marionette';
 import Backbone from 'backbone';
-import _ from 'underscore';
 import $ from 'jquery';
 import 'bootstrap';
 
@@ -23,233 +22,6 @@ Regions.ModalRegion = Region.extend({
     },
     onEmpty: function() {
         this.$el.modal('hide');
-    }
-});
-
-// based on https://github.com/jmeas/marionette.transition-region
-Regions.TransitionRegion = Region.extend({
-    transitionInCss: {
-        opacity: 0
-    },
-
-    concurrentTransition: false,
-
-    // This is queue manager code that doesn't belong in regions.
-    // maybe when this transition region is in Marionette,
-    // you will be some sort of mixin for a region.
-    setQueue: function(view, options) {
-        this._queuedView = view;
-        this._queueOptions = options;
-    },
-
-    setInQueue: function(view, options) {
-        this._inQueueView = view;
-        this._inQueueOptions = options;
-    },
-
-    _clearInQueue: function() {
-        delete this._inQueueView;
-        delete this._inQueueOptions;
-    },
-
-    checkQueue: function() {
-        if (this._queued) { return false; }
-
-        this._queued = true;
-        this.once('animateIn', _.bind(this.showQueue, this));
-    },
-
-    showQueue: function() {
-        this.show(this._queuedView, this._queuedOptions);
-        this._queued = false;
-        this.clearQueue();
-    },
-
-    clearQueue: function() {
-        delete this._queuedView;
-        delete this._queuedOptions;
-    },
-
-    show: function(view, options) {
-        options = options || {};
-        // If animating out, set the animateInQueue.
-        // This new view will be what is transitioned in
-        if (this._animatingOut) {
-            this.setInQueue(view, options);
-            return this;
-        }
-
-        else if (this._animatingIn) {
-            this.setQueue(view, options);
-            this.checkQueue();
-            return this;
-        }
-
-        this.setInQueue(view, options);
-        this._animatingOut = true;
-
-        this._ensureElement();
-
-        var currentView = this.currentView;
-        this._oldView = this.currentView;
-        var animateOut = currentView && _.isFunction(this.currentView.animateOut);
-        var concurrent = this.getOption('concurrentTransition');
-
-        // If the view has an animate out function, then wait for it to conclude and then continue.
-        // Otherwise, simply continue.
-        if (animateOut && !concurrent) {
-            this.listenToOnce(currentView, 'animateOut', _.bind(this._onTransitionOut, this));
-            currentView.animateOut(options);
-            // Return this for backwards compat
-            return this;
-        }
-
-        // Otherwise, execute both transitions at the same time
-        else if (animateOut && concurrent) {
-            currentView.animateOut(options);
-            return this._onTransitionOut();
-        }
-
-        else {
-            return this._onTransitionOut();
-        }
-    },
-
-    // This is most of the original show function.
-    _onTransitionOut: function() {
-        this.triggerMethod('animateOut', this.currentView);
-
-        var view = this._inQueueView;
-        var options = this._inQueueOptions;
-        this._clearInQueue();
-
-        // This is the last time to update what view is about to be shown.
-        // At this point, any subsequent shows will cause a brand new animation phase
-        // to commence.
-        this._animatingOut = false;
-        this._animatingIn = true;
-
-        var showOptions = options || {};
-        var isDifferentView = view !== this.currentView;
-        var preventDestroy =  !!showOptions.preventDestroy;
-        var forceShow = !!showOptions.forceShow;
-
-        // we are only changing the view if there is a view to change to begin with
-        var isChangingView = !!this.currentView;
-
-        // The region is only animating if there's an animateIn method on the new view
-        var animatingIn = _.isFunction(view.animateIn);
-
-        // only destroy the view if we don't want to preventDestroy and the view is different
-        var _shouldDestroyView = !preventDestroy && isDifferentView && !this.getOption('concurrentTransition');
-
-        // Destroy the old view
-        if (_shouldDestroyView) {
-            this.empty({animate:false});
-        }
-
-        // show the view if the view is different or if you want to re-show the view
-        var _shouldShowView = isDifferentView || forceShow;
-
-        // Cut things short if we're not showing the view
-        if (!_shouldShowView) {
-            return this;
-        }
-
-        // Render the new view, then hide its $el
-        view.render();
-
-        if (isChangingView) {
-            this.triggerMethod('before:swap', view);
-        }
-
-        // before:show triggerMethods
-        this.triggerMethod("before:show", view);
-        if (_.isFunction(view.triggerMethod)) {
-            view.triggerMethod("before:show");
-        } else {
-            this.triggerMethod.call(view, "before:show");
-        }
-
-        // Only hide the view if we want to animate it
-        if (animatingIn) {
-            var transitionInCss = view.transitionInCss || this.transitionInCss;
-            view.$el.css(transitionInCss);
-        }
-
-        this.attachHtml(view);
-        this.currentView = view;
-
-        // show triggerMethods
-        this.triggerMethod("show", view);
-        if (_.isFunction(view.triggerMethod)) {
-            view.triggerMethod("show");
-        } else {
-            this.triggerMethod.call(view, "show");
-        }
-
-        // If there's an animateIn method, then call it and wait for it to complete
-        if (animatingIn) {
-            this.listenToOnce(view, 'animateIn', _.bind(this._onTransitionIn, this, showOptions));
-            view.animateIn(options);
-            return this;
-        }
-
-        // Otherwise, continue on
-        else {
-            return this._onTransitionIn(showOptions);
-        }
-    },
-
-    _onTransitionIn: function(options) {
-        var preventDestroy =  options.preventDestroy;
-
-        var oldView = this._oldView;
-        // Destroy the old view
-        if (!preventDestroy && oldView && !oldView.isDestroyed()) {
-            if (oldView.destroy) { oldView.destroy(); }
-            else if (oldView.remove) { oldView.remove(); }
-        }
-
-        delete this._oldView;
-        this._animatingIn = false;
-        this.triggerMethod('animateIn', this.currentView);
-        return this;
-    },
-
-    // Empty the region, animating the view out first if it needs to be
-    empty: function(options) {
-        options = options || {};
-
-        var view = this.currentView;
-        if (!view || view.isDestroyed()) { return; }
-
-        // Animate by default
-        var animate = options.animate === undefined ? true : options.animate;
-
-        // Animate the view before destroying it if a function exists. Otherwise,
-        // immediately destroy it
-        if (_.isFunction(view.animateOut) && animate) {
-            this.listenToOnce(this.currentView, 'animateOut', _.bind(this._destroyView, this));
-            this.currentView.animateOut(options);
-        } else {
-            this._destroyView();
-        }
-    },
-
-    _destroyView: function() {
-        var view = this.currentView;
-        if (!view || view.isDestroyed()) { return; }
-
-        this.triggerMethod('before:empty', view);
-
-        // call 'destroy' or 'remove', depending on which is found
-        if (view.destroy) { view.destroy(); }
-        else if (view.remove) { view.remove(); }
-
-        this.triggerMethod('empty', view);
-
-        delete this.currentView;
     }
 });
 
@@ -277,17 +49,22 @@ Regions.OverlayRegion = Region.extend({
             view.$el.css('width', $('#main').width());
         });
         // callback: close overlay when navigating away from the current page
-        this.listenTo(Backbone.history, 'route', function() {
-            region.empty();
+        this.listenTo(Backbone.history, 'route', function(router, route, params) {
+            var currentFragment = router.current().fragment;
+            if(currentFragment !== this.foregroundFragment) region.closeOverlay(false);
+        });
+        // callback: close overlay when requested by its view
+        this.listenTo(view, 'view:close', function() {
+            region.closeOverlay(true);
         });
         // callback: close overlay when pressing ESC
         $(document).on('keyup', function(e) {
-            if(e.key === "Escape") region.empty();
+            if(e.key === "Escape") region.closeOverlay(true);
         });
     },
-    empty: function() {
+    empty: function(callback) {
         var region = this,
-            view = this.currentView;
+            view = region.currentView;
         $(document).off('keyup');
         if(view) {
             var $backdrop = view.$el.parent().find('div.overlay-backdrop');
@@ -296,15 +73,38 @@ Regions.OverlayRegion = Region.extend({
                 duration: 400,
                 complete: function() {
                     Region.prototype.empty.apply(region, arguments);
+                    if(callback) callback();
                 }
             });
             $backdrop.on('transitionend', function() {
                 $backdrop.remove();
             }).removeClass('active');
             // remove callbacks
-            this.stopListening();
+            region.stopListening();
             $(window).off('resize');
         }
+    },
+    _showOverlayImpl: function(view, fragment, backgroundFragment, router, showOptions) {
+        this.foregroundFragment = fragment;
+        this.backgroundFragment = backgroundFragment;
+        this.show(view, showOptions);
+        router.navigate(fragment);
+    },
+    showOverlay: function(view, fragment, backgroundFragment, router, showOptions) {
+        var region = this;
+        region.backgroundRouter = router;
+        if(region.hasOwnProperty('foregroundFragment') && region.foregroundFragment !== null) {
+            // An overlay is already shown, close it first
+            region.closeOverlay(false, function() {
+                region._showOverlayImpl(view, fragment, backgroundFragment, router, showOptions);
+            });
+        } else region._showOverlayImpl(view, fragment, backgroundFragment, router, showOptions);
+    },
+    closeOverlay: function(updateRoutingState, callback) {
+        if(updateRoutingState) this.backgroundRouter.navigate(this.backgroundFragment);
+        this.backgroundFragment = null;
+        this.foregroundFragment = null;
+        this.empty(callback);
     }
 });
 

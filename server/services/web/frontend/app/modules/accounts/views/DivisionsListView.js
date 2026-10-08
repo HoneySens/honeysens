@@ -12,7 +12,7 @@ const DivisionsListView = CollectionView.extend({
     events: {
         'click #addDivision': function(e) {
             e.preventDefault();
-            radio.request('accounts:division:add', {animation: 'slideLeft'});
+            radio.request('accounts:division:add');
         }
     }
 });

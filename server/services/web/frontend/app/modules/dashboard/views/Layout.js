@@ -7,10 +7,8 @@ const Layout = View.extend({
     template: _.template(LayoutTpl),
     templateContext: {...i18n},
     regions: {
-        content: {
-            el: 'div.content',
-            regionClass: Regions.TransitionRegion
-    }},
+        content: { el: 'div.content' }
+    },
     initialize: function() {
         this.getRegion('content').concurrentTransition = true;
     }

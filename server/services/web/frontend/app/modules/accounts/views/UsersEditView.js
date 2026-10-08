@@ -1,23 +1,22 @@
 import i18n from 'app/common/i18n';
 import Backbone from 'backbone';
+import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import { UserDomain, UserRole } from 'app/models';
 import ModalServerError from 'app/common/views/ModalServerError';
 import UsersEditViewTpl from 'app/modules/accounts/templates/UsersEditView.tpl';
-import { SlideItemView } from 'app/views/common';
 import 'validator';
 
-const UsersEditView = SlideItemView.extend({
+const UsersEditView = View.extend({
     template: _.template(UsersEditViewTpl),
-    className: 'transitionView row',
+    className: 'container-fluid',
     errors: {
         1: i18n.t('accounts:userNameConflict')
     },
     events: {
-        'click button.cancel': function(e) {
-            e.preventDefault();
-            radio.request('accounts:show', {animation: 'slideRight'});
+        'click button.cancel': function() {
+            this.trigger('view:close');
         },
         'click button.save': function(e) {
             e.preventDefault();
@@ -73,7 +72,7 @@ const UsersEditView = SlideItemView.extend({
                         success: function() {
                             HoneySens.data.models.users.fetch({ reset: true, success: function() {
                                 if(model.id == HoneySens.data.session.user.id) radio.request('logout');
-                                radio.request('accounts:show', {animation: 'slideRight'});
+                                view.trigger('view:close');
                             }});
                         }
                     });
@@ -92,7 +91,7 @@ const UsersEditView = SlideItemView.extend({
                             data = JSON.parse(data);
                             model.id = data.id;
                             HoneySens.data.models.users.fetch({ reset: true, success: function() {
-                                    radio.request('accounts:show', {animation: 'slideRight'});
+                                view.trigger('view:close');
                             }});
                         }
                     });
@@ -102,8 +101,8 @@ const UsersEditView = SlideItemView.extend({
     },
     templateContext: {
         ...i18n,
-        isEdit: function() {
-            return typeof this.id !== 'undefined';
+        isNew: function() {
+            return !this.hasOwnProperty('id');
         },
         getDivisionList: function() {
             var result = "";
