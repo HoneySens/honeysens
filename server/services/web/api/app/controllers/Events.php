@@ -212,7 +212,7 @@ class Events extends RESTResource {
                     V::arrayType()
                         ->key('timestamp', V::intVal())
                         ->key('type', V::intVal()->between(0, 1))
-                        ->key('data', V::stringType())))
+                        ->key('data', V::stringType(), false)))
                 ->key('packets', V::arrayVal()->each(
                     V::arrayType()
                         ->key('timestamp', V::intVal())

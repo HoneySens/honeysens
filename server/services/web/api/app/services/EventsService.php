@@ -127,6 +127,7 @@ class EventsService extends Service {
             // Save event details
             $details = array();
             foreach($eventData['details'] as $detailData) {
+                if(!array_key_exists('data', $detailData)) continue;
                 if($detailData['timestamp'] === null) {
                     $detailTimestamp = null;
                 } else {
