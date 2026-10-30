@@ -149,8 +149,8 @@ class Events extends RESTResource {
             $result->toTS = intval($data['toTS']);
         }
         if(array_key_exists('id', $data)) {
-            V::key('id', V::intType())->check($data);
-            $result->list = [$data['id']];
+            V::key('id', V::intVal())->check($data);
+            $result->list = [intval($data['id'])];
         } elseif(array_key_exists('list', $data)) {
             V::key('list', V::arrayVal()->each(V::intVal()))->check($data);
             $result->list = array_map('intval', $data['list']);

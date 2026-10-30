@@ -450,10 +450,17 @@ class EventsService extends Service {
         }
         if($conditions->filter !== null) {
             $filters = $qb->expr()->orX();
+            // Parse a plain integer as event ID
+            if(is_numeric($conditions->filter)) {
+                $idColumn = $conditions->archived ? 'e.oid' : 'e.id';
+                $filters->add($qb->expr()->eq($idColumn, ':id'));
+                $qb->setParameter('id', intval($conditions->filter));
+            }
             // Parse both source and comment fields against the filter string
-            $filters->add($qb->expr()->like('e.source', ':filter'));
-            $filters->add($qb->expr()->like('e.comment', ':filter'));
-            $qb->setParameter('filter', '%'. $conditions->filter . '%');
+            $filters->add($qb->expr()->like('e.comment', ':comment'));
+            $qb->setParameter('comment', '%'. $conditions->filter . '%');
+            $filters->add($qb->expr()->eq('e.source', ':source'));
+            $qb->setParameter('source', $conditions->filter);
             // Also try to parse the filter string into a date
             $date = false;
             try {

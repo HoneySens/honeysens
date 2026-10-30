@@ -76,14 +76,10 @@ const TaskList = View.extend({
                         e.preventDefault();
                         this.model.downloadResult(false);
                     },
-                    'click button.inspectUpload': function(e) {
+                    'click button.editTask': function(e) {
                         e.preventDefault();
-                        radio.request('tasks:upload:show', this.model);
+                        radio.request('tasks:edit', this.model);
                     },
-                    'click button.inspectTestMail': function(e) {
-                        e.preventDefault();
-                        radio.request('tasks:testmail:show', this.model);
-                    }
                 },
                 render: function() {
                     var templateData = this.model.attributes,

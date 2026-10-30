@@ -14,7 +14,7 @@ const PlatformDetails = View.extend({
     },
     events: {
         'click button.cancel': function() {
-            radio.request('view:content').getRegion('overlay').empty();
+            this.trigger('view:close');
         }
     },
     onRender: function() {

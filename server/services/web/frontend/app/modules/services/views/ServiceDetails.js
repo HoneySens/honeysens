@@ -18,7 +18,7 @@ const ServiceDetails = View.extend({
     revisionStatus: null,
     events: {
         'click button.cancel': function() {
-            radio.request('view:content').getRegion('overlay').empty();
+            this.trigger('view:close');
         }
     },
     onRender: function() {

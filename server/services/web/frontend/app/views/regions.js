@@ -26,6 +26,7 @@ Regions.ModalRegion = Region.extend({
 });
 
 Regions.OverlayRegion = Region.extend({
+    pendingFragment: null,
     show: function(view, options) {
         var region = this;
         Region.prototype.show.apply(this, arguments);
@@ -51,7 +52,8 @@ Regions.OverlayRegion = Region.extend({
         // callback: close overlay when navigating away from the current page
         this.listenTo(Backbone.history, 'route', function(router, route, params) {
             var currentFragment = router.current().fragment;
-            if(currentFragment !== this.foregroundFragment) region.closeOverlay(false);
+            if(currentFragment !== this.foregroundFragment && this.pendingFragment === null)
+                region.closeOverlay(false);
         });
         // callback: close overlay when requested by its view
         this.listenTo(view, 'view:close', function() {
@@ -87,6 +89,7 @@ Regions.OverlayRegion = Region.extend({
     _showOverlayImpl: function(view, fragment, backgroundFragment, router, showOptions) {
         this.foregroundFragment = fragment;
         this.backgroundFragment = backgroundFragment;
+        if(this.pendingFragment === fragment) this.pendingFragment = null;
         this.show(view, showOptions);
         router.navigate(fragment);
     },
@@ -105,6 +108,13 @@ Regions.OverlayRegion = Region.extend({
         this.backgroundFragment = null;
         this.foregroundFragment = null;
         this.empty(callback);
+    },
+    announceFragment: function(fragment) {
+        /* Use in case a fragment change (e.g. users enters different in-app URL) can't be shown synchronously,
+         * e.g. due to pending API requests. Announcing the pending fragment early prevents premature
+         * overlay closure, specifically when directly switching from one overlay URL to another.
+         */
+        this.pendingFragment = fragment;
     }
 });
 

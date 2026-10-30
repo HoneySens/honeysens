@@ -30,17 +30,24 @@ var SensorsModule = createRoutingModule({
         radio.reply('sensors:show', function() {
             if(!HoneySens.assureAllowed('sensors', 'get')) return false;
             contentRegion.show(new SensorListView({collection: HoneySens.data.models.sensors}));
-            router.navigate('sensors');
             radio.trigger('sensors:shown');
         });
         radio.reply('sensors:add', function() {
-            radio.request('view:content').getRegion('overlay').show(new SensorEditView({model: new Sensor()}));
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new SensorEditView({model: new Sensor()}),
+                'sensors/add',
+                'sensors',
+                router);
         });
-        radio.reply('sensors:edit', function(model) {
-            radio.request('view:content').getRegion('overlay').show(new SensorEditView({model: model}));
+        radio.reply('sensors:edit', function(sensor) {
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new SensorEditView({model: sensor}),
+                'sensors/' + sensor.id,
+                'sensors',
+                router);
         });
-        radio.reply('sensors:remove', function(model) {
-            radio.request('view:modal').show(new ModalSensorRemoveView({model: model}));
+        radio.reply('sensors:remove', function(sensor) {
+            radio.request('view:modal').show(new ModalSensorRemoveView({model: sensor}));
         });
         radio.reply('sensors:config:download', function(model) {
             $.ajax({
@@ -83,9 +90,22 @@ var SensorsModule = createRoutingModule({
         radio.stopReplying('sensors:remove');
     },
     routesList: {
-        'sensors': 'showSensors'
+        'sensors': 'showSensors',
+        'sensors/:id': 'editSensor',
+        'sensors/add': 'addSensor'
     },
-    showSensors: function() {radio.request('sensors:show');},
+    showSensors: function() {
+        radio.request('sensors:show');
+        this.router.navigate('sensors');
+    },
+    addSensor: function() {
+        radio.request('sensors:show');
+        radio.request('sensors:add');
+    },
+    editSensor: function(id) {
+        radio.request('sensors:show');
+        radio.request('sensors:edit', HoneySens.data.models.sensors.get(id));
+    }
 });
 
 export default SensorsModule;

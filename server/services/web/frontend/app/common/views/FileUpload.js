@@ -81,13 +81,14 @@ const FileUpload = View.extend({
             })
         },
         'click button.cancel': function() {
+            var view = this;
             if(this.model == null
                 || this.model.get('status') === TaskStatus.SCHEDULED
                 || this.model.get('status') === TaskStatus.RUNNING)
-                radio.request('view:content').getRegion('overlay').empty();
+                view.trigger('view:close');
             else this.model.destroy({
                 wait: true, success: function () {
-                    radio.request('view:content').getRegion('overlay').empty();
+                    view.trigger('view:close');
                 }
             });
         }

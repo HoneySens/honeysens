@@ -40,7 +40,7 @@ const ServiceList = View.extend({
                 events: {
                     'click button.showDetails': function(e) {
                         e.preventDefault();
-                        radio.request('services:details', this.model);
+                        radio.request('services:edit', this.model);
                     },
                     'click button.removeService': function(e) {
                         e.preventDefault();

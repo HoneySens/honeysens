@@ -17,7 +17,9 @@ const Menu = View.extend({
                 subitems = '<ul class="nav">' + view.createMenuPart(this.items) + '</ul>';
             }
             if(HoneySens.assureAllowed(this.permission.domain, this.permission.action)) {
-                result += '<li><a href="#' + this.uri + '"><span class="' + this.iconClass + '"></span><span class="badge"></span><span class="menuLabel">&nbsp;&nbsp;' + this.title + '</span></a>' + subitems + '</li>';
+                // Enable modules to overwrite the URI used in the menu from its regular uri
+                var uri = this.link_uri ?? this.uri;
+                result += '<li><a href="#' + uri + '"><span class="' + this.iconClass + '"></span><span class="badge"></span><span class="menuLabel">&nbsp;&nbsp;' + this.title + '</span></a>' + subitems + '</li>';
             }
         });
         return result;

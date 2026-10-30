@@ -1,7 +1,7 @@
 import i18n from 'app/common/i18n';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
-import { TaskStatus } from 'app/models';
+import { TaskStatus, TaskType } from 'app/models';
 import createRoutingModule from 'app/routing';
 import LayoutView from 'app/modules/tasks/views/Layout';
 import TaskListView from 'app/modules/tasks/views/TaskList';
@@ -42,24 +42,45 @@ var TasksModule = createRoutingModule({
         radio.reply('tasks:show', function() {
             if(!HoneySens.assureAllowed('tasks', 'get')) return false;
             contentRegion.show(new TaskListView({collection: HoneySens.data.models.tasks}));
-            router.navigate('tasks');
             radio.trigger('tasks:shown');
         });
+        radio.reply('tasks:edit', function(task) {
+            if(!HoneySens.assureAllowed('tasks', 'update')) return false;
+            switch(task.get('type')) {
+                case TaskType.UPLOAD_VERIFIER:
+                    radio.request('view:content').getRegion('overlay').showOverlay(
+                        new FileUploadView({model: task}),
+                        'tasks/' + task.id,
+                        'tasks',
+                        router);
+                    break;
+                case TaskType.EMAIL_EMITTER:
+                    radio.request('view:modal').show(new ModalSendTestMail({model: task}));
+                    break;
+            }
+        });
         radio.reply('tasks:upload:show', function(model) {
-            radio.request('view:content').getRegion('overlay').show(new FileUploadView({model: model}));
         });
         radio.reply('tasks:testmail:show', function(model) {
-            radio.request('view:modal').show(new ModalSendTestMail({model: model}));
         });
     },
     stop: function() {
         console.log('Stopping module: tasks');
         radio.stopReplying('tasks:show');
+        radio.stopReplying("tasks:edit");
     },
     routesList: {
-        'tasks': 'showTasks'
+        'tasks': 'showTasks',
+        'tasks/:id': 'editTask'
     },
-    showTasks: function() {radio.request('tasks:show');}
+    showTasks: function() {
+        radio.request('tasks:show');
+        this.router.navigate('tasks');
+    },
+    editTask: function(id) {
+        radio.request('tasks:show');
+        radio.request('tasks:edit', HoneySens.data.models.tasks.get(id));
+    }
 });
 
 export default TasksModule;

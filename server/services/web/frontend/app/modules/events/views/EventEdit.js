@@ -15,7 +15,7 @@ const EventEdit = View.extend({
             this.refreshValidators(e.target.value);
         },
         'click button.cancel': function() {
-            radio.request('view:content').getRegion('overlay').empty();
+            this.trigger('view:close');
         },
         'click button:submit': function(e) {
             e.preventDefault();

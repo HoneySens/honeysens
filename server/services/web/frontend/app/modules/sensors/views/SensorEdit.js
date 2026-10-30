@@ -13,7 +13,7 @@ const SensorEdit = View.extend({
     cfgTaskId: null, // The id of a sensor config creation task we're waiting for, if any
     events: {
         'click button.cancel': function() {
-            radio.request('view:content').getRegion('overlay').empty();
+            this.trigger('view:close');
         },
         'click button.useCustomUpdateInterval': function(e) {
             var $updateIntervalField = this.$el.find('input[name="updateInterval"]'),

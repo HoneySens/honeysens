@@ -9,12 +9,8 @@
     </button>
 <% } %>
 <% if(status === TaskStatus.DONE) { %>
-    <% if(type === TaskType.UPLOAD_VERIFIER) { %>
-        <button type="button" class="inspectUpload btn btn-default btn-xs" data-toggle="tooltip" title="<%= t('show') %>">
-            <span class="glyphicon glyphicon-search"></span>
-        </button>
-    <% } else if(type === TaskType.EMAIL_EMITTER) { %>
-        <button type="button" class="inspectTestMail btn btn-default btn-xs" data-toggle="tooltip" title="<%= t('show') %>">
+    <% if(type === TaskType.UPLOAD_VERIFIER || type === TaskType.EMAIL_EMITTER) { %>
+        <button type="button" class="editTask btn btn-default btn-xs" data-toggle="tooltip" title="<%= t('show') %>">
             <span class="glyphicon glyphicon-search"></span>
         </button>
     <% } %>

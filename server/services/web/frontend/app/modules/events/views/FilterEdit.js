@@ -13,13 +13,13 @@ const FilterEdit = View.extend({
         conditions: 'div.conditionList'
     },
     events: {
-        'click button.cancel': function(e) {
-            e.preventDefault();
-            radio.request('view:content').getRegion('overlay').empty();
+        'click button.cancel': function() {
+            this.trigger('view:close');
         },
         'click button.save': function(e) {
             e.preventDefault();
-            var valid = true;
+            var valid = true,
+                view = this;
 
             this.$el.find('form').validator('validate');
             this.$el.find('.form-group').each(function() {
@@ -39,7 +39,7 @@ const FilterEdit = View.extend({
                 model.save({name: name, description: description, division: division, conditions: conditions},
                     {success: function() {
                         HoneySens.data.models.eventfilters.fetch();
-                        radio.request('view:content').getRegion('overlay').empty();
+                        view.trigger('view:close');
                     }});
             }
         }

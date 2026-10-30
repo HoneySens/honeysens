@@ -39,7 +39,7 @@ const PlatformList = View.extend({
                 events: {
                     'click button.showDetails': function(e) {
                         e.preventDefault();
-                        radio.request('platforms:details', this.model);
+                        radio.request('platforms:edit', this.model);
                     }
                 },
                 render: function() {

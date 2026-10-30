@@ -27,28 +27,48 @@ var PlatformsModule = createRoutingModule({
         radio.reply('platforms:show', function() {
             if(!HoneySens.assureAllowed('sensors', 'get')) return false;
             contentRegion.show(new PlatformListView({collection: HoneySens.data.models.platforms}));
-            router.navigate('sensors/platforms');
             radio.trigger('platforms:shown');
         });
-        radio.reply('platforms:details', function(model) {
-            radio.request('view:content').getRegion('overlay').show(new PlatformDetailsView({model: model}));
+        radio.reply('platforms:edit', function(platform) {
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new PlatformDetailsView({model: platform}),
+                'sensors/platforms/' + platform.id,
+                'sensors/platforms',
+                router);
         });
         radio.reply('platforms:firmware:add', function() {
-            radio.request('view:content').getRegion('overlay').show(new FileUploadView());
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new FileUploadView(),
+                'sensors/platforms/add',
+                'sensors/platforms',
+                router);
         });
-        radio.reply('platforms:firmware:remove', function(model) {
-            radio.request('view:modal').show(new ModalFirmwareRemoveView({model: model}));
+        radio.reply('platforms:firmware:remove', function(platform) {
+            radio.request('view:modal').show(new ModalFirmwareRemoveView({model: platform}));
         });
     },
     stop: function() {
         console.log('Stopping module: platforms');
         radio.stopReplying('platforms:show');
-        radio.stopReplying('platforms:details');
+        radio.stopReplying('platforms:edit');
     },
     routesList: {
-        'sensors/platforms': 'showPlatforms'
+        'sensors/platforms': 'showPlatforms',
+        'sensors/platforms/:id': 'editPlatform',
+        'sensors/platforms/add': 'addPlatformFirmware'
     },
-    showPlatforms: function() {radio.request('platforms:show');}
+    showPlatforms: function() {
+        radio.request('platforms:show');
+        this.router.navigate('sensors/platforms');
+    },
+    addPlatformFirmware: function() {
+        radio.request('platforms:show');
+        radio.request('platforms:firmware:add');
+    },
+    editPlatform: function(id) {
+        radio.request('platforms:show');
+        radio.request('platforms:edit', HoneySens.data.models.platforms.get(id));
+    }
 });
 
 export default PlatformsModule;

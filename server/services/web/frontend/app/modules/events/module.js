@@ -6,8 +6,9 @@ import createRoutingModule from 'app/routing';
 import { EventFilter, Task } from 'app/models';
 import Backbone from 'backbone';
 import LayoutView from 'app/modules/events/views/Layout';
-import EventListView from 'app/modules/events/views/EventList';
+import EventDetailsView from 'app/modules/events/views/EventDetails';
 import EventEditView from 'app/modules/events/views/EventEdit';
+import EventListView from 'app/modules/events/views/EventList';
 import FilterListView from 'app/modules/events/views/FilterList';
 import FilterEditView from 'app/modules/events/views/FilterEdit';
 import ModalFilterRemoveView from 'app/modules/events/views/ModalFilterRemove';
@@ -15,7 +16,7 @@ import ModalEventRemoveView from 'app/modules/events/views/ModalEventRemove';
 import ModalAwaitTaskView from 'app/modules/tasks/views/ModalAwaitTask';
 
 function calculateEventQueryParams(params) {
-    // Takes an params object as provided in collection.queryParams, calculates and returns its actual values
+    // Takes a params object as provided in collection.queryParams, calculates and returns its actual values
     var result = _.clone(params);
     // Clean up and assemble parameters
     delete result.currentPage;
@@ -43,6 +44,7 @@ var EventsModule = createRoutingModule({
     menuItems: [{
         title: i18n.t('events:eventHeader'),
         uri: 'events',
+        link_uri: 'events/live',  // Use this as effective link target instead of uri
         iconClass: 'glyphicon glyphicon-list',
         permission: {domain: 'events', action: 'get'},
         priority: 1,
@@ -71,20 +73,39 @@ var EventsModule = createRoutingModule({
         var contentRegion = this.rootView.getRegion('content'),
             router = this.router;
 
-        radio.reply('events:show', function() {
+        radio.reply('events:show', function(options) {
             if(!HoneySens.assureAllowed('events', 'get')) return false;
+            HoneySens.data.models.events.queryParams.filter = options?.filter;
+            HoneySens.data.models.events.queryParams.archived = options?.hasOwnProperty('archived') ? options.archived : false;
             contentRegion.show(new EventListView({collection: HoneySens.data.models.events}));
             radio.trigger('events:shown');
-            router.navigate('events');
+        });
+        radio.reply('events:details', function(event) {
+            if(!HoneySens.assureAllowed('eventdetails', 'get')) return false;
+            var archived = event.get('archived'),
+                source = archived ? 'archive' : 'live',
+                eventId = archived ? event.get('oid') : event.id;
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new EventDetailsView({model: event}),
+                'events/' + source + '/' + eventId,
+                'events/' + source,
+                router);
+        });
+        radio.reply('events:navigate', function(fragment) {
+            // Enables views to update the URI
+            router.navigate(fragment);
         });
         radio.reply('events:filters:show', function() {
             contentRegion.show(new FilterListView({collection: HoneySens.data.models.eventfilters}));
             radio.trigger('events:filters:shown');
-            router.navigate('events/filters');
         });
         radio.reply('events:filters:add', function() {
             if(!HoneySens.assureAllowed('eventfilters', 'create')) return false;
-            radio.request('view:content').getRegion('overlay').show(new FilterEditView({model: new EventFilter()}));
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new FilterEditView({model: new EventFilter()}),
+                'events/filters/add',
+                'events/filters',
+                router);
         });
         radio.reply('events:filters:toggle', function(filter) {
             if(!HoneySens.assureAllowed('eventfilters', 'update')) return false;
@@ -93,7 +114,11 @@ var EventsModule = createRoutingModule({
 
         radio.reply('events:filters:edit', function(filter) {
             if(!HoneySens.assureAllowed('eventfilters', 'update')) return false;
-            radio.request('view:content').getRegion('overlay').show(new FilterEditView({model: filter}));
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                new FilterEditView({model: filter}),
+                'events/filters/' + filter.id,
+                'events/filters',
+                router);
         });
         radio.reply('events:filters:remove', function(filter) {
             radio.request('view:modal').show(new ModalFilterRemoveView({model: filter}));
@@ -119,7 +144,7 @@ var EventsModule = createRoutingModule({
             dialog.listenTo(dialog, 'confirm', function(data) {
                 // Only send a request in case something was modified
                 if(Object.keys(data).length === 0) {
-                    radio.request('view:content').getRegion('overlay').empty();
+                    dialog.trigger('view:close');
                     return;
                 }
                 $.ajax({
@@ -129,11 +154,15 @@ var EventsModule = createRoutingModule({
                     contentType: 'application/json',
                     success: function() {
                         HoneySens.data.models.events.fetch();
-                        radio.request('view:content').getRegion('overlay').empty();
+                        dialog.trigger('view:close');
                     }
                 });
             });
-            radio.request('view:content').getRegion('overlay').show(dialog);
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                dialog,
+                'events/edit/' + model.id,
+                'events/live',
+                router);
         });
         radio.reply('events:edit:all', function(collection) {
             if(!HoneySens.assureAllowed('events', 'update')) return false;
@@ -141,10 +170,14 @@ var EventsModule = createRoutingModule({
             dialog.listenTo(dialog, 'confirm', function(data) {
                 module.updateEvents(collection.queryParams, data, function() {
                     HoneySens.data.models.events.fetch();
-                    radio.request('view:content').getRegion('overlay').empty();
+                    dialog.trigger('view:close');
                 });
             });
-            radio.request('view:content').getRegion('overlay').show(dialog);
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                dialog,
+                'events/live',
+                'events/live',
+                router);
         });
         radio.reply('events:edit:some', function(selection) {
             if(!HoneySens.assureAllowed('events', 'update') || selection.length === 0) return false;
@@ -160,12 +193,16 @@ var EventsModule = createRoutingModule({
                         contentType: 'application/json',
                         success: function() {
                             HoneySens.data.models.events.fetch();
-                            radio.request('view:content').getRegion('overlay').empty();
+                            dialog.trigger('view:close');
                         }
                     });
-                } else radio.request('view:content').getRegion('overlay').empty();
+                } else dialog.trigger('view:close');
             });
-            radio.request('view:content').getRegion('overlay').show(dialog);
+            radio.request('view:content').getRegion('overlay').showOverlay(
+                dialog,
+                'events/live',
+                'events/live',
+                router);
         });
         radio.reply('events:remove:all', function(collection) {
             if(!HoneySens.assureAllowed('events', 'delete')) return false;
@@ -208,17 +245,78 @@ var EventsModule = createRoutingModule({
     stop: function() {
         console.log('Stopping module: events');
         radio.stopReplying('events:show');
+        radio.stopReplying('events:details');
         radio.stopReplying('events:filters:show');
         radio.stopReplying('events:filters:add');
         radio.stopReplying('events:filter:edit');
         radio.stopReplying('events:filter:remove');
     },
     routesList: {
-        'events': 'showEvents',
-        'events/filters': 'showFilters'
+        'events': 'showLiveEvents',
+        'events/live': 'showLiveEvents',
+        'events/live/:id': 'showLiveEventDetails',
+        'events/archive': 'showArchivedEvents',
+        'events/archive/:oid': 'showArchivedEventDetails',
+        'events/edit/:id': 'editEvent',
+        'events/filters': 'showFilters',
+        'events/filters/:id': 'editFilter',
+        'events/filters/add': 'addFilter'
     },
-    showEvents: function() {radio.request('events:show');},
-    showFilters: function() {radio.request('events:filters:show');},
+    showLiveEvents: function() {
+        radio.request('events:show');
+        this.router.navigate('events/live');
+    },
+    showLiveEventDetails: function(id) {
+        var events = HoneySens.data.models.events;
+        events.queryParams.filter = id;
+        radio.request('view:content').getRegion('overlay').announceFragment('events/live/' + id);
+        events.fetch({
+            success: function() {
+                radio.request('events:details', events.get(id));
+                radio.request('events:show', { filter: id });
+            }
+        });
+    },
+    showArchivedEvents: function() {
+        radio.request('events:show', { archived: true });
+        this.router.navigate('events/archive');
+    },
+    showArchivedEventDetails: function(oid) {
+        var events = HoneySens.data.models.events,
+            originalEventId = parseInt(oid);
+        events.queryParams.archived = true;
+        events.queryParams.filter = originalEventId;
+        radio.request('view:content').getRegion('overlay').announceFragment('events/archive/' + oid);
+        events.fetch({
+            success: function() {
+                radio.request('events:details', events.findWhere({ oid: originalEventId }));
+                radio.request('events:show', { filter: originalEventId, archived: true });
+            }
+        });
+    },
+    editEvent: function(id) {
+        var events = HoneySens.data.models.events;
+        events.queryParams.filter = id;
+        radio.request('view:content').getRegion('overlay').announceFragment('events/edit/' + id);
+        events.fetch({
+            success: function() {
+                radio.request('events:edit:single', events.get(id));
+                radio.request('events:show', { filter: id });
+            }
+        });
+    },
+    showFilters: function() {
+        radio.request('events:filters:show');
+        this.router.navigate('events/filters');
+    },
+    addFilter: function() {
+        radio.request('events:filters:show');
+        radio.request('events:filters:add');
+    },
+    editFilter: function(id) {
+        radio.request('events:filters:show');
+        radio.request('events:filters:edit', HoneySens.data.models.eventfilters.get(id));
+    },
     exportEvents: function(collection, params) {
         var calcParams = calculateEventQueryParams(params);
         // Sorting

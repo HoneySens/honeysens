@@ -1,6 +1,6 @@
 <div class="row eventDetails">
     <div class="col-sm-12">
-        <h1 class="page-header"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;<%= t("events:eventDetailsHeader") %></h1>
+        <h1 class="page-header"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;<%= t("event") %> <% if(archived) { %><%- oid %><% } else { %><%- id %><% } %></h1>
         <div class="row">
             <p class="col-sm-2"><strong><%= t("timestamp") %></strong></p>
             <p class="col-sm-9"><%- showTimestamp() %></p>

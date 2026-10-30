@@ -136,7 +136,7 @@ const EventDetailsView = View.extend({
     },
     events: {
         'click button.btn-default': function() {
-            radio.request('view:content').getRegion('overlay').empty();
+            this.trigger('view:close');
         }
     },
     templateContext: {...i18n, ...EventTemplateHelpers},
