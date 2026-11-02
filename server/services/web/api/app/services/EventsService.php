@@ -461,16 +461,6 @@ class EventsService extends Service {
             $qb->setParameter('comment', '%'. $conditions->filter . '%');
             $filters->add($qb->expr()->eq('e.source', ':source'));
             $qb->setParameter('source', $conditions->filter);
-            // Also try to parse the filter string into a date
-            $date = false;
-            try {
-                $date = new \DateTime($conditions->filter);
-            } catch (\Exception $e) {}
-            if ($date) {
-                $timestamp = $date->format('Y-m-d');
-                $filters->add($qb->expr()->like('e.timestamp', ':timestamp'));
-                $qb->setParameter('timestamp', $timestamp . '%');
-            }
             $qb->andWhere($filters);
         }
         if($conditions->sortBy !== null && $conditions->sortOrder !== null) {

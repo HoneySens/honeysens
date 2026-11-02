@@ -33,7 +33,7 @@
   "eventListFilterSearch": "Suche",
   "eventListFilterDatasetLive": "Live",
   "eventListFilterDatasetArchive": "Archiv",
-  "eventListFilterSearchPlaceholder": "Suche nach ID, Datum, Quelle oder Kommentar",
+  "eventListFilterSearchPlaceholder": "Nach ID, Quelle oder Kommentar filtern",
   "eventListFilterStatusUneditedBusy": "Neu & In Bearb.",
   "eventListFilterStatusResolvedIgnored": "Erledigt & Ign.",
   "eventCurrentPage": "Aktuelle Seite",
