@@ -19,7 +19,7 @@ const Menu = View.extend({
             if(HoneySens.assureAllowed(this.permission.domain, this.permission.action)) {
                 // Enable modules to overwrite the URI used in the menu from its regular uri
                 var uri = this.link_uri ?? this.uri;
-                result += '<li><a href="#' + uri + '"><span class="' + this.iconClass + '"></span><span class="badge"></span><span class="menuLabel">&nbsp;&nbsp;' + this.title + '</span></a>' + subitems + '</li>';
+                result += '<li><a href="#' + uri + '" data-uri="' + this.uri + '"><span class="' + this.iconClass + '"></span><span class="badge"></span><span class="menuLabel">&nbsp;&nbsp;' + this.title + '</span></a>' + subitems + '</li>';
             }
         });
         return result;

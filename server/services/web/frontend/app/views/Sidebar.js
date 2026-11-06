@@ -29,9 +29,9 @@ const Sidebar = View.extend({
         this.listenTo(Backbone.history, 'route', function(router, route, params) {
             var $sidebar = this.$el;
             if(router.current) {
-                var fragment = '#' + router.current().fragment;
+                var fragment = router.current().fragment;
                 $sidebar.find('ul.nav-sidebar li > a').each(function() {
-                    if(fragment.startsWith($(this).attr('href'))) {
+                    if(fragment.startsWith($(this).attr('data-uri'))) {
                         var $node = $(this).parent('li').addClass('active');
                         $sidebar.find('ul.nav-sidebar li').not($node).removeClass('active');
                     }
