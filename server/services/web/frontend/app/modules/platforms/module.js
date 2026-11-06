@@ -66,8 +66,11 @@ var PlatformsModule = createRoutingModule({
         radio.request('platforms:firmware:add');
     },
     editPlatform: function(id) {
-        radio.request('platforms:show');
-        radio.request('platforms:edit', HoneySens.data.models.platforms.get(id));
+        var platform = HoneySens.data.models.platforms.get(id);
+        if(platform) {
+            radio.request('platforms:show');
+            radio.request('platforms:edit', platform);
+        } else this.showPlatforms();
     }
 });
 

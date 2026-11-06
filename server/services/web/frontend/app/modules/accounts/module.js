@@ -90,16 +90,22 @@ var AccountsModule = createRoutingModule({
         radio.request('accounts:division:add');
     },
     editDivision: function(id) {
-        radio.request("accounts:show");
-        radio.request('accounts:division:edit', HoneySens.data.models.divisions.get(id));
+        var division = HoneySens.data.models.divisions.get(id);
+        if(division) {
+            radio.request("accounts:show");
+            radio.request('accounts:division:edit', division);
+        } else this.showAccounts();
     },
     addUser: function() {
         radio.request("accounts:show");
         radio.request('accounts:user:add');
     },
     editUser: function(id) {
-        radio.request("accounts:show");
-        radio.request('accounts:user:edit', HoneySens.data.models.users.get(id));
+        var user = HoneySens.data.models.users.get(id);
+        if(user) {
+            radio.request("accounts:show");
+            radio.request('accounts:user:edit', user);
+        } else this.showAccounts();
     }
 });
 

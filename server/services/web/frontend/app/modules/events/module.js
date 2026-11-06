@@ -263,43 +263,67 @@ var EventsModule = createRoutingModule({
         'events/filters/add': 'addFilter'
     },
     showLiveEvents: function() {
+        // Attempt to close a potentially open overlay.
+        // This is only required due to this module using announceFragment(), which can result in dangling overlays.
+        radio.request('view:content').getRegion('overlay').closeOverlay(false)
         radio.request('events:show');
         this.router.navigate('events/live');
     },
     showLiveEventDetails: function(id) {
-        var events = HoneySens.data.models.events;
+        var events = HoneySens.data.models.events,
+            overlay = radio.request('view:content').getRegion('overlay'),
+            module = this;
         events.queryParams.filter = id;
-        radio.request('view:content').getRegion('overlay').announceFragment('events/live/' + id);
+        overlay.announceFragment('events/live/' + id);
         events.fetch({
             success: function() {
+                if(events.length === 0) {
+                    overlay.announceFragment(null);
+                    module.showLiveEvents();
+                    return;
+                }
                 radio.request('events:details', events.get(id));
                 radio.request('events:show', { filter: id });
             }
         });
     },
     showArchivedEvents: function() {
+        radio.request('view:content').getRegion('overlay').closeOverlay(false)
         radio.request('events:show', { archived: true });
         this.router.navigate('events/archive');
     },
     showArchivedEventDetails: function(oid) {
         var events = HoneySens.data.models.events,
-            originalEventId = parseInt(oid);
+            overlay = radio.request('view:content').getRegion('overlay'),
+            module = this;
         events.queryParams.archived = true;
-        events.queryParams.filter = originalEventId;
-        radio.request('view:content').getRegion('overlay').announceFragment('events/archive/' + oid);
+        events.queryParams.filter = oid;
+        overlay.announceFragment('events/archive/' + oid);
         events.fetch({
             success: function() {
-                radio.request('events:details', events.findWhere({ oid: originalEventId }));
-                radio.request('events:show', { filter: originalEventId, archived: true });
+                if(events.length === 0) {
+                    overlay.announceFragment(null);
+                    module.showArchivedEvents();
+                    return;
+                }
+                radio.request('events:details', events.findWhere({ oid: parseInt(oid) }));
+                radio.request('events:show', { filter: oid, archived: true });
             }
         });
     },
     editEvent: function(id) {
-        var events = HoneySens.data.models.events;
+        var events = HoneySens.data.models.events,
+            overlay = radio.request('view:content').getRegion('overlay'),
+            module = this;
         events.queryParams.filter = id;
-        radio.request('view:content').getRegion('overlay').announceFragment('events/edit/' + id);
+        overlay.announceFragment('events/edit/' + id);
         events.fetch({
             success: function() {
+                if(events.length === 0) {
+                    overlay.announceFragment(null);
+                    module.showLiveEvents();
+                    return;
+                }
                 radio.request('events:edit:single', events.get(id));
                 radio.request('events:show', { filter: id });
             }
@@ -314,8 +338,11 @@ var EventsModule = createRoutingModule({
         radio.request('events:filters:add');
     },
     editFilter: function(id) {
-        radio.request('events:filters:show');
-        radio.request('events:filters:edit', HoneySens.data.models.eventfilters.get(id));
+        var filter = HoneySens.data.models.eventfilters.get(id);
+        if(filter) {
+            radio.request('events:filters:show');
+            radio.request('events:filters:edit', filter);
+        } else this.showFilters();
     },
     exportEvents: function(collection, params) {
         var calcParams = calculateEventQueryParams(params);

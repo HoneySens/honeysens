@@ -103,8 +103,11 @@ var SensorsModule = createRoutingModule({
         radio.request('sensors:add');
     },
     editSensor: function(id) {
-        radio.request('sensors:show');
-        radio.request('sensors:edit', HoneySens.data.models.sensors.get(id));
+        var sensor = HoneySens.data.models.sensors.get(id);
+        if(sensor) {
+            radio.request('sensors:show');
+            radio.request('sensors:edit', sensor);
+        } else this.showSensors();
     }
 });
 

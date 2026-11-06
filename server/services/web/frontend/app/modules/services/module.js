@@ -72,8 +72,11 @@ var ServicesModule = createRoutingModule({
         radio.request('services:add');
     },
     editService: function(id) {
-        radio.request('services:show');
-        radio.request('services:edit', HoneySens.data.models.services.get(id));
+        var service = HoneySens.data.models.services.get(id);
+        if(service) {
+            radio.request('services:show');
+            radio.request('services:edit', service);
+        } else this.showServices();
     }
 });
 

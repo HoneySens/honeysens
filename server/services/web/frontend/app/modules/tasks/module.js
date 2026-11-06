@@ -55,13 +55,15 @@ var TasksModule = createRoutingModule({
                         router);
                     break;
                 case TaskType.EMAIL_EMITTER:
-                    radio.request('view:modal').show(new ModalSendTestMail({model: task}));
+                    if(task.get('status') === TaskStatus.DONE || task.get('status') === TaskStatus.ERROR)
+                        radio.request('view:modal').show(new ModalSendTestMail({model: task}));
+                    // We do not reserve URIs for shown modals
+                    router.navigate('tasks');
                     break;
+                default:
+                    // Redirects to the tasks overview URI in case users visited an invalid ID manually
+                    router.navigate('tasks');
             }
-        });
-        radio.reply('tasks:upload:show', function(model) {
-        });
-        radio.reply('tasks:testmail:show', function(model) {
         });
     },
     stop: function() {
@@ -78,8 +80,11 @@ var TasksModule = createRoutingModule({
         this.router.navigate('tasks');
     },
     editTask: function(id) {
-        radio.request('tasks:show');
-        radio.request('tasks:edit', HoneySens.data.models.tasks.get(id));
+        var task = HoneySens.data.models.tasks.get(id);
+        if(task) {
+            radio.request('tasks:show');
+            radio.request('tasks:edit', task);
+        } else this.showTasks();
     }
 });
 
