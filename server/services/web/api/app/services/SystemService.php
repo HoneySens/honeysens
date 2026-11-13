@@ -16,7 +16,7 @@ use HoneySens\app\models\exceptions\BadRequestException;
 use HoneySens\app\models\exceptions\ForbiddenException;
 use HoneySens\app\models\exceptions\SystemException;
 use NoiseLabs\ToolKit\ConfigParser\ConfigParser;
-use phpseclib3\File\X509;
+use phpseclib4\File\X509;
 
 class SystemService extends Service {
 
@@ -48,20 +48,10 @@ class SystemService extends Service {
     public function getSystemInfo(string $serverTLSCert): array {
         // Fetch TLS cert common name
         $commonName = null;
-        $x509 = new X509();
         try {
-            // Manually select the first cert of a potential chain (see https://github.com/phpseclib/phpseclib/issues/708)
-            $certs = preg_split('#-+BEGIN CERTIFICATE-+#', $serverTLSCert);
-            array_shift($certs); // Remove the first empty element
-            $cert = $x509->loadX509(sprintf('%s%s', '-----BEGIN CERTIFICATE-----', array_shift($certs)));
-            foreach($cert['tbsCertificate']['subject']['rdnSequence'] as $prim) {
-                foreach($prim as $sec) {
-                    if(array_key_exists('type', $sec) && $sec['type'] == 'id-at-commonName') {
-                        if(array_key_exists('value', $sec) && is_array($sec['value'])) {
-                            $commonName = $sec['value'][key($sec['value'])];
-                        }
-                    }
-                }
+            $cert = X509::load($serverTLSCert);
+            if($cert->hasSubjectDNProp('id-at-commonName')) {
+                $commonName = $cert->getSubjectDNProps('id-at-commonName')[0]->value;
             }
         } catch(\Exception) {}
         return array(
