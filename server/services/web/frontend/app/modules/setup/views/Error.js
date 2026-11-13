@@ -1,6 +1,7 @@
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import ErrorTpl from 'app/modules/setup/templates/Error.tpl';
+import _ from 'underscore';
 
 const Error = View.extend({
     template: _.template(ErrorTpl),

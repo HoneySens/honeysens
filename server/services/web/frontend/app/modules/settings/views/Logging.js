@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import LoggingTpl from 'app/modules/settings/templates/Logging.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const Logging = View.extend({
     template: _.template(LoggingTpl),

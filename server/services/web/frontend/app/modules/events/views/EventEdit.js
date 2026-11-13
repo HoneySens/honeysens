@@ -1,11 +1,12 @@
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
-import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import { EventStatus } from 'app/models';
 import EventEditTpl from 'app/modules/events/templates/EventEdit.tpl';
 import { EventTemplateHelpers } from 'app/views/common';
 import 'validator';
+import $ from 'jquery';
+import _ from 'underscore';
 
 const EventEdit = View.extend({
     template: _.template(EventEditTpl),

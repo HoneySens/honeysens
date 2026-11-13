@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import EventsTimelineTpl from 'app/modules/dashboard/templates/EventsTimeline.tpl';
 import 'chart.js';
+import _ from 'underscore';
 
 // Calculates the timeline dataset from model data
 function getDataset(model) {

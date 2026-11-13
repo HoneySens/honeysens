@@ -1,5 +1,6 @@
 import { View } from 'backbone.marionette';
 import ModalSensorStatusItemTpl from 'app/modules/sensors/templates/ModalSensorStatusItem.tpl';
+import _ from 'underscore';
 
 const ModalSensorStatusItem = View.extend({
     template: _.template(ModalSensorStatusItemTpl),

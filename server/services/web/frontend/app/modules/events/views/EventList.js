@@ -14,6 +14,8 @@ import 'backgrid-select-filter';
 import 'backgrid-select-all';
 import 'backgrid-filter';
 import { EventTemplateHelpers } from 'app/views/common';
+import $ from 'jquery';
+import _ from 'underscore';
 
 function getSensorSelectOptions() {
     var division = parseInt($('div.groupFilter select').val()),

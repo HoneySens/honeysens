@@ -6,6 +6,8 @@ import MenuView from 'app/common/views/Menu';
 import NavigationTpl from 'app/templates/Navigation.tpl';
 import ProgressBar from 'progressbar.js';
 import i18n from 'app/common/i18n';
+import _ from 'underscore';
+import $ from 'jquery';
 
 const Navigation = View.extend({
     popoverVisible: false,

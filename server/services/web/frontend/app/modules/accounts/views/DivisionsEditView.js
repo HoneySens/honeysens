@@ -9,6 +9,8 @@ import DivisionsUserListView from 'app/modules/accounts/views/DivisionsUserListV
 import DivisionsContactListView from 'app/modules/accounts/views/DivisionsContactListView';
 import DivisionsEditViewTpl from 'app/modules/accounts/templates/DivisionsEditView.tpl';
 import 'validator';
+import $ from 'jquery';
+import _ from 'underscore';
 
 const DivisionsEditView = View.extend({
     template: _.template(DivisionsEditViewTpl),

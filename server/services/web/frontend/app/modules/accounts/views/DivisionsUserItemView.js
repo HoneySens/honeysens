@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import DivisionsUserItemViewTpl from 'app/modules/accounts/templates/DivisionsUserItemView.tpl';
 import UserItemTemplateHelpers from 'app/modules/accounts/views/common';
+import _ from 'underscore';
 
 const DivisionsUserItemView = View.extend({
     template: _.template(DivisionsUserItemViewTpl),

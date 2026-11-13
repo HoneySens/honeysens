@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import LoginTpl from 'app/templates/Login.tpl';
+import _ from 'underscore';
 
 const Login = View.extend({
     template: _.template(LoginTpl),

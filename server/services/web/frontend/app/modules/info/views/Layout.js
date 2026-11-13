@@ -2,6 +2,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import LayoutTpl from 'app/modules/info/templates/Layout.tpl';
 import 'app/views/regions';
+import _ from 'underscore';
 
 const Layout = View.extend({
     template: _.template(LayoutTpl),

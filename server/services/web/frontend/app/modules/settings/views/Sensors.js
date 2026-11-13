@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import SensorsTpl from 'app/modules/settings/templates/Sensors.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const Sensors = View.extend({
     template: _.template(SensorsTpl),

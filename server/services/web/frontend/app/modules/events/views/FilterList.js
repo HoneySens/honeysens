@@ -7,6 +7,7 @@ import FilterListTpl from 'app/modules/events/templates/FilterList.tpl';
 import FilterListStatusCellTpl from 'app/modules/events/templates/FilterListStatusCell.tpl';
 import FilterListActionsCellTpl from 'app/modules/events/templates/FilterListActionsCell.tpl';
 import 'backgrid-select-filter';
+import _ from 'underscore';
 
 const FilterList = View.extend({
     template: _.template(FilterListTpl),

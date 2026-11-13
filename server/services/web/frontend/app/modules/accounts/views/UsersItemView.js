@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import ModalRemoveUser from 'app/modules/accounts/views/ModalRemoveUser';
 import UsersItemViewTpl from 'app/modules/accounts/templates/UsersItemView.tpl';
 import UserItemTemplateHelpers from 'app/modules/accounts/views/common';
+import _ from 'underscore';
 
 const UsersItemView = View.extend({
     template: _.template(UsersItemViewTpl),

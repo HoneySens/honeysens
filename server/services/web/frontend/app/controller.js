@@ -9,6 +9,7 @@ import NavigationView from 'app/views/Navigation';
 import SidebarView from 'app/views/Sidebar';
 import ModalServerError from 'app/common/views/ModalServerError';
 import 'app/modules/setup/module';
+import _ from 'underscore';
 
 // Initialize main app router
 export const router = new Backbone.Router({

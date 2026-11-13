@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import ModalServiceRevisionRemoveTpl from 'app/modules/services/templates/ModalServiceRevisionRemove.tpl';
+import _ from 'underscore';
 
 const ModalServiceRevisionRemove = View.extend({
     template: _.template(ModalServiceRevisionRemoveTpl),

@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import Backbone from 'backbone';
 import BackgridDatepickerFilterTpl from 'app/common/templates/BackgridDatepickerFilter.tpl';
 import 'bootstrap-datepicker';
+import _ from 'underscore';
 
 const BackgridDatepickerFilter = Backbone.View.extend({
     tagName: 'div',

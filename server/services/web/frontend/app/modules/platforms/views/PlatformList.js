@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import Backgrid from 'backgrid';
 import PlatformListTpl from 'app/modules/platforms/templates/PlatformList.tpl';
 import PlatformListActionsCellTpl from 'app/modules/platforms/templates/PlatformListActionsCell.tpl';
+import _ from 'underscore';
 
 const PlatformList = View.extend({
     template: _.template(PlatformListTpl),

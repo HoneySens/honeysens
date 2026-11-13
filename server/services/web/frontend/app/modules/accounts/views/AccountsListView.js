@@ -2,6 +2,7 @@ import { View } from 'backbone.marionette';
 import UsersListView from 'app/modules/accounts/views/UsersListView';
 import DivisionsListView from 'app/modules/accounts/views/DivisionsListView';
 import AccountsListViewTpl from 'app/modules/accounts/templates/AccountsListView.tpl';
+import _ from 'underscore';
 
 const AccountsListView = View.extend({
     template: _.template(AccountsListViewTpl),

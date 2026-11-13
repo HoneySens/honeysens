@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import { EventClassification, EventFilterCondition, EventFilterConditionField, EventFilterConditionType, EventPacketProtocol } from 'app/models';
 import FilterConditionListItemTpl from 'app/modules/events/templates/FilterConditionListItem.tpl';
 import FilterConditionListTpl from 'app/modules/events/templates/FilterConditionList.tpl';
+import _ from 'underscore';
 
 var FilterConditionListItem = View.extend({
     template: _.template(FilterConditionListItemTpl),

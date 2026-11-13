@@ -1,6 +1,7 @@
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import PermissionsTpl from 'app/modules/settings/templates/Permissions.tpl';
+import _ from 'underscore';
 
 const Permissions = View.extend({
     template: _.template(PermissionsTpl),

@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalRemoveDivisionTpl from 'app/modules/accounts/templates/ModalRemoveDivision.tpl';
+import _ from 'underscore';
 
 const ModalRemoveDivision = View.extend({
     template: _.template(ModalRemoveDivisionTpl),

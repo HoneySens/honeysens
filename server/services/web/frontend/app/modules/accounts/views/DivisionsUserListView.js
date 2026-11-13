@@ -5,6 +5,7 @@ import HoneySens from 'app/app';
 import { Users } from 'app/models';
 import DivisionsUserItemView from 'app/modules/accounts/views/DivisionsUserItemView';
 import DivisionsUserListViewTpl from 'app/modules/accounts/templates/DivisionsUserListView.tpl';
+import _ from 'underscore';
 
 // inline views to render the "add user" dropdown menu
 var DivisionsUserDropdownItem = View.extend({

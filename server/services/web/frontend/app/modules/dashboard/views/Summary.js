@@ -1,6 +1,7 @@
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import SummaryTpl from 'app/modules/dashboard/templates/Summary.tpl';
+import _ from 'underscore';
 
 const Summary = View.extend({
     template: _.template(SummaryTpl),

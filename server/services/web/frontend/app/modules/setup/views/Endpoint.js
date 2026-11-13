@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import EndpointTpl from 'app/modules/setup/templates/Endpoint.tpl';
+import _ from 'underscore';
 
 const Endpoint = View.extend({
     template: _.template(EndpointTpl),

@@ -5,6 +5,7 @@ import { radio } from 'app/radio';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import LDAPTpl from 'app/modules/settings/templates/LDAP.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const LDAP = View.extend({
     template: _.template(LDAPTpl),

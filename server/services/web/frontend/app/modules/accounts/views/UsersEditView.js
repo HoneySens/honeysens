@@ -7,6 +7,8 @@ import { UserDomain, UserRole } from 'app/models';
 import ModalServerError from 'app/common/views/ModalServerError';
 import UsersEditViewTpl from 'app/modules/accounts/templates/UsersEditView.tpl';
 import 'validator';
+import $ from 'jquery';
+import _ from 'underscore';
 
 const UsersEditView = View.extend({
     template: _.template(UsersEditViewTpl),

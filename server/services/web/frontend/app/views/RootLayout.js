@@ -1,6 +1,7 @@
 import { View } from 'backbone.marionette';
 import Regions from 'app/views/regions';
 import RootLayoutTpl from 'app/templates/RootLayout.tpl';
+import _ from 'underscore';
 
 export default View.extend({
     el: 'body',

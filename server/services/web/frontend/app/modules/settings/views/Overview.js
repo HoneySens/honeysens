@@ -2,6 +2,7 @@ import { View } from 'backbone.marionette';
 import MaintenanceView from 'app/modules/settings/views/Maintenance';
 import SettingsView from 'app/modules/settings/views/Settings';
 import OverviewTpl from 'app/modules/settings/templates/Overview.tpl';
+import _ from 'underscore';
 
 const Overview = View.extend({
     template: _.template(OverviewTpl),

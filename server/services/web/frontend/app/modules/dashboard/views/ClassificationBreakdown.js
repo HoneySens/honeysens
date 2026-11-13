@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import ClassificationBreakdownTpl from 'app/modules/dashboard/templates/ClassificationBreakdown.tpl';
 import 'chart.js';
+import _ from 'underscore';
 
 // Calculates the pie chart dataset from model data
 function getDataset(model) {

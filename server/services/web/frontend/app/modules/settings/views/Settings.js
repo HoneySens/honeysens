@@ -11,6 +11,8 @@ import SMTPSettingsView from 'app/modules/settings/views/SMTPSettings';
 import SMTPTemplatesView from 'app/modules/settings/views/SMTPTemplates';
 import EventForwardingView from 'app/modules/settings/views/EventForwarding';
 import SettingsTpl from 'app/modules/settings/templates/Settings.tpl';
+import _ from 'underscore';
+import $ from 'jquery';
 
 const Settings = View.extend({
     template: _.template(SettingsTpl),

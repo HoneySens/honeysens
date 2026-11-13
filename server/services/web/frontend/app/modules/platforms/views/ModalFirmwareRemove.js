@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalFirmwareRemoveTpl from 'app/modules/platforms/templates/ModalFirmwareRemove.tpl';
+import _ from 'underscore';
 
 const ModalFirmwareRemove = View.extend({
     template: _.template(ModalFirmwareRemoveTpl),

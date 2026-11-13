@@ -14,6 +14,7 @@ import FilterEditView from 'app/modules/events/views/FilterEdit';
 import ModalFilterRemoveView from 'app/modules/events/views/ModalFilterRemove';
 import ModalEventRemoveView from 'app/modules/events/views/ModalEventRemove';
 import ModalAwaitTaskView from 'app/modules/tasks/views/ModalAwaitTask';
+import _ from 'underscore';
 
 function calculateEventQueryParams(params) {
     // Takes a params object as provided in collection.queryParams, calculates and returns its actual values

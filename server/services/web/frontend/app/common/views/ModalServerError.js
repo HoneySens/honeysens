@@ -1,6 +1,7 @@
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import ModalServerErrorTpl from 'app/common/templates/ModalServerError.tpl';
+import _ from 'underscore';
 
 const ModalServerError = View.extend({
     template: _.template(ModalServerErrorTpl),

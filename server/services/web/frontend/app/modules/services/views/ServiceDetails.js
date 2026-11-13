@@ -7,6 +7,7 @@ import RevisionListActionsCellTpl from 'app/modules/services/templates/RevisionL
 import VersionListActionsCellTpl from 'app/modules/services/templates/VersionListActionsCell.tpl';
 import RevisionListStatusCellTpl from 'app/modules/services/templates/RevisionListStatusCell.tpl';
 import 'backgrid-subgrid-cell';
+import _ from 'underscore';
 
 const ServiceDetails = View.extend({
     template: _.template(ServiceDetailsTpl),

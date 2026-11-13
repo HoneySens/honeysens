@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import Backbone from 'backbone';
 import { radio } from 'app/radio';
 import LandingTpl from 'app/modules/setup/templates/Landing.tpl';
+import _ from 'underscore';
 
 const Landing = View.extend({
     template: _.template(LandingTpl),

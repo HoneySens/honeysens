@@ -6,6 +6,8 @@ import EventsTimelineView from 'app/modules/dashboard/views/EventsTimeline';
 import ClassificationBreakdownView from 'app/modules/dashboard/views/ClassificationBreakdown';
 import SummaryView from 'app/modules/dashboard/views/Summary';
 import DashboardTpl from 'app/modules/dashboard/templates/Dashboard.tpl';
+import $ from 'jquery';
+import _ from 'underscore';
 
 // inline views to render the division selector
 var DivisionDropdownItem = View.extend({

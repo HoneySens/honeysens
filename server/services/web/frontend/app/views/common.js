@@ -1,7 +1,6 @@
 import i18n from 'app/common/i18n';
 import HoneySens from 'app/app';
 import { EventClassification, TaskStatus } from 'app/models';
-import { CollectionView, View } from 'backbone.marionette';
 import { Spinner } from 'spin.js';
 
 export const EventTemplateHelpers = {

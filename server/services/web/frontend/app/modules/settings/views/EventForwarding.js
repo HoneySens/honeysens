@@ -6,6 +6,7 @@ import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave'
 import ModalForwardTestEvent from 'app/modules/settings/views/ModalForwardTestEvent';
 import EventForwardingTpl from 'app/modules/settings/templates/EventForwarding.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const EventForwarding = View.extend({
     template: _.template(EventForwardingTpl),

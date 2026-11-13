@@ -3,6 +3,8 @@ import Backbone from 'backbone';
 import HoneySens from 'app/app';
 import MenuView from 'app/common/views/Menu';
 import SidebarTpl from 'app/templates/Sidebar.tpl';
+import $ from 'jquery';
+import _ from 'underscore';
 
 const Sidebar = View.extend({
     template: _.template(SidebarTpl),

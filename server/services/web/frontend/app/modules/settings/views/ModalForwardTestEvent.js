@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import ModalForwardTestEventTpl from 'app/modules/settings/templates/ModalForwardTestEvent.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const ModalForwardTestEvent = View.extend({
     template:  _.template(ModalForwardTestEventTpl),

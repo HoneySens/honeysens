@@ -5,6 +5,8 @@ import { Task } from 'app/models';
 import ModalSendTestMailTpl from 'app/modules/settings/templates/ModalSendTestMail.tpl';
 import { inlineSpinner, waitForTask } from 'app/views/common';
 import 'validator';
+import $ from 'jquery';
+import _ from 'underscore';
 
 // The model this view receives is a vanilla Backbone.Model() upon first invocation,
 // but will be exchanged with a Task model when the 'send' button is pressed.

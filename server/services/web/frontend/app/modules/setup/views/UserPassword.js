@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import Backbone from 'backbone';
@@ -6,6 +5,7 @@ import { radio } from 'app/radio';
 import ModalServerError from 'app/common/views/ModalServerError';
 import UserPasswordTpl from 'app/modules/setup/templates/UserPassword.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const UserPassword = View.extend({
     template: _.template(UserPasswordTpl),

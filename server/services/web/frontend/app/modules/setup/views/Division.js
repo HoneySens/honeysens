@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import DivisionTpl from 'app/modules/setup/templates/Division.tpl';
+import _ from 'underscore';
 
 const Division = View.extend({
     template: _.template(DivisionTpl),

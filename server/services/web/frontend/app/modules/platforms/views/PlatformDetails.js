@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import Backgrid from 'backgrid';
 import PlatformDetailsTpl from 'app/modules/platforms/templates/PlatformDetails.tpl';
 import FirmwareListActionsCellTpl from 'app/modules/platforms/templates/FirmwareListActionsCell.tpl';
+import _ from 'underscore';
 
 const PlatformDetails = View.extend({
     template: _.template(PlatformDetailsTpl),

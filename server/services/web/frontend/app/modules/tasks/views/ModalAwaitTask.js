@@ -3,6 +3,7 @@ import { TaskStatus } from 'app/models';
 import { View } from 'backbone.marionette';
 import ModalAwaitTaskTpl from 'app/modules/tasks/templates/ModalAwaitTask.tpl';
 import { inlineSpinner } from 'app/views/common';
+import _ from 'underscore';
 
 const ModalAwaitTask = View.extend({
     template: _.template(ModalAwaitTaskTpl),

@@ -1,5 +1,6 @@
 import { View } from 'backbone.marionette';
 import HoneySens from 'app/app';
+import _ from 'underscore';
 
 // Creates a menu from the global application menu data (and therefore from all submodules)
 const Menu = View.extend({

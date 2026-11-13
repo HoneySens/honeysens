@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import AdminPasswordTpl from 'app/modules/setup/templates/AdminPassword.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const AdminPassword = View.extend({
     template: _.template(AdminPasswordTpl),

@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import DivisionsItemViewTpl from 'app/modules/accounts/templates/DivisionsItemView.tpl';
+import _ from 'underscore';
 
 const DivisionsItemView = View.extend({
     template: _.template(DivisionsItemViewTpl),

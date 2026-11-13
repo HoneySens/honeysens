@@ -6,6 +6,7 @@ import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave'
 import ModalSMTPTemplatePreviewView from 'app/modules/settings/views/ModalSMTPTemplatePreview';
 import SMTPTemplatesTpl from 'app/modules/settings/templates/SMTPTemplates.tpl';
 import SMTPTemplateDetailsTpl from 'app/modules/settings/templates/SMTPTemplateDetails.tpl';
+import _ from 'underscore';
 
 // Inline views to render the template selector
 var TemplateDropdownItem = View.extend({

@@ -7,6 +7,8 @@ import LogListTpl from 'app/modules/logs/templates/LogList.tpl';
 import 'backgrid-paginator';
 import 'backgrid-select-filter';
 import {EventTemplateHelpers} from 'app/views/common';
+import $ from 'jquery';
+import _ from 'underscore';
 
 function getUserSelectOptions() {
     var users = HoneySens.data.models.users.models;

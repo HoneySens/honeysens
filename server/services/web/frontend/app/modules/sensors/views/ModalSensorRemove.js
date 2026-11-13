@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import ModalSensorRemoveTpl from 'app/modules/sensors/templates/ModalSensorRemove.tpl';
+import _ from 'underscore';
 
 const ModalSensorRemove = View.extend({
     template: _.template(ModalSensorRemoveTpl),

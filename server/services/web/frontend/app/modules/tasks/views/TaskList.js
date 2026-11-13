@@ -8,6 +8,7 @@ import TaskListTpl from 'app/modules/tasks/templates/TaskList.tpl';
 import TaskListTypeCellTpl from 'app/modules/tasks/templates/TaskListTypeCell.tpl';
 import TaskListStatusCellTpl from 'app/modules/tasks/templates/TaskListStatusCell.tpl';
 import TaskListActionsCellTpl from 'app/modules/tasks/templates/TaskListActionsCell.tpl';
+import _ from 'underscore';
 
 const TaskList = View.extend({
     template: _.template(TaskListTpl),

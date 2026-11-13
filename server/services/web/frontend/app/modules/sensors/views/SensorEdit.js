@@ -6,6 +6,8 @@ import { Task } from 'app/models';
 import SensorEditTpl from 'app/modules/sensors/templates/SensorEdit.tpl';
 import { spinner, waitForTask } from 'app/views/common';
 import 'validator';
+import $ from 'jquery';
+import _ from 'underscore';
 
 const SensorEdit = View.extend({
     template: _.template(SensorEditTpl),

@@ -1,10 +1,11 @@
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
-import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import FilterConditionListView from 'app/modules/events/views/FilterConditionList';
 import FilterEditTpl from 'app/modules/events/templates/FilterEdit.tpl';
 import 'validator';
+import $ from 'jquery';
+import _ from 'underscore';
 
 const FilterEdit = View.extend({
     template: _.template(FilterEditTpl),

@@ -6,6 +6,7 @@ import HoneySens from 'app/app';
 import ModalConfirmation from 'app/common/views/ModalConfirmation';
 import MaintenanceTpl from 'app/modules/settings/templates/Maintenance.tpl';
 import { EventTemplateHelpers } from 'app/views/common';
+import _ from 'underscore';
 
 const DatabaseSettings = View.extend({
     template: _.template(MaintenanceTpl),

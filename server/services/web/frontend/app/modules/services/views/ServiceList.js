@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import Backgrid from 'backgrid';
 import ServiceListTpl from 'app/modules/services/templates/ServiceList.tpl';
 import ServiceListActionsCellTpl from 'app/modules/services/templates/ServiceListActionsCell.tpl';
+import _ from 'underscore';
 
 const ServiceList = View.extend({
     template: _.template(ServiceListTpl),

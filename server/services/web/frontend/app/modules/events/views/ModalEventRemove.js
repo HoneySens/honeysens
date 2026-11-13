@@ -4,6 +4,7 @@ import HoneySens from 'app/app';
 import ModalEventRemoveSingleTpl from 'app/modules/events/templates/ModalEventRemoveSingle.tpl';
 import ModalEventRemoveMassTpl from 'app/modules/events/templates/ModalEventRemoveMass.tpl';
 import { EventTemplateHelpers } from 'app/views/common';
+import _ from 'underscore';
 
 const ModalRemoveEvent = View.extend({
     events: {

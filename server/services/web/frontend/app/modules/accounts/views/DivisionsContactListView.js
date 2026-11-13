@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import { IncidentContact, IncidentContactType } from 'app/models';
 import DivisionsContactItemTpl from 'app/modules/accounts/templates/DivisionsContactItem.tpl';
 import DivisionsContactListViewTpl from 'app/modules/accounts/templates/DivisionsContactListView.tpl';
+import _ from 'underscore';
 
 var DivisionsContactUserSelectItem = View.extend({
     template: _.template('<%- name %>'),

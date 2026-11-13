@@ -1,5 +1,6 @@
 import Backgrid from 'backgrid';
 import 'vendor/backgrid-select-filter';
+import _ from 'underscore';
 
 var prototype = Backgrid.Extension.SelectFilter.prototype;
 

@@ -1,6 +1,7 @@
 import { View } from 'backbone.marionette';
 import Regions from 'app/views/regions';
 import AppLayoutTpl from 'app/templates/AppLayout.tpl';
+import _ from 'underscore';
 
 const AppLayout = View.extend({
     template: _.template(AppLayoutTpl),

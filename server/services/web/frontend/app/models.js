@@ -1,6 +1,7 @@
 import Backbone from 'backbone';
 import HoneySens from 'app/app';
 import PageableCollection from 'backbone.paginator';
+import _ from 'underscore';
 
 export const Event = Backbone.Model.extend({
     urlRoot: 'api/events',

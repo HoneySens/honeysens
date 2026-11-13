@@ -10,6 +10,8 @@ import SensorListStatusCellTpl from 'app/modules/sensors/templates/SensorListSta
 import SensorListActionsCellTpl from 'app/modules/sensors/templates/SensorListActionsCell.tpl';
 import SensorListServiceCellTpl from 'app/modules/sensors/templates/SensorListServiceCell.tpl';
 import { EventTemplateHelpers } from 'app/views/common';
+import $ from 'jquery';
+import _ from 'underscore';
 
 const SensorList = View.extend({
     template: _.template(SensorListTpl),

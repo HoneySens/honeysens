@@ -3,6 +3,7 @@ import { View } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import EventArchiveTpl from 'app/modules/settings/templates/EventArchive.tpl';
+import _ from 'underscore';
 
 const EventArchive = View.extend({
     template: _.template(EventArchiveTpl),

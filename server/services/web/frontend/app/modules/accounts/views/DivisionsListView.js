@@ -3,6 +3,7 @@ import { CollectionView } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import DivisionsItemView from 'app/modules/accounts/views/DivisionsItemView';
 import DivisionsListViewTpl from 'app/modules/accounts/templates/DivisionsListView.tpl';
+import _ from 'underscore';
 
 const DivisionsListView = CollectionView.extend({
     template: _.template(DivisionsListViewTpl),

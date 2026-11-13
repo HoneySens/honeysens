@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import { CollectionView } from 'backbone.marionette';
 import ModalSensorStatusItemView from 'app/modules/sensors/views/ModalSensorStatusItem';
 import ModalSensorStatusListTpl from 'app/modules/sensors/templates/ModalSensorStatusList.tpl';
+import _ from 'underscore';
 
 const ModalSensorStatusList = CollectionView.extend({
     template: _.template(ModalSensorStatusListTpl),

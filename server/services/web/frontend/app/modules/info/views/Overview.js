@@ -2,6 +2,7 @@ import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import HoneySens from 'app/app';
 import OverviewTpl from 'app/modules/info/templates/Overview.tpl';
+import _ from 'underscore';
 
 const Overview = View.extend({
     template: _.template(OverviewTpl),

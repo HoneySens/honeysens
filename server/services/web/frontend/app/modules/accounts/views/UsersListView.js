@@ -3,6 +3,7 @@ import { CollectionView } from 'backbone.marionette';
 import { radio } from 'app/radio';
 import UsersItemView from 'app/modules/accounts/views/UsersItemView';
 import UsersListViewTpl from 'app/modules/accounts/templates/UsersListView.tpl';
+import _ from 'underscore';
 
 const UsersListView = CollectionView.extend({
     template: _.template(UsersListViewTpl),

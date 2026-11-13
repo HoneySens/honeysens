@@ -1,6 +1,5 @@
 import i18n from 'app/common/i18n';
 import { View, CollectionView } from 'backbone.marionette';
-import { radio } from 'app/radio';
 import { EventDetails, EventDetailType, EventPacketProtocol } from 'app/models';
 import EventDetailsTpl from 'app/modules/events/templates/EventDetails.tpl';
 import DetailsDataItemTpl from 'app/modules/events/templates/DetailsDataItem.tpl';
@@ -10,6 +9,7 @@ import DetailsInteractionListTpl from 'app/modules/events/templates/DetailsInter
 import DetailsPacketListTpl from 'app/modules/events/templates/DetailsPacketList.tpl';
 import DetailsPacketListItemTpl from 'app/modules/events/templates/DetailsPacketListItem.tpl';
 import { EventTemplateHelpers } from 'app/views/common';
+import _ from 'underscore';
 
 
 var showTimestampHelper = function() {

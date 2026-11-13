@@ -7,6 +7,7 @@ import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave'
 import ModalSendTestMail from 'app/modules/settings/views/ModalSendTestMail';
 import SMTPSettingsTpl from 'app/modules/settings/templates/SMTPSettings.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const SMTPSettings = View.extend({
     template: _.template(SMTPSettingsTpl),

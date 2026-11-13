@@ -1,11 +1,11 @@
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
-import { radio } from 'app/radio';
 import HoneySens from 'app/app';
 import { Service, Task, TaskStatus } from 'app/models';
 import FileUploadTpl from 'app/common/templates/FileUpload.tpl';
 import { waitForTask, inlineSpinner } from 'app/views/common';
 import 'bootstrap-fileinput';
+import _ from 'underscore';
 
 function generateToken() {
     return Math.random().toString(36).substring(2);

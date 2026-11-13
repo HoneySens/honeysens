@@ -4,6 +4,7 @@ import { radio } from 'app/radio';
 import ModalSettingsSaveView from 'app/modules/settings/views/ModalSettingsSave';
 import ServerEndpointTpl from 'app/modules/settings/templates/ServerEndpoint.tpl';
 import 'validator';
+import _ from 'underscore';
 
 const ServerEndpoint = View.extend({
     template: _.template(ServerEndpointTpl),

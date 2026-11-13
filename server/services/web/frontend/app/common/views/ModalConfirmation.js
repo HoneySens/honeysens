@@ -1,6 +1,7 @@
 import i18n from 'app/common/i18n';
 import { View } from 'backbone.marionette';
 import ModalConfirmationTpl from 'app/common/templates/ModalConfirmation.tpl';
+import _ from 'underscore';
 
 /**
  * Expects to be passed a model with params
