@@ -464,7 +464,9 @@ class EventsService extends Service {
             $qb->andWhere($filters);
         }
         if($conditions->sortBy !== null && $conditions->sortOrder !== null) {
-            $qb->orderBy('e.' . $conditions->sortBy, $conditions->sortOrder);
+            if($conditions->sortBy === 'division')
+                $qb->orderBy('d.id', $conditions->sortOrder);
+            else $qb->orderBy('e.' . $conditions->sortBy, $conditions->sortOrder);
         } else {
             // Default behaviour: return timestamp-sorted events
             $qb->orderBy('e.timestamp', 'desc');

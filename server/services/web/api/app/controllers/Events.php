@@ -109,7 +109,7 @@ class Events extends RESTResource {
             $result->filter = $data['filter'];
         }
         if(array_key_exists('sort_by', $data) && array_key_exists('order', $data)) {
-            V::key('sort_by', V::in(['id', 'sensor', 'timestamp', 'classification', 'source', 'summary', 'status', 'comment']))
+            V::key('sort_by', V::in(['id', 'sensor', 'division', 'timestamp', 'classification', 'source', 'summary', 'status', 'comment']))
                 ->key('order', V::in(['asc', 'desc']))
                 ->check($data);
             $result->sortBy = $data['sort_by'];
