@@ -8,10 +8,7 @@ const ModalSensorStatusList = CollectionView.extend({
     template: _.template(ModalSensorStatusListTpl),
     templateContext: {...i18n},
     childViewContainer: 'tbody',
-    childView: ModalSensorStatusItemView,
-    attachHtml: function(collectionView, childView) {
-        collectionView.$el.find(this.childViewContainer).prepend(childView.el);
-    }
+    childView: ModalSensorStatusItemView
 });
 
 export default ModalSensorStatusList;

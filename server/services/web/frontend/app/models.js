@@ -259,6 +259,10 @@ export const ServiceStatusFlag = {
 };
 
 export const SensorStati = Backbone.Collection.extend({
+    comparator: function(a, b) {
+        if(a.id === b.id) return 0;
+        return a.id < b.id ? 1 : -1;
+    },
     model: SensorStatus,
     url: function() {
         return 'api/sensors/status/by-sensor/' + this.sensor.id;
