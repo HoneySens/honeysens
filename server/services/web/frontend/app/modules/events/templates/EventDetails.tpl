@@ -10,6 +10,10 @@
             <p class="col-sm-9"><%- showSensor() %></p>
         </div>
         <div class="row">
+            <p class="col-sm-2"><strong><%= t("events:eventDataset") %></strong></p>
+            <p class="col-sm-9"><%- showDataset() %></p>
+        </div>
+        <div class="row">
             <p class="col-sm-2"><strong><%= t("events:eventClassification") %></strong></p>
             <p class="col-sm-9"><%- showClassification() %></p>
         </div>

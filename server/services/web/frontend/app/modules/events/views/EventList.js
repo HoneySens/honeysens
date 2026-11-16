@@ -382,8 +382,8 @@ const EventList = View.extend({
             field: 'archived',
             initialValue: HoneySens.data.models.events.queryParams.archived,
             selectOptions: [
-                {label: i18n.t('events:eventListFilterDatasetLive'), value: false},
-                {label: i18n.t('events:eventListFilterDatasetArchive'), value: true}
+                {label: i18n.t('events:eventDatasetLive'), value: false},
+                {label: i18n.t('events:eventDatasetArchive'), value: true}
             ],
             beforeChange: function(e) {
                 let switchingToArchive = e.target.value === 'true',

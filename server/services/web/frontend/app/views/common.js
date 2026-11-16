@@ -4,11 +4,14 @@ import { EventClassification, TaskStatus } from 'app/models';
 import { Spinner } from 'spin.js';
 
 export const EventTemplateHelpers = {
-    showTimestamp: function (ts) {
+    showTimestamp: function(ts) {
         var ts = ts || this.timestamp;
         ts = new Date(ts * 1000);
         return ('0' + ts.getDate()).slice(-2) + '.' + ('0' + (ts.getMonth() + 1)).slice(-2) + '.' +
             ts.getFullYear() + ' ' + ('0' + ts.getHours()).slice(-2) + ':' + ('0' + ts.getMinutes()).slice(-2) + ':' + ('0' + ts.getSeconds()).slice(-2);
+    },
+    showDataset: function() {
+        return this.archived ? i18n.t('events:eventDatasetArchive') : i18n.t('events:eventDatasetLive')
     },
     showClassification: function (classification) {
         var classification = classification || this.classification;
@@ -25,7 +28,7 @@ export const EventTemplateHelpers = {
                 return i18n.t('unknown');
         }
     },
-    showSensor: function (eventAttrs) {
+    showSensor: function(eventAttrs) {
         eventAttrs = eventAttrs || this;
         // On archived events, the sensor name is directly attached to the event
         if(eventAttrs.archived) return eventAttrs.sensor;
@@ -48,7 +51,7 @@ export const EventTemplateHelpers = {
         var division_id =  HoneySens.data.models.sensors.get(sensor).get('division');
         return HoneySens.data.models.divisions.get(division_id).get('name');
     },
-    showSummary: function (summary, numberOfPackets, numberOfDetails) {
+    showSummary: function(summary, numberOfPackets, numberOfDetails) {
         var summary = summary || this.summary;
         var interactionCount;
         interactionCount = parseInt(numberOfPackets) + parseInt(numberOfDetails);

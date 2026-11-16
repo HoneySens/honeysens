@@ -1,6 +1,6 @@
 <div class="filters form-inline">
     <div class="form-group">
-        <label><%= t("events:eventListFilterDataset") %></label>
+        <label><%= t("events:eventDataset") %></label>
         <div class="sourceFilter"></div>
     </div>
     <div class="form-group">
