@@ -241,6 +241,9 @@ div.addForm, div.addBusy, div.addResult {top: 0; transition: top 400ms linear 0s
 div.selectionOptions {border: 1px solid #ddd; border-radius: 4px; padding: 0 8px; line-height: 30px; background-color: #dff0d8}
 div.selectionOptions button.btn {vertical-align: baseline}
 
+/* Highlight event list search bar contents */
+div.eventFilter input {color: #d9230f; font-weight: bold}
+
 /* Remove white space around tables in the event details overlay (for better integration into the accordion) */
 #detailLists {margin-bottom: 0}
 #detailLists div.panel-body {padding: 0}
