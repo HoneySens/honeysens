@@ -41,7 +41,8 @@ Regions.OverlayRegion = Region.extend({
             duration: 400,
             complete: function() {
                 view.$el.css('left', 'auto');
-                view.$el.find(':input[autofocus]').focus();
+                // Focus an optional autofocus input element with preventScroll via its native DOM element
+                view.$el.find(':input[autofocus]')[0]?.focus({ preventScroll: true });
             }
         });
         // callback: adjust overlay size on viewport changes

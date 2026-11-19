@@ -4,7 +4,7 @@
         <form role="form">
             <div class="form-group has-feedback">
                 <label for="divisionname" class="control-label"><%= t("name") %></label>
-                <input pattern="^[a-zA-Z0-9]+$" data-pattern-error="<%= t('nameValidationError')%>" data-maxlength-error="<%= t('lengthValidationError', { min: 1, max: 255 }) %>" maxlength="255" minlength="1" type="text" class="form-control" name="divisionname" placeholder="<%= t('name') %>" value="<%- name %>" required />
+                <input pattern="^[a-zA-Z0-9]+$" data-pattern-error="<%= t('nameValidationError')%>" data-maxlength-error="<%= t('lengthValidationError', { min: 1, max: 255 }) %>" maxlength="255" minlength="1" type="text" class="form-control" name="divisionname" placeholder="<%= t('name') %>" value="<%- name %>" required autofocus />
                 <span class="form-control-feedback glyphicon" aria-hidden="true"></span>
                 <div class="help-block with-errors"></div>
             </div>
