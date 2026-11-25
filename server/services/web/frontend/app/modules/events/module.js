@@ -45,7 +45,7 @@ var EventsModule = createRoutingModule({
     menuItems: [{
         title: i18n.t('events:eventHeader'),
         uri: 'events',
-        link_uri: 'events/live',  // Use this as effective link target instead of uri
+        link_uri: 'events/live/status/0,1',  // Use this as effective link target instead of uri
         iconClass: 'glyphicon glyphicon-list',
         permission: {domain: 'events', action: 'get'},
         priority: 1,
@@ -76,10 +76,30 @@ var EventsModule = createRoutingModule({
 
         radio.reply('events:show', function(options) {
             if(!HoneySens.assureAllowed('events', 'get')) return false;
+            var sourceValid = options?.hasOwnProperty('source') && (options.source === 'live' || options.source === 'archive'),
+                archived = sourceValid ? options.source === 'archive' : false,
+                division = Number(options?.division),
+                divisionValid = division > 0 && Number.isSafeInteger(division),
+                sensor = Number(options?.sensor),
+                sensorValid = sensor > 0 && Number.isSafeInteger(sensor),
+                classification = Number(options?.classification),
+                classificationValid = classification > 0 && Number.isSafeInteger(classification),
+                statusValid = options?.hasOwnProperty('status') && ['0,1', '2,3', '0', '1', '2', '3'].includes(options.status),
+                from = Number(options?.from),
+                fromValid = from > 0 && Number.isSafeInteger(from),
+                to = Number(options?.to),
+                toValid = to > 0 && Number.isSafeInteger(to);
+            HoneySens.data.models.events.queryParams.division = divisionValid ? division : null;
+            HoneySens.data.models.events.queryParams.sensor = sensorValid ? sensor : null;
+            HoneySens.data.models.events.queryParams.classification = classificationValid ? classification : null;
+            HoneySens.data.models.events.queryParams.status = statusValid ? options.status : (archived ? null : '0,1');
+            HoneySens.data.models.events.queryParams.fromTS = fromValid ? from : null;
+            HoneySens.data.models.events.queryParams.toTS = toValid ? to : null;
             HoneySens.data.models.events.queryParams.filter = options?.filter;
-            HoneySens.data.models.events.queryParams.archived = options?.hasOwnProperty('archived') ? options.archived : false;
+            HoneySens.data.models.events.queryParams.archived = archived;
             contentRegion.show(new EventListView({collection: HoneySens.data.models.events}));
             radio.trigger('events:shown');
+            return module.generateStateFragment();
         });
         radio.reply('events:details', function(event) {
             if(!HoneySens.assureAllowed('eventdetails', 'get')) return false;
@@ -89,12 +109,11 @@ var EventsModule = createRoutingModule({
             radio.request('view:content').getRegion('overlay').showOverlay(
                 new EventDetailsView({model: event}),
                 'events/' + source + '/' + eventId,
-                'events/' + source,
+                module.generateStateFragment(),
                 router);
         });
-        radio.reply('events:navigate', function(fragment) {
-            // Enables views to update the URI
-            router.navigate(fragment);
+        radio.reply('events:navigate:regenerate', function() {
+            router.navigate(module.generateStateFragment());
         });
         radio.reply('events:filters:show', function() {
             contentRegion.show(new FilterListView({collection: HoneySens.data.models.eventfilters}));
@@ -253,22 +272,29 @@ var EventsModule = createRoutingModule({
         radio.stopReplying('events:filter:remove');
     },
     routesList: {
-        'events': 'showLiveEvents',
-        'events/live': 'showLiveEvents',
+        'events': 'showEvents',
+        'events/:source(/division/:division)(/sensor/:sensor)(/classification/:classification)(/status/:status)(/from/:from/to/:to)': 'showEvents',
         'events/live/:id': 'showLiveEventDetails',
-        'events/archive': 'showArchivedEvents',
         'events/archive/:oid': 'showArchivedEventDetails',
         'events/edit/:id': 'editEvent',
         'events/filters': 'showFilters',
         'events/filters/:id': 'editFilter',
         'events/filters/add': 'addFilter'
     },
-    showLiveEvents: function() {
+    showEvents: function(source, division, sensor, classification, status, from, to) {
         // Attempt to close a potentially open overlay.
         // This is only required due to this module using announceFragment(), which can result in dangling overlays.
         radio.request('view:content').getRegion('overlay').closeOverlay(false)
-        radio.request('events:show');
-        this.router.navigate('events/live');
+        var fragment = radio.request('events:show', {
+            source: source,
+            division: division,
+            sensor: sensor,
+            classification: classification,
+            status: status,
+            from: from,
+            to: to
+        });
+        this.router.navigate(fragment);
     },
     showLiveEventDetails: function(id) {
         var events = HoneySens.data.models.events,
@@ -280,18 +306,13 @@ var EventsModule = createRoutingModule({
             success: function() {
                 if(events.length === 0) {
                     overlay.announceFragment(null);
-                    module.showLiveEvents();
+                    module.showEvents('live');
                     return;
                 }
                 radio.request('events:details', events.get(id));
-                radio.request('events:show', { filter: id });
+                radio.request('events:show', { source: 'live', filter: id });
             }
         });
-    },
-    showArchivedEvents: function() {
-        radio.request('view:content').getRegion('overlay').closeOverlay(false)
-        radio.request('events:show', { archived: true });
-        this.router.navigate('events/archive');
     },
     showArchivedEventDetails: function(oid) {
         var events = HoneySens.data.models.events,
@@ -304,11 +325,11 @@ var EventsModule = createRoutingModule({
             success: function() {
                 if(events.length === 0) {
                     overlay.announceFragment(null);
-                    module.showArchivedEvents();
+                    module.showEvents('archive');
                     return;
                 }
                 radio.request('events:details', events.findWhere({ oid: parseInt(oid) }));
-                radio.request('events:show', { filter: oid, archived: true });
+                radio.request('events:show', { source: 'archive', filter: oid });
             }
         });
     },
@@ -322,11 +343,11 @@ var EventsModule = createRoutingModule({
             success: function() {
                 if(events.length === 0) {
                     overlay.announceFragment(null);
-                    module.showLiveEvents();
+                    module.showEvents();
                     return;
                 }
                 radio.request('events:edit:single', events.get(id));
-                radio.request('events:show', { filter: id });
+                radio.request('events:show', { source: 'live', filter: id });
             }
         });
     },
@@ -402,6 +423,24 @@ var EventsModule = createRoutingModule({
             dataType: 'json',
             success: success
         });
+    },
+    generateStateFragment: function() {
+        // Generates the current fragment string based on model state
+        var source = HoneySens.data.models.events.queryParams.archived ? 'archive' : 'live',
+            fragment = `events/${source}`,
+            division = HoneySens.data.models.events.queryParams.division,
+            sensor = HoneySens.data.models.events.queryParams.sensor,
+            classification = HoneySens.data.models.events.queryParams.classification,
+            status = HoneySens.data.models.events.queryParams.status,
+            from = HoneySens.data.models.events.queryParams.fromTS,
+            to = HoneySens.data.models.events.queryParams.toTS;
+        if(division) fragment += `/division/${division}`;
+        if(sensor) fragment += `/sensor/${sensor}`;
+        if(classification) fragment += `/classification/${classification}`;
+        if(status) fragment += `/status/${status}`;
+        if(from) fragment += `/from/${from}`;
+        if(to) fragment += `/to/${to}`;
+        return fragment;
     }
 });
 

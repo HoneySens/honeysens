@@ -9,11 +9,13 @@ const BackgridDatepickerFilter = Backbone.View.extend({
     className: 'input-group input-daterange',
     template: _.template(BackgridDatepickerFilterTpl),
     events: {
-        'change': 'onChange'
+        'changeDate': 'onChange'
     },
     defaults: {
         fromField: undefined,
-        toField: undefined
+        toField: undefined,
+        initialFromValue: null,
+        initialToValue: null
     },
     initialize: function (options) {
         _.defaults(this, options || {}, this.defaults);
@@ -25,8 +27,18 @@ const BackgridDatepickerFilter = Backbone.View.extend({
     render: function () {
         this.$el.empty().append(this.template({t: i18n.t}));
         // Initialize date range picker
-        this.$el.datepicker({clearBtn: true});
-        this.onChange();
+        this.$el.datepicker({
+            clearBtn: true,
+            todayHighlight: true
+        });
+        if(this.initialFromValue) {
+            var valueFrom = new Date(this.initialFromValue * 1000);
+            this.$el.find('input.dpFrom').datepicker('update', valueFrom);
+        }
+        if(this.initialToValue) {
+            var valueTo = new Date(this.initialToValue * 1000);
+            this.$el.find('input.dpTo').datepicker('update', valueTo);
+        }
         return this;
     },
     onChange: function () {

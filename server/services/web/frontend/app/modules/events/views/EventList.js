@@ -79,10 +79,7 @@ const EventList = View.extend({
         $(window).resize(function() {
             view.refreshPageSize(view.collection);
         });
-        // Reset query params (in case they were set previously)
-        delete HoneySens.data.models.events.queryParams.classification;
-        delete HoneySens.data.models.events.queryParams.sensor;
-        delete HoneySens.data.models.events.queryParams.division;
+        // Reset sorting params (in case they were set previously)
         this.collection.state.order = 1;
         this.collection.state.sortKey = 'timestamp';
 
@@ -308,27 +305,42 @@ const EventList = View.extend({
                 view.sensorFilterView.render();
                 delete HoneySens.data.models.events.queryParams.sensor;
                 Backgrid.Extension.SelectFilter.prototype.onChange.call(this);
+                radio.request('events:navigate:regenerate');
             }
         });
         this.groupFilterView = new GroupFilterView({
             className: 'backgrid-filter form-control',
             collection: this.collection,
             field: 'division',
-            selectOptions: divisions
+            selectOptions: divisions,
+            initialValue: HoneySens.data.models.events.queryParams.division
         });
         this.getRegion('groupFilter').show(this.groupFilterView);
         // Sensor filter
-        this.sensorFilterView = new Backgrid.Extension.SelectFilter({
+        var SensorFilterView = Backgrid.Extension.SelectFilter.extend({
+            onChange: function() {
+                Backgrid.Extension.SelectFilter.prototype.onChange.call(this);
+                radio.request('events:navigate:regenerate');
+            }
+        })
+        this.sensorFilterView = new SensorFilterView({
             className: 'backgrid-filter form-control',
             collection: this.collection,
             field: 'sensor',
-            selectOptions: getSensorSelectOptions()
+            selectOptions: getSensorSelectOptions(),
+            initialValue: HoneySens.data.models.events.queryParams.sensor
         });
         this.getRegion('sensorFilter').show(this.sensorFilterView);
         // Event control box tooltips
         this.$el.find('div.selectionOptions button').tooltip();
         // Classification filter
-        this.classificationFilterView = new Backgrid.Extension.SelectFilter({
+        var ClassificationFilterView = Backgrid.Extension.SelectFilter.extend({
+            onChange: function() {
+                Backgrid.Extension.SelectFilter.prototype.onChange.call(this);
+                radio.request('events:navigate:regenerate');
+            }
+        })
+        this.classificationFilterView = new ClassificationFilterView({
             className: 'backgrid-filter form-control',
             collection: this.collection,
             field: 'classification',
@@ -337,15 +349,21 @@ const EventList = View.extend({
                 {label: i18n.t('eventClassificationConnectionAttempt'), value: '2'},
                 {label: i18n.t('eventClassificationScan'), value: 4},
                 {label: i18n.t('eventClassificationHoneypot'), value: '3'}
-            ]
+            ],
+            initialValue: HoneySens.data.models.events.queryParams.classification
         });
         this.getRegion('classificationFilter').show(this.classificationFilterView);
         // Status filter
-        this.statusFilterView = new Backgrid.Extension.SelectFilter({
+        var StatusFilterView = Backgrid.Extension.SelectFilter.extend({
+            onChange: function() {
+                Backgrid.Extension.SelectFilter.prototype.onChange.call(this);
+                radio.request('events:navigate:regenerate');
+            }
+        })
+        this.statusFilterView = new StatusFilterView({
             className: 'backgrid-filter form-control',
             collection: this.collection,
             field: 'status',
-            initialValue: '0,1',
             selectOptions: [
                 {label: i18n.t('events:eventListFilterStatusUneditedBusy'), value: '0,1'},
                 {label: i18n.t('events:eventListFilterStatusResolvedIgnored'), value: '2,3'},
@@ -354,14 +372,23 @@ const EventList = View.extend({
                 {label: i18n.t('events:eventStatusResolved'), value: '2'},
                 {label: i18n.t('events:eventStatusIgnored'), value: '3'},
                 {label: i18n.t('all'), value: null}
-            ]
+            ],
+            initialValue: HoneySens.data.models.events.queryParams.status
         });
         this.getRegion('statusFilter').show(this.statusFilterView);
         // Date filter
-        this.dateFilterView = new BackgridDatepickerFilter({
+        var DateFilterView = BackgridDatepickerFilter.extend({
+            onChange: function() {
+                BackgridDatepickerFilter.prototype.onChange.call(this);
+                radio.request('events:navigate:regenerate');
+            }
+        });
+       this.dateFilterView = new DateFilterView({
             collection: this.collection,
             fromField: 'fromTS',
-            toField: 'toTS'
+            toField: 'toTS',
+            initialFromValue: HoneySens.data.models.events.queryParams.fromTS,
+            initialToValue: HoneySens.data.models.events.queryParams.toTS
         });
         this.getRegion('dateFilter').show(this.dateFilterView);
         // Search box
@@ -376,16 +403,8 @@ const EventList = View.extend({
         });
         this.getRegion('eventFilter').show(eventFilter);
         // Source filter
-        this.sourceFilterView = new Backgrid.Extension.SelectFilter({
-            className: 'backgrid-filter form-control',
-            collection: this.collection,
-            field: 'archived',
-            initialValue: HoneySens.data.models.events.queryParams.archived,
-            selectOptions: [
-                {label: i18n.t('events:eventDatasetLive'), value: false},
-                {label: i18n.t('events:eventDatasetArchive'), value: true}
-            ],
-            beforeChange: function(e) {
+        var SourceFilterView = Backgrid.Extension.SelectFilter.extend({
+            onChange: function(e) {
                 let switchingToArchive = e.target.value === 'true',
                     $sensorFilter = view.$el.find('div.sensorFilter select');
                 if(switchingToArchive) {
@@ -394,12 +413,10 @@ const EventList = View.extend({
                     delete HoneySens.data.models.events.queryParams.status;
                     view.$el.find('div.statusFilter select').val('null');
                     $sensorFilter.val('null');
-                    radio.request('events:navigate', 'events/archive');
                 } else {
                     // When switching back to live view, only show new and busy events
                     HoneySens.data.models.events.queryParams.status = '0,1';
                     view.$el.find('div.statusFilter select').val('"0,1"');
-                    radio.request('events:navigate', 'events/live');
                 }
                 // Enable/disable sensor filter
                 $sensorFilter.prop('disabled', switchingToArchive);
@@ -410,7 +427,19 @@ const EventList = View.extend({
                 let $groupEditElements = view.$el.find('.groupEditElement');
                 if(switchingToArchive) $groupEditElements.addClass('hidden')
                 else $groupEditElements.removeClass('hidden');
+                Backgrid.Extension.SelectFilter.prototype.onChange.call(this);
+                radio.request('events:navigate:regenerate');
             }
+        })
+        this.sourceFilterView = new SourceFilterView({
+            className: 'backgrid-filter form-control',
+            collection: this.collection,
+            field: 'archived',
+            initialValue: HoneySens.data.models.events.queryParams.archived,
+            selectOptions: [
+                {label: i18n.t('events:eventDatasetLive'), value: false},
+                {label: i18n.t('events:eventDatasetArchive'), value: true}
+            ],
         });
         this.getRegion('sourceFilter').show(this.sourceFilterView);
         // Display control box when models are selected and update counter
@@ -436,6 +465,8 @@ const EventList = View.extend({
                 }
             });
         });
+        // Fetch events with all active query params
+        this.collection.getFirstPage();
     },
     onDestroy: function() {
         HoneySens.data.models.events.reset();
