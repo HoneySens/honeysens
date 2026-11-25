@@ -321,6 +321,11 @@ const EventList = View.extend({
             onChange: function() {
                 Backgrid.Extension.SelectFilter.prototype.onChange.call(this);
                 radio.request('events:navigate:regenerate');
+            },
+            render: function() {
+                Backgrid.Extension.SelectFilter.prototype.render.call(this);
+                // Disable dropdown when showing the event archive
+                if(HoneySens.data.models.events.queryParams.archived) this.$el.prop('disabled', true);
             }
         })
         this.sensorFilterView = new SensorFilterView({
