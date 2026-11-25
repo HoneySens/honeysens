@@ -242,7 +242,7 @@ div.selectionOptions {border: 1px solid #ddd; border-radius: 4px; padding: 0 8px
 div.selectionOptions button.btn {vertical-align: baseline}
 
 /* Highlight event list search bar contents */
-div.eventFilter input {color: #d9230f; font-weight: bold}
+div.eventFilter input:not(:placeholder-shown) {color: #d9230f; font-weight: bold}
 
 /* Remove white space around tables in the event details overlay (for better integration into the accordion) */
 #detailLists {margin-bottom: 0}
